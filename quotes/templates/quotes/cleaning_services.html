@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Cleaning Services</h2>
+<p>Select the cleaning service you need and request a quote.</p>
+
+<ul>
+    {% for service in services %}
+        <li>{{ service.name }} - {{ service.description }}</li>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'request_quote' %}" class="btn btn-primary">Request a Cleaning Quote</a>
+{% endblock %}
