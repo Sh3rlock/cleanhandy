@@ -26,8 +26,10 @@ SECRET_KEY = 'django-insecure-b@l@av@rh*6)xlvgfrhu0a+*h9#l9pb&zdebab*+$(mkg)d73w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['cleanhandy-production.up.railway.app', 'https://cleanhandy-production.up.railway.app']
-CSRF_TRUSTED_ORIGINS = ['cleanhandy-production.up.railway.app', 'https://cleanhandy-production.up.railway.app']
+ALLOWED_HOSTS = ['cleanhandy-production.up.railway.app']
+
+CSRF_TRUSTED_ORIGINS = ['https://cleanhandy-production.up.railway.app']
+
 
 
 # Application definition
