@@ -1,0 +1,49 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block content %}
+<h2>Customer Details</h2>
+
+<!-- Customer Info -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h4 class="card-title">{{ customer.name }}</h4>
+        <p><strong>Email:</strong> {{ customer.email }}</p>
+        <p><strong>Phone:</strong> {{ customer.phone }}</p>
+    </div>
+</div>
+
+<!-- Customer's Quotes -->
+<h3>Quotes by {{ customer.name }}</h3>
+{% if quotes %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Service</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for quote in quotes %}
+        <tr>
+            <td>{{ quote.id }}</td>
+            <td>{{ quote.service.name }}</td>
+            <td>{{ quote.status }}</td>
+            <td>{{ quote.created_at }}</td>
+            <td>
+                <a href="{% url 'quote_detail' quote.id %}" class="btn btn-info btn-sm">View Quote</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No quotes found for this customer.</p>
+{% endif %}
+
+<!-- Back Button -->
+<a href="{% url 'customer_list' %}" class="btn btn-secondary mt-3">Back to Customers</a>
+
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block content %}
+<h2>Quotes Management</h2>
+
+<form method="post" action="{% url 'update_quote_status' %}">
+    {% csrf_token %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Service</th>
+                <th>Created At</th>
+                <th>Actions</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for quote in quotes %}
+            <tr>
+                <td>{{ quote.id }}</td>
+                <td>{{ quote.customer.name }} ({{ quote.customer.email }})</td>
+                <td>{{ quote.service.name }}</td>
+                <td>{{ quote.created_at }}</td>
+                <td><a href="{% url 'quote_detail' quote.id %}" class="btn btn-info btn-sm">View</a></td>
+                <td>
+                    <select name="status_{{ quote.id }}" class="form-select">
+                        {% for value, label in quote.STATUS_CHOICES %}
+                            <option value="{{ value }}" {% if quote.status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="text-end">
+        <button type="submit" class="btn btn-primary mt-3">Update Status</button>
+    </div>
+</form>
+
+{% endblock %}
+

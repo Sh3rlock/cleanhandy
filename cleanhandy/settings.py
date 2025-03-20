@@ -26,12 +26,13 @@ SECRET_KEY = 'django-insecure-b@l@av@rh*6)xlvgfrhu0a+*h9#l9pb&zdebab*+$(mkg)d73w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# For localhost
 #ALLOWED_HOSTS = ['*']
 
+# For production
 ALLOWED_HOSTS = ['cleanhandy-production.up.railway.app']
 
 CSRF_TRUSTED_ORIGINS = ['https://cleanhandy-production.up.railway.app']
-
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
@@ -56,6 +57,7 @@ INSTALLED_APPS = [
     "quotes",
     "bookings",
     "customers",
+    "adminpanel",
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,58 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block content %}
+<h2>Service Management</h2>
+
+<!-- Add Category & Service Buttons -->
+<a href="{% url 'add_service_category' %}" class="btn btn-success mb-3">Add Service Category</a>
+<a href="{% url 'add_service' %}" class="btn btn-primary mb-3">Add Sub-Service</a>
+
+<!-- List of Service Categories -->
+<h3>Main Service Categories</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for category in categories %}
+        <tr>
+            <td>{{ category.name }}</td>
+            <td>
+                <a href="{% url 'edit_service_category' category.id %}" class="btn btn-info btn-sm">Edit</a>
+                <a href="{% url 'delete_service_category' category.id %}" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- List of Sub-Services -->
+<h3>Sub-Services</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Category</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for service in services %}
+        <tr>
+            <td>{{ service.category.name }}</td>
+            <td>{{ service.name }}</td>
+            <td>{{ service.description }}</td>
+            <td>
+                <a href="{% url 'edit_service' service.id %}" class="btn btn-info btn-sm">Edit</a>
+                <a href="{% url 'delete_service' service.id %}" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

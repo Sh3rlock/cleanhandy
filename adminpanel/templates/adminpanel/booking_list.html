@@ -1,0 +1,25 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block content %}
+<h2>Bookings Management</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Quote</th>
+            <th>Confirmed</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for booking in bookings %}
+        <tr>
+            <td>{{ booking.id }}</td>
+            <td>{{ booking.quote.name }}</td>
+            <td>{{ booking.confirmed }}</td>
+            <td><a href="{% url 'booking_detail' booking.id %}" class="btn btn-info">View</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

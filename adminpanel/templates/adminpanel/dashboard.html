@@ -1,0 +1,122 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block content %}
+<h2>Admin Dashboard</h2>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Quotes</h5>
+                <p class="card-text">{{ total_quotes }}</p>
+                <a href="{% url 'quote_list' %}" class="btn btn-light">Manage Quotes</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Total Bookings</h5>
+                <p class="card-text">{{ total_bookings }}</p>
+                <a href="{% url 'booking_list' %}" class="btn btn-light">Manage Bookings</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Total Customers</h5>
+                <p class="card-text">{{ total_customers }}</p>
+                <a href="{% url 'customer_list' %}" class="btn btn-light">Manage Customers</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Service Management</h5>
+                <a href="{% url 'service_list' %}" class="btn btn-light">Manage Services</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Latest Quotes -->
+<h3>Latest Quotes</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Service</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for quote in latest_quotes %}
+        <tr>
+            <td>{{ quote.id }}</td>
+            <td>{{ quote.name }}</td>
+            <td>{{ quote.service.name }}</td>
+            <td>{{ quote.status }}</td>
+            <td>{{ quote.created_at }}</td>
+            <td><a href="{% url 'quote_detail' quote.id %}" class="btn btn-info btn-sm">View</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Latest Bookings -->
+<h3>Latest Bookings</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Quote</th>
+            <th>Confirmed</th>
+            <th>Created At</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for booking in latest_bookings %}
+        <tr>
+            <td>{{ booking.id }}</td>
+            <td>{{ booking.quote.name }}</td>
+            <td>{{ booking.confirmed }}</td>
+            <td>{{ booking.created_at }}</td>
+            <td><a href="{% url 'booking_detail' booking.id %}" class="btn btn-info btn-sm">View</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Latest Customers -->
+<h3>Latest Customers</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for customer in latest_customers %}
+        <tr>
+            <td>{{ customer.id }}</td>
+            <td>{{ customer.name }}</td>
+            <td>{{ customer.email }}</td>
+            <td>{{ customer.phone }}</td>
+            <td><a href="{% url 'customer_detail' customer.id %}" class="btn btn-info btn-sm">View</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

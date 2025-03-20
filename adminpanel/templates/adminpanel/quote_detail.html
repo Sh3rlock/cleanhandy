@@ -1,0 +1,26 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block content %}
+<h2>Quote #{{ quote.id }}</h2>
+
+<p><strong>Name:</strong> {{ quote.customer.name }}</p>
+<p><strong>Service:</strong> {{ quote.service.name }}</p>
+<p><strong>Email:</strong> {{ quote.customer.email }}</p>
+<p><strong>Phone:</strong> {{ quote.customer.phone }}</p>
+
+<!-- Status Update Form -->
+<form method="post" action="{% url 'update_quote_detail_status' quote.id %}">
+    {% csrf_token %}
+    <label><strong>Status:</strong></label>
+    <select name="status" class="form-select">
+        {% for value, label in quote.STATUS_CHOICES %}
+            <option value="{{ value }}" {% if quote.status == value %}selected{% endif %}>
+                {{ label }}
+            </option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary mt-2">Update Status</button>
+</form>
+
+<a href="{% url 'quote_list' %}" class="btn btn-secondary mt-3">Back to Quotes</a>
+{% endblock %}
