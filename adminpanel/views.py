@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from quotes.models import Quote, Service, ServiceCategory
+from quotes.forms import CleaningQuoteForm, HandymanQuoteForm
 from bookings.models import Booking
 from customers.models import Customer
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -20,6 +21,10 @@ from django.utils import timezone
 
 from django.template.loader import render_to_string
 from django.http import HttpResponse
+from django.urls import reverse
+
+from .forms import AdminQuoteForm
+from django.utils.timezone import localtime
 
 
 def admin_check(user):
@@ -116,9 +121,30 @@ def update_quote_status(request, quote_id):
         quote.save()
     return redirect(request.META.get("HTTP_REFERER", "/"))
 
+
 def quote_detail(request, quote_id):
-    quote = get_object_or_404(Quote, id=quote_id)
-    return render(request, "adminpanel/quote_detail.html", {"quote": quote})
+    quote = get_object_or_404(Quote, pk=quote_id)
+
+    if request.method == "POST":
+        form = AdminQuoteForm(request.POST, instance=quote)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Quote updated successfully!")
+            return redirect("quote_list")
+    else:
+        form = AdminQuoteForm(instance=quote)
+
+    return render(request, "adminpanel/quote_detail.html", {
+        "form": form,
+        "quote": quote
+    })
+
+@require_POST
+def delete_quote(request, quote_id):
+    quote = get_object_or_404(Quote, pk=quote_id)
+    quote.delete()
+    messages.success(request, "Quote deleted.")
+    return redirect("quote_list")
 
 def update_quote_detail_status(request, quote_id):
     quote = get_object_or_404(Quote, id=quote_id)

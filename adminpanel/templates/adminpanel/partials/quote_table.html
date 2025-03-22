@@ -8,6 +8,7 @@
             <th>Time Slot</th>
             <th>Price</th>
             <th>Action</th>
+            <th>Edit</th>
         </tr>
     </thead>
     <tbody>
@@ -20,6 +21,11 @@
             <td>${{ quote.price|default:"Not set" }}</td>
             <td>
                 <button class="btn btn-primary btn-sm view-quote-btn" data-quote-id="{{ quote.id }}" data-bs-toggle="modal" data-bs-target="#quoteDetailModal">View</button>
+            </td>
+            <td>
+                <a href="{% url 'quote_detail' quote.id %}" class="btn btn-secondary btn-sm ms-1">
+                    Edit
+                </a>
             </td>
         </tr>
         {% empty %}

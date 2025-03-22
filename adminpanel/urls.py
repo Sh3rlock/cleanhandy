@@ -3,7 +3,7 @@ from .views import (
     admin_dashboard, update_quote_status, update_quote_detail_status, quote_list, quote_detail, booking_list, booking_detail, customer_list, customer_detail, 
     service_list, add_service_category, edit_service_category, delete_service_category,
     add_service, edit_service, delete_service, booking_calendar, get_upcoming_quotes, 
-    get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv
+    get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv, delete_quote
 )
 
 urlpatterns = [
@@ -12,6 +12,7 @@ urlpatterns = [
     # Quotes Management
     path("quotes/", quote_list, name="quote_list"),
     path("quotes/<int:quote_id>/", quote_detail, name="quote_detail"),
+    path("quotes/<int:quote_id>/delete/", delete_quote, name="delete_quote"),
     path("admin/quotes/update-status/<int:quote_id>/", update_quote_status, name="update_quote_status"),
     path("quotes/<int:quote_id>/update-status/", update_quote_detail_status, name="update_quote_detail_status"),
 
