@@ -1,0 +1,31 @@
+<!-- adminpanel/partials/quote_table.html -->
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Customer</th>
+            <th>Service</th>
+            <th>Date</th>
+            <th>Time Slot</th>
+            <th>Price</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for quote in quotes %}
+        <tr>
+            <td>{{ quote.customer.name }}</td>
+            <td>{{ quote.service.name }}</td>
+            <td>{{ quote.date|date:"M d, Y" }}</td>
+            <td>{{ quote.time_slot }}</td>
+            <td>${{ quote.price|default:"Not set" }}</td>
+            <td>
+                <button class="btn btn-primary btn-sm view-quote-btn" data-quote-id="{{ quote.id }}" data-bs-toggle="modal" data-bs-target="#quoteDetailModal">View</button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center text-muted">No quotes found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -1,0 +1,16 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block content %}
+<h2>📜 Quote Details</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Customer: {{ booking.customer.name }}</h5>
+        <p><strong>Service:</strong> {{ booking.service.name }}</p>
+        <p><strong>Date:</strong> {{ booking.date|date:"M d, H:i" }}</p>
+        <p><strong>Status:</strong> {{ booking.status }}</p>
+        <p><strong>Price:</strong> ${{ booking.price|default:"Not set" }}</p>
+        <a href="{% url 'booking_list' %}" class="btn btn-secondary">Back to Bookings</a>
+    </div>
+</div>
+{% endblock %}

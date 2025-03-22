@@ -1,0 +1,393 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block content %}
+
+<!-- Tippy.js -->
+<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/animations/scale.css" />
+<style>
+    /* Adjust for mobile */
+    @media (max-width: 768px) {
+        .upcoming-quotes-container {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+    }
+</style>
+
+<h2>Booking Calendar</h2>
+<!-- Button to Open Quote Modal -->
+<button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#quoteModal">
+    + Create New Quote
+</button>
+
+<!-- Bootstrap Modal for Creating a Quote -->
+<div class="modal fade" id="quoteModal" tabindex="-1" aria-labelledby="quoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="quoteModalLabel">Create a New Quote</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="quoteForm">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="serviceSelect" class="form-label">Select Service:</label>
+                <select id="serviceSelect" name="service" class="form-select" required>
+                  <option value="">-- Choose a Service --</option>
+                  {% for service in services %}
+                    <option value="{{ service.id }}">{{ service.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+  
+            <div class="mb-3">
+              <label for="customerName" class="form-label">Customer Name:</label>
+              <input type="text" id="customerName" name="customer_name" class="form-control" required>
+            </div>
+  
+            <div class="mb-3">
+              <label for="zipCode" class="form-label">ZIP Code:</label>
+              <input type="text" id="zipCode" name="zip_code" class="form-control" required>
+            </div>
+  
+            <div class="mb-3">
+              <label for="jobDescription" class="form-label">Job Description:</label>
+              <textarea id="jobDescription" name="job_description" class="form-control" rows="3" required></textarea>
+            </div>
+  
+            <div class="mb-3">
+              <label for="hoursRequested" class="form-label">Hours Requested:</label>
+              <input type="number" id="hoursRequested" name="hours_requested" class="form-control" min="2" value="2" required>
+            </div>
+  
+            <div class="mb-3">
+              <label for="quoteDate" class="form-label">Select Date:</label>
+              <input type="date" id="quoteDate" name="date" class="form-control" required>
+            </div>
+  
+            <div class="mb-3">
+              <label for="quoteHour" class="form-label">Select Hour:</label>
+              <select id="quoteHour" name="hour" class="form-select" required>
+                <option value="">-- Choose Hour --</option>
+                <!-- Options will be populated via JavaScript -->
+              </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="customerEmail" class="form-label">Customer Email:</label>
+                <input type="email" id="customerEmail" name="customer_email" class="form-control" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="customerPhone" class="form-label">Customer Phone:</label>
+                <input type="text" id="customerPhone" name="customer_phone" class="form-control">
+            </div>
+  
+            <button type="submit" class="btn btn-success">Save Quote</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+<div class="d-flex flex-column flex-lg-row">
+    <!-- Sidebar for Upcoming Quotes -->
+    <div class="upcoming-quotes-container p-3 bg-light rounded shadow-sm mb-3 mb-lg-0" style="width: 300px;">
+
+        <h5 class="mb-3 text-success">✔️ Booked Quotes</h5>
+        {% for quote in booked_quotes %}
+            <div class="card mb-2 border-success">
+                <div class="card-body p-2">
+                    <h6 class="card-title mb-1">{{ quote.customer.name }}</h6>
+                    <p class="mb-1 text-muted small">
+                        <strong>Service:</strong> {{ quote.service.name }}<br>
+                        <strong>Time Slot:</strong> {{ quote.time_slot }}<br>
+                        <strong>Date:</strong> {{ quote.date|date:"M d" }}<br>
+                        <strong>ZIP:</strong> {{ quote.zip_code }}<br>
+                        <strong>Email:</strong> {{ quote.customer.email }}<br>
+                        <strong>Price:</strong> {% if quote.price %}${{ quote.price }}{% else %}<em>Not set</em>{% endif %}<br>
+                        <strong>Description:</strong>
+                        <span class="d-block text-truncate" style="max-width: 100%;">{{ quote.job_description }}</span>
+                    </p>
+                </div>
+            </div>
+        {% empty %}
+            <p class="text-muted">No booked quotes</p>
+        {% endfor %}
+    
+        <hr class="my-3">
+    
+        <h5>⏳ Upcoming Quotes</h5>
+        {% for quote in upcoming_quotes %}
+            <div class="card mb-2 shadow-sm">
+                <div class="card-body p-2">
+                    <h6 class="card-title mb-1">{{ quote.customer.name }}</h6>
+                    <p class="mb-1 text-muted small">
+                        <strong>Service:</strong> {{ quote.service.name }}<br>
+                        <strong>Time Slot:</strong> {{ quote.time_slot }}<br>
+                        <strong>Date:</strong> {{ quote.date|date:"M d" }}<br>
+                        <strong>ZIP:</strong> {{ quote.zip_code }}<br>
+                        <strong>Email:</strong> {{ quote.customer.email }}<br>
+                        <strong>Price:</strong> {% if quote.price %}${{ quote.price }}{% else %}<em>Not set</em>{% endif %}<br>
+                        <strong>Description:</strong>
+                        <span class="d-block text-truncate" style="max-width: 100%;">{{ quote.job_description }}</span>
+                    </p>
+    
+                    <form method="post" action="{% url 'update_quote_status' quote.id %}">
+                        {% csrf_token %}
+                        <select name="status" class="form-select form-select-sm mb-1" onchange="this.form.submit()">
+                            {% for key, value in status_choices %}
+                                <option value="{{ key }}" {% if quote.status == key %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+            </div>
+        {% empty %}
+            <p class="text-muted">No upcoming quotes</p>
+        {% endfor %}
+    </div>
+
+    <!-- Calendar Container -->
+    <div class="flex-grow-1">
+        <div id="calendar"></div>
+    </div>
+</div>
+
+<!-- Bootstrap Modal for Quote & Booking Details -->
+<div class="modal fade" id="eventDetailModal" tabindex="-1" aria-labelledby="eventDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventDetailModalLabel">Quote Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Customer:</strong> <span id="eventCustomer"></span></p>
+                <p><strong>Service:</strong> <span id="eventService"></span></p>
+                <p><strong>Date:</strong> <span id="eventDate"></span></p>
+                <p><strong>Time Slots:</strong> <span id="eventSlots"></span></p>
+                <p><strong>Status:</strong> <span id="eventStatus"></span></p>
+                <p><strong>Price:</strong> <span id="eventPrice"></span></p>
+                <button id="bookQuoteBtn" class="btn btn-success" style="display: none;">Mark as Booked</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FullCalendar.js -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Handle quote form submission
+        const quoteForm = document.getElementById("quoteForm");
+      
+        quoteForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+      
+          const formData = {
+            customer_name: document.getElementById("customerName").value,
+            customer_email: document.getElementById("customerEmail").value,
+            customer_phone: document.getElementById("customerPhone").value,
+            zip_code: document.getElementById("zipCode").value,
+            job_description: document.getElementById("jobDescription").value,
+            hours_requested: document.getElementById("hoursRequested").value,
+            date: document.getElementById("quoteDate").value,
+            hour: document.getElementById("quoteHour").value,
+            service: document.getElementById("serviceSelect").value,
+          };
+      
+          fetch("{% url 'add_quote' %}", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: JSON.stringify(formData),
+          })
+            .then((response) => response.json())
+            .then(data => {
+                if (data.success) {
+                  alert("✅ Quote created!");
+                  const modal = bootstrap.Modal.getInstance(document.getElementById("quoteModal"));
+                  modal.hide();
+              
+                  location.reload();  // ⬅️ This refreshes the entire page
+              
+                  document.getElementById("quoteForm").reset();
+                } else {
+                  alert("❌ Error: " + data.error);
+                }
+              })
+            .catch((err) => {
+              console.error(err);
+              alert("❌ Failed to create quote. Check console for details.");
+            });
+        });
+
+    function getStatusColor(status) {
+        switch (status) {
+            case "booked": return "#28a745";      // Green
+            case "pending": return "#ffc107";     // Yellow
+            case "declined": return "#dc3545";    // Red
+            case "approved": return "#17a2b8";    // Cyan
+            case "accepted": return "#6f42c1";    // Purple
+            case "expired": return "#6c757d";     // Gray
+            default: return "#333";               // Fallback
+        }
+    }
+
+    var calendarEl = document.getElementById("calendar");
+    var eventDetailModal = new bootstrap.Modal(document.getElementById("eventDetailModal"));
+    var bookQuoteBtn = document.getElementById("bookQuoteBtn");
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        slotDuration: "00:30:00",
+        headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay"
+        },
+        events: "{% url 'get_quotes_for_calendar' %}",
+
+        eventDidMount: function (info) {
+            if (info.event.extendedProps.time_slots) {
+                info.el.style.borderRadius = "5px";
+                info.el.style.opacity = "0.95";
+                info.el.style.color = "white";  // Text color
+                info.el.style.backgroundColor = "#007bff";  // ✅ Bootstrap blue
+                info.el.style.border = "none";  // Optional: remove default border
+
+                // ✅ Improved tooltip styling
+                tippy(info.el, {
+                    content: `
+                        <div style="font-size: 14px; padding: 8px; line-height: 1.6;">
+                            <b style="font-size: 16px; color: #007bff;">📅 Time Slot:</b> ${info.event.extendedProps.time_slots}<br>
+                            <b style="font-size: 16px; color: #28a745;">🛠️ Service:</b> ${info.event.extendedProps.service}<br>
+                            <b style="font-size: 15px; color: ${getStatusColor(info.event.extendedProps.status)};">📌 Status:</b> <strong>${info.event.extendedProps.status.toUpperCase()}</strong><br><hr>
+                            <b>🧑 Customer:</b> ${info.event.extendedProps.customer}<br>
+                            <b>📍 ZIP Code:</b> ${info.event.extendedProps.zip_code}<br>
+                            <b>📧 Email:</b> ${info.event.extendedProps.email}<br>
+                            <b>📝 Job Description:</b> ${info.event.extendedProps.job_description}<br>
+                            <b>💰 Price:</b> ${info.event.extendedProps.price}
+                        </div>
+                    `,
+                    allowHTML: true,
+                    placement: "top",
+                    animation: "scale",
+                    theme: "light-border"
+                });
+            }
+        }
+    });
+
+    calendar.render();
+
+    // Handle booking a quote
+    bookQuoteBtn.addEventListener("click", function() {
+        var quoteId = this.getAttribute("data-quote-id");
+
+        fetch("{% url 'book_quote' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({ quote_id: quoteId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Quote booked successfully!");
+                document.getElementById("eventStatus").textContent = "Booked";
+                bookQuoteBtn.style.display = "none";
+                calendar.refetchEvents();
+            } else {
+                alert("Error: " + data.error);
+            }
+        });
+    });
+});
+
+function refreshCalendar() {
+    calendar.refetchEvents();  // Reloads events from the API
+}
+
+// Example function to decline a quote (if you have this action)
+function declineQuote(quoteId) {
+    fetch("{% url 'decline_quote' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ quote_id: quoteId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Quote declined!");
+            refreshCalendar();  // Reloads calendar after declining
+        } else {
+            alert("Error: " + data.error);
+        }
+    });
+}
+</script>
+<script>
+    eventDidMount: function(info) {
+        if (info.event.extendedProps.time_slots) {
+            tippy(info.el, {
+                content: info.event.extendedProps.time_slots,
+                placement: "top",
+                animation: "scale",
+                theme: "light-border"
+            });
+        }
+    }
+</script>       
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const dateField = document.getElementById("quoteDate");
+        const hoursField = document.getElementById("hoursRequested");
+        const hourSelect = document.getElementById("quoteHour");
+    
+        function fetchAvailableHours() {
+            const date = dateField.value;
+            const hoursRequested = hoursField.value || 2;
+    
+            if (date) {
+                fetch(`/quotes/api/available-hours/?date=${date}&hours_requested=${hoursRequested}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        hourSelect.innerHTML = '<option value="">-- Choose Hour --</option>';
+                        data.available_hours.forEach(hour => {
+                            const option = document.createElement("option");
+                            option.value = hour;
+                            option.textContent = hour;
+                            hourSelect.appendChild(option);
+                        });
+                    });
+            }
+        }
+    
+        dateField.addEventListener("change", fetchAvailableHours);
+        hoursField.addEventListener("blur", fetchAvailableHours);
+    });
+</script>
+    
+
+
+<script src="https://unpkg.com/@popperjs/core@2"></script>
+<script src="https://unpkg.com/tippy.js@6"></script>
+
+{% endblock %}

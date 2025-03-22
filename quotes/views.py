@@ -4,6 +4,10 @@ from customers.models import Customer  # Import Customer from the correct app
 from .forms import CleaningQuoteForm, HandymanQuoteForm
 from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
+from .utils import get_available_hours_for_date
+from django.http import JsonResponse
+from datetime import datetime, time, timedelta, date
+
 
 def home(request):
     return render(request, "home.html")  # Make sure to create this template
@@ -100,3 +104,16 @@ def cleaning_services(request):
 def handyman_services(request):
     services = Service.objects.filter(category__name="Handyman")
     return render(request, "quotes/handyman_services.html", {"services": services})
+
+def available_hours_api(request):
+    date_str = request.GET.get("date")
+    hours = int(request.GET.get("hours", 2))  # get from query param or default 2
+    try:
+        date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "Invalid date"}, status=400)
+
+    available = get_available_hours_for_date(date, hours_requested=hours)
+    formatted = [slot.strftime("%H:%M") for slot in available]
+    return JsonResponse({"available_hours": formatted})
+

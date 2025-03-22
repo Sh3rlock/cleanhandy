@@ -1,25 +1,153 @@
-{% extends "adminpanel/base_admin.html" %}
+{% extends 'adminpanel/base_admin.html' %}
 
 {% block content %}
-<h2>Bookings Management</h2>
-<table class="table">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Quote</th>
-            <th>Confirmed</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for booking in bookings %}
-        <tr>
-            <td>{{ booking.id }}</td>
-            <td>{{ booking.quote.name }}</td>
-            <td>{{ booking.confirmed }}</td>
-            <td><a href="{% url 'booking_detail' booking.id %}" class="btn btn-info">View</a></td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+  <h2>📅 Booked Quotes</h2>
+
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header d-flex justify-content-between flex-wrap align-items-end gap-2">
+      <!-- Filter Form (Left) -->
+      <form id="filterForm" class="d-flex flex-wrap align-items-end gap-2 mb-0">
+        <div>
+          <label class="form-label mb-0 small">Service</label>
+          <select name="service" class="form-select form-select-sm" style="min-width: 160px;">
+            <option value="">All Services</option>
+            {% for service in services %}
+              <option value="{{ service.id }}">{{ service.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Date range filter -->
+        {% if messages %}
+        <div class="alert alert-warning">
+          {% for message in messages %}
+            {{ message }}
+          {% endfor %}
+        </div>
+      {% endif %}
+        <div>
+          <label class="form-label mb-0 small">From Date</label>
+          <input type="date" name="from_date" class="form-control form-control-sm" value="{{ request.GET.from_date }}" style="min-width: 140px;" />
+        </div>
+
+        <div>
+          <label class="form-label mb-0 small">To Date</label>
+          <input type="date" name="to_date" class="form-control form-control-sm" value="{{ request.GET.to_date }}" style="min-width: 140px;" />
+        </div>
+      </form>
+
+      <!-- Export Button (Right) -->
+      <div class="ms-auto">
+        <label class="form-label mb-0 opacity-0 d-none d-md-block">Export</label>
+        <a href="{% url 'export_quotes_csv' %}?{{ request.GET.urlencode }}" class="btn btn-outline-secondary btn-sm">📤 Export CSV</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Result Container -->
+  <div id="quoteListContainer">
+    {% include 'adminpanel/partials/quote_table.html' %}
+  </div>
+
+  <!-- Quote Detail Modal -->
+  <div class="modal fade" id="quoteDetailModal" tabindex="-1" aria-labelledby="quoteDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="quoteDetailModalLabel">Quote Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>
+            <strong>Customer:</strong> <span id="modalCustomer"></span>
+          </p>
+          <p>
+            <strong>Service:</strong> <span id="modalService"></span>
+          </p>
+          <p>
+            <strong>Date:</strong> <span id="modalDate"></span>
+          </p>
+          <p>
+            <strong>Time Slot:</strong> <span id="modalTimeSlot"></span>
+          </p>
+          <p>
+            <strong>ZIP Code:</strong> <span id="modalZip"></span>
+          </p>
+          <p>
+            <strong>Email:</strong> <span id="modalEmail"></span>
+          </p>
+          <p>
+            <strong>Description:</strong> <span id="modalDescription"></span>
+          </p>
+          <p>
+            <strong>Price:</strong> <span id="modalPrice"></span>
+          </p>
+          <p>
+            <strong>Status:</strong> <span id="modalStatus"></span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".view-quote-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                const quoteId = this.getAttribute("data-quote-id");
+    
+                fetch(`/admin/api/get_event_details/?event_id=${quoteId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert("Error: " + data.error);
+                        } else {
+                            document.getElementById("modalCustomer").textContent = data.customer || "-";
+                            document.getElementById("modalService").textContent = data.service || "-";
+                            document.getElementById("modalDate").textContent = data.date || "-";
+                            document.getElementById("modalTimeSlot").textContent = data.time_slots || "-";
+                            document.getElementById("modalZip").textContent = data.zip_code || "-";
+                            document.getElementById("modalEmail").textContent = data.email || "-";
+                            document.getElementById("modalDescription").textContent = data.description || "-";
+                            document.getElementById("modalPrice").textContent = data.price ? `$${data.price}` : "Not set";
+                            document.getElementById("modalStatus").textContent = data.status || "-";
+                        }
+                    });
+            });
+        });
+    });
+    </script>
+    
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const filterForm = document.getElementById('filterForm')
+    
+      // Listen to change events on all inputs inside the form
+      filterForm.querySelectorAll('select, input').forEach((el) => {
+        el.addEventListener('change', function () {
+          autoFilter()
+        })
+    
+        el.addEventListener('blur', function () {
+          autoFilter()
+        })
+      })
+    
+      function autoFilter() {
+        const formData = new FormData(filterForm)
+        const query = new URLSearchParams(formData).toString()
+    
+        fetch(`?${query}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+          .then((response) => response.text())
+          .then((html) => {
+            document.getElementById('quoteListContainer').innerHTML = html
+          })
+      }
+    })
+  </script>
 {% endblock %}

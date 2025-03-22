@@ -5,6 +5,8 @@
 <form method="post">
     {% csrf_token %}
 
+    {{ form.as_p }}
+
     <label>Name:</label>
     <input type="text" name="name" class="form-control" required>
 
@@ -14,8 +16,52 @@
     <label>Phone:</label>
     <input type="text" name="phone" class="form-control" required>
 
-    {{ form.as_p }}
-
     <button type="submit" class="btn btn-primary">Submit Quote</button>
 </form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const dateField = document.getElementById("id_date");
+        const hoursField = document.getElementById("id_hours_requested");
+        const hourSelect = document.getElementById("id_hour");
+    
+        function fetchAvailableHours() {
+            const selectedDate = dateField.value;
+            const selectedHours = hoursField.value || 2;
+    
+            if (!selectedDate) return;
+    
+            // Disable the dropdown & show loading
+            hourSelect.innerHTML = "<option>Loading...</option>";
+            hourSelect.disabled = true;
+    
+            fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${selectedHours}`)
+                .then(response => response.json())
+                .then(data => {
+                    hourSelect.innerHTML = "";
+                    hourSelect.disabled = false;
+    
+                    if (data.available_hours.length === 0) {
+                        hourSelect.innerHTML = "<option value=''>No available time</option>";
+                    } else {
+                        data.available_hours.forEach(hour => {
+                            const option = document.createElement("option");
+                            option.value = hour;
+                            option.textContent = hour;
+                            hourSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(() => {
+                    hourSelect.innerHTML = "<option value=''>Failed to load</option>";
+                    hourSelect.disabled = false;
+                });
+        }
+    
+        // Refresh on blur (when user clicks out of the input)
+        dateField.addEventListener("blur", fetchAvailableHours);
+        hoursField.addEventListener("blur", fetchAvailableHours);
+    });
+    </script>
+    
 {% endblock %}
