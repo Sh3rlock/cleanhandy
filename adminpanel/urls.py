@@ -2,8 +2,8 @@ from django.urls import path
 from .views import (
     admin_dashboard, update_quote_status, update_quote_detail_status, quote_list, quote_detail, booking_list, booking_detail, customer_list, customer_detail, 
     service_list, add_service_category, edit_service_category, delete_service_category,
-    add_service, edit_service, delete_service, booking_calendar, get_upcoming_quotes, 
-    get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv, delete_quote
+    add_service, edit_service, delete_service, booking_calendar, get_upcoming_quotes, quote_approval_view, quote_decline_view, block_time_slot,
+    get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv, delete_quote, send_quote_email_view
 )
 
 urlpatterns = [
@@ -46,6 +46,15 @@ urlpatterns = [
     path("quotes/api/upcoming/", get_upcoming_quotes, name="get_upcoming_quotes"),
 
     path("bookings/export-csv/", export_quotes_csv, name="export_quotes_csv"),
+
+    path("quotes/<int:quote_id>/send-email/", send_quote_email_view, name="send_quote_email"),
+    path("quote/<int:quote_id>/approve/<str:token>/", quote_approval_view, name="quote_approve_link"),
+    path("quote/<int:quote_id>/decline/<str:token>/", quote_decline_view, name="quote_decline_link"),
+
+    path("admin/block-time-slot/", block_time_slot, name="block_time_slot"),
+
+
+
 
 
 ]   

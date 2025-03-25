@@ -52,9 +52,17 @@ class AdminQuoteForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.fields["service"].queryset = Service.objects.all()
+
+        # If we're editing an existing quote, pre-fill the fields
         if self.instance and self.instance.hour and self.instance.hours_requested:
             start = self.instance.hour
-            end = (datetime.combine(date.today(), start) + timedelta(hours=self.instance.hours_requested)).time()
+            end_dt = (
+                datetime.combine(date.today(), start)
+                + timedelta(hours=self.instance.hours_requested)
+            )
+            end = end_dt.time()
+
             self.fields["start_hour"].initial = start.strftime("%H:%M")
             self.fields["end_hour"].initial = end.strftime("%H:%M")
 

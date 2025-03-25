@@ -1,122 +1,151 @@
 {% extends "adminpanel/base_admin.html" %}
 
 {% block content %}
-<h2>Admin Dashboard</h2>
+<h2 class="mb-4">📊 Admin Dashboard</h2>
 
 <!-- Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-primary">
+<div class="row mb-5">
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-primary shadow-sm">
             <div class="card-body">
-                <h5 class="card-title">Total Quotes</h5>
-                <p class="card-text">{{ total_quotes }}</p>
-                <a href="{% url 'quote_list' %}" class="btn btn-light">Manage Quotes</a>
+                <h5 class="card-title">📋 Total Quotes</h5>
+                <h3 class="card-text">{{ total_quotes }}</h3>
+                <a href="{% url 'quote_list' %}" class="btn btn-light btn-sm mt-2">Manage Quotes</a>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-success shadow-sm">
             <div class="card-body">
-                <h5 class="card-title">Total Bookings</h5>
-                <p class="card-text">{{ total_bookings }}</p>
-                <a href="{% url 'booking_list' %}" class="btn btn-light">Manage Bookings</a>
+                <h5 class="card-title">📅 Total Bookings</h5>
+                <h3 class="card-text">{{ total_bookings }}</h3>
+                <a href="{% url 'booking_list' %}" class="btn btn-light btn-sm mt-2">Manage Bookings</a>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-warning">
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-warning shadow-sm">
             <div class="card-body">
-                <h5 class="card-title">Total Customers</h5>
-                <p class="card-text">{{ total_customers }}</p>
-                <a href="{% url 'customer_list' %}" class="btn btn-light">Manage Customers</a>
+                <h5 class="card-title">👥 Total Customers</h5>
+                <h3 class="card-text">{{ total_customers }}</h3>
+                <a href="{% url 'customer_list' %}" class="btn btn-light btn-sm mt-2">Manage Customers</a>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-info">
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-info shadow-sm">
             <div class="card-body">
-                <h5 class="card-title">Service Management</h5>
-                <a href="{% url 'service_list' %}" class="btn btn-light">Manage Services</a>
+                <h5 class="card-title">🛠 Services</h5>
+                <h3 class="card-text">&nbsp;</h3>
+                <a href="{% url 'service_list' %}" class="btn btn-light btn-sm mt-2">Manage Services</a>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Latest Quotes -->
-<h3>Latest Quotes</h3>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Service</th>
-            <th>Status</th>
-            <th>Created At</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for quote in latest_quotes %}
-        <tr>
-            <td>{{ quote.id }}</td>
-            <td>{{ quote.name }}</td>
-            <td>{{ quote.service.name }}</td>
-            <td>{{ quote.status }}</td>
-            <td>{{ quote.created_at }}</td>
-            <td><a href="{% url 'quote_detail' quote.id %}" class="btn btn-info btn-sm">View</a></td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<h4 class="mt-4 mb-3">📝 Latest Quotes</h4>
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Service</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for quote in latest_quotes %}
+            <tr>
+                <td>{{ quote.id }}</td>
+                <td>{{ quote.customer.name }}</td>
+                <td>{{ quote.service.name }}</td>
+                <td>
+                    <span class="badge bg-secondary text-uppercase">{{ quote.status }}</span>
+                </td>
+                <td>{{ quote.created_at|date:"M d, Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'quote_detail' quote.id %}" class="btn btn-outline-info btn-sm">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-muted text-center">No recent quotes.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 <!-- Latest Bookings -->
-<h3>Latest Bookings</h3>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Quote</th>
-            <th>Confirmed</th>
-            <th>Created At</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for booking in latest_bookings %}
-        <tr>
-            <td>{{ booking.id }}</td>
-            <td>{{ booking.quote.name }}</td>
-            <td>{{ booking.confirmed }}</td>
-            <td>{{ booking.created_at }}</td>
-            <td><a href="{% url 'booking_detail' booking.id %}" class="btn btn-info btn-sm">View</a></td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<h4 class="mt-5 mb-3">📆 Latest Bookings</h4>
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Service</th>
+                <th>Confirmed</th>
+                <th>Created</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in latest_bookings %}
+            <tr>
+                <td>{{ booking.id }}</td>
+                <td>{{ booking.quote.customer.name }}</td>
+                <td>{{ booking.quote.service.name }}</td>
+                <td>
+                    {% if booking.confirmed %}
+                        <span class="badge bg-success">Yes</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                </td>
+                <td>{{ booking.created_at|date:"M d, Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'booking_detail' booking.id %}" class="btn btn-outline-info btn-sm">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-muted text-center">No recent bookings.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 <!-- Latest Customers -->
-<h3>Latest Customers</h3>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for customer in latest_customers %}
-        <tr>
-            <td>{{ customer.id }}</td>
-            <td>{{ customer.name }}</td>
-            <td>{{ customer.email }}</td>
-            <td>{{ customer.phone }}</td>
-            <td><a href="{% url 'customer_detail' customer.id %}" class="btn btn-info btn-sm">View</a></td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<h4 class="mt-5 mb-3">👤 Latest Customers</h4>
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in latest_customers %}
+            <tr>
+                <td>{{ customer.id }}</td>
+                <td>{{ customer.name }}</td>
+                <td>{{ customer.email }}</td>
+                <td>{{ customer.phone }}</td>
+                <td>
+                    <a href="{% url 'customer_detail' customer.id %}" class="btn btn-outline-info btn-sm">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-muted text-center">No recent customers.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 {% endblock %}

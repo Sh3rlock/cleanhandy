@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-b@l@av@rh*6)xlvgfrhu0a+*h9#l9pb&zdebab*+$(mkg)d73w
 DEBUG = True
 
 # For localhost
-#ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
 
 # For production
 ALLOWED_HOSTS = ['cleanhandy-production.up.railway.app']
@@ -43,6 +43,7 @@ EMAIL_HOST_USER = "matyass91@gmail.com"
 EMAIL_HOST_PASSWORD = "weqwmobbdznudgff"
 
 
+LOGIN_REDIRECT_URL = '/admin/'
 
 # Application definition
 

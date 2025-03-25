@@ -19,6 +19,9 @@
 <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#quoteModal">
     + Create New Quote
 </button>
+<button class="btn btn-danger mb-3" data-bs-toggle="modal" data-bs-target="#blockSlotModal">
+    ⛔ Block Time Slot
+</button>
 
 <!-- Bootstrap Modal for Creating a Quote -->
 <div class="modal fade" id="quoteModal" tabindex="-1" aria-labelledby="quoteModalLabel" aria-hidden="true">
@@ -91,6 +94,50 @@
       </div>
     </div>
   </div>
+
+
+  <div class="modal fade" id="blockSlotModal" tabindex="-1" aria-labelledby="blockSlotModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form method="POST" action="{% url 'block_time_slot' %}">
+        {% csrf_token %}
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="blockSlotModalLabel">Block Time Slot</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" name="all_day" id="allDayCheckbox">
+                <label class="form-check-label" for="allDayCheckbox">All Day Block</label>
+              </div>
+            <label>Date:</label>
+            <input type="date" name="date" class="form-control" required>
+  
+            <label class="mt-2">Start Time:</label>
+            <select name="start_time" class="form-select" id="startTimeSelect" required>
+                {% for t in time_choices %}
+                    <option value="{{ t }}">{{ t }}</option>
+                {% endfor %}
+            </select>
+
+            <label class="mt-2">End Time:</label>
+            <select name="end_time" class="form-select" id="endTimeSelect" required>
+                {% for t in time_choices %}
+                    <option value="{{ t }}">{{ t }}</option>
+                {% endfor %}
+            </select>   
+
+            <label class="mt-2">Reason:</label>
+            <input type="text" name="reason" class="form-control" placeholder="Optional reason (e.g. Maintenance)">
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-danger">Block</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  
   
 
 <div class="d-flex flex-column flex-lg-row">
@@ -286,6 +333,16 @@ document.addEventListener("DOMContentLoaded", function() {
                     theme: "light-border"
                 });
             }
+
+            if (info.event.extendedProps.is_blocked) {
+                // Tooltip for blocked slots
+                let tooltip = new bootstrap.Tooltip(info.el, {
+                    title: `⛔ Blocked: ${info.event.extendedProps.reason || "Unavailable"}\n🕒 ${info.event.extendedProps.time_slot}`,
+                    placement: "top",
+                    trigger: "hover",
+                    customClass: "calendar-tooltip"
+                });
+            }
         }
     });
 
@@ -384,6 +441,72 @@ function declineQuote(quoteId) {
         hoursField.addEventListener("blur", fetchAvailableHours);
     });
 </script>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.querySelector("#blockSlotModal form");
+        const startTimeSelect = document.getElementById("startTimeSelect");
+        const endTimeSelect = document.getElementById("endTimeSelect");
+        const allDayCheckbox = document.getElementById("allDayCheckbox");
+
+         // 🔁 Disable/Enable start and end time based on All Day checkbox
+        function toggleTimeInputs() {
+            const isAllDay = allDayCheckbox.checked;
+            startTimeSelect.disabled = isAllDay;
+            endTimeSelect.disabled = isAllDay;
+
+            if (isAllDay) {
+                startTimeSelect.value = "";
+                endTimeSelect.value = "";
+            }
+        }
+
+        // ✅ Initial state
+        toggleTimeInputs();
+
+    // 🔁 React to checkbox change
+    allDayCheckbox.addEventListener("change", toggleTimeInputs);
+    
+        form.addEventListener("submit", function (e) {
+            // Only validate if not all-day
+            if (!allDayCheckbox.checked) {
+                const startTime = startTimeSelect.value;
+                const endTime = endTimeSelect.value;
+    
+                if (!startTime || !endTime) {
+                    alert("Please select both start and end time.");
+                    e.preventDefault();
+                    return;
+                }
+    
+                if (startTime >= endTime) {
+                    alert("❌ End time must be after start time.");
+                    e.preventDefault();
+                    return;
+                }
+    
+                const start = parseTime(startTime);
+                const end = parseTime(endTime);
+                const diffMinutes = (end - start) / (1000 * 60);
+    
+                if (diffMinutes < 30) {
+                    alert("⚠️ Time slot must be at least 30 minutes long.");
+                    e.preventDefault();
+                }
+            }
+        });
+    
+        function parseTime(timeStr) {
+            const [hours, minutes] = timeStr.split(":").map(Number);
+            const now = new Date();
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+        }
+    });
+    </script>
+    
+  
+  
     
 
 

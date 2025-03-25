@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; color: #333; }
+    .container { max-width: 600px; padding: 20px; margin: auto; }
+    .quote-box { border: 1px solid #ddd; border-radius: 8px; padding: 20px; background-color: #f9f9f9; }
+    .quote-box h2 { color: #2a2a2a; }
+    .label { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Hello {{ customer.name }},</h2>
+    <p>Thank you for your quote request. Here are your details:</p>
+
+    <div class="quote-box">
+      <p><span class="label">Service:</span> {{ quote.service.name }}</p>
+      <p><span class="label">Date:</span> {{ quote.date|date:"F d, Y" }}</p>
+      <p><span class="label">Time Slot:</span> {{ time_slot }}</p>
+      <p><span class="label">ZIP Code:</span> {{ quote.zip_code }}</p>
+      <p><span class="label">Description:</span><br>{{ quote.job_description|linebreaks }}</p>
+      <p><span class="label">Price:</span> 
+        {% if quote.price %}${{ quote.price }}{% else %}<em>To be confirmed</em>{% endif %}
+      </p>
+      <p><span class="label">Status:</span> {{ quote.status|title }}</p>
+      {% if admin_note %}
+        <hr>
+        <p><strong>Note from our team:</strong></p>
+        <p>{{ admin_note|linebreaks }}</p>
+      {% endif %}
+      <hr>
+        <p><strong>Happy with this quote?</strong></p>
+        <p>
+            <a href="{{ request_scheme }}://{{ domain }}{% url 'quote_approve_link' quote.id quote.approval_token %}" 
+            class="btn btn-success">
+            ✅ Approve This Quote
+         </a>
+         <a href="{{ request_scheme }}://{{ domain }}{% url 'quote_decline_link' quote.id quote.approval_token %}" 
+            class="btn btn-outline-danger" 
+            style="margin-left: 10px;">
+            ❌ Decline This Quote
+        </a>
+
+        </p>
+    </div>
+
+    <p>If you have any questions or would like to confirm, feel free to reply to this email.</p>
+    <p>Best regards,<br><strong>Clean & Handy Team</strong></p>
+  </div>
+</body>
+</html>

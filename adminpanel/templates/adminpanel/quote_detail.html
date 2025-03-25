@@ -1,7 +1,8 @@
 {% extends "adminpanel/base_admin.html" %}
 {% block content %}
 <div class="container">
-  <h2 class="mb-4">📝 Edit Quote</h2>
+  <h2>📝 Edit Quote</h2>
+  <a lass="mb-4" href="{% url 'quote_list' %}" class="btn btn-link">🔙 Back to Quote List</a>  
 
   <form method="post" class="card shadow-sm p-4">
     {% csrf_token %}
@@ -44,12 +45,35 @@
     </div>
 
     <div class="d-flex justify-content-between mt-4">
-      <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+      <button type="submit" class="btn btn-primary">💾 Save Changes</button> 
       <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
         🗑️ Delete Quote
       </button>
     </div>
   </form>
+
+  <div class="mt-4 d-flex gap-3 flex-wrap align-items-center">
+    <form method="post" action="{% url 'send_quote_email' quote.id %}" class="d-flex flex-column gap-2 mt-3">
+      {% csrf_token %}
+      
+      <label for="admin_note" class="form-label">Add a custom message to the email:</label>
+      <textarea name="admin_note" id="admin_note" class="form-control" rows="3" placeholder=""></textarea>
+  
+      <button type="submit" class="btn btn-outline-primary">
+          {% if quote.quote_email_sent_at %}
+            📤 Resend Email
+          {% else %}
+            📧 Send Email
+          {% endif %}
+      </button>
+  </form>
+  
+    {% if quote.quote_email_sent_at %}
+      <small class="text-muted">
+        Last sent: {{ quote.quote_email_sent_at|date:"M d, Y H:i" }}
+      </small>
+    {% endif %}
+  </div>
 
   <!-- Delete Confirmation Modal -->
   <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">

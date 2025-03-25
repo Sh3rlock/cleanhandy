@@ -1,5 +1,8 @@
 from datetime import time, timedelta, datetime
 from quotes.models import Quote
+from adminpanel.models import BlockedTimeSlot
+from datetime import datetime, timedelta, time
+from django.http import JsonResponse
 
 def get_available_hours_for_date(date, hours_requested=2):
     start_hour = 9
@@ -22,6 +25,11 @@ def get_available_hours_for_date(date, hours_requested=2):
         start = datetime.combine(date, quote.hour)
         end = start + timedelta(hours=duration)
         unavailable_ranges.append((start.time(), end.time()))
+    
+      # 3. ❌ Exclude admin-blocked slots
+    blocked_slots = BlockedTimeSlot.objects.filter(date=date)
+    for block in blocked_slots:
+        unavailable_ranges.append((block.start_time, block.end_time))
 
     # Check if each slot fits entirely in available range
     valid_slots = []

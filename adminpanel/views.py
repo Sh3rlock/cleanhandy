@@ -26,6 +26,21 @@ from django.urls import reverse
 from .forms import AdminQuoteForm
 from django.utils.timezone import localtime
 
+from django.core.mail import send_mail
+from django.contrib import messages
+from django.shortcuts import redirect
+
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
+from django.contrib.sites.shortcuts import get_current_site
+import secrets
+from django.http import HttpResponseForbidden
+
+from .models import BlockedTimeSlot
+
+
 
 def admin_check(user):
     return user.is_staff  # Only allow staff users
@@ -36,7 +51,7 @@ def admin_check(user):
 def admin_dashboard(request):
     # Fetch latest 10 records
     latest_quotes = Quote.objects.all().order_by("-created_at")[:10]
-    latest_bookings = Booking.objects.all().order_by("-created_at")[:10]
+    latest_bookings = Quote.objects.all().order_by("-created_at")[:10]
     latest_customers = Customer.objects.all().order_by("-id")[:10]
 
     total_quotes = Quote.objects.count()
@@ -298,10 +313,22 @@ def format_time_slot(quote):
     end = (start + duration).time()
     return f"{quote.hour.strftime('%H:%M')} - {end.strftime('%H:%M')}"
 
+def generate_time_choices(start="09:00", end="17:00", step_minutes=30):
+    times = []
+    t = datetime.strptime(start, "%H:%M")
+    end_time = datetime.strptime(end, "%H:%M")
+    while t <= end_time:
+        times.append(t.strftime("%H:%M"))
+        t += timedelta(minutes=step_minutes)
+    return times
+
 STATUS_CHOICES = Quote._meta.get_field("status").choices
 # 📌 Booking Calendar View
 def booking_calendar(request):
     services = Service.objects.all()  
+
+    time_choices = generate_time_choices()
+
     upcoming_quotes = Quote.objects.filter(
         status__in=["pending", "approved", "accepted"]
     ).filter(date__gte=timezone.now().date()).order_by("date", "hour")[:5]
@@ -322,7 +349,8 @@ def booking_calendar(request):
         "services": services,
         "upcoming_quotes": upcoming_quotes,
         "booked_quotes": booked_quotes,
-        "status_choices": STATUS_CHOICES
+        "status_choices": STATUS_CHOICES,
+        "time_choices": time_choices,
     })
 
 # 📌 API to Fetch Existing Bookings
@@ -429,30 +457,69 @@ def add_quote(request):
 def get_quotes_for_calendar(request):
     events = []
 
+    # 🟢 1. Add all Quotes
     for quote in Quote.objects.all():
-        duration = max(quote.hours_requested or 2, 2)  # Ensure min 2 hours
+        duration = max(quote.hours_requested or 2, 2)  # Minimum 2 hours
         start_time = datetime.combine(quote.date, quote.hour)
         end_time = start_time + timedelta(hours=duration)
 
         events.append({
-            "id": quote.id,
+            "id": f"quote-{quote.id}",
             "title": f"{quote.customer.name} - {quote.service.name}",
-            "start": start_time.strftime("%Y-%m-%dT%H:%M:%S"),
-            "end": end_time.strftime("%Y-%m-%dT%H:%M:%S"),  # 🔥 Covers full duration
-            "color": "#28a745" if quote.status == "booked" else "#ffc107",  # Green for booked, Yellow for pending
+            "start": start_time.isoformat(),
+            "end": end_time.isoformat(),
+            "color": "#28a745" if quote.status == "booked" else "#ffc107",
             "extendedProps": {
                 "customer": quote.customer.name if quote.customer else "N/A",
                 "zip_code": quote.zip_code or "N/A",
                 "email": quote.customer.email if quote.customer else "N/A",
                 "service": quote.service.name,
                 "job_description": quote.job_description or "N/A",
-                "time_slots": f"{quote.hour.strftime('%H:%M')} - {end_time.strftime('%H:%M')}",  # One range
+                "time_slots": f"{quote.hour.strftime('%H:%M')} - {end_time.strftime('%H:%M')}",
                 "price": str(quote.price) if quote.price else "N/A",
                 "status": quote.status,
             }
         })
 
+    # 🔴 2. Add Blocked Time Slots
+    for block in BlockedTimeSlot.objects.all():
+        if block.all_day:
+            events.append({
+                "id": f"blocked-{block.id}",
+                "title": f"⛔ Blocked: {block.reason or 'Unavailable'} (All Day)",
+                "start": block.date.isoformat(),
+                "allDay": True,
+                "backgroundColor": "#dc3545",
+                "borderColor": "#dc3545",
+                "textColor": "white",
+                "editable": False,
+                "extendedProps": {
+                    "is_blocked": True,
+                    "reason": block.reason or "N/A",
+                    "time_slot": "All Day",
+                }
+            })
+        else:
+            time_range = f"{block.start_time.strftime('%H:%M')} – {block.end_time.strftime('%H:%M')}"
+            events.append({
+                "id": f"blocked-{block.id}",
+                "title": f"⛔ {block.reason or 'Blocked'}\n{time_range}",
+                "start": datetime.combine(block.date, block.start_time).isoformat(),
+                "end": datetime.combine(block.date, block.end_time).isoformat(),
+                "backgroundColor": "#dc3545",
+                "borderColor": "#dc3545",
+                "textColor": "white",
+                "editable": False,
+                "display": "block",
+                "extendedProps": {
+                    "is_blocked": True,
+                    "reason": block.reason or "N/A",
+                    "time_slot": time_range,
+                }
+            })
+
     return JsonResponse(events, safe=False)
+
 
 
 def get_event_details(request):
@@ -620,6 +687,110 @@ def export_quotes_csv(request):
         ])
 
     return response
+
+
+def send_quote_email_view(request, quote_id):
+    quote = get_object_or_404(Quote, pk=quote_id)
+    customer = quote.customer
+    time_slot = format_time_slot(quote)
+    # 📝 Get the custom admin message from form
+    admin_note = request.POST.get("admin_note", "").strip()
+
+     # ✅ Save timestamp and admin note to the quote
+    if not quote.approval_token:
+        quote.approval_token = secrets.token_urlsafe(32)
+
+    subject = "Your Quote from Clean & Handy Services"
+    from_email = "matyass91@gmail.com"
+    to_email = [customer.email]
+    bcc = ["matyass91@gmail.com"]  # 👈 Add admin here
+
+    context = {
+        "customer": customer,
+        "quote": quote,
+        "time_slot": time_slot,
+        "admin_note": admin_note,
+        "request_scheme": request.scheme,
+        "domain": get_current_site(request).domain,
+    }
+
+    # Render HTML email from template
+    html_content = render_to_string("emails/quote_email.html", context)
+    text_content = strip_tags(html_content)
+
+    try:
+        email = EmailMultiAlternatives(subject, text_content, from_email, to_email, bcc=bcc)
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+
+        quote.last_admin_note = admin_note
+        quote.quote_email_sent_at = timezone.now()
+        quote.save(update_fields=["last_admin_note", "quote_email_sent_at", "approval_token"])
+
+        messages.success(request, f"📧 Email sent to {customer.email}")
+    except Exception as e:
+        messages.error(request, f"❌ Failed to send email: {str(e)}")
+
+    return redirect("quote_detail", quote_id=quote.id)
+
+# 📌 Quote Approval View
+def quote_approval_view(request, quote_id, token):
+    quote = get_object_or_404(Quote, id=quote_id)
+
+    if quote.approval_token != token:
+        return HttpResponseForbidden("Invalid token")
+
+    if quote.status != "accepted":
+        quote.status = "accepted"
+        quote.save(update_fields=["status"])
+    
+    send_mail(
+        subject="Quote Approved by Customer",
+        message=f"The quote #{quote.id} for {quote.customer.name} was approved.\nService: {quote.service.name}\nDate: {quote.date}\nPrice: {quote.price}",
+        from_email="noreply@cleanhandy.com",
+        recipient_list=["admin@email.com"]
+    )
+
+    return render(request, "quotes/quote_approved.html", {"quote": quote})
+
+# 📌 Quote Decline View
+def quote_decline_view(request, quote_id, token):
+    quote = get_object_or_404(Quote, id=quote_id)
+
+    if quote.approval_token != token:
+        return HttpResponseForbidden("Invalid token")
+
+    if quote.status != "declined":
+        quote.status = "declined"
+        quote.save(update_fields=["status"])
+
+    return render(request, "quotes/quote_declined.html", {"quote": quote})
+
+
+@require_POST
+def block_time_slot(request):
+    date = request.POST.get("date")
+    start_time = request.POST.get("start_time")
+    end_time = request.POST.get("end_time")
+    reason = request.POST.get("reason")
+    all_day = request.POST.get("all_day") == "on"
+
+    if all_day:
+        start_time = None
+        end_time = None
+
+    BlockedTimeSlot.objects.create(
+        date=date,
+        start_time=start_time,
+        end_time=end_time,
+        reason=reason,
+        all_day=all_day
+    )
+    messages.success(request, "⛔ Time slot blocked.")
+    return redirect("booking_calendar")
+
+
+
 
 
 

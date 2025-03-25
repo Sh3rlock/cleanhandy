@@ -16,6 +16,13 @@ class Service(models.Model):
     def __str__(self):
         return f"{self.category.name} - {self.name}"
 
+class CleaningExtra(models.Model):
+    name = models.CharField(max_length=100)
+    price = models.DecimalField(max_digits=6, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.name} (${self.price})"
+
 class Quote(models.Model):
     customer = models.ForeignKey("customers.Customer", on_delete=models.CASCADE, null=True, blank=True)
     service = models.ForeignKey("quotes.Service", on_delete=models.CASCADE)
@@ -26,6 +33,9 @@ class Quote(models.Model):
     hours_requested = models.IntegerField(null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    quote_email_sent_at = models.DateTimeField(null=True, blank=True)
+    last_admin_note = models.TextField(null=True, blank=True)
+    approval_token = models.CharField(max_length=64, blank=True, null=True)
     
     status = models.CharField(
         max_length=20,
@@ -39,6 +49,25 @@ class Quote(models.Model):
         ],
         default="pending",
     )
+
+    home_type = models.CharField(
+        max_length=50,
+        choices=[
+            ("apartment", "Apartment"),
+            ("house", "House"),
+            ("studio", "Studio"),
+            ("other", "Other"),
+        ],
+        null=True,
+        blank=True,
+    )
+    square_feet = models.PositiveIntegerField(null=True, blank=True)
+    num_bedrooms = models.PositiveIntegerField(null=True, blank=True)
+    num_bathrooms = models.PositiveIntegerField(null=True, blank=True)
+    is_recurring = models.BooleanField(default=False)  # Recurring toggle
+
+    # Price calculation extras (optional, see model below)
+    extras = models.ManyToManyField("CleaningExtra", blank=True)
 
     def __str__(self):
         return f"Quote {self.id} - {self.customer.name if self.customer else 'No Name'} ({self.status})"
@@ -61,3 +90,13 @@ class Quote(models.Model):
             slots.append(f"{start.strftime('%H:%M')} - {end.strftime('%H:%M')}")
         
         return slots
+    
+    def calculate_total_price(self):
+        base_price = 50  # or per sqft or room logic
+        sqft_price = 0.15 * (self.square_feet or 0)
+        bedroom_price = 10 * (self.num_bedrooms or 0)
+        bathroom_price = 12 * (self.num_bathrooms or 0)
+        extras_price = sum(extra.price for extra in self.extras.all())
+
+        total = base_price + sqft_price + bedroom_price + bathroom_price + extras_price
+        return round(total, 2)
