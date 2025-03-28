@@ -31,6 +31,7 @@ DEBUG = True
 
 # For production
 ALLOWED_HOSTS = ['cleanhandy-production.up.railway.app']
+SECURE_SSL_REDIRECT = True
 
 CSRF_TRUSTED_ORIGINS = ['https://cleanhandy-production.up.railway.app']
 
