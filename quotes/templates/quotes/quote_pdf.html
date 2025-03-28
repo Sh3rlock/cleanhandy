@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; }
+    h2 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+    .section { margin-bottom: 20px; }
+    .bold { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Cleaning Quote Summary</h2>
+
+  <div class="section">
+    <p><span class="bold">Customer:</span> {{ quote.customer.name }} ({{ quote.customer.email }})</p>
+    <p><span class="bold">Phone:</span> {{ quote.customer.phone }}</p>
+  </div>
+
+  <div class="section">
+    <h3>Price Breakdown</h3>
+    {% if quote.square_feet_options %}
+    <p>Square Footage ({{ quote.square_feet_options.name }}): ${{ quote.square_feet_options.price }}</p>
+    {% endif %}
+    {% if quote.home_types %}
+    <p>Home Type ({{ quote.home_types.name }}): ${{ quote.home_types.price }}</p>
+    {% endif %}
+    {% if quote.extras.all %}
+    <p>Extras:</p>
+    <ul>
+      {% for extra in quote.extras.all %}
+        <li>{{ extra.name }} — ${{ extra.price }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <p>Subtotal: ${{ quote.calculate_subtotal }}</p>
+    <p>Sales Tax: ${{ quote.calculate_tax }}</p>
+    <p class="bold">Total: ${{ quote.price }}</p>
+  </div>
+
+  <div class="section">
+    <h3>Schedule</h3>
+    <p>Date: {{ quote.date }}</p>
+    <p>Time: {{ quote.hour }}</p>
+    <p>Duration: {{ quote.hours_requested }} hour(s)</p>
+    <p>Recurring: {{ quote.get_recurrence_pattern_display }}</p>
+  </div>
+
+  <div class="section">
+    <h3>Address</h3>
+    <p>{{ quote.address }}, Apt {{ quote.apartment }}</p>
+    <p>{{ quote.city }}, {{ quote.state }} {{ quote.zip_code }}</p>
+  </div>
+</body>
+</html>

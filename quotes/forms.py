@@ -1,7 +1,5 @@
 from django import forms
-from .models import Quote, Service
-from django import forms
-from .models import Quote, Service
+from .models import Quote, Service, HomeType, SquareFeetOption
 from datetime import time, datetime, timedelta
 
 class CleaningQuoteForm(forms.ModelForm):
@@ -17,7 +15,7 @@ class CleaningQuoteForm(forms.ModelForm):
         required=True,
         widget=forms.Textarea(attrs={
             "class": "form-control",
-            "placeholder": "Please describe the job in detail. (required)",
+            "placeholder": "Please describe the job in detail.",
             "rows": 3
         })
     )
@@ -25,12 +23,12 @@ class CleaningQuoteForm(forms.ModelForm):
     hours_requested = forms.IntegerField(
         label="Hours Requested",
         required=True,
-        initial=2,  # Default value
-        min_value=2,  # Minimum allowed value
+        initial=2,
+        min_value=2,
         widget=forms.NumberInput(attrs={
             "class": "form-control",
             "placeholder": "Enter number of hours",
-            "min": 2  # Enforces min value on the frontend
+            "min": 2
         })
     )
 
@@ -46,14 +44,36 @@ class CleaningQuoteForm(forms.ModelForm):
 
     class Meta:
         model = Quote
-        fields = ["service", "zip_code", "job_description", "hours_requested", "date", "hour"]
+        fields = [
+            "service",
+            "square_feet_options",  # new ManyToMany
+            "home_types",           # new ManyToMany
+            "job_description",
+            "address",
+            "apartment",
+            "zip_code",
+            "date",
+            "hour",
+            "hours_requested",
+            "recurrence_pattern"
+        ]
+
+        widgets = {
+            "service": forms.Select(attrs={"class": "form-select"}),
+            "square_feet_options": forms.Select(attrs={"class": "form-select"}),
+            "home_types": forms.Select(attrs={"class": "form-select"}),
+            "address": forms.TextInput(attrs={"class": "form-control", "placeholder": "Street Address"}),
+            "apartment": forms.TextInput(attrs={"class": "form-control", "placeholder": "Apt/Suite #"}),
+            "recurrence_pattern": forms.Select(attrs={"class": "form-select"}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Only show Cleaning services
         self.fields["service"].queryset = Service.objects.filter(category__name="Cleaning")
 
-        # Default hour choices (9:00 to 17:00, every 30 min)
+        # 30-minute time slots from 09:00 to 17:00
         time_slots = []
         t = datetime.strptime("09:00", "%H:%M")
         while t.time() <= time(17, 0):
@@ -61,6 +81,7 @@ class CleaningQuoteForm(forms.ModelForm):
             t += timedelta(minutes=30)
 
         self.fields["hour"].choices = time_slots
+
 
 class HandymanQuoteForm(forms.ModelForm):
     zip_code = forms.CharField(

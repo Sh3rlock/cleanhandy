@@ -5,3 +5,4 @@ packaging==24.2
 pytz==2025.1
 sqlparse==0.5.3
 whitenoise==6.9.0
+weasyprint==65.0

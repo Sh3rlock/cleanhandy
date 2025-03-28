@@ -1,67 +1,200 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% block content %}
-<h2>Request a Cleaning Quote</h2>
-<form method="post">
+  <style>
+    .hidden-step {
+      display: none;
+    }
+    .is-invalid {
+      border-color: #dc3545;
+    }
+  </style>
+
+  <h2>Request a Cleaning Quote</h2>
+  <form method="post" id="quoteForm">
     {% csrf_token %}
 
-    {{ form.as_p }}
+    <!-- Step 1: Choose Service Type -->
+    <div class="step" id="step1">
+      <h4>💼 Choose Service</h4>
 
-    <label>Name:</label>
-    <input type="text" name="name" class="form-control" required>
+      {{ form.service.label_tag }}
+      {{ form.service }}
 
-    <label>Email:</label>
-    <input type="email" name="email" class="form-control" required>
+      <label for="id_square_feet_options">Square Feet</label>
+      <select name="square_feet_options" id="id_square_feet_options" class="form-select">
+        {% for option in form.fields.square_feet_options.queryset %}
+          <option value="{{ option.id }}" data-price="{{ option.price }}">{{ option.name }}</option>
+        {% endfor %}
+      </select>
 
-    <label>Phone:</label>
-    <input type="text" name="phone" class="form-control" required>
+      <label for="id_home_types">Home Type</label>
+      <select name="home_types" id="id_home_types" class="form-select">
+        {% for option in form.fields.home_types.queryset %}
+          <option value="{{ option.id }}" data-price="{{ option.price }}">{{ option.name }} (${{ option.price }})</option>
+        {% endfor %}
+      </select>
 
-    <button type="submit" class="btn btn-primary">Submit Quote</button>
-</form>
+      <h5 class="mt-4">✨ Optional Extras</h5>
+      <div id="cleaningExtrasContainer" class="mb-3">
+        {% for extra in cleaning_extras %}
+          <div class="form-check">
+            <input class="form-check-input extra-checkbox" type="checkbox" id="extra{{ extra.id }}" name="extras" value="{{ extra.id }}" data-price="{{ extra.price }}" />
+            <label class="form-check-label" for="extra{{ extra.id }}">{{ extra.name }} (+${{ extra.price }})</label>
+          </div>
+        {% endfor %}
+      </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const dateField = document.getElementById("id_date");
-        const hoursField = document.getElementById("id_hours_requested");
-        const hourSelect = document.getElementById("id_hour");
+      <button type="button" class="btn btn-primary mt-3" onclick="showNextStep(2)">Next</button>
+    </div>
+
+    <!-- Step 2: Schedule Info -->
+    <div class="step hidden-step" id="step2">
+      <h4>🗓️ Schedule</h4>
+
+      {{ form.date.label_tag }}
+      {{ form.date }}
+
+      {{ form.hours_requested.label_tag }}
+      {{ form.hours_requested }}
+
+      {{ form.hour.label_tag }}
+      {{ form.hour }}
+
+      {{ form.recurrence_pattern.label_tag }}
+      {{ form.recurrence_pattern }}
+
+      <button type="button" class="btn btn-secondary mt-3" onclick="scrollToStep(1)">Back</button>
+      <button type="button" class="btn btn-primary mt-3" onclick="showNextStep(3)">Next</button>
+    </div>
+
+    <!-- Step 3: Contact Info -->
+    <div class="step hidden-step" id="step3">
+      <h4>👤 Contact Info</h4>
+
+      <label>Name:</label>
+      <input type="text" name="name" class="form-control" required />
+
+      <label>Email:</label>
+      <input type="email" name="email" class="form-control" required />
+
+      <label>Phone:</label>
+      <input type="text" name="phone" class="form-control" required />
+
+      {{ form.address.label_tag }}
+      {{ form.address }}
+
+      {{ form.apartment.label_tag }}
+      {{ form.apartment }}
+
+      {{ form.city.label_tag }}
+      {{ form.city }}
+
+      {{ form.state.label_tag }}
+      {{ form.state }}
+
+      {{ form.zip_code.label_tag }}
+      {{ form.zip_code }}
+
+      {{ form.job_description.label_tag }}
+      {{ form.job_description }}
+
+      <button type="button" class="btn btn-secondary mt-3" onclick="scrollToStep(2)">Back</button>
+      <button type="submit" class="btn btn-success mt-3">Submit Quote</button>
+    </div>
+  </form>
+
+  <!-- Quote Summary -->
+<div class="card mt-4">
+    <div class="card-body">
+      <h5>💰 Price Estimate</h5>
+      <p><strong>Subtotal:</strong> $<span id="subtotalPrice">0.00</span></p>
+      <p><strong>Sales Tax:</strong> $<span id="salesTax">0.00</span></p>
+      <p><strong>Total:</strong> <strong>$<span id="totalPrice">0.00</span></strong></p>
+    </div>
+  </div>
+
+  <script>
+    function showNextStep(step) {
+      const currentStepDiv = document.getElementById('step' + (step - 1))
+      const requiredFields = currentStepDiv.querySelectorAll('input[required], select[required]')
+      let isValid = true
     
-        function fetchAvailableHours() {
-            const selectedDate = dateField.value;
-            const selectedHours = hoursField.value || 2;
-    
-            if (!selectedDate) return;
-    
-            // Disable the dropdown & show loading
-            hourSelect.innerHTML = "<option>Loading...</option>";
-            hourSelect.disabled = true;
-    
-            fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${selectedHours}`)
-                .then(response => response.json())
-                .then(data => {
-                    hourSelect.innerHTML = "";
-                    hourSelect.disabled = false;
-    
-                    if (data.available_hours.length === 0) {
-                        hourSelect.innerHTML = "<option value=''>No available time</option>";
-                    } else {
-                        data.available_hours.forEach(hour => {
-                            const option = document.createElement("option");
-                            option.value = hour;
-                            option.textContent = hour;
-                            hourSelect.appendChild(option);
-                        });
-                    }
-                })
-                .catch(() => {
-                    hourSelect.innerHTML = "<option value=''>Failed to load</option>";
-                    hourSelect.disabled = false;
-                });
+      requiredFields.forEach((field) => {
+        if (!field.value) {
+          isValid = false
+          field.classList.add('is-invalid')
+        } else {
+          field.classList.remove('is-invalid')
         }
+      })
     
-        // Refresh on blur (when user clicks out of the input)
-        dateField.addEventListener("blur", fetchAvailableHours);
-        hoursField.addEventListener("blur", fetchAvailableHours);
-    });
-    </script>
+      if (!isValid) {
+        alert('Please fill out all required fields before continuing.')
+        const firstInvalid = currentStepDiv.querySelector('.is-invalid')
+        if (firstInvalid) {
+          firstInvalid.focus()
+        }
+        return
+      }
     
+      const nextStepDiv = document.getElementById('step' + step)
+      if (nextStepDiv.classList.contains('hidden-step')) {
+        nextStepDiv.classList.remove('hidden-step')
+        updatePrice()
+      }
+      nextStepDiv.scrollIntoView({ behavior: 'smooth' })
+    }
+    
+    function scrollToStep(step) {
+      const stepDiv = document.getElementById('step' + step)
+      stepDiv.scrollIntoView({ behavior: 'smooth' })
+    }
+    
+    function updatePrice() {
+        let subtotal = 0;
+    
+        // Square Foot Option Price
+        const sqftSelect = document.getElementById("id_square_feet_options");
+        const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
+        subtotal += sqftPrice;
+    
+        // Home Type Price
+        const homeTypeSelect = document.getElementById("id_home_types");
+        const homePrice = parseFloat(homeTypeSelect?.selectedOptions[0]?.dataset.price || 0);
+        subtotal += homePrice;
+    
+        // Extras
+        document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+          subtotal += parseFloat(cb.dataset.price || 0);
+        });
+    
+        // Calculate Sales Tax
+        const taxRate = 0.08875;
+        const tax = subtotal * taxRate;
+        const total = subtotal + tax;
+    
+        // Update UI
+        document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
+        document.getElementById("salesTax").innerText = tax.toFixed(2);
+        document.getElementById("totalPrice").innerText = total.toFixed(2);
+      }
+    
+      // Bind events
+      document.querySelectorAll('.extra-checkbox').forEach(cb => {
+        cb.addEventListener('change', updatePrice);
+      });
+    
+      document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('change', updatePrice);
+        el.addEventListener('input', () => {
+          if (el.classList.contains('is-invalid') && el.value) {
+            el.classList.remove('is-invalid');
+          }
+        });
+      });
+    
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", updatePrice);
+  </script>
 {% endblock %}

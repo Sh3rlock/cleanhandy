@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Your Cleaning Quote</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: auto; padding: 20px; }
+    .section { margin-bottom: 20px; }
+    .section h3 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+    .price-line { margin-left: 10px; }
+    .total { font-weight: bold; font-size: 1.2em; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2>Hi {{ quote.customer.name }},</h2>
+  <p>Thank you for requesting a cleaning quote! Here's your summary:</p>
+
+  <div class="section">
+    <h3>💰 Price Breakdown</h3>
+
+    {% if quote.square_feet_options %}
+    <p class="price-line">
+      Square Footage ({{ quote.square_feet_options.name }}): 
+      ${{ quote.square_feet_options.price }}
+    </p>
+    {% endif %}
+
+    {% if quote.home_types %}
+    <p class="price-line">
+      Home Type ({{ quote.home_types.name }}): 
+      ${{ quote.home_types.price }}
+    </p>
+    {% endif %}
+
+    {% if quote.extras.all %}
+    <p class="price-line">Extras:</p>
+    <ul>
+      {% for extra in quote.extras.all %}
+        <li>{{ extra.name }} — ${{ extra.price }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    <p class="price-line">
+      Subtotal: ${{ quote.calculate_subtotal }}
+    </p>
+    <p class="price-line">
+      Sales Tax: ${{ quote.calculate_tax }}
+    </p>
+    <p class="total">Total Price: ${{ quote.price }}</p>
+  </div>
+
+  <div class="section">
+    <h3>📅 Schedule Info</h3>
+    <p>Date: {{ quote.date }}</p>
+    <p>Time: {{ quote.hour }}</p>
+    <p>Duration: {{ quote.hours_requested }} hour(s)</p>
+    <p>Recurring: 
+      {% if quote.recurrence_pattern != "one_time" %}
+        {{ quote.get_recurrence_pattern_display }}
+      {% else %}
+        One-time
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="section">
+    <h3>🏠 Home Info</h3>
+    <p>Home Type: {{ quote.home_types.name }}</p>
+    <p>Square Footage: {{ quote.square_feet_options.name }}</p>
+    <p>Address: {{ quote.address }}, Apt {{ quote.apartment }}</p>
+    <p>ZIP Code: {{ quote.zip_code }}</p>
+  </div>
+
+  <div class="section">
+    <h3>👤 Contact Info</h3>
+    <p>Name: {{ quote.customer.name }}</p>
+    <p>Email: {{ quote.customer.email }}</p>
+    <p>Phone: {{ quote.customer.phone }}</p>
+  </div>
+
+  <p>We’ll be in touch shortly to confirm your booking!</p>
+  <p>Best regards,<br>The CleanPro Team</p>
+</div>
+</body>
+</html>
