@@ -33,8 +33,8 @@ COPY . .
 RUN python manage.py migrate
 RUN python manage.py collectstatic --noinput
 
-# Expose the port for the app
+# Expose the default port (optional, doesn't affect Railway)
 EXPOSE 8000
 
-# Start the application with Gunicorn
-CMD ["gunicorn", "cleanhandy.wsgi:application", "--bind", "0.0.0.0:$PORT"]
+# Start Gunicorn, using dynamic $PORT from Railway
+CMD sh -c "gunicorn cleanhandy.wsgi:application --bind 0.0.0.0:${PORT:-8000}"
