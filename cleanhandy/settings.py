@@ -26,12 +26,13 @@ SECRET_KEY = 'django-insecure-b@l@av@rh*6)xlvgfrhu0a+*h9#l9pb&zdebab*+$(mkg)d73w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# For localhost
-#ALLOWED_HOSTS = ['*']
-
 # For production
-ALLOWED_HOSTS = ['cleanhandy-production.up.railway.app']
-SECURE_SSL_REDIRECT = True
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+
+SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
+
+# Add this if not present
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 CSRF_TRUSTED_ORIGINS = ['https://cleanhandy-production.up.railway.app']
 
