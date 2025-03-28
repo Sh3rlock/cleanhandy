@@ -1,16 +1,17 @@
-# Use a Python image with system-level control
+# Use a lightweight Python base image
 FROM python:3.11-slim
 
-# Install system dependencies (for WeasyPrint, etc.)
+# Install system dependencies needed by WeasyPrint and others
 RUN apt-get update && apt-get install -y \
     build-essential \
+    libglib2.0-0 \
     libpango-1.0-0 \
     libgdk-pixbuf2.0-0 \
     libffi-dev \
     libcairo2 \
     libpangocairo-1.0-0 \
-    libgobject-2.0-0 \
     fonts-liberation \
+    shared-mime-info \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -18,22 +19,22 @@ RUN apt-get update && apt-get install -y \
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Set work directory
+# Set the working directory
 WORKDIR /app
 
-# Install dependencies
+# Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
+# Copy the entire project
 COPY . .
 
-# Collect static files and run migrations (optional if needed at build)
+# (Optional) Static + Migrations (if handled at build)
 # RUN python manage.py collectstatic --noinput
 # RUN python manage.py migrate
 
-# Expose port
+# Expose the port for the app
 EXPOSE 8000
 
-# Start Gunicorn
+# Start the application with Gunicorn
 CMD ["gunicorn", "quotes.wsgi:application", "--bind", "0.0.0.0:8000"]
