@@ -37,4 +37,4 @@ COPY . .
 EXPOSE 8000
 
 # Start the application with Gunicorn
-CMD ["gunicorn", "quotes.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "cleanhandy.wsgi:application", "--bind", "0.0.0.0:8000"]
