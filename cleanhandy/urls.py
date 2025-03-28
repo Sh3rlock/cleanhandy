@@ -5,6 +5,10 @@ from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
 from django.conf import settings
 
+from django.http import HttpResponse
+def healthcheck(request):
+    return HttpResponse("OK")
+
 urlpatterns = [
     path("", home, name="home"),
     path("admin/", include("adminpanel.urls")),  # Custom admin panel
@@ -20,3 +24,7 @@ urlpatterns = [
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += [
+    path("healthz/", healthcheck),  # add this
+]

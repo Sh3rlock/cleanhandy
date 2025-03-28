@@ -29,9 +29,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the entire project
 COPY . .
 
-# (Optional) Static + Migrations (if handled at build)
-# RUN python manage.py collectstatic --noinput
-# RUN python manage.py migrate
+# Run migrations and collect static files now that code is present
+RUN python manage.py migrate
+RUN python manage.py collectstatic --noinput
 
 # Expose the port for the app
 EXPOSE 8000
