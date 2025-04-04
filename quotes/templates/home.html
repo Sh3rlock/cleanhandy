@@ -30,6 +30,30 @@
         text-decoration: none;
         border-radius: 5px;
       }
+
+      .categories-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+      }
+
+      .categories-single-title {
+        color: var(--black-color);
+        font-size: 20px;
+        font-weight: 500;
+        line-height: 30px;
+        margin: 16px 0 4px;
+        }
+      
+      .categories-single {
+        transition: box-shadow 0.3s;
+      }
+      
+      .categories-link:hover .categories-single {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transform: scale(1.02);
+      }
+      
   </style>
 
   <!-- preloader -->
@@ -123,7 +147,7 @@
                      <img src="{% static '/assets/images/resource/cleaner.png' %}" alt="img" />
                   </div>
                   <div class="banner-right-image">
-                    <img src="{% static '/assets/images/banner/banner_img.png' %}" alt="girl" />
+                    <img src="{% static '/assets/images/banner/banner_img.webp' %}" alt="girl" />
                   </div>
                   <!-- <div class="cleaning-review">
                                         <h5>Cleaning Reviews</h5>
@@ -161,23 +185,25 @@
           <div class="row">
             {% for c_service in cleaning_services %}
               <div class="col-lg-6 col-md-6">
-                <div class="categories-single">
-                  <div class="categories-single-image">
-                    {% if c_service.service_image %}
-                      <img src="{{ c_service.service_image.url }}" alt="{{ c_service.name }}" />
-                    {% else %}
-                      <img src="{% static 'assets/images/default_white.png' %}" alt="default image" />
-                    {% endif %}
+                <a href="{% url 'request_cleaning_quote' c_service.id %}" class="categories-link">
+                  <div class="categories-single">
+                    <div class="categories-single-image">
+                      {% if c_service.service_image %}
+                        <img src="{{ c_service.service_image.url }}" alt="{{ c_service.name }}" />
+                      {% else %}
+                        <img src="{% static 'assets/images/default_white.png' %}" alt="default image" />
+                      {% endif %}
+                    </div>
+                    <div class="categories-single-title">
+                      <span>{{ c_service.name }}</span>
+                    </div>
                   </div>
-                  <div class="categories-single-title">
-                    <a href="{% url 'request_cleaning_quote' c_service.id %}">{{ c_service.name }}</a>
-                    <!-- <p>4,982 Providers</p> -->
-                  </div>
-                </div>
+                </a>
               </div>
             {% endfor %}
           </div>
         </div>
+        
 
         <!-- Column 2: Example - Handyman Services -->
         <div class="col-lg-6">
@@ -185,19 +211,20 @@
           <div class="row">
             {% for h_service in handyman_services %}
               <div class="col-lg-6 col-md-6">
-                <div class="categories-single">
-                  <div class="categories-single-image">
-                    {% if h_service.service_image %}
-                      <img src="{{ h_service.service_image.url }}" alt="{{ h_service.name }}" />
-                    {% else %}
-                      <img src="{% static 'assets/images/default_white.png' %}" alt="default image" />
-                    {% endif %}
+                <a href="{% url 'request_handyman_quote' h_service.id %}" class="categories-link">
+                  <div class="categories-single">
+                    <div class="categories-single-image">
+                      {% if h_service.service_image %}
+                        <img src="{{ h_service.service_image.url }}" alt="{{ h_service.name }}" />
+                      {% else %}
+                        <img src="{% static 'assets/images/default_white.png' %}" alt="default image" />
+                      {% endif %}
+                    </div>
+                    <div class="categories-single-title">
+                      <span>{{ h_service.name }}</span>
+                    </div>
                   </div>
-                  <div class="categories-single-title">
-                    <a href="{% url 'request_handyman_quote' h_service.id %}">{{ h_service.name }}</a>
-                    <!-- <p>2,384 Providers</p> -->
-                  </div>
-                </div>
+                </a>
               </div>
             {% endfor %}
           </div>
