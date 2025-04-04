@@ -1,26 +1,449 @@
-{% extends "base.html" %}
-
+{% extends 'base.html' %}
+{% load static %}
 {% block content %}
-<h2>Select a Service Category</h2>
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Cleaning Services</h5>
-                <p>Explore our professional cleaning services.</p>
-                <a href="{% url 'request_cleaning_quote' %}" class="btn btn-primary">Go to Cleaning</a>
-            </div>
-        </div>
-    </div>
+  <style>
+    .categories-single-image {
+      width: 150px !important;
+      height: 150px !important;
+      margin: 0 auto;
+    }
 
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Handyman Services</h5>
-                <p>Find expert handyman services for your home.</p>
-                <a href="{% url 'request_handyman_quote' %}" class="btn btn-primary">Go to Handyman</a>
-            </div>
+    .banner-section {
+        position: relative;
+        overflow:hidden;
+        padding: 0px !important;
+      }
+
+      .banner-form {
+        display: flex;
+        align-items: stretch; /* Makes children equal height */
+        gap: 10px; /* Optional: space between the two blocks */
+      }
+      
+      .banner-location a,
+      .banner-search a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%; /* Ensures full height inside the parent */
+        padding: 20px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+  </style>
+
+  <!-- preloader -->
+  <div class="loader-wrap">
+    <div class="preloader">
+        <div class="preloader-close">x</div>
+        <div id="handle-preloader" class="handle-preloader">
+            <div class="animation-preloader">
+                <div class="loader-image">
+                    <img src="{% static 'assets/images/loader.gif' %}" alt="loader">
+                </div>
+                <div class="txt-loading">
+                    <span data-text-preloader="c" class="letters-loading">
+                    c
+                    </span>
+                    <span data-text-preloader="l" class="letters-loading">
+                    l
+                    </span>
+                    <span data-text-preloader="e" class="letters-loading">
+                    e
+                    </span>
+                    <span data-text-preloader="a" class="letters-loading">
+                    a
+                    </span>
+                    <span data-text-preloader="n" class="letters-loading">
+                    n
+                     </span>
+                    <span data-text-preloader="h" class="letters-loading">
+                    h
+                    </span>
+                    <span data-text-preloader="a" class="letters-loading">
+                    a
+                    </span>
+                    <span data-text-preloader="n" class="letters-loading">
+                    n
+                    </span>
+                    <span data-text-preloader="d" class="letters-loading">
+                    d
+                    </span>
+                    <span data-text-preloader="y" class="letters-loading">
+                    y
+                    </span>
+                </div>
+            </div>  
         </div>
     </div>
 </div>
+<!-- preloader end --> 
+  <!-- banner-section -->
+  <section class="banner-section-one banner-section">
+    <div class="bg-layer" style="background-image: url({% static '/assets/images/banner/banner-1-bg.jpg' %});"></div>
+   
+    <div class="container">
+      <div class="swiper-container banner-slider-1">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide">
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="banner-content-box">
+                  <div class="banner-content-box-inner">
+                    <h2>Choose Experts to Complete Your <span>Job <img src="{% static '/assets/images/shape/banner-title-shape.png' %}" alt="shape" /></span> Done</h2>
+                    <p>Check availability, and book services with confidence.</p>
+                    <div class="banner-form">
+                      <div class="banner-location">
+                        <a href="contact.html"><i class="fa-sharp fa-solid fa-location-dot"></i> New York</a>
+                      </div>
+                      <div class="banner-search">
+                        <a class="btn-1" href="#categories">Check Our Services</a>
+                      </div>
+                    </div>
+                    <div class="customer-box">
+                      <div class="customer-list">
+                        <!--  <ul>
+                                                    <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-1.png' %}" alt="image"></a></li>
+                                                    <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-2.png' %}" alt="image"></a></li>
+                                                    <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-3.png' %}" alt="image"></a></li>
+                                                    <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-4.png' %}" alt="image"></a></li>
+                                                </ul>  -->
+                      </div>
+                      <!--  <div class="customer-content">
+                                                <h6><span>2k+</span> Customers </h6>
+                                                <p>Satisfied with Servat services</p>
+                                            </div>  -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="banner-right-conteiner">
+                  <div class="cleaner-image">
+                     <img src="{% static '/assets/images/resource/cleaner.png' %}" alt="img" />
+                  </div>
+                  <div class="banner-right-image">
+                    <img src="{% static '/assets/images/banner/banner_img.png' %}" alt="girl" />
+                  </div>
+                  <!-- <div class="cleaning-review">
+                                        <h5>Cleaning Reviews</h5>
+                                        <div class="cleaning-review-inner">
+                                            <h6><i class="fa-sharp fa-solid fa-star"></i> <span>5.0 Great</span> 400+ More</h6>
+                                            <p>1day Ago</p>
+                                        </div>
+                                        <img src="{% static '/assets/images/shape/cleaning-shape.png' %}" alt="shape">
+                                    </div>  -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- banner-section -->
+
+  <!-- Categories -->
+  <section class="categories" id="categories">
+    <div class="container">
+      <div class="common-title-container">
+        <div class="common-title mb-0">
+          <img src="{% static '/assets/images/shape/title-shape-1.png' %}" alt="shape" />
+          <h6>Explore our professional services.</h6>
+          <!-- <h3>Popular Categories</h3> -->
+        </div>
+        <!-- <a href="service.html" class="btn-1">Explore More <i class="icon-arrow-1"></i></a> -->
+      </div>
+      <div class="row">
+        <!-- Column 1: Cleaning Services -->
+        <div class="col-lg-6">
+          <h4>Cleaning Services</h4>
+          <div class="row">
+            {% for c_service in cleaning_services %}
+              <div class="col-lg-6 col-md-6">
+                <div class="categories-single">
+                  <div class="categories-single-image">
+                    {% if c_service.service_image %}
+                      <img src="{{ c_service.service_image.url }}" alt="{{ c_service.name }}" />
+                    {% else %}
+                      <img src="{% static 'assets/images/default_white.png' %}" alt="default image" />
+                    {% endif %}
+                  </div>
+                  <div class="categories-single-title">
+                    <a href="{% url 'request_cleaning_quote' c_service.id %}">{{ c_service.name }}</a>
+                    <!-- <p>4,982 Providers</p> -->
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Column 2: Example - Handyman Services -->
+        <div class="col-lg-6">
+          <h4>Handyman Services</h4>
+          <div class="row">
+            {% for h_service in handyman_services %}
+              <div class="col-lg-6 col-md-6">
+                <div class="categories-single">
+                  <div class="categories-single-image">
+                    {% if h_service.service_image %}
+                      <img src="{{ h_service.service_image.url }}" alt="{{ h_service.name }}" />
+                    {% else %}
+                      <img src="{% static 'assets/images/default_white.png' %}" alt="default image" />
+                    {% endif %}
+                  </div>
+                  <div class="categories-single-title">
+                    <a href="{% url 'request_handyman_quote' h_service.id %}">{{ h_service.name }}</a>
+                    <!-- <p>2,384 Providers</p> -->
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Categories -->
+
+  <!-- services -->
+  <section class="services">
+    <div class="container">
+      <div class="services-container">
+        <div class="common-title text-center">
+          <h6><i class="fa-solid fa-angles-right"></i> HOW IT WORKS</h6>
+          <h3>Convenient Service Access</h3>
+          <p>Launch your online presence with ease! Our Professional Website Setup service offers a comprehensive.</p>
+        </div>
+        <div class="services-one-wrapper">
+          <div class="services-one-wrapper-shape">
+            <img src="{% static '/assets/images/shape/arrow-line.png' %}" alt="shape" />
+          </div>
+          <div class="row">
+            <div class="col-lg-4 col-md-6">
+              <div class="service-single">
+                <div class="service-number">
+                  <h3>01</h3>
+                </div>
+                <div class="service-icon">
+                  <img src="{% static '/assets/images/icons/service-01.png' %}" alt="icon" />
+                </div>
+                <div class="service-single-title">
+                  <a href="service-details.html">Choose Your Service</a>
+                  <p>Pick the service you are looking for- from the website .</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+              <div class="service-single">
+                <div class="service-number">
+                  <h3>02</h3>
+                </div>
+                <div class="service-icon">
+                  <img src="{% static '/assets/images/icons/service-02.png' %}" alt="icon" />
+                </div>
+                <div class="service-single-title">
+                  <a href="service-details.html">Pick Your Schedule</a>
+                  <p>Pick the service you are looking for- from the website.</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+              <div class="service-single">
+                <div class="service-number">
+                  <h3>03</h3>
+                </div>
+                <div class="service-icon">
+                  <img src="{% static '/assets/images/icons/service-03.png' %}" alt="icon" />
+                </div>
+                <div class="service-single-title">
+                  <a href="service-details.html">Place The Order</a>
+                  <p>Pick the service you are looking for- from the website.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- services -->
+
+  <!-- featured -->
+  <section class="featured">
+    <div class="container">
+      <div class="common-title">
+        <img src="{% static '/assets/images/shape/title-shape-1.png' %}" alt="shape" />
+        <h6>FEATURED SERVICES</h6>
+      </div>
+      <div class="row">
+        {% for service in top_services %}
+        <div class="col-lg-4 col-md-6">
+          <div class="service-tow-single">
+              <div class="service-tow-single-img">
+                  <img src="{{ service.service_detail_image.url }}" alt="image">
+              </div>
+              <div class="service-tow-single-content">
+                    {% if service.category.name|lower == "cleaning" %}
+                        <a href="{% url 'request_cleaning_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
+                    {% elif service.category.name|lower == "handyman" %}
+                        <a href="{% url 'request_handyman_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
+                    {% endif %}
+                  <div class="service-tow-single-rating">
+                      <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
+                  </div>
+                  <div class="featured-single-info">
+                      <a href="{% url 'request_handyman_quote' service.id %}">Book Now</a>
+                      <div class="featured-single-info-left">
+                          <p>Starting from:</p><h5>${{ service.base_price }}</h5>
+                      </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+        {% endfor %}
+        
+      </div>
+    </div>
+  </section>
+  <!-- featured -->
+
+  <!-- blog -->
+  <section class="blog">
+    <div class="container">
+      <div class="common-title-container">
+        <div class="common-title mb-0">
+          <img src="{% static '/assets/images/shape/title-shape-1.png' %}" alt="shape" />
+          <h6>BLOGS</h6>
+          <h3>Popular Update</h3>
+        </div>
+        <a href="blog.html" class="underline-link">Explore More <i class="fa-solid fa-arrow-up-right"></i></a>
+      </div>
+      <div class="row">
+        <div class="col-lg-4 col-md-6">
+          <div class="blog-single">
+            <div class="blog-single-title">
+              <a href="{% url 'blog_detail' %}">Insight from the On-Demand Marketplace</a>
+            </div>
+            <div class="blog-single-info">
+              <p>Trips $ Tricks</p>
+              <span>Dec 24, 2024</span>
+            </div>
+            <div class="blog-single-image">
+              <img src="{% static '/assets/images/blog/blog-01.jpg' %}" alt="blog" />
+            </div>
+            <div class="blog-single-content">
+              <p>In today's fast-paced world, on-demand services have , offering convenience, efficiency, and flexibility. In this blog post ...</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+          <div class="blog-single">
+            <div class="blog-single-title">
+              <a href="{% url 'blog_detail' %}">Clean Beyond Expectations, Only with Servat.</a>
+            </div>
+            <div class="blog-single-info">
+              <p>Business</p>
+              <span>Dec 24, 2024</span>
+            </div>
+            <div class="blog-single-image">
+              <img src="{% static '/assets/images/blog/blog-02.jpg' %}" alt="blog" />
+            </div>
+            <div class="blog-single-content">
+              <p>In today's fast-paced world, on-demand services have , offering convenience, efficiency, and flexibility. In this blog post ...</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+          <div class="blog-single">
+            <div class="blog-single-title">
+              <a href="{% url 'blog_detail' %}">Get Face Glowing Service At Low Price.</a>
+            </div>
+            <div class="blog-single-info">
+              <p>Free & Fresh</p>
+              <span>Dec 24, 2024</span>
+            </div>
+            <div class="blog-single-image">
+              <img src="{% static '/assets/images/blog/blog-03.jpg' %}" alt="blog" />
+            </div>
+            <div class="blog-single-content">
+              <p>In today's fast-paced world, on-demand services have , offering convenience, efficiency, and flexibility. In this blog post ...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- blog -->
+
+  <!-- testimonial -->
+  <section class="testimonial">
+    <div class="container">
+      <div class="testimonial-container">
+        <div class="testimonial-bg-shape">
+          <img src="{% static '/assets/images/shape/testimonial-bg-shape.png' %}" alt="shape" />
+        </div>
+        <div class="common-title text-center">
+          <img src="{% static '/assets/images/shape/title-shape-1.png' %}" alt="shape" />
+          <h6>TESTIMONIAL</h6>
+          <h3>Our Stories As Told By Customers</h3>
+        </div>
+
+        <div class="testimonial-carousel">
+          <div class="swiper-container">
+            <div class="swiper single-item-carousel">
+              <div class="swiper-wrapper">
+                <div class="swiper-slide testimonial-slider-item">
+                  <div class="testimonial-slider-single">
+                    <div class="testimonial-slider-image">
+                      <img src="{% static '/assets/images/team/testimonial-1.png' %}" alt="image" />
+                    </div>
+                    <div class="testimonial-slider-content">
+                      <div class="rating">
+                        <ul>
+                          <li>
+                            <i class="fa-sharp fa-solid fa-star"></i>
+                          </li>
+                          <li>
+                            <i class="fa-sharp fa-solid fa-star"></i>
+                          </li>
+                          <li>
+                            <i class="fa-sharp fa-solid fa-star"></i>
+                          </li>
+                          <li>
+                            <i class="fa-sharp fa-solid fa-star"></i>
+                          </li>
+                          <li>
+                            <i class="fa-sharp fa-solid fa-star"></i>
+                          </li>
+                          <li>4.8</li>
+                        </ul>
+                      </div>
+                      <div class="testimonial-comments">
+                        <p>“Clean & shine did an amazing job with our deep clean. The team was punctual, professional, and thorough. Every corner of the house sparkles now! Will definitely hire them again.”</p>
+                      </div>
+                      <div class="testimonial-info-box">
+                        <div class="testimonial-info">
+                          <h5>_Sarah M. Talker,</h5>
+                          <h6>Project Designer</h6>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-button-next">
+            <i class="fa-regular fa-angle-right"></i>
+          </div>
+          <div class="swiper-button-prev">
+            <i class="fa-sharp fa-regular fa-angle-left"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- testimonial -->
 {% endblock %}

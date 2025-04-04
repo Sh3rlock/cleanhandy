@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
+<section class="contact-details">
+  <div class="container">
 <h2>🎉 Quote Submitted!</h2>
 <p>Thank you, {{ quote.customer.name }}! Here’s a breakdown of your cleaning request:</p>
 
@@ -75,4 +77,6 @@
     <p><strong>Phone:</strong> {{ quote.customer.phone }}</p>
   </div>
 </div>
+  </div>
+</section>
 {% endblock %}

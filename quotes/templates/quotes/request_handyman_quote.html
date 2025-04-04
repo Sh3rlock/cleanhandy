@@ -1,67 +1,251 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block content %}
-<h2>Request a Handyman Quote</h2>
-<form method="post">
-    {% csrf_token %}
 
-    {{ form.as_p }}
+<style>
+    @media (min-width: 992px) {
+        
+    }
 
-    <label>Name:</label>
-    <input type="text" name="name" class="form-control" required>
+    .cmn-input {
+        border-radius: 8px;
+        border: 1px solid #F15A29;
+        background: var(--white-color);
+        padding: 15px 10px !important;
+        width: 100%;
+        margin-bottom: 15px !important;
+    }
 
-    <label>Email:</label>
-    <input type="email" name="email" class="form-control" required>
+    .bg-layer {
+        height: 60% !important;
+    }
 
-    <label>Phone (optional):</label>
-    <input type="text" name="phone" class="form-control">
+    .common-banner {
+        padding: 30px 0 70px !important;
+      }
 
-    <button type="submit" class="btn btn-primary">Submit Quote</button>
-</form>
+      .service-details {
+        padding: 0px 0 !important;
+      }
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const dateField = document.getElementById("id_date");
-        const hoursField = document.getElementById("id_hours_requested");
-        const hourSelect = document.getElementById("id_hour");
-    
-        function fetchAvailableHours() {
-            const selectedDate = dateField.value;
-            const selectedHours = hoursField.value || 2;
-    
-            if (!selectedDate) return;
-    
-            // Disable the dropdown & show loading
-            hourSelect.innerHTML = "<option>Loading...</option>";
-            hourSelect.disabled = true;
-    
-            fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${selectedHours}`)
-                .then(response => response.json())
-                .then(data => {
-                    hourSelect.innerHTML = "";
-                    hourSelect.disabled = false;
-    
-                    if (data.available_hours.length === 0) {
-                        hourSelect.innerHTML = "<option value=''>No available time</option>";
-                    } else {
-                        data.available_hours.forEach(hour => {
-                            const option = document.createElement("option");
-                            option.value = hour;
-                            option.textContent = hour;
-                            hourSelect.appendChild(option);
-                        });
-                    }
-                })
-                .catch(() => {
-                    hourSelect.innerHTML = "<option value=''>Failed to load</option>";
-                    hourSelect.disabled = false;
-                });
+      .leave-comments-form textarea {
+        width: 100%;
+        height: 150px !important;s
+      }
+
+      .service-form-card {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        font-family: 'Inter', sans-serif;
+        max-width: 100%;
+      }
+      
+      .form-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+      }
+      
+      .input,
+      .textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+        box-sizing: border-box;
+      }
+      
+      .input:focus,
+      .textarea:focus {
+        border-color: #ff6b35;
+        outline: none;
+      }
+      
+      .textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+      
+      .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      
+      .form-group {
+        flex: 1;
+        min-width: 120px;
+      }
+      
+      .checkbox-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 1rem 0;
+        font-size: 0.95rem;
+      }
+      
+      .btn-submit {
+        width: 100%;
+        background: #e1552f;
+        color: #fff;
+        font-weight: 600;
+        padding: 0.9rem 1rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+      
+      .btn-submit:hover {
+        background: #c84827;
+      }
+
+      .featured-single-info {
+        margin-top: -5px !important;
+      }
+      
+      /* Responsive tweaks */
+      @media (max-width: 768px) {
+        .form-row {
+          flex-direction: column;
         }
-    
-        // Refresh on blur (when user clicks out of the input)
-        dateField.addEventListener("blur", fetchAvailableHours);
-        hoursField.addEventListener("blur", fetchAvailableHours);
-    });
-    </script>
+      
+        .form-group {
+          width: 100%;
+        }
+      } 
+
+/* Basic reset and style to match input fields */
+select {
+  -webkit-appearance: none; /* Removes default Safari styling */
+  -moz-appearance: none;
+  appearance: none;
+
+  background-color: white;
+  border: 2px solid #e74c3c; /* Match your input border color */
+  border-radius: 8px;         /* Rounded corners like your input */
+  padding: 10px;
+  font-size: 16px;
+  width: 100%;
+}
+
+/* Optional: Add a custom dropdown arrow */
+.form-style select {
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='5'%3E%3Cpath fill='%23333' d='M0 0l5 5 5-5z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 10px 5px !important;
+}
+
+/* Optional: Hide native arrow in IE */
+select::-ms-expand {
+  display: none;
+}
+
+.flatpickr-current-month {
+  font-size: 130% !important;
+}
+</style>
+
+<!-- common banner -->
+<section class="common-banner">
+    <div class="bg-layer" style="background: url({% static '/assets/images/background/common-banner-bg.jpg' %});"></div>
+    <div class="common-banner-content">
+        <h3>Service Details</h3>
+        <div class="breadcrumb">
+            <ul>
+              <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+              <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Service Details</li>
+            </ul>
+        </div>
+    </div>
+  </section>
+  <!-- common banner -->
+  
+  
+  <!-- service details -->
+  <section class="service-details">
+    <div class="container">
+        <div class="common-title">
+            <h3>{{ service.name }}</h3>
+            <div class="service-details-top-btn">
+                <div class="btn-left">
+                    <a href="#0">Handyman</a>
+                    <a href="#0"><i class="fa-light fa-location-dot"></i> New York, USA</a>
+                </div>
+                <div class="btn-right d-flex gap-2">
+                    
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="service-details-image">
+                    <img src="{{ service.service_detail_image.url }}" alt="image"> 
+               </div>
+               
+               <div class="service-details-content">
+                   {{ service.description|safe }}
+               </div>
+            </div>
+  
+            <div class="col-lg-5 margin-200">
+                <div class="service-form-card">
+                  <h2 class="form-title">Handyman Service</h2>
+                  <div class="form-style">
+                    {% include "partials/handyman_quote_form.html" %}
+                  </div>
+                </div>
+              </div>
+        </div>
+  </section>
+  <!-- service details -->
+  
+  
+  <!-- service 2 -->
+  <section class="service-two pt-0" style="background-color: transparent;">
+    <div class="container">
+        <div class="common-title">
+            <h6><i class="fa-solid fa-angles-right"></i> Another Service </h6>
+            <h3>Most Related Services</h3>
+        </div>
+  
+        <div class="row">
+            
+        {% for service in related_services %}
+        <div class="col-lg-4 col-md-6">
+          <div class="service-tow-single">
+              <div class="service-tow-single-img">
+                  <img src="{{ service.service_detail_image.url }}" alt="image">
+              </div>
+              <div class="service-tow-single-content">
+                  <a href="{% url 'request_handyman_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
+                  <div class="service-tow-single-rating">
+                      <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
+                  </div>
+                  <div class="featured-single-info">
+                      <a href="{% url 'request_handyman_quote' service.id %}">Book Now</a>
+                      <div class="featured-single-info-left">
+                          <p>Starting from:</p><h5>{{ service.base_price }}</h5>
+                      </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+        {% endfor %}
+            
+        </div>
+    </div>
+  </section>
+  <!-- service 2 -->
+
 
 {% endblock %}

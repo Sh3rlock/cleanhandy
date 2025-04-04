@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-b@l@av@rh*6)xlvgfrhu0a+*h9#l9pb&zdebab*+$(mkg)d73w
 DEBUG = True
 
 # For localhost
-#ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
 
 # For production
 ALLOWED_HOSTS = ['cleanhandy-production.up.railway.app']
@@ -90,6 +90,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'quotes.context_processors.all_services',
             ],
         },
     },

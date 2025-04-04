@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<!-- blog page -->
+<section class="blog-two">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="blog-two-single">
+                    <div class="blog-two-image">
+                        <img src="{% static 'assets/images/blog/blog-04.jpg' %}" alt="image">
+                    </div>
+                    <div class="blog-two-content">
+                        <div class="blog-two-image-bags">
+                            <span>Electronics</span>
+                        </div>
+                        <span><i class="fa-light fa-clock"></i> Dec 24, 2024</span>
+                        <a href="{% url 'blog_detail' %}">AC Repair By Expert Home Service Business</a>
+                        <p>In today's fast-paced world, on-demand services have , offering convenience, efficiency, and flexibility....</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="blog-two-single">
+                    <div class="blog-two-image">
+                        <img src="{% static 'assets/images/blog/blog-05.jpg' %}" alt="image">
+                    </div>
+                    <div class="blog-two-content">
+                        <div class="blog-two-image-bags">
+                            <span>Cleaning </span>
+                        </div>
+                        <span><i class="fa-light fa-clock"></i> Dec 24, 2024</span>
+                        <a href="{% url 'blog_detail' %}">Clean Beyond Expectations, Only with Servat.</a>
+                        <p>In today's fast-paced world, on-demand services have , offering convenience, efficiency, and flexibility....</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="blog-two-single">
+                    <div class="blog-two-image">
+                        <img src="{% static 'assets/images/blog/blog-06.jpg' %}" alt="image">
+                    </div>
+                    <div class="blog-two-content">
+                        <div class="blog-two-image-bags">
+                            <span>Salons & Spa</span>
+                        </div>
+                        <span><i class="fa-light fa-clock"></i> Dec 24, 2024</span>
+                        <a href="{% url 'blog_detail' %}">Get Beard Shaving Service At Low Price.</a>
+                        <p>In today's fast-paced world, on-demand services have , offering convenience, efficiency, and flexibility....</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="blog-two-single">
+                    <div class="blog-two-image">
+                        <img src="{% static 'assets/images/blog/blog-08.jpg' %}" alt="image">
+                    </div>
+                    <div class="blog-two-content">
+                        <div class="blog-two-image-bags">
+                            <span>Interior Info</span>
+                        </div>
+                        <span><i class="fa-light fa-clock"></i> Dec 24, 2024</span>
+                        <a href="{% url 'blog_detail' %}">The Ultimate Guide to Hiring Interior Service Experts</a>
+                        <p>In today's fast-paced world, on-demand services have , offering convenience, efficiency, and flexibility....</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="blog-two-single">
+                    <div class="blog-two-image">
+                        <img src="{% static 'assets/images/blog/blog-09.jpg' %}" alt="image">
+                    </div>
+                    <div class="blog-two-content">
+                        <div class="blog-two-image-bags">
+                            <span>Carpentry</span>
+                        </div>
+                        <span><i class="fa-light fa-clock"></i> Dec 24, 2024</span>
+                        <a href="{% url 'blog_detail' %}">Top Trends in Carpentry Services for 2024</a>
+                        <p>In today's fast-paced world, on-demand services have , offering convenience, efficiency, and flexibility....</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="blog-two-single">
+                    <div class="blog-two-image">
+                        <img src="{% static 'assets/images/blog/blog-10.jpg' %}" alt="image">
+                    </div>
+                    <div class="blog-two-content">
+                        <div class="blog-two-image-bags">
+                            <span>Construction</span>
+                        </div>
+                        <span><i class="fa-light fa-clock"></i> Dec 24, 2024</span>
+                        <a href="{% url 'blog_detail' %}">The Ultimate Guide to Hiring  Experts Online</a>
+                        <p>In today's fast-paced world, on-demand services have , offering convenience, efficiency, and flexibility....</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-12">
+                <div class="paigination">
+                    <ul>
+                        <li><a href="javascript:void(0);"><i class="fa-regular fa-angle-left"></i></a></li>
+                        <li><a href="javascript:void(0);">1</a></li>
+                        <li><a href="javascript:void(0);">2</a></li>
+                        <li><a href="javascript:void(0);">3</a></li>
+                        <li class="dot"><p>.....</p></li>
+                        <li><a href="javascript:void(0);">12</a></li>
+                        <li><a href="javascript:void(0);"><i class="fa-regular fa-angle-right"></i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- blog page -->
+
+{% endblock %}

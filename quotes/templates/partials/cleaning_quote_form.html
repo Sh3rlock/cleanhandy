@@ -1,0 +1,301 @@
+<style>
+  .summary-font {
+    font-size: 20px !important;
+  }
+
+  .total-font {
+    font-size: 24px !important;
+  }
+
+  .table>:not(caption)>*>* {
+    padding: .1rem .1rem !important; 
+    }
+</style>
+
+<form method="post" id="quoteForm">
+    {% csrf_token %}
+
+    <!-- Step 1: Choose Service Type -->
+    <div class="step" id="step1">
+
+      <div class="row">
+        <div class="col-7">
+          <div class="form-group">
+            {{ form.service.label_tag }}
+            {{ form.service }}
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="form-group">
+            <label for="id_square_feet_options">Square Feet</label>
+            <select name="square_feet_options" id="id_square_feet_options" class="cmn-input">
+              {% for option in form.fields.square_feet_options.queryset %}
+                  <option value="{{ option.id }}" data-price="{{ option.price }}">{{ option.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+      <label for="id_home_types">Home Type</label>
+      <select name="home_types" id="id_home_types" class="cmn-input">
+        {% for option in form.fields.home_types.queryset %}
+          <option value="{{ option.id }}" data-price="{{ option.price }}">{{ option.name }} (${{ option.price }})</option>
+        {% endfor %}
+      </select>
+
+      <h4 class="mt-4">Select Optional Extras</h4>
+      <div id="cleaningExtrasContainer" class="mb-4">
+        <div class="row">
+          {% for extra in cleaning_extras %}
+            <div class="col-12 col-md-6 mb-2">
+              <div class="form-check p-3 border rounded shadow-sm h-100">
+                <input 
+                  class="form-check-input extra-checkbox" 
+                  type="checkbox" 
+                  id="extra{{ extra.id }}" 
+                  name="extras" 
+                  value="{{ extra.id }}" 
+                  data-price="{{ extra.price }}" 
+                />
+                <label class="form-check-label ms-2" for="extra{{ extra.id }}">
+                  {{ extra.name }} <small class="text-muted">(+${{ extra.price }})</small>
+                </label>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      
+      <!-- <button type="button" class="btn-1 btn-next" data-next="step2">Next →</button> -->
+    </div>
+
+    
+
+    <!-- Step 3: Contact Info -->
+    <div class="step hidden-step" id="step3">
+      <h4>Contact Info</h4>
+      <input type="text" name="name" class="cmn-input" placeholder="Name" required>
+      <input type="email" name="email" class="cmn-input" placeholder="Email" required>
+      <input type="text" name="phone" class="cmn-input" placeholder="Phone (optional)">
+
+      
+
+      {{ form.city.label_tag }}
+      {{ form.city }}
+      {{ form.state }}
+      <div class="row">
+        <div class="col-9">
+          <div class="form-group">
+            {{ form.address }}
+          </div>
+        </div>
+        <div class="col-3">
+          <div class="form-group">
+            {{ form.apartment }}
+          </div>
+        </div>
+      </div>
+    {{ form.zip_code }}
+      <!-- Step 2: Schedule Info -->
+    <div class="step hidden-step" id="step2">
+      <h4 class="mt-4">Schedule</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="{{ form.hours_requested.id_for_label }}">Hours</label>
+          {{ form.hours_requested }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.date.id_for_label }}">Date</label>
+          <div style="position: relative;">
+            {{ form.date }}
+            <i class="icon-calendar" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;"></i>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="{{ form.hour.id_for_label }}">Time</label>
+          {{ form.hour }}
+        </div>
+      </div>
+
+      {{ form.recurrence_pattern.label_tag }}
+      {{ form.recurrence_pattern }}
+      <!-- <button type="button" class="btn-1 btn-back" data-prev="step1">← Back</button>
+      <button type="button" class="btn-1 btn-next" data-next="step3">Next →</button> -->
+    </div>
+
+      {{ form.job_description.label_tag }}
+      {{ form.job_description }}
+
+      <!-- Price Summary -->
+      <div class="service-skills mt-4">
+        <div class="service-duration">
+          <h6>Duration</h6>
+          <p><i class="fa-light fa-calendar-image"></i> 3 hours</p>
+        </div>
+        <div class="service-package-name">
+          <div class="package-name">
+            <table class="table table-borderless mb-0 w-auto">
+              <tbody>
+                <tr>
+                  <td class="summary-font text-end" style="width: 150px;">Subtotal:</td>
+                  <td class="summary-font fw-semibold">$<span id="subtotalPrice">0.00</span></td>
+                </tr>
+                <tr>
+                  <td class="summary-font text-end" style="width: 150px;">Sales Tax:</td>
+                  <td class="summary-font fw-semibold">$<span id="salesTax">0.00</span></td>
+                </tr>
+                <tr style="padding-top:10px">
+                  <td class="total-font text-end" style="width: 150px;">Total:</td>
+                  <td class="total-font fw-bold">$<span id="totalPrice">0.00</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          
+          
+        </div>
+      </div>
+
+      <!-- Terms -->
+    <div class="checkbox-wrap" style="margin-top: -20px;">
+        <input type="checkbox" id="terms" required>
+        <label for="terms">I agree with all the terms & conditions</label>
+      </div>
+      <!-- <button type="button" class="btn-1 btn-back" data-prev="step2">← Back</button> -->
+      <button type="submit" class="btn-1 w-100">Book Service</button>
+    </div>
+  </form>
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    flatpickr("#id_date", {
+      dateFormat: "Y-m-d",
+      minDate: "today",
+      defaultDate: "today",
+      disableMobile: true // fallback for mobile native pickers
+    });
+
+    const dateField = document.getElementById("id_date");
+    const hoursField = document.getElementById("id_hours_requested");
+    const hourSelect = document.getElementById("id_hour");
+
+    function fetchAvailableHours() {
+      const selectedDate = dateField.value;
+      const selectedHours = hoursField.value || 2;
+
+      if (!selectedDate) return;
+
+      hourSelect.innerHTML = "<option>Loading...</option>";
+      hourSelect.disabled = true;
+
+      fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${selectedHours}`)
+        .then(response => response.json())
+        .then(data => {
+          hourSelect.innerHTML = "";
+          hourSelect.disabled = false;
+
+          if (data.available_hours.length === 0) {
+            hourSelect.innerHTML = "<option value=''>No available time</option>";
+          } else {
+            data.available_hours.forEach(hour => {
+              const option = document.createElement("option");
+              option.value = hour;
+              option.textContent = hour;
+              hourSelect.appendChild(option);
+            });
+          }
+        })
+        .catch(() => {
+          hourSelect.innerHTML = "<option value=''>Failed to load</option>";
+          hourSelect.disabled = false;
+        });
+    }
+
+    // Attach Flatpickr change event instead of blur
+    dateField._flatpickr.config.onChange.push(fetchAvailableHours);
+    hoursField.addEventListener("blur", fetchAvailableHours);
+  });
+</script>
+
+  <script>
+    
+    function updatePrice() {
+        let subtotal = 0;
+    
+        // Square Foot Option Price
+        const sqftSelect = document.getElementById("id_square_feet_options");
+        const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
+        subtotal += sqftPrice;
+    
+        // Home Type Price
+        const homeTypeSelect = document.getElementById("id_home_types");
+        const homePrice = parseFloat(homeTypeSelect?.selectedOptions[0]?.dataset.price || 0);
+        subtotal += homePrice;
+    
+        // Extras
+        document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+          subtotal += parseFloat(cb.dataset.price || 0);
+        });
+    
+        // Calculate Sales Tax
+        const taxRate = 0.08875;
+        const tax = subtotal * taxRate;
+        const total = subtotal + tax;
+    
+        // Update UI
+        document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
+        document.getElementById("salesTax").innerText = tax.toFixed(2);
+        document.getElementById("totalPrice").innerText = total.toFixed(2);
+      }
+    
+      // Bind events
+      document.querySelectorAll('.extra-checkbox').forEach(cb => {
+        cb.addEventListener('change', updatePrice);
+      });
+    
+      document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('change', updatePrice);
+        el.addEventListener('input', () => {
+          if (el.classList.contains('is-invalid') && el.value) {
+            el.classList.remove('is-invalid');
+          }
+        });
+      });
+    
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", updatePrice);
+  </script>
+
+
+  <!-- <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const steps = document.querySelectorAll('.step');
+      const nextBtns = document.querySelectorAll('.btn-next');
+      const backBtns = document.querySelectorAll('.btn-back');
+    
+      nextBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+          const currentStep = btn.closest('.step');
+          const nextStepId = btn.getAttribute('data-next');
+          const nextStep = document.getElementById(nextStepId);
+    
+          currentStep.classList.add('hidden-step');
+          nextStep.classList.remove('hidden-step');
+        });
+      });
+    
+      backBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+          const currentStep = btn.closest('.step');
+          const prevStepId = btn.getAttribute('data-prev');
+          const prevStep = document.getElementById(prevStepId);
+    
+          currentStep.classList.add('hidden-step');
+          prevStep.classList.remove('hidden-step');
+        });
+      });
+    });
+    </script> -->

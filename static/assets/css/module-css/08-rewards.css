@@ -1,0 +1,651 @@
+.rewards{
+    padding: 100px 0 100px;
+}
+.rewards-left-container{
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+.rewards-left-container-inner {
+    margin-right: 80px;
+}
+.rewards-left-container .common-title h3{
+    color: var(--white-color);
+    margin-bottom: 10px;
+}
+.rewards-left-container .common-title p{
+    color: var(--white-color) !important;
+}
+.rewards-left-list ul li{
+    color: var(--white-color);
+    font-size: 18px;
+    line-height: 24px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.rewards-left-list ul li:last-child{
+    margin-bottom: 0;
+}
+.rewards-left-list ul li i{
+    color: var(--secondary-color);
+}
+.reward-btn{
+    margin-top: 40px;
+}
+
+.rewards-righter-container{
+    position: relative;
+}
+.rewards-righter-image{
+    width: 100%;
+    height: 608px;
+    border-radius: 30px;
+}
+.rewards-righter-image img{
+    width: 100%;
+    height: 100%;
+    border-radius: 30px;
+}
+.rewards-alert{
+    position: absolute;
+    right: -30px;
+    top: 40px;
+}
+.rewards-alert h6 {
+    display: inline-block;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 7px;
+    background-color: var(--white-color);
+    display: flex;
+    align-items: center;
+}
+.rewards-alert h6 i {
+    color: var(--secondary-color);
+    margin-right: 8px;
+    font-size: 24px;
+}
+
+/* round text */
+.rewards-round-text {
+    position: absolute;
+    top: -30px;
+    left: -60px;
+}
+.round-box-content {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    text-align: center;
+    background-color: var(--secondary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.round-box-content .curved-circle {
+    font-size: 18px;
+    letter-spacing: 0;
+    color: var(
+    --black-color);
+    font-weight: 500;
+    text-align: center;
+    transition: .7s;
+    left: 66px;
+    top: 6px;
+    animation: round 20s linear infinite;
+}
+.round-box-content .curved-circle .char19, .round-box-content .curved-circle .char31{
+    color: var(--primary-color);
+    font-weight: 500;
+}
+.round-box-icon{
+    position: absolute;
+    z-index: 1;
+}
+.round-box-icon a{
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    border: 1px solid var(--black-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* round text */
+
+.earning-chart {
+    position: absolute;
+    bottom: -18px;
+    left: -150px;
+    max-width: 245px;
+    width: 100%;
+    border-radius: 24px;
+    overflow: hidden;
+}
+.earning-chart-header{
+    background-color: #062D4E;
+    padding: 16px 20px;
+}
+.earning-chart-header h6{
+    color: var(--white-color);
+    font-size: 16px;
+    font-weight: 600;
+}
+.earning-chart-body{
+    padding: 16px 20px;
+    background: url('../../images/shape/line-chart.png');
+    background-color: #E0EDF8;
+}
+.earning-chart-content{
+    margin-top: 12px;
+}
+.earning-chart-content h5{
+    color: var(--black-color);
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 32px;
+}
+.earning-chart-content p{
+    margin-bottom: 0;
+}
+.earning-chart-content p i{
+    color: var(--secondary-color);
+    font-size: 15px;
+}
+
+
+/* ------------------------------------------
+Rewards two
+-------------------------------------------- */
+.rewards-two{
+    padding: 120px 0 120px;
+}
+.rewards-two .rewards-left-container .common-title h3 {
+    color: var(--black-color);
+    margin-bottom: 10px;
+}
+.rewards-two .rewards-left-container .common-title p {
+    color: var(--black-color) !important;
+}
+.rewards-two .rewards-left-list ul li {
+    color: var(--black-color);
+}
+.rewards-two .rewards-alert h6 {
+    display: inline-block;
+    font-size: 16px;
+    padding: 12px 20px;
+    border-radius: 4px;
+    color: var(--white-color);
+    background-color: var(--black-color);
+    display: flex;
+    align-items: center;
+}
+
+.rewards-two-round-text {
+    position: absolute;
+    left: 130px;
+    top: 45%;
+    z-index: 2;
+}
+.rewards-two .round-box-content {
+    background-color: var(--white-color);
+    border: 1px solid var(--secondary-color);
+}
+.rewards-two .round-box-content .curved-circle {
+    left: 71px;
+    top: 6px;
+}
+.rewards-two .round-box-icon a {
+    border: 1px solid var(--secondary-color);
+}
+
+.earning-chart-two {
+    box-shadow: 3px 6px 13.6px 0px rgb(192 192 192 / 18%);
+    left: -50px;
+    z-index: 1;
+}
+.earning-chart-two .earning-chart-header{
+    background-color: var(--border-color-1);
+    padding: 16px 20px;
+}
+.earning-chart-two .earning-chart-header h6{
+    color: var(--black-color);
+}
+.earning-chart-two .earning-chart-body{
+    padding: 16px 20px;
+    background: url('../../images/shape/line-chart.png');
+    background-color: var(--bg-1);
+}
+/* ------------------------------------------
+Rewards two
+-------------------------------------------- */
+
+/* ------------------------------------------
+Rewards three
+-------------------------------------------- */
+.rewards-three{
+    padding: 120px 0 120px;
+}
+.rewards-three .rewards-left-container .common-title h3 {
+    color: var(--black-color);
+    margin-bottom: 10px;
+}
+.rewards-three .rewards-left-container .common-title p {
+    color: var(--black-color) !important;
+}
+.rewards-three .rewards-left-list ul li {
+    color: var(--black-color);
+}
+
+.rewards-three-round-text{
+    position: absolute;
+    top: -30px;
+    right: -60px;
+    z-index: 1;
+}
+.rewards-three-round-text .round-box-content {
+    background-color: var(--primary-color);
+}
+.rewards-three-round-text .round-box-content .curved-circle {
+    color: var(--white-color);
+    left: 67px;
+    top: 5px;
+}
+.rewards-three-round-text .round-box-icon a {
+    border: 1px solid var(--white-color);
+}
+.rewards-three-round-text .round-box-content .curved-circle .char19, .rewards-three-round-text .round-box-content .curved-circle .char31 {
+    color: var(--white-color);
+    font-weight: 500;
+}
+/* ------------------------------------------
+Rewards three
+-------------------------------------------- */
+
+
+/* ------------------------------------------
+security
+-------------------------------------------- */
+.security{
+    padding: 120px 0 120px;
+}
+.security .common-title h3{
+    color: var(--white-color);
+}
+.security-left-container{
+    position: relative;
+}
+.security-left-image{
+    position: relative;
+    width: 100%;
+    height: 515px;
+    border-radius: 16px;
+    padding: 15px;
+    overflow: hidden;
+    z-index: 1;
+}
+.security-left-image .bg-layer{
+    z-index: -1;
+}
+.security-left-image img{
+    width: 100%;
+    height: 100%;
+    border-radius: 16px;
+}
+
+.security-right-container{
+    margin-left: 40px;
+    position: relative;
+}
+.security-right-container-inner{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 25px;
+}
+.security-right-content{
+    width: 100%;
+    padding: 25px 37px 24px 21px;
+    border-radius: 16px;
+    background: #062D4E;
+    display: flex;
+    align-items: center;
+    gap: 34px;
+}
+.security-right-title a{
+    color: var(--white-color);
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 32px;
+    margin-bottom: 10px;
+}
+.security-right-title p{
+    color: var(--bg-3) !important;
+    margin-bottom: 0;
+}
+/* ------------------------------------------
+security
+-------------------------------------------- */
+
+
+/* ------------------------------------------
+about-page
+-------------------------------------------- */
+.about-page{
+    padding: 120px 0 120px;
+}
+.about-page-left{
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.yellow-shape {
+    position: absolute;
+    left: 15px;
+    top: -22px;
+    width: 354.994px;
+    height: 378.66px;
+    border-radius: 8.232px;
+    background: #FFBD3C;
+}
+.pink-shape {
+    position: absolute;
+    right: 15px;
+    bottom: -25px;
+    width: 374.723px;
+    height: 157.618px;
+    border-radius: 8.232px;
+    background: #FDEEEE;
+}
+.about-counter{
+    position: absolute;
+    bottom: 60px;
+    left: 0;
+    width: 309.719px;
+    height: 220.201px;
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 1;
+}
+.about-counter-content {
+    position: absolute;
+    text-align: center;
+    left: 138px;
+    top: 0;
+    transform: rotate(12deg);
+    animation: rot 2s linear infinite alternate;
+}
+@keyframes rot {
+    0%{
+        transform: rotate(0);
+    }
+    100%{
+        transform: rotate(12deg);
+    }
+}
+.about-counter-content h3{
+    -webkit-text-stroke: 1px var(--primary-color);
+    font-size: 44px;
+    color: transparent;
+    margin-bottom: 0;
+}
+.about-counter-content p{
+    color: #375369 !important;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 12px;
+    max-width: 84px;
+    text-align: center;
+    margin-bottom: 0;
+}
+.about-counter-imag{
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+.about-page-left-image{
+    position: relative;
+    overflow: hidden;
+    max-width: 747px;
+    width: 100%;
+    height: 627px;
+    border-radius: 16px;
+}
+.about-page-left-image img{
+    width: 100%;
+    height: 100%;
+    border-radius: 16px;
+}
+.about-shape {
+    position: absolute;
+    right: -10px;
+    top: -10px;
+}
+.about-page .rewards-left-container .common-title h3,
+.about-page .rewards-left-container .common-title p
+ {
+    color: var(--black-color) !important;
+}
+.about-page .rewards-left-container-inner {
+    margin-right: 0;
+}
+.about-page .rewards-left-list ul li {
+    color: var(--black-color);
+}
+/* ------------------------------------------
+about-page
+-------------------------------------------- */
+
+
+
+/* ----------------------------------------
+Responsive
+------------------------------------------- */
+/* Large screen  */
+@media only screen and (min-width: 1200px) and (max-width: 1319px) {
+    .about-page-left-image {
+        height: 500px;
+    }
+    .rewards-righter-image {
+        height: 540px;
+    }
+}
+
+/* Medium screen  */
+@media only screen and (min-width: 992px) and (max-width: 1199px) {
+    .earning-chart {
+        left: -80px;
+    }
+    .rewards-righter-image {
+        height: 480px;
+    }
+
+    /* security */
+    .security-left-container .earning-chart {
+        left: -20px;
+    }
+    .security-right-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* reward */
+    .about-page-left-image {
+        height: 483px;
+    }
+    
+}
+
+/* Tablet Layout: 768px. */
+@media only screen and (min-width: 768px) and (max-width: 991px){
+    .rewards-left-container-inner {
+        margin-right: 0;
+        margin-bottom: 70px;
+    }
+    .about-page .rewards-left-container-inner {
+        margin-right: 0;
+        margin-bottom: 0;
+        margin-top: 30px;
+    }
+    .rewards-round-text {
+        top: -30px;
+        left: -16px;
+    }
+    .round-box-content .curved-circle {
+        left: 71px;
+        top: 1px;
+    }
+    .earning-chart {
+        bottom: -18px;
+        left: -12px;
+    }
+
+    /* rewards-two  */
+    .rewards-two {
+        padding: 100px 0 100px;
+    }
+    .rewards-two .round-box-content .curved-circle {
+        left: 65px;
+        top: 2px;
+    }
+
+     /* rewards-three  */
+     .rewards-three {
+        padding: 60px 0 50px;
+    }
+    .rewards-three .rewards-left-container{
+        margin-top: 40px;
+    }
+
+    /* security */
+    .security {
+        padding: 100px 0 100px;
+    }
+    .security-right-container {
+        margin-left: 0;
+        margin-top: 50px;
+    }
+    .security-left-container .rewards-three-round-text {
+        top: -30px;
+        right: -20px;
+    }
+    .security-left-container .rewards-three-round-text .round-box-content .curved-circle {
+        color: var(--white-color);
+        left: 71px;
+        top: 0;
+    }
+
+    /* about */
+    .about-page {
+        padding: 100px 0 70px;
+    }
+    
+}
+
+/* Mobile Layout: 320px. */
+@media only screen and (max-width: 767px){
+    .rewards {
+        padding: 0px 0 280px;
+    }
+    .rewards-left-container-inner {
+        margin-right: 0;
+        margin-bottom: 70px;
+    }
+    .rewards-round-text {
+        top: -30px;
+        left: -4px;
+    }
+    .round-box-content .curved-circle {
+        left: 71px;
+        top: 7px;
+    }
+    .earning-chart {
+        bottom: -180px;
+        left: -4px;
+        max-width: 225px;
+    }
+    .rewards-righter-image {
+        height: 420px;
+    }
+    .rewards-alert {
+        position: absolute;
+        right: -5px;
+        top: 92px;
+    }
+    .about-page-left-image {
+        height: 420px;
+    }
+    .rewards-left-container {
+        margin-top: 50px;
+    }
+    .about-counter {
+        bottom: -20px;
+    }
+    .about-page .rewards-left-container-inner {
+        margin-right: 0;
+        margin-bottom: 0;
+    }
+
+    /* rewards-two  */
+    .rewards-two {
+        padding: 80px 0 80px;
+    }
+    .rewards-two .round-box-content .curved-circle {
+        left: 66px;
+        top: 1px;
+    }
+
+
+    /* rewards-three  */
+    .rewards-three {
+        padding: 40px 0 30px;
+    }
+    .rewards-three .rewards-left-container{
+        margin-top: 40px;
+    }
+    .rewards-three .rewards-righter-image {
+        height: 325px;
+    }
+
+
+     /* security */
+     .security {
+        padding: 80px 0 80px;
+    }
+    .security-right-container {
+        margin-left: 0;
+        top: 50px;
+    }
+     .security-left-container .earning-chart {
+        left: 0px;
+    }
+    .security-right-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .security-left-container .rewards-three-round-text {
+        top: 0;
+        right: 0;
+    }
+    .security-left-container .rewards-three-round-text .round-box-content .curved-circle {
+        left: 72px;
+        top: 6px;
+    }
+    .security-right-content {
+        padding: 25px 10px 24px 15px;
+    }
+    .security-left-image {
+        height: 420px;
+    }
+    
+}
+/* ----------------------------------------
+Responsive
+------------------------------------------- */

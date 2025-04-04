@@ -1,200 +1,294 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block content %}
   <style>
+    .cmn-input {
+      border-radius: 8px;
+      border: 1px solid #F15A29;
+      background: var(--white-color);
+      padding: 15px 10px !important;
+      width: 100%;
+      margin-bottom: 15px !important;
+  }
+
+  .bg-layer {
+      height: 60% !important;
+  }
+
+  .common-banner {
+      padding: 30px 0 70px !important;
+    }
+
+    .service-details {
+      padding: 0px 0 !important;
+    }
+
+    .leave-comments-form textarea {
+      width: 100%;
+      height: 150px !important;s
+    }
+
+    .service-form-card {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+      font-family: 'Inter', sans-serif;
+      max-width: 100%;
+    }
+    
+    .form-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+    
+    .input,
+    .textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    
+    .input:focus,
+    .textarea:focus {
+      border-color: #ff6b35;
+      outline: none;
+    }
+    
+    .textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .form-group {
+      flex: 1;
+      min-width: 120px;
+    }
+    
+    .checkbox-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    
+    .btn-submit {
+      width: 100%;
+      background: #e1552f;
+      color: #fff;
+      font-weight: 600;
+      padding: 0.9rem 1rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+      background: #c84827;
+    }
+
+    .featured-single-info {
+      margin-top: -5px !important;
+    }
+    
+    /* Responsive tweaks */
+    @media (max-width: 768px) {
+      .form-row {
+        flex-direction: column;
+      }
+    
+      .form-group {
+        width: 100%;
+      }
+    } 
+    
+    /*.step {
+      display: block;
+    }
+    
     .hidden-step {
       display: none;
+    } */
+    
+    .service-skills {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
     }
-    .is-invalid {
-      border-color: #dc3545;
+    
+    .service-duration h6,
+    .package-name p {
+      margin: 0;
+      font-size: 0.95rem;
     }
-  </style>
+    
+    .package-name h5 {
+      margin: 0;
+      font-weight: 600;
+    }
 
-  <h2>Request a Cleaning Quote</h2>
-  <form method="post" id="quoteForm">
-    {% csrf_token %}
+    .featured-single-info {
+      margin-top: -5px !important;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .form-row {
+        flex-direction: column;
+      }
+    
+      .form-group {
+        width: 100%;
+      }
+    
+      .service-skills {
+        flex-direction: column;
+      }
+    }
 
-    <!-- Step 1: Choose Service Type -->
-    <div class="step" id="step1">
-      <h4>💼 Choose Service</h4>
 
-      {{ form.service.label_tag }}
-      {{ form.service }}
+    /* Basic reset and style to match input fields */
+select {
+  -webkit-appearance: none; /* Removes default Safari styling */
+  -moz-appearance: none;
+  appearance: none;
 
-      <label for="id_square_feet_options">Square Feet</label>
-      <select name="square_feet_options" id="id_square_feet_options" class="form-select">
-        {% for option in form.fields.square_feet_options.queryset %}
-          <option value="{{ option.id }}" data-price="{{ option.price }}">{{ option.name }}</option>
-        {% endfor %}
-      </select>
+  background-color: white;
+  border: 2px solid #e74c3c; /* Match your input border color */
+  border-radius: 8px;         /* Rounded corners like your input */
+  padding: 10px;
+  font-size: 16px;
+  width: 100%;
+}
 
-      <label for="id_home_types">Home Type</label>
-      <select name="home_types" id="id_home_types" class="form-select">
-        {% for option in form.fields.home_types.queryset %}
-          <option value="{{ option.id }}" data-price="{{ option.price }}">{{ option.name }} (${{ option.price }})</option>
-        {% endfor %}
-      </select>
+/* Optional: Add a custom dropdown arrow */
+.form-style select {
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='5'%3E%3Cpath fill='%23333' d='M0 0l5 5 5-5z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 10px 5px !important;
+}
 
-      <h5 class="mt-4">✨ Optional Extras</h5>
-      <div id="cleaningExtrasContainer" class="mb-3">
-        {% for extra in cleaning_extras %}
-          <div class="form-check">
-            <input class="form-check-input extra-checkbox" type="checkbox" id="extra{{ extra.id }}" name="extras" value="{{ extra.id }}" data-price="{{ extra.price }}" />
-            <label class="form-check-label" for="extra{{ extra.id }}">{{ extra.name }} (+${{ extra.price }})</label>
+/* Optional: Hide native arrow in IE */
+select::-ms-expand {
+  display: none;
+}  
+
+.flatpickr-current-month {
+  font-size: 130% !important;
+}
+
+</style>
+
+
+<!-- common banner -->
+<section class="common-banner" style="position: relative;">
+  <div class="bg-layer" style="background: url({% static '/assets/images/background/common-banner-bg.jpg' %});"></div>
+  <div class="common-banner-content">
+      <h3>Service Details</h3>
+      <div class="breadcrumb">
+          <ul>
+            <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Service Details</li>
+          </ul>
+      </div>
+  </div>
+</section>
+<!-- common banner -->
+
+
+<!-- service details -->
+<section class="service-details">
+  <div class="container">
+      <div class="common-title">
+          <h3>{{ service.name }}</h3>
+          <div class="service-details-top-btn">
+              <div class="btn-left">
+                  <a href="#0">Cleaning</a>
+                  <a href="#0"><i class="fa-light fa-location-dot"></i> New York, USA</a>
+              </div>
+              <div class="btn-right d-flex gap-2">
+              </div>
           </div>
-        {% endfor %}
+      </div>
+      <div class="row">
+          <div class="col-lg-7">
+              <div class="service-details-image">
+                   <img src="{{ service.service_detail_image.url }}" alt="image"> 
+              </div>
+              <div class="service-details-content">
+                  {{ service.description|safe }}
+              </div>
+          </div>
+
+          <div class="col-lg-5">
+              <div class="service-form-card">
+                  <h2 class="form-title">Cleaning Service</h2>
+                  <div class="form-style">
+                    {% include "partials/cleaning_quote_form.html" %}
+                  </div>
+              </div>
+          </div>
+      </div> <!-- ✅ this closes .row -->
+  </div> <!-- ✅ this closes .container -->
+</section>
+<!-- service details -->
+
+
+
+<!-- service 2 -->
+<section class="service-two pt-0" style="background-color: transparent;">
+  <div class="container">
+      <div class="common-title">
+          <h6><i class="fa-solid fa-angles-right"></i> Another Service </h6>
+          <h3>Most Related Services</h3>
       </div>
 
-      <button type="button" class="btn btn-primary mt-3" onclick="showNextStep(2)">Next</button>
-    </div>
-
-    <!-- Step 2: Schedule Info -->
-    <div class="step hidden-step" id="step2">
-      <h4>🗓️ Schedule</h4>
-
-      {{ form.date.label_tag }}
-      {{ form.date }}
-
-      {{ form.hours_requested.label_tag }}
-      {{ form.hours_requested }}
-
-      {{ form.hour.label_tag }}
-      {{ form.hour }}
-
-      {{ form.recurrence_pattern.label_tag }}
-      {{ form.recurrence_pattern }}
-
-      <button type="button" class="btn btn-secondary mt-3" onclick="scrollToStep(1)">Back</button>
-      <button type="button" class="btn btn-primary mt-3" onclick="showNextStep(3)">Next</button>
-    </div>
-
-    <!-- Step 3: Contact Info -->
-    <div class="step hidden-step" id="step3">
-      <h4>👤 Contact Info</h4>
-
-      <label>Name:</label>
-      <input type="text" name="name" class="form-control" required />
-
-      <label>Email:</label>
-      <input type="email" name="email" class="form-control" required />
-
-      <label>Phone:</label>
-      <input type="text" name="phone" class="form-control" required />
-
-      {{ form.address.label_tag }}
-      {{ form.address }}
-
-      {{ form.apartment.label_tag }}
-      {{ form.apartment }}
-
-      {{ form.city.label_tag }}
-      {{ form.city }}
-
-      {{ form.state.label_tag }}
-      {{ form.state }}
-
-      {{ form.zip_code.label_tag }}
-      {{ form.zip_code }}
-
-      {{ form.job_description.label_tag }}
-      {{ form.job_description }}
-
-      <button type="button" class="btn btn-secondary mt-3" onclick="scrollToStep(2)">Back</button>
-      <button type="submit" class="btn btn-success mt-3">Submit Quote</button>
-    </div>
-  </form>
-
-  <!-- Quote Summary -->
-<div class="card mt-4">
-    <div class="card-body">
-      <h5>💰 Price Estimate</h5>
-      <p><strong>Subtotal:</strong> $<span id="subtotalPrice">0.00</span></p>
-      <p><strong>Sales Tax:</strong> $<span id="salesTax">0.00</span></p>
-      <p><strong>Total:</strong> <strong>$<span id="totalPrice">0.00</span></strong></p>
-    </div>
+      <div class="row">
+        {% for service in related_services %}
+        <div class="col-lg-4 col-md-6">
+          <div class="service-tow-single">
+              <div class="service-tow-single-img">
+                  <img src="{{ service.service_detail_image.url }}" alt="image">
+              </div>
+              <div class="service-tow-single-content">
+                  <a href="{% url 'request_cleaning_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
+                  <div class="service-tow-single-rating">
+                      <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
+                  </div>
+                  <div class="featured-single-info">
+                      <a href="{% url 'request_cleaning_quote' service.id %}">Book Now</a>
+                      <div class="featured-single-info-left">
+                          <p>Starting from:</p><h5>${{ service.base_price }}</h5>
+                      </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+        {% endfor %}
+          
+      </div>
   </div>
-
-  <script>
-    function showNextStep(step) {
-      const currentStepDiv = document.getElementById('step' + (step - 1))
-      const requiredFields = currentStepDiv.querySelectorAll('input[required], select[required]')
-      let isValid = true
+</section>
+<!-- service 2 -->
+ 
     
-      requiredFields.forEach((field) => {
-        if (!field.value) {
-          isValid = false
-          field.classList.add('is-invalid')
-        } else {
-          field.classList.remove('is-invalid')
-        }
-      })
-    
-      if (!isValid) {
-        alert('Please fill out all required fields before continuing.')
-        const firstInvalid = currentStepDiv.querySelector('.is-invalid')
-        if (firstInvalid) {
-          firstInvalid.focus()
-        }
-        return
-      }
-    
-      const nextStepDiv = document.getElementById('step' + step)
-      if (nextStepDiv.classList.contains('hidden-step')) {
-        nextStepDiv.classList.remove('hidden-step')
-        updatePrice()
-      }
-      nextStepDiv.scrollIntoView({ behavior: 'smooth' })
-    }
-    
-    function scrollToStep(step) {
-      const stepDiv = document.getElementById('step' + step)
-      stepDiv.scrollIntoView({ behavior: 'smooth' })
-    }
-    
-    function updatePrice() {
-        let subtotal = 0;
-    
-        // Square Foot Option Price
-        const sqftSelect = document.getElementById("id_square_feet_options");
-        const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
-        subtotal += sqftPrice;
-    
-        // Home Type Price
-        const homeTypeSelect = document.getElementById("id_home_types");
-        const homePrice = parseFloat(homeTypeSelect?.selectedOptions[0]?.dataset.price || 0);
-        subtotal += homePrice;
-    
-        // Extras
-        document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
-          subtotal += parseFloat(cb.dataset.price || 0);
-        });
-    
-        // Calculate Sales Tax
-        const taxRate = 0.08875;
-        const tax = subtotal * taxRate;
-        const total = subtotal + tax;
-    
-        // Update UI
-        document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
-        document.getElementById("salesTax").innerText = tax.toFixed(2);
-        document.getElementById("totalPrice").innerText = total.toFixed(2);
-      }
-    
-      // Bind events
-      document.querySelectorAll('.extra-checkbox').forEach(cb => {
-        cb.addEventListener('change', updatePrice);
-      });
-    
-      document.querySelectorAll('input, select').forEach(el => {
-        el.addEventListener('change', updatePrice);
-        el.addEventListener('input', () => {
-          if (el.classList.contains('is-invalid') && el.value) {
-            el.classList.remove('is-invalid');
-          }
-        });
-      });
-    
-      // Initialize on page load
-      document.addEventListener("DOMContentLoaded", updatePrice);
-  </script>
 {% endblock %}

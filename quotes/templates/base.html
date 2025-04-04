@@ -1,39 +1,324 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Clean & Handy{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
-<body>
+  <head>
+    <meta charset="utf-8" />
+    <title>CleanHandy</title>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container">
-        <a class="navbar-brand" href="/">Clean & Handy</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'request_cleaning_quote' %}">Request a Cleaning Quote</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'request_handyman_quote' %}">Request a Handyman Quote</a></li>
-                <li class="nav-item"><a class="nav-link" href="/admin/">Admin</a></li>
-            </ul>
+    <!-- Stylesheets -->
+    <link href="{% static 'assets/css/style.css' %}" rel="stylesheet" />
+
+    <link rel="shortcut icon" href="{% static '/assets/images/favicon.png' %}" type="image/x-icon" />
+    <link rel="icon" href="{% static '/assets/images/favicon.png' %}" type="image/x-icon" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+
+  <body>
+    <div class="page-wrapper">
+      
+      <!-- header -->
+      <header class="main-header header-style-one">
+        <!-- Header Lower -->
+        <div class="header-lower">
+          <div class="container">
+            <div class="inner-container d-flex align-items-center justify-content-between">
+              <div class="header-left-column">
+                <div class="logo-box">
+                  <div class="logo">
+                    <a href="{% url 'home' %}"><img src="{% static '/assets/images/logo.png' %}" alt="logo" /></a>
+                  </div>
+                </div>
+              </div>
+              <div class="header-center-column">
+                <div class="nav-outer">
+                  <div class="mobile-nav-toggler">
+                    <img src="{% static '/assets/images/icons/icon-bar.png' %}" alt="icon" />
+                  </div>
+                  <nav class="main-menu navbar-expand-md navbar-light">
+                    <div class="collapse navbar-collapse show clearfix" id="navbarSupportedContent">
+                      <ul class="navigation">
+                        <li>
+                          <a href="{% url 'home' %}">Home</a>
+                        </li>
+
+                        <li class="dropdown">
+                          <a href="javascript:void(0);">All Services</a>
+                          <ul>
+                            {% for service in all_services %}
+                              <li>
+                                {% if service.category.name|lower == 'cleaning' %}
+                                  <a href="{% url 'request_cleaning_quote' service.id %}">{{ service.name }}</a>
+                                {% elif service.category.name|lower == 'handyman' %}
+                                  <a href="{% url 'request_handyman_quote' service.id %}">{{ service.name }}</a>
+                                {% else %}
+                                  <a href="#">{{ service.name }} (Unknown Category)</a>
+                                {% endif %}
+                              </li>
+                            {% endfor %}
+                          </ul>
+                        </li>
+                        <li>
+                            <a href="{% url 'about' %}">About Us</a>
+                          </li>
+                        <li>
+                          <a href="{% url 'blog' %}">Blog</a>
+                        </li>
+                        <li>
+                          <a href="{% url 'contact' %}">Contact</a>
+                        </li>
+                        <li>
+                          <a class="nav-link" href="/admin/">Admin</a>
+                        </li>
+                      </ul>
+                    </div>
+                  </nav>
+                </div>
+              </div>
+              <div class="header-right-column d-flex align-items-center">
+                <div class="header-right-contact">
+                  <a href="tel:+48615579822"><i class="icon-call-2"></i> +48 615 579 822</a>
+                </div>
+                <div class="header-right-btn-area">
+                  <a href="#0" class="btn-1">Sign In</a>
+                  <a href="#0" class="btn-1">Sign Up</a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+        <!-- Header Lower -->
+
+        <!-- sticky header -->
+        <div class="sticky-header">
+          <div class="header-upper">
+            <div class="container">
+              <div class="inner-container d-flex align-items-center justify-content-between">
+                <div class="left-column d-flex align-items-center">
+                  <div class="logo-box">
+                    <div class="logo">
+                      <a href="index.html"><img src="{% static '/assets/images/logo.png' %}" alt="logo" /></a>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="nav-outer gap-5 d-flex align-items-center">
+                  <div class="mobile-nav-toggler">
+                    <img src="{% static '/assets/images/icons/icon-bar.png' %}" alt="icon" />
+                  </div>
+                  <nav class="main-menu navbar-expand-md navbar-light"></nav>
+                </div>
+
+                <div class="header-right-column d-flex align-items-center">
+                  <div class="header-right-contact">
+                    <a href="tel:+48615579822"><i class="icon-call-2"></i> +48 615 579 822</a>
+                  </div>
+                  <div class="header-right-btn-area">
+                    <a href="#0" class="btn-1">Sign In</a>
+                    <a href="#0" class="btn-1">Sign Up</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- sticky header -->
+
+        <!-- mobile menu -->
+        <div class="mobile-menu">
+          <div class="menu-backdrop"></div>
+          <div class="close-btn">
+            <span class="fal fa-times"></span>
+          </div>
+
+          <nav class="menu-box">
+            <div class="nav-logo">
+              <a href="index.html"><img src="{% static '/assets/images/logo.png' %}" alt="logo" /></a>
+            </div>
+            <div class="menu-outer">
+              <!-- Here Menu Will Come Automatically Via Javascript / Same Menu as in Header -->
+            </div>
+            <!-- Social Links -->
+            <div class="social-links">
+              <ul class="clearfix">
+                <li>
+                  <a href="#"><span class="fab fa-twitter"></span></a>
+                </li>
+                <li>
+                  <a href="#"><span class="fab fa-facebook-square"></span></a>
+                </li>
+                <li>
+                  <a href="#"><span class="fab fa-pinterest-p"></span></a>
+                </li>
+                <li>
+                  <a href="#"><span class="fab fa-instagram"></span></a>
+                </li>
+                <li>
+                  <a href="#"><span class="fab fa-youtube"></span></a>
+                </li>
+              </ul>
+            </div>
+          </nav>
+        </div>
+      </header>
+      <!-- header -->
+
+      {% block content %}
+      {% endblock %}
+
+      <!-- footer -->
+      <footer id="footer" class="main-footer footer-one">
+        <div class="container">
+          <div class="footer-top">
+            <div class="footer-top-logo">
+              <img src="assets/images/logo.png" alt="logo" />
+            </div>
+            <div class="social-media">
+              <ul>
+                <li>
+                  <a href="#0"><i class="fa-brands fa-facebook-f"></i></a>
+                </li>
+                <li>
+                  <a href="#0"><i class="icon-twiter"></i></a>
+                </li>
+                <li>
+                  <a href="#0"><i class="fa-brands fa-linkedin-in"></i></a>
+                </li>
+                <li>
+                  <a href="#0"><i class="fa-brands fa-instagram"></i></a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="footer-widget-container">
+            <div class="row">
+              <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="footer-widget about-widget">
+                  <div class="about-widget-inner">
+                    <h6 class="footer-widget-title">About us</h6>
+                    <p>It is a long established fact that a reader will be distracted by the readable counter of a page.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-lg-4 col-md-4">
+                <div class="footer-widget company-widget">
+                  <div class="company-widget-inner">
+                    <h6 class="footer-widget-title">Company</h6>
+                    <ul class="footer-widget-list">
+                      <li>
+                        <a href="contact.html">Contact Us</a>
+                      </li>
+                      <li>
+                        <a href="blog.html">Servat Blog</a>
+                      </li>
+                      <li>
+                        <a href="blog.html">Engineering Blog</a>
+                      </li>
+                      <li>
+                        <a href="workers.html">Marketplace</a>
+                      </li>
+                      <li>
+                        <a href="workers.html">Social Good</a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-2 col-lg-4 col-md-2">
+                <div class="footer-widget support-widget">
+                  <div class="support-widget-inner">
+                    <h6 class="footer-widget-title">Support</h6>
+                    <ul class="footer-widget-list">
+                      <li>
+                        <a href="contact.html">Help Topics</a>
+                      </li>
+                      <li>
+                        <a href="blog-details.html">Post A Job</a>
+                      </li>
+                      <li>
+                        <a href="contact.html">Servat Pro</a>
+                      </li>
+                      <li>
+                        <a href="#0">FAQs</a>
+                      </li>
+                      <li>
+                        <a href="contact.html">Verify</a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-4 col-lg-6 col-md-8">
+                <div class="footer-widget newsletter-widget">
+                  <div class="newsletter-widget-inner">
+                    <h6 class="footer-widget-title">Join Our Newsletter</h6>
+                    <div class="footer-newsletter-info">
+                      <div class="footer-newsletter-form">
+                        <input type="email" name="email" placeholder="Enter Your Email" />
+                        <button type="submit" class="btn-1">Subscribe <i class="icon-arrow-1"></i></button>
+                        <div class="checkbox-input">
+                          <input type="checkbox" class="form-check-input" />
+                          <label>Agree Terms and conditions</label>
+                        </div>
+                      </div>
+                      <div class="footer-contact-info">
+                        <a href="#0"><i class="fa-light fa-location-dot"></i> Australia Wise 9297 Maxim AV. Antonio, USA.</a>
+                        <a href="mailto:example@gmail.com"><i class="fa-light fa-envelope"></i> example@gmail.com</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-copyright">
+          <div class="container">
+            <div class="footer-copyright-content">
+              <p>
+                &copy; 2024 – 2030 | Alrights reserved By <a href="#0">binary-vines</a>
+              </p>
+              <div class="footer-terms">
+                <a href="#0">Privacy Policy</a>
+                <a href="#0">Terms & Conditions</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+      <!-- footer -->
     </div>
-</nav>
 
-<div class="container mt-4">
-    {% block content %}{% endblock %}
-</div>
+    <!-- Scroll to top -->
+    <div class="scroll-to-top">
+      <div>
+        <div class="scroll-top-inner">
+          <div class="scroll-bar">
+            <div class="bar-inner"></div>
+          </div>
+          <div class="scroll-bar-text">Go To Top</div>
+        </div>
+      </div>
+    </div>
+    <!-- Scroll to top end -->
 
-<footer class="text-center mt-5 py-3 bg-light">
-    <p>&copy; 2025 Clean & Handy - All rights reserved</p>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
+    <script src="{% static '/assets/js/jquery.min.js' %}"></script>
+    <script src="{% static '/assets/js/bootstrap.min.js' %}"></script>
+    <script src="{% static '/assets/js/select2.min.js' %}"></script>
+    <script src="{% static '/assets/js/jquery.nice-select.min.js' %}"></script>
+    <script src="{% static '/assets/js/appear.js' %}"></script>
+    <script src="{% static '/assets/js/wow.js' %}"></script>
+    <script src="{% static '/assets/js/TweenMax.min.js' %}"></script>
+    <script src="{% static '/assets/js/odometer.min.js' %}"></script>
+    <script src="{% static '/assets/js/swiper.min.js' %}"></script>
+    <script src="{% static '/assets/js/parallax-scroll.js' %}"></script>
+    <script src="{% static '/assets/js/jarallax.min.js' %}"></script>
+    <script src="{% static '/assets/js/jquery.paroller.min.js' %}"></script>
+    <script src="{% static '/assets/js/jquery.magnific-popup.min.js' %}"></script>
+    <script src="{% static '/assets/js/isotope.js' %}"></script>
+    <script src="{% static '/assets/js/flatpickr-min.js' %}"></script>
+    <script src="{% static '/assets/js/socialSharing.js' %}"></script>
+    <script src="{% static '/assets/js/script.js' %}"></script>
+  </body>
 </html>

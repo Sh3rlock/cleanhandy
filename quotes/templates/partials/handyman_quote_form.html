@@ -1,0 +1,151 @@
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<form method="post">
+    {% csrf_token %}
+    
+    <!-- Service -->
+    <label for="{{ form.service.id_for_label }}">Service</label>
+    {{ form.service }}
+
+    <!-- ZIP Code -->
+    {{ form.zip_code }}
+
+    <!-- Job Description -->
+    <label for="{{ form.job_description.id_for_label }}">Tell us about the job</label>
+    {{ form.job_description }}
+
+    <!-- Grid Row: Hours / Date / Hour -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.hours_requested.id_for_label }}">Hours</label>
+        {{ form.hours_requested }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.date.id_for_label }}">Date</label>
+        <div style="position: relative;">
+          {{ form.date }}
+          <i class="icon-calendar" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;"></i>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="{{ form.hour.id_for_label }}">Time</label>
+        {{ form.hour }}
+      </div>
+    </div>
+
+    <!-- Manual fields -->
+    <input type="text" name="name" class="cmn-input" placeholder="Name" required>
+    <input type="email" name="email" class="cmn-input" placeholder="Email" required>
+    <input type="text" name="phone" class="cmn-input" placeholder="Phone (optional)">
+
+    <!-- Terms -->
+    <div class="checkbox-wrap">
+      <input type="checkbox" id="terms" required>
+      <label for="terms">I agree with all the terms & conditions</label>
+    </div>
+
+    <button type="submit" class="btn-submit">
+      Get Price <i class="icon-arrow-1"></i>
+    </button>
+  </form>
+
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    flatpickr("#id_date", {
+      dateFormat: "Y-m-d",
+      minDate: "today",
+      defaultDate: "today",
+      disableMobile: true // fallback for mobile native pickers
+    });
+
+    const dateField = document.getElementById("id_date");
+    const hoursField = document.getElementById("id_hours_requested");
+    const hourSelect = document.getElementById("id_hour");
+
+    function fetchAvailableHours() {
+      const selectedDate = dateField.value;
+      const selectedHours = hoursField.value || 2;
+
+      if (!selectedDate) return;
+
+      hourSelect.innerHTML = "<option>Loading...</option>";
+      hourSelect.disabled = true;
+
+      fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${selectedHours}`)
+        .then(response => response.json())
+        .then(data => {
+          hourSelect.innerHTML = "";
+          hourSelect.disabled = false;
+
+          if (data.available_hours.length === 0) {
+            hourSelect.innerHTML = "<option value=''>No available time</option>";
+          } else {
+            data.available_hours.forEach(hour => {
+              const option = document.createElement("option");
+              option.value = hour;
+              option.textContent = hour;
+              hourSelect.appendChild(option);
+            });
+          }
+        })
+        .catch(() => {
+          hourSelect.innerHTML = "<option value=''>Failed to load</option>";
+          hourSelect.disabled = false;
+        });
+    }
+
+    // Attach Flatpickr change event instead of blur
+    dateField._flatpickr.config.onChange.push(fetchAvailableHours);
+    hoursField.addEventListener("blur", fetchAvailableHours);
+  });
+</script>
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      const dateField = document.getElementById("id_date");
+      const hoursField = document.getElementById("id_hours_requested");
+      const hourSelect = document.getElementById("id_hour");
+  
+      function fetchAvailableHours() {
+          const selectedDate = dateField.value;
+          const selectedHours = hoursField.value || 2;
+  
+          if (!selectedDate) return;
+  
+          // Disable the dropdown & show loading
+          hourSelect.innerHTML = "<option>Loading...</option>";
+          hourSelect.disabled = true;
+  
+          fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${selectedHours}`)
+              .then(response => response.json())
+              .then(data => {
+                  hourSelect.innerHTML = "";
+                  hourSelect.disabled = false;
+  
+                  if (data.available_hours.length === 0) {
+                      hourSelect.innerHTML = "<option value=''>No available time</option>";
+                  } else {
+                      data.available_hours.forEach(hour => {
+                          const option = document.createElement("option");
+                          option.value = hour;
+                          option.textContent = hour;
+                          hourSelect.appendChild(option);
+                      });
+                  }
+              })
+              .catch(() => {
+                  hourSelect.innerHTML = "<option value=''>Failed to load</option>";
+                  hourSelect.disabled = false;
+              });
+      }
+  
+      // Refresh on blur (when user clicks out of the input)
+      dateField.addEventListener("blur", fetchAvailableHours);
+      hoursField.addEventListener("blur", fetchAvailableHours);
+  });
+  </script>

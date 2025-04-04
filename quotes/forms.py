@@ -7,14 +7,14 @@ class CleaningQuoteForm(forms.ModelForm):
         label="ZIP Code",
         max_length=10,
         required=True,
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "ZIP Code"})
+        widget=forms.TextInput(attrs={"class": "cmn-input", "placeholder": "ZIP Code"})
     )
 
     job_description = forms.CharField(
         label="Tell us about the job",
         required=True,
         widget=forms.Textarea(attrs={
-            "class": "form-control",
+            "class": "cmn-input",
             "placeholder": "Please describe the job in detail.",
             "rows": 3
         })
@@ -26,7 +26,7 @@ class CleaningQuoteForm(forms.ModelForm):
         initial=2,
         min_value=2,
         widget=forms.NumberInput(attrs={
-            "class": "form-control",
+            "class": "cmn-input",
             "placeholder": "Enter number of hours",
             "min": 2
         })
@@ -34,12 +34,12 @@ class CleaningQuoteForm(forms.ModelForm):
 
     date = forms.DateField(
         label="Select Date",
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"})
+        widget=forms.DateInput(attrs={"type": "date", "class": "cmn-input"})
     )
 
     hour = forms.ChoiceField(
         label="Select Hour",
-        widget=forms.Select(attrs={"class": "form-select"})
+        widget=forms.Select(attrs={"class": "cmn-input"})
     )
 
     class Meta:
@@ -59,12 +59,12 @@ class CleaningQuoteForm(forms.ModelForm):
         ]
 
         widgets = {
-            "service": forms.Select(attrs={"class": "form-select"}),
-            "square_feet_options": forms.Select(attrs={"class": "form-select"}),
-            "home_types": forms.Select(attrs={"class": "form-select"}),
-            "address": forms.TextInput(attrs={"class": "form-control", "placeholder": "Street Address"}),
-            "apartment": forms.TextInput(attrs={"class": "form-control", "placeholder": "Apt/Suite #"}),
-            "recurrence_pattern": forms.Select(attrs={"class": "form-select"}),
+            "service": forms.Select(attrs={"class": "cmn-input"}),
+            "square_feet_options": forms.Select(attrs={"class": "cmn-input"}),
+            "home_types": forms.Select(attrs={"class": "cmn-input"}),
+            "address": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Street Address"}),
+            "apartment": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Apt/Suite #"}),
+            "recurrence_pattern": forms.Select(attrs={"class": "cmn-input"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -88,14 +88,14 @@ class HandymanQuoteForm(forms.ModelForm):
         label="ZIP Code",
         max_length=10,
         required=True,
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "ZIP Code"})
+        widget=forms.TextInput(attrs={"class": "cmn-input", "placeholder": "ZIP Code"})
     )
 
     job_description = forms.CharField(
         label="Tell us about the job",
         required=True,
         widget=forms.Textarea(attrs={
-            "class": "form-control",
+            "class": "cmn-input",
             "placeholder": "Please describe the job in detail. (required)",
             "rows": 3
         })
@@ -107,7 +107,7 @@ class HandymanQuoteForm(forms.ModelForm):
         initial=2,  # Default value
         min_value=2,  # Minimum allowed value
         widget=forms.NumberInput(attrs={
-            "class": "form-control",
+            "class": "cmn-input",
             "placeholder": "Enter number of hours",
             "min": 2  # Enforces min value on the frontend
         })
@@ -115,17 +115,21 @@ class HandymanQuoteForm(forms.ModelForm):
 
     date = forms.DateField(
         label="Select Date",
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"})
+        widget=forms.DateInput(attrs={"type": "date", "class": "cmn-input"})
     )
 
     hour = forms.ChoiceField(
         label="Select Hour",
-        widget=forms.Select(attrs={"class": "form-select"})
+        widget=forms.Select(attrs={"class": "cmn-input"})
     )
 
     class Meta:
         model = Quote
         fields = ["service", "zip_code", "job_description", "hours_requested", "date", "hour"]
+
+        widgets = {
+                "service": forms.Select(attrs={"class": "cmn-input"})
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

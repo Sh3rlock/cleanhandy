@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <section class="contact-details">
+    <div class="container">
+      <h2>🛠️ Handyman Quote Submitted</h2>
+      <p>Thank you, {{ quote.customer.name }}! We've received your handyman service request. One of our team members will review the details and get back to you with a personalized quote shortly.</p>
+
+      <div class="card mt-4">
+        <div class="card-body">
+          <h4>📋 Request Summary</h4>
+          <p>
+            <strong>Requested Service:</strong> {{ quote.service.name }}
+          </p>
+          <p>
+            <strong>Date:</strong> {{ quote.date }}
+          </p>
+          <p>
+            <strong>Preferred Time:</strong> {{ quote.hour }}
+          </p>
+          <p>
+            <strong>Duration:</strong> {{ quote.hours_requested }} hour(s)
+          </p>
+          <p>
+            <strong>ZIP Code:</strong> {{ quote.zip_code }}
+          </p>
+          <p>
+            <strong>Description:</strong><br />{{ quote.job_description }}
+          </p>
+        </div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-body">
+          <h4>👤 Customer Info</h4>
+          <p>
+            <strong>Name:</strong> {{ quote.customer.name }}
+          </p>
+          <p>
+            <strong>Email:</strong> {{ quote.customer.email }}
+          </p>
+          <p>
+            <strong>Phone:</strong> {{ quote.customer.phone }}
+          </p>
+        </div>
+      </div>
+
+      <p class="mt-4">If any changes are needed, feel free to contact us. We’ll be in touch soon!</p>
+    </div>
+  </section>
+{% endblock %}

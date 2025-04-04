@@ -14,9 +14,13 @@ class Service(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     base_price = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
+    service_image = models.ImageField(upload_to='service_images/', blank=True, null=True)
+    service_detail_image = models.ImageField(upload_to='service_detail_images/', blank=True, null=True)
+    view_count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        return f"{self.category.name} - {self.name}"
+        return f"{self.name}"
+
 
 class CleaningExtra(models.Model):
     name = models.CharField(max_length=100)
@@ -44,8 +48,8 @@ class Quote(models.Model):
     customer = models.ForeignKey("customers.Customer", on_delete=models.CASCADE, null=True, blank=True)
     service = models.ForeignKey("quotes.Service", on_delete=models.CASCADE)
     extras = models.ManyToManyField("CleaningExtra", blank=True)
-    home_types = models.ForeignKey("HomeType", on_delete=models.CASCADE)
-    square_feet_options = models.ForeignKey("SquareFeetOption", on_delete=models.CASCADE)
+    home_types = models.ForeignKey("HomeType", on_delete=models.CASCADE, null=True, blank=True)
+    square_feet_options = models.ForeignKey("SquareFeetOption", on_delete=models.CASCADE, null=True, blank=True)
 
     # System Fields
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
