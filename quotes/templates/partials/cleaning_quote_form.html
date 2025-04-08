@@ -7,9 +7,7 @@
     font-size: 24px !important;
   }
 
-  .table>:not(caption)>*>* {
-    padding: .1rem .1rem !important; 
-    }
+ 
 </style>
 
 <form method="post" id="quoteForm">
@@ -128,25 +126,31 @@
       {{ form.state }}
       <div class="row">
         <div class="col-9">
-          <div class="form-group">
             {{ form.address }}
-          </div>
         </div>
         <div class="col-3">
-          <div class="form-group">
             {{ form.apartment }}
-          </div>
         </div>
       </div>
     {{ form.zip_code }}
+
+    <h4 class="mt-4">Discount Code</h4>
+    <div class="row">
+      <div class="col-8">
+        <input type="text" name="discount" class="cmn-input" placeholder="Discount Code">
+      </div>
+      <div class="col-4">
+        <button type="submit" class="btn-1 w-100" style="padding:16px;">Apply</button>
+      </div>
+    </div>
       <!-- Step 2: Schedule Info -->
     <div class="step hidden-step" id="step2">
       <h4 class="mt-4">Schedule</h4>
       <div class="form-row">
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label for="{{ form.hours_requested.id_for_label }}">Hours</label>
           {{ form.hours_requested }}
-        </div>
+        </div> -->
         <div class="form-group">
           <label for="{{ form.date.id_for_label }}">Date</label>
           <div style="position: relative;">
@@ -155,7 +159,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="{{ form.hour.id_for_label }}">Time</label>
+          <label for="{{ form.hour.id_for_label }}">Start Time</label>
           {{ form.hour }}
         </div>
       </div>
@@ -170,46 +174,48 @@
       {{ form.job_description }}
 
       <!-- Price Summary -->
-      <div class="service-skills mt-4">
-        <div class="service-duration">
-          <!-- <h6>Duration</h6>
-          <p><i class="fa-light fa-calendar-image"></i> 3 hours</p> -->
-        </div>
-        <div class="service-package-name">
-          <div class="package-name">
-            <table class="table table-borderless mb-0 w-auto">
-              <tbody>
-                <tr id="laborCostRow" style="display: none;">
-                  <td class="summary-font text-end">Labor Cost:</td>
-                  <td class="summary-font fw-semibold">
-                    $<span id="laborCostAmount">0.00</span>
-                    <br>
-                    <small class="text-muted" id="laborCostDetails"></small>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="summary-font text-end">Subtotal:</td>
-                  <td class="summary-font fw-semibold">$<span id="subtotalPrice">0.00</span></td>
-                </tr>
-                <tr>
-                  <td class="summary-font text-end">Sales Tax:</td>
-                  <td class="summary-font fw-semibold">$<span id="salesTax">0.00</span></td>
-                </tr>
-                <tr>
-                  <td class="total-font text-end">Total:</td>
-                  <td class="total-font fw-bold">$<span id="totalPrice">0.00</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          
-          
-        </div>
-      </div>
+      <!-- Summary Box -->
+<div class="service-summary mt-4 p-3 border rounded shadow-sm" style="background: #fff;">
+  <!-- Dynamic Items -->
+  <div id="summary-items" class="mb-3"></div>
+
+  <!-- Date -->
+  <div class="d-flex align-items-center mb-1">
+    <i class="fa-solid fa-calendar-days me-2 text-muted"></i>
+    <span id="summary-date">–</span>
+  </div>
+
+  <!-- Duration -->
+  <div class="d-flex align-items-center mb-1">
+    <i class="fa-regular fa-clock me-2 text-muted"></i>
+    <span id="summary-duration">–</span>
+  </div>
+
+  <!-- Recurrence -->
+  <div class="d-flex align-items-center mb-3">
+    <i class="fa-solid fa-rotate me-2 text-muted"></i>
+    <span id="summary-recurrence">–</span>
+  </div>
+
+  <hr>
+
+  <!-- Totals -->
+  <div class="d-flex justify-content-between">
+    <strong>SUB-TOTAL</strong>
+    <strong>$<span id="subtotalPrice">0.00</span></strong>
+  </div>
+  <div class="d-flex justify-content-between">
+    <span>SALES TAX</span>
+    <span>$<span id="salesTax">0.00</span></span>
+  </div>
+  <div class="d-flex justify-content-between mt-2" style="font-size: 1.3rem;">
+    <strong>TOTAL</strong>
+    <strong style="color: orange;">$<span id="totalPrice">0.00</span></strong>
+  </div>
+</div>
 
       <!-- Terms -->
-    <div class="checkbox-wrap" style="margin-top: -20px;">
+    <div class="checkbox-wrap" >
         <input type="checkbox" id="terms" required>
         <label for="terms">I agree with all the terms & conditions</label>
       </div>
@@ -272,337 +278,243 @@
 </script>
 
 <script>
-  function updatePrice() {
-    let subtotal = 0;
-
-    // Square Foot Option Price
+  document.addEventListener("DOMContentLoaded", function () {
     const sqftSelect = document.getElementById("id_square_feet_options");
-    const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
-    subtotal += sqftPrice;
-
-    // Home Type Price (only if visible)
-    const homeTypeSelect = document.getElementById("id_home_types");
-    if (homeTypeSelect?.offsetParent !== null) {
-      const homePrice = parseFloat(homeTypeSelect?.selectedOptions[0]?.dataset.price || 0);
-      subtotal += homePrice;
-    }
-
-    // Extras (only if visible)
-    const extrasContainer = document.getElementById("cleaningExtrasContainer");
-    if (extrasContainer?.offsetParent !== null) {
-      document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
-        subtotal += parseFloat(cb.dataset.price || 0);
-      });
-    }
-
-// Large Home Calculation: $55 or $60 x cleaners x hours
-const largeHomeOptions = document.getElementById("largeHomeOptions");
-let laborCost = 0;
-
-if (largeHomeOptions?.offsetParent !== null) {
-  const numCleaners = parseInt(document.querySelector('select[name="num_cleaners"]')?.value || 0);
-  const hours = parseInt(document.querySelector('select[name="est_hours"]')?.value || 0);
-  const cleaningType = document.querySelector('select[name="cleaning_type"]')?.value || "";
-
-  // Determine hourly rate
-  let hourlyRate = 55;
-
-  if (
-    cleaningType.toLowerCase().includes("post") ||
-    cleaningType.toLowerCase().includes("renovation")
-  ) {
-    hourlyRate = 60;
-  }
-  
-
-  laborCost = numCleaners * hours * hourlyRate;
-  subtotal += laborCost;
-
-  // Show labor breakdown
-  const laborRow = document.getElementById("laborCostRow");
-  const laborAmount = document.getElementById("laborCostAmount");
-  const laborDetails = document.getElementById("laborCostDetails");
-
-  if (laborRow && laborAmount && laborDetails) {
-    laborRow.style.display = "";
-    laborAmount.innerText = laborCost.toFixed(2);
-    laborDetails.innerText = `${numCleaners} cleaner${numCleaners > 1 ? 's' : ''} × ${hours} hour${hours > 1 ? 's' : ''} × $${hourlyRate}`;
-  }
-} else {
-  // Hide labor row
-  document.getElementById("laborCostRow").style.display = "none";
-}
-
-    // Sales Tax (8.875%)
-    const taxRate = 0.08875;
-    const tax = subtotal * taxRate;
-    const total = subtotal + tax;
-
-    // Update UI
-    document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
-    document.getElementById("salesTax").innerText = tax.toFixed(2);
-    document.getElementById("totalPrice").innerText = total.toFixed(2);
-  }
-
-  function toggleHomeAndExtras() {
-    const sqftSelect = document.getElementById("id_square_feet_options");
-    const selectedOption = sqftSelect?.selectedOptions[0];
     const homeType = document.getElementById("id_home_types").closest(".form-group") || document.getElementById("id_home_types").parentElement;
     const extrasContainer = document.getElementById("cleaningExtrasContainer");
     const largeHomeOptions = document.getElementById("largeHomeOptions");
+    const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
+    const hourSelect = document.querySelector('select[name="est_hours"]');
+    const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
 
-    if (!selectedOption) return;
-
-    const selectedName = selectedOption.textContent.trim().toLowerCase();
-    const isUnder1000 = selectedName.includes("under 1000");
-
-    if (isUnder1000) {
-      homeType.style.display = "";
-      extrasContainer.style.display = "";
-      largeHomeOptions.style.display = "none";
-    } else {
-      homeType.style.display = "none";
-      extrasContainer.style.display = "none";
-      largeHomeOptions.style.display = "";
+    function resetSummary() {
+      document.getElementById("summary-items").innerHTML = "";
+    
+      document.getElementById("summary-date").textContent = "-";
+      document.getElementById("summary-duration").textContent = "-";
+      document.getElementById("summary-recurrence").textContent = "-";
+    
+      document.getElementById("subtotalPrice").innerText = "0.00";
+      document.getElementById("salesTax").innerText = "0.00";
+      document.getElementById("totalPrice").innerText = "0.00";
     }
 
-    updatePrice(); // Always recalculate after toggle
-  }
+    function toggleHomeAndExtras() {
+      const selectedOption = sqftSelect?.selectedOptions[0];
+      if (!selectedOption) return;
 
-  // --- INITIALIZATION ---
-  const sqftSelect = document.getElementById("id_square_feet_options");
+      const selectedName = selectedOption.textContent.trim().toLowerCase();
+      const isUnder1000 = selectedName.includes("under 1000");
 
-  // Force default: Under 1000
-  if (sqftSelect) {
-    for (let i = 0; i < sqftSelect.options.length; i++) {
-      if (sqftSelect.options[i].textContent.toLowerCase().includes("under 1000")) {
-        sqftSelect.selectedIndex = i;
-        break;
+      if (isUnder1000) {
+        homeType.style.display = "";
+        extrasContainer.style.display = "";
+        largeHomeOptions.style.display = "none";
+      } else {
+        homeType.style.display = "none";
+        extrasContainer.style.display = "none";
+        largeHomeOptions.style.display = "";
+
+        // 🔥 Uncheck all extras when switching from 'Under 1000'
+        document.querySelectorAll(".extra-checkbox").forEach(cb => cb.checked = false);
+
+        if (selectedName.includes("1500–2000") || selectedName.includes("1500-2000")) {
+          cleaningTypeSelect.innerHTML = `
+            <option value="">Select Cleaning Type</option>
+            <option value="1500-2000 (Regular)" selected>1500–2000 sq.ft (Regular Cleaning)</option>
+            <option value="1500-2000 (Deep)">1500–2000 sq.ft (Deep Cleaning)</option>
+            <option value="1500-2000 (Move)">1500–2000 sq.ft (Move In/Out Cleaning)</option>
+            <option value="1500-2000 (Post)">1500–2000 sq.ft (Post Renovation)</option>
+          `;
+          cleanerSelect.value = "2";
+          hourSelect.value = "5";
+        } else if (selectedName.includes("custom")) {
+          cleaningTypeSelect.innerHTML = `
+            <option value="custom_cleaning" selected>Hourly Service 55$ per hour/per cleaner</option>
+          `;
+          cleanerSelect.value = "2";
+          hourSelect.value = "5";
+        } else if (selectedName.includes("renovation")) {
+          cleaningTypeSelect.innerHTML = `
+            <option value="post_renovation" selected>Hourly Service 60$ per hour/per cleaner</option>
+          `;
+          cleanerSelect.value = "2";
+          hourSelect.value = "5";
+        } else {
+          cleaningTypeSelect.innerHTML = `
+            <option value="">Select Cleaning Type</option>
+            <option value="1000-1500 (Regular)" selected>1000–1500 sq.ft (Regular Cleaning)</option>
+            <option value="1000-1500 (Deep)">1000–1500 sq.ft (Deep Cleaning)</option>
+            <option value="1000-1500 (Move)">1000–1500 sq.ft (Move In/Out Cleaning)</option>
+            <option value="1000-1500 (Post)">1000–1500 sq.ft (Post Renovation)</option>
+          `;
+          cleanerSelect.value = "2";
+          hourSelect.value = "3";
+        }
+
+        cleaningTypeSelect?.dispatchEvent(new Event("change"));
+      }
+
+      updatePrice();
+    }
+
+    cleaningTypeSelect?.addEventListener("change", function () {
+      const value = this.value.toLowerCase();
+
+      if (value.includes("regular")) {
+        cleanerSelect.value = value.includes("1500-2000") ? "2" : "2";
+        hourSelect.value = value.includes("1500-2000") ? "5" : "3";
+      } else if (value.includes("deep")) {
+        cleanerSelect.value = value.includes("1500-2000") ? "3" : "2";
+        hourSelect.value = "5";
+      } else if (value.includes("move")) {
+        cleanerSelect.value = value.includes("1500-2000") ? "3" : "2";
+        hourSelect.value = "5";
+      } else if (value.includes("post")) {
+        cleanerSelect.value = "3";
+        hourSelect.value = value.includes("1500-2000") ? "8" : "6";
+      }
+
+      updatePrice();
+    });
+
+    function updatePrice() {
+      let subtotal = 0;
+      const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
+      subtotal += sqftPrice;
+
+      if (homeType?.offsetParent !== null) {
+        const homePrice = parseFloat(document.getElementById("id_home_types")?.selectedOptions[0]?.dataset.price || 0);
+        subtotal += homePrice;
+      }
+
+      if (extrasContainer?.offsetParent !== null) {
+        document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+          subtotal += parseFloat(cb.dataset.price || 0);
+        });
+      }
+
+      // Labor cost
+      let laborCost = 0;
+      if (largeHomeOptions?.offsetParent !== null) {
+        const numCleaners = parseInt(cleanerSelect?.value || 0);
+        const hours = parseInt(hourSelect?.value || 0);
+        const cleaningType = cleaningTypeSelect?.value || "";
+
+        let hourlyRate = 55;
+        if (cleaningType.toLowerCase().includes("post") || cleaningType.toLowerCase().includes("renovation")) {
+          hourlyRate = 60;
+        }
+
+        laborCost = numCleaners * hours * hourlyRate;
+        subtotal += laborCost;
+      }
+
+      const taxRate = 0.08875;
+      const tax = subtotal * taxRate;
+      const total = subtotal + tax;
+
+      // Update UI
+      document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
+      document.getElementById("salesTax").innerText = tax.toFixed(2);
+      document.getElementById("totalPrice").innerText = total.toFixed(2);
+
+      // Update summary list
+      const summaryContainer = document.getElementById("summary-items");
+      summaryContainer.innerHTML = "";
+
+      if (sqftSelect) {
+        const sqftLabel = sqftSelect.selectedOptions[0]?.textContent.trim();
+        if (sqftPrice > 0) {
+          summaryContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div><i class="fa-solid fa-house me-2"></i>${sqftLabel}</div>
+              <div>$${sqftPrice.toFixed(2)}</div>
+            </div>`;
+        }
+      }
+
+      // 1.5 – Home Type (only if visible and price > 0)
+      if (homeType?.offsetParent !== null) {
+        const homeTypeSelect = document.getElementById("id_home_types");
+        const selectedOption = homeTypeSelect?.selectedOptions[0];
+        const homeLabel = selectedOption?.textContent.trim();
+        const homePrice = parseFloat(selectedOption?.dataset.price || 0).toFixed(2);
+
+      if (homeLabel && homePrice > 0) {
+          summaryContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
+              <div>• ${homeLabel}</div>
+            <div>$${homePrice}</div>
+          </div>`;
+        }
+      }
+
+      document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+        const label = cb.nextElementSibling?.textContent?.trim() || "Extra";
+        const price = parseFloat(cb.dataset.price || 0).toFixed(2);
+        summaryContainer.innerHTML += `
+          <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
+            <div>• ${label}</div>
+            <div>$${price}</div>
+          </div>`;
+      });
+
+      if (largeHomeOptions?.offsetParent !== null && laborCost > 0) {
+        summaryContainer.innerHTML += `
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div><i class="fa-solid fa-broom me-2"></i>${cleanerSelect.value} Cleaners × ${hourSelect.value} Hours</div>
+            <div>$${laborCost.toFixed(2)}</div>
+          </div>`;
+      }
+
+      // Update schedule info
+      const dateField = document.getElementById("id_date");
+      const timeField = document.getElementById("id_hour");
+      const recurrenceField = document.getElementById("id_recurrence_pattern");
+      const hoursRequested = document.getElementById("id_hours_requested");
+
+      document.getElementById("summary-date").textContent = `${dateField?.value || '-'} @ ${timeField?.value || '-'}`;
+      document.getElementById("summary-recurrence").textContent = recurrenceField?.selectedOptions?.[0]?.textContent || "-";
+
+      const estHoursSelect = document.querySelector('select[name="est_hours"]');
+      const estHours = estHoursSelect?.value || "0";
+
+      document.getElementById("summary-duration").textContent = `${estHours} Hour${estHours !== "1" ? "s" : ""} 0 Minutes`;
+    }
+
+    // Force default sqft to "Under 1000"
+    if (sqftSelect) {
+      for (let i = 0; i < sqftSelect.options.length; i++) {
+        if (sqftSelect.options[i].textContent.toLowerCase().includes("under 1000")) {
+          sqftSelect.selectedIndex = i;
+          break;
+        }
       }
     }
-  }
 
-  toggleHomeAndExtras();
-  updatePrice();
+    
 
-  // --- EVENT BINDING ---
-  sqftSelect?.addEventListener("change", () => {
+    // Bind events
+    sqftSelect?.addEventListener("change", toggleHomeAndExtras);
+    document.querySelectorAll(".extra-checkbox").forEach(cb => cb.addEventListener("change", updatePrice));
+    document.querySelectorAll("input, select").forEach(el => {
+      el.addEventListener("change", updatePrice);
+      el.addEventListener("input", () => {
+        if (el.classList.contains("is-invalid") && el.value) {
+          el.classList.remove("is-invalid");
+        }
+      });
+    });
+
+    cleanerSelect?.addEventListener("change", updatePrice);
+    hourSelect?.addEventListener("change", updatePrice);
+
+    // Initial setup
     toggleHomeAndExtras();
     updatePrice();
+    resetSummary();
   });
-
-  document.querySelectorAll(".extra-checkbox").forEach(cb => {
-    cb.addEventListener("change", updatePrice);
-  });
-
-  document.querySelectorAll("input, select").forEach(el => {
-    el.addEventListener("change", updatePrice);
-    el.addEventListener("input", () => {
-      if (el.classList.contains("is-invalid") && el.value) {
-        el.classList.remove("is-invalid");
-      }
-    });
-  });
-
-  const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
-  const hourSelect = document.querySelector('select[name="est_hours"]');
-  cleanerSelect?.addEventListener("change", updatePrice);
-  hourSelect?.addEventListener("change", updatePrice);
-
-  const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
-cleaningTypeSelect?.addEventListener("change", function () {
-  const value = this.value.toLowerCase();
-  const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
-  const hourSelect = document.querySelector('select[name="est_hours"]');
-
-  // REGULAR
-  if (value.includes("regular")) {
-    if (value.includes("1500-2000")) {
-      cleanerSelect.value = "2";
-      hourSelect.value = "5";
-    } else {
-      cleanerSelect.value = "2";
-      hourSelect.value = "3";
-    }
-  }
-
-  // DEEP
-  else if (value.includes("deep")) {
-    if (value.includes("1500-2000")) {
-      cleanerSelect.value = "3";
-      hourSelect.value = "5";
-    } else {
-      cleanerSelect.value = "2";
-      hourSelect.value = "5";
-    }
-  }
-
-  // MOVE
-  else if (value.includes("move")) {
-    if (value.includes("1500-2000")) {
-      cleanerSelect.value = "3";
-      hourSelect.value = "5";
-    } else {
-      cleanerSelect.value = "2";
-      hourSelect.value = "5";
-    }
-  }
-
-  // POST RENOVATION
-  else if (value.includes("post")) {
-    if (value.includes("1500-2000")) {
-      cleanerSelect.value = "3";
-      hourSelect.value = "8";
-    } else {
-      cleanerSelect.value = "3";
-      hourSelect.value = "6";
-    }
-  }
-
-  updatePrice();
-});
 </script>
 
-
-
-  <!-- <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const steps = document.querySelectorAll('.step');
-      const nextBtns = document.querySelectorAll('.btn-next');
-      const backBtns = document.querySelectorAll('.btn-back');
-    
-      nextBtns.forEach(btn => {
-        btn.addEventListener('click', function () {
-          const currentStep = btn.closest('.step');
-          const nextStepId = btn.getAttribute('data-next');
-          const nextStep = document.getElementById(nextStepId);
-    
-          currentStep.classList.add('hidden-step');
-          nextStep.classList.remove('hidden-step');
-        });
-      });
-    
-      backBtns.forEach(btn => {
-        btn.addEventListener('click', function () {
-          const currentStep = btn.closest('.step');
-          const prevStepId = btn.getAttribute('data-prev');
-          const prevStep = document.getElementById(prevStepId);
-    
-          currentStep.classList.add('hidden-step');
-          prevStep.classList.remove('hidden-step');
-        });
-      });
-    });
-    </script> -->
-
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        function toggleHomeAndExtras() {
-          const sqftSelect = document.getElementById("id_square_feet_options");
-          const selectedOption = sqftSelect?.selectedOptions[0];
-          const homeType = document.getElementById("id_home_types").closest(".form-group") || document.getElementById("id_home_types").parentElement;
-          const extrasContainer = document.getElementById("cleaningExtrasContainer");
-          const largeHomeOptions = document.getElementById("largeHomeOptions");
-        
-          if (!selectedOption) return;
-        
-          const selectedName = selectedOption.textContent.trim().toLowerCase();
-          const isUnder1000 = selectedName.includes("under 1000");
-        
-          const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
-          const hourSelect = document.querySelector('select[name="est_hours"]');
-          const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
-        
-          if (isUnder1000) {
-            homeType.style.display = "";
-            extrasContainer.style.display = "";
-            largeHomeOptions.style.display = "none";
-          } else {
-            homeType.style.display = "none";
-            extrasContainer.style.display = "none";
-            largeHomeOptions.style.display = "";
-        
-            // Set defaults based on sqft
-            if (selectedName.includes("1500–2000") || selectedName.includes("1500-2000")) {
-              // Update dropdown options
-              cleaningTypeSelect.innerHTML = `
-                <option value="">Select Cleaning Type</option>
-                <option value="1500-2000 (Regular)" selected>1500–2000 sq.ft (Regular Cleaning)</option>
-                <option value="1500-2000 (Deep)">1500–2000 sq.ft (Deep Cleaning)</option>
-                <option value="1500-2000 (Move)">1500–2000 sq.ft (Move In/Out Cleaning)</option>
-                <option value="1500-2000 (Post)">1500–2000 sq.ft (Post Renovation)</option>
-              `;
-              cleanerSelect.value = "2";
-              hourSelect.value = "5";
-            } else if (selectedName.includes("custom")) {
-              cleaningTypeSelect.innerHTML = `
-                <option value="custom_cleaning" selected>Hourly Service 55$ per hour/per cleaner</option>
-              `;
-              cleanerSelect.value = "2";
-              hourSelect.value = "5";
-            } else if (selectedName.includes("renovation")) {
-              cleaningTypeSelect.innerHTML = `
-                <option value="post_renovation" selected>Hourly Service 60$ per hour/per cleaner</option>
-              `;
-              cleanerSelect.value = "2";
-              hourSelect.value = "5";
-            } else {
-              // Default: assume 1000-1500
-              cleaningTypeSelect.innerHTML = `
-                <option value="">Select Cleaning Type</option>
-                <option value="1000-1500 (Regular)" selected>1000–1500 sq.ft (Regular Cleaning)</option>
-                <option value="1000-1500 (Deep)">1000–1500 sq.ft (Deep Cleaning)</option>
-                <option value="1000-1500 (Move)">1000–1500 sq.ft (Move In/Out Cleaning)</option>
-                <option value="1000-1500 (Post)">1000–1500 sq.ft (Post Renovation)</option>
-              `;
-              cleanerSelect.value = "2";
-              hourSelect.value = "3";
-            }
-          }
-        
-          updatePrice(); // Always recalculate
-        }
-    
-       // Reset Square Feet to "Under 1000"
-  const sqftSelect = document.getElementById("id_square_feet_options");
-
-  if (sqftSelect) {
-    // Find option that contains "Under 1000"
-    for (let i = 0; i < sqftSelect.options.length; i++) {
-      if (sqftSelect.options[i].textContent.toLowerCase().includes("under 1000")) {
-        sqftSelect.selectedIndex = i;
-        break;
-      }
-    }
-  }
-
-  // Reset form visibility and values
-  toggleHomeAndExtras();
-  updatePrice();
-
-  // Attach event handlers
-  sqftSelect?.addEventListener("change", () => {
-    toggleHomeAndExtras();
-    updatePrice();
-  });
-
-  document.querySelectorAll('.extra-checkbox').forEach(cb => {
-    cb.addEventListener('change', updatePrice);
-  });
-
-  document.querySelectorAll('input, select').forEach(el => {
-    el.addEventListener('change', updatePrice);
-    el.addEventListener('input', () => {
-      if (el.classList.contains('is-invalid') && el.value) {
-        el.classList.remove('is-invalid');
-      }
-    });
-  });
-
-  const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
-  const hourSelect = document.querySelector('select[name="est_hours"]');
-  cleanerSelect?.addEventListener("change", updatePrice);
-  hourSelect?.addEventListener("change", updatePrice);
-      });
-    </script>
     

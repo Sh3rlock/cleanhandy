@@ -196,6 +196,48 @@ select::-ms-expand {
   font-size: 130% !important;
 }
 
+
+/* Table */
+/* Modern table styling for cleaner look */
+.table-clean thead {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.table-clean th,
+.table-clean td {
+  padding: 1rem;
+  border: 1px solid #eaeaea;
+  vertical-align: middle;
+  font-size: 0.95rem;
+}
+
+.table-clean th.text-start {
+  font-weight: 600;
+  color: #333;
+}
+
+.table-clean tbody tr:nth-child(even) {
+  background-color: #fcfcfc;
+}
+
+.table-clean {
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+}
+
+/* Responsive tweak: font shrink on small devices */
+@media (max-width: 576px) {
+  .table-clean th, .table-clean td {
+    font-size: 0.85rem;
+    padding: 0.75rem;
+  }
+}
+
+
 </style>
 
 
@@ -234,7 +276,52 @@ select::-ms-expand {
               <div class="service-details-image">
                    <img src="{{ service.service_detail_image.url }}" alt="image"> 
               </div>
-              <div class="service-details-content">
+              <h3>Recommended number of cleaners and time according to square footage and type of service.</h3>
+              <div class="table-responsive mt-4">
+                <table class="table table-clean text-center align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="text-start" style="min-width: 200px;">Type of Service</th>
+                      <th>1000–1500<br><small>SQ FT</small></th>
+                      <th>1500–2000<br><small>SQ FT</small></th>
+                      <th>2000–2500<br><small>SQ FT</small></th>
+                      <th>2500–3000<br><small>SQ FT</small></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th class="text-start">Post Renovation Cleaning</th>
+                      <td>3C × 6 hrs</td>
+                      <td>3C × 8 hrs</td>
+                      <td>4C × 8 hrs</td>
+                      <td>5C × 8 hrs</td>
+                    </tr>
+                    <tr>
+                      <th class="text-start">Deep Cleaning</th>
+                      <td>2C × 5 hrs</td>
+                      <td>3C × 5 hrs</td>
+                      <td>3C × 7 hrs</td>
+                      <td>3C × 8 hrs</td>
+                    </tr>
+                    <tr>
+                      <th class="text-start">Move In / Move Out</th>
+                      <td>2C × 5 hrs</td>
+                      <td>3C × 5 hrs</td>
+                      <td>3C × 7 hrs</td>
+                      <td>3C × 8 hrs</td>
+                    </tr>
+                    <tr>
+                      <th class="text-start">Regular Cleaning</th>
+                      <td>2C × 3 hrs</td>
+                      <td>2C × 5 hrs</td>
+                      <td>2C × 7 hrs</td>
+                      <td>2C × 8 hrs</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="service-details-content mt-4">
                   {{ service.description|safe }}
               </div>
           </div>
