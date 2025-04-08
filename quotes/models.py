@@ -140,3 +140,11 @@ class Quote(models.Model):
         subtotal = self.calculate_subtotal()
         tax = self.calculate_tax()
         return (subtotal + tax).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    
+
+class NewsletterSubscriber(models.Model):
+    email = models.EmailField(unique=True)
+    subscribed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.email

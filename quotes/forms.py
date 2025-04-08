@@ -1,6 +1,7 @@
 from django import forms
-from .models import Quote, Service, HomeType, SquareFeetOption
+from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber
 from datetime import time, datetime, timedelta
+from django.core.exceptions import ValidationError
 
 class CleaningQuoteForm(forms.ModelForm):
     zip_code = forms.CharField(
@@ -144,6 +145,24 @@ class HandymanQuoteForm(forms.ModelForm):
             t += timedelta(minutes=30)
 
         self.fields["hour"].choices = time_slots
+
+class NewsletterForm(forms.ModelForm):
+    class Meta:
+        model = NewsletterSubscriber
+        fields = ['email']
+        widgets = {
+            'email': forms.EmailInput(attrs={
+                'placeholder': 'Enter Your Email',
+                'class': 'cmn-input mb-0',
+                'id': 'email',
+            })
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if NewsletterSubscriber.objects.filter(email=email).exists():
+            raise ValidationError("You're already subscribed with this email.")
+        return email
 
 
 

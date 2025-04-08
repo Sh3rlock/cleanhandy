@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
-from .models import Quote, Service, CleaningExtra, ServiceCategory
+from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber
 from customers.models import Customer  # Import Customer from the correct app
-from .forms import CleaningQuoteForm, HandymanQuoteForm
+from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm
 from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 from .utils import get_available_hours_for_date
@@ -15,6 +15,7 @@ from django.http import HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404
 
 from .utils import process_handyman_quote, process_cleaning_quote
+from django.contrib import messages
 
 
 def home(request):
@@ -130,6 +131,31 @@ def available_hours_api(request):
     available = get_available_hours_for_date(date, hours_requested=hours)
     formatted = [slot.strftime("%H:%M") for slot in available]
     return JsonResponse({"available_hours": formatted})
+
+
+def subscribe_newsletter(request):
+    if request.method == 'POST':
+        if not request.POST.get('agree_terms'):
+            return JsonResponse({'status': 'error', 'message': 'You must agree to the terms.'})
+
+        form = NewsletterForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            subscriber, created = NewsletterSubscriber.objects.get_or_create(email=email)
+
+            if not created:
+                return JsonResponse({'status': 'info', 'message': 'You are already subscribed.'})
+
+            return JsonResponse({'status': 'success', 'message': 'Thanks for subscribing!'})
+
+        # Extract the first form error to display in the UI
+        error_message = form.errors.get('email')
+        if error_message:
+            return JsonResponse({'status': 'error', 'message': error_message[0]})
+        
+        return JsonResponse({'status': 'error', 'message': 'Invalid input.'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request.'})
 
 
 

@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "bookings",
     "customers",
     "adminpanel",
+    "blog",
 ]
 
 MIDDLEWARE = [
@@ -91,6 +92,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'quotes.context_processors.all_services',
+                'quotes.context_processors.newsletter_form',
             ],
         },
     },

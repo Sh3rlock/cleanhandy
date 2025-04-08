@@ -262,12 +262,25 @@
                     <h6 class="footer-widget-title">Join Our Newsletter</h6>
                     <div class="footer-newsletter-info">
                       <div class="footer-newsletter-form">
-                        <input type="email" name="email" placeholder="Enter Your Email" />
-                        <button type="submit" class="btn-1">Subscribe <i class="icon-arrow-1"></i></button>
-                        <div class="checkbox-input">
-                          <input type="checkbox" class="form-check-input" />
-                          <label>Agree Terms and conditions</label>
-                        </div>
+                       
+                        <form id="newsletter-form" method="post">
+                          {% csrf_token %}
+                          {{ newsletter_form.email }}
+                        
+                          <div class="checkbox-input flex items-center mt-2">
+                            <input  type="checkbox" name="agree_terms" id="agree_terms" class="form-check-input" required />
+                            <label for="agree_terms" class="ml-2">
+                              I agree to the <a href="/terms" class="text-blue-500 underline">Terms and Conditions</a>
+                            </label>
+                          </div>
+                        
+                          <button type="submit" class="btn-1">Subscribe <i class="icon-arrow-1"></i></button>
+                        </form>
+                        
+                        <div id="newsletter-message" class="mt-2 text-sm"></div>
+                    
+                      
+                      
                       </div>
                       <div class="footer-contact-info">
                         <a href="#0"><i class="fa-light fa-location-dot"></i> Australia Wise 9297 Maxim AV. Antonio, USA.</a>
@@ -309,6 +322,60 @@
       </div>
     </div>
     <!-- Scroll to top end -->
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("newsletter-form");
+        const messageBox = document.getElementById("newsletter-message");
+        const termsCheckbox = document.getElementById("agree_terms");
+      
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+      
+          // Clear old styles
+          messageBox.className = "mt-2 text-sm";
+          messageBox.innerText = "";
+      
+          // Check terms box
+          if (!termsCheckbox.checked) {
+            messageBox.innerText = "You must agree to the terms.";
+            messageBox.classList.add("text-red-600");
+            return;
+          }
+      
+          const formData = new FormData(form);
+      
+          fetch("{% url 'subscribe_newsletter' %}", {
+            method: "POST",
+            headers: {
+              'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+            messageBox.innerText = data.message;
+      
+            if (data.status === "success") {
+              messageBox.style.color = "#28a745"; // green
+              form.reset();
+            } else if (data.status === "info") {
+              messageBox.style.color = "#007bff"; // blue
+            } else {
+              messageBox.style.color = "#F15A29"; // orange
+            }
+
+            messageBox.style.fontSize = "1.1rem";
+            messageBox.style.fontWeight = "600";
+          })
+          .catch(() => {
+            messageBox.innerText = "Something went wrong. Please try again.";
+            messageBox.classList.add("text-red-600");
+          });
+        });
+      });
+      </script>
+      
 
     <script src="{% static '/assets/js/jquery.min.js' %}"></script>
     <script src="{% static '/assets/js/bootstrap.min.js' %}"></script>

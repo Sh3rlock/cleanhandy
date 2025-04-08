@@ -16,6 +16,7 @@ urlpatterns = [
     path("cleaning/", include("quotes.urls_cleaning")),
     path("handyman/", include("quotes.urls_handyman")),
     path("quotes/", include("quotes.urls")),
+    path("blog/", include("blog.urls")),
 
     # Authentication URLs
     path("accounts/login/", auth_views.LoginView.as_view(), name="login"),

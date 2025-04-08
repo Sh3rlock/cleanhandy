@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import about, contact, blog, blog_detail, quote_submitted, request_cleaning_quote, request_handyman_quote, available_hours_api, quote_submitted_handyman
+from .views import about, contact, blog, blog_detail, quote_submitted, request_cleaning_quote, request_handyman_quote, available_hours_api, quote_submitted_handyman, subscribe_newsletter
 
 urlpatterns = [
     path("about", about, name="about"),
@@ -12,5 +12,7 @@ urlpatterns = [
     path("submitted/<int:quote_id>/", quote_submitted, name="quote_submitted"),
     path("submitted-handyman/<int:quote_id>/", quote_submitted_handyman, name="quote_submitted_handyman"),
     path("api/available-hours/", available_hours_api, name="available_hours_api"),
+
+    path('subscribe/', subscribe_newsletter, name='subscribe_newsletter'),
     
 ]
