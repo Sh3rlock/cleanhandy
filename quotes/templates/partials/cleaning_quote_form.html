@@ -152,6 +152,7 @@
     <div class="step hidden-step" id="step2">
       <h4 class="mt-4">Schedule</h4>
       <div class="form-row">
+        <input type="hidden" id="id_hours_requested" name="hours_requested">
         <!-- <div class="form-group">
           <label for="{{ form.hours_requested.id_for_label }}">Hours</label>
           {{ form.hours_requested }}
@@ -246,7 +247,8 @@
 
     function fetchAvailableHours() {
       const selectedDate = dateField.value;
-      const selectedHours = hoursField.value || 2;
+      const hoursField = document.getElementById("id_hours_requested");
+      const selectedHours = parseFloat(hoursField?.value || "2");
 
       if (!selectedDate) return;
 
@@ -580,6 +582,12 @@
 // Convert to hours + minutes
 const finalHours = Math.floor(totalMinutes / 60);
 const finalMinutes = totalMinutes % 60;
+
+const hoursRequestedInput = document.getElementById("id_hours_requested");
+if (hoursRequestedInput) {
+  const totalHoursDecimal = Math.round((totalMinutes / 60) * 2) / 2;
+  hoursRequestedInput.value = totalHoursDecimal;
+}
 
 const hourLabel = finalHours === 1 ? "Hour" : "Hours";
 const minuteLabel = finalMinutes === 1 ? "Minute" : "Minutes";
