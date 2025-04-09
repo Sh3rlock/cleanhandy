@@ -35,7 +35,7 @@ class CleaningQuoteForm(forms.ModelForm):
 
     date = forms.DateField(
         label="Select Date",
-        widget=forms.DateInput(attrs={"type": "date", "class": "cmn-input"})
+        widget=forms.DateInput(attrs={"class": "cmn-input", "autocomplete": "off"})
     )
 
     hour = forms.ChoiceField(

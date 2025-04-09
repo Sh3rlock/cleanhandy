@@ -235,8 +235,8 @@
   document.addEventListener("DOMContentLoaded", function () {
     flatpickr("#id_date", {
       dateFormat: "Y-m-d",
-      minDate: "today",
-      defaultDate: "today",
+      minDate: new Date().fp_incr(2), // Today + 2 days,
+      defaultDate: new Date().fp_incr(2), // Today + 2 days,
       disableMobile: true // fallback for mobile native pickers
     });
 
@@ -311,6 +311,7 @@
     
       // 3. Reset date and time
       const today = new Date();
+    today.setDate(today.getDate() + 2); // ✅ Add 2 days
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
@@ -352,7 +353,7 @@
     
       document.getElementById("summary-items").innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
-          <div>• Studio</div>
+          <div>• Studio ($130.00)</div>
           <div>$${price.toFixed(2)}</div>
         </div>`;
     
