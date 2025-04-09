@@ -25,6 +25,7 @@ class Service(models.Model):
 class CleaningExtra(models.Model):
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=6, decimal_places=2)
+    extra_minutes = models.PositiveIntegerField(default=0, help_text="Add time in minutes (e.g. 30, 60)")
 
     def __str__(self):
         return f"{self.name} (${self.price})"
@@ -32,6 +33,7 @@ class CleaningExtra(models.Model):
 class HomeType(models.Model):
     name = models.CharField(max_length=100, unique=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
+    extra_minutes = models.PositiveIntegerField(default=180, help_text="Additional time in minutes for this home type")
 
     def __str__(self):
         return f"{self.name} (${self.price})"
