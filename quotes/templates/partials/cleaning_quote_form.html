@@ -294,10 +294,6 @@ document.addEventListener("DOMContentLoaded", function () {
         hourSelect.innerHTML = "<option value=''>Failed to load</option>";
         hourSelect.disabled = false;
       });
-
-      // Refresh on blur (when user clicks out of the input)
-      dateField.addEventListener("blur", fetchAvailableHours);
-      hoursField.addEventListener("blur", fetchAvailableHours);
   }
 
   // === UI Defaults ===
@@ -401,6 +397,10 @@ document.addEventListener("DOMContentLoaded", function () {
   cleaningTypeSelect?.addEventListener("change", fetchAvailableHours);
   cleanerSelect?.addEventListener("change", fetchAvailableHours);
   hoursField?.addEventListener("change", fetchAvailableHours);
+
+  // Refresh on blur (when user clicks out of the input)
+  dateField.addEventListener("blur", fetchAvailableHours);
+  hoursField.addEventListener("blur", fetchAvailableHours);
 
   document.querySelectorAll(".extra-checkbox").forEach(cb => cb.addEventListener("change", updatePrice));
   document.querySelectorAll("input, select").forEach(el => {
