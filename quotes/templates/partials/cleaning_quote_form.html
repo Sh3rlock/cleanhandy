@@ -294,6 +294,10 @@ document.addEventListener("DOMContentLoaded", function () {
         hourSelect.innerHTML = "<option value=''>Failed to load</option>";
         hourSelect.disabled = false;
       });
+
+      // Refresh on blur (when user clicks out of the input)
+      dateField.addEventListener("blur", fetchAvailableHours);
+      hoursField.addEventListener("blur", fetchAvailableHours);
   }
 
   // === UI Defaults ===
@@ -434,16 +438,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Labor cost for large homes
-    let laborCost = 0;
-    if (largeHomeOptions?.offsetParent !== null) {
-      const numCleaners = parseInt(cleanerSelect?.value || 0);
-      const hours = parseInt(hourSelect?.value || 0);
-      const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
-      let hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 60 : 55;
+let laborCost = 0;
+if (largeHomeOptions?.offsetParent !== null) {
+  const numCleaners = parseInt(cleanerSelect?.value || 0);
+  const estimatedHours = parseFloat(hoursField?.value || 0); // ✅ correct value
+  const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
+  let hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 60 : 55;
 
-      laborCost = numCleaners * hours * hourlyRate;
-      subtotal += laborCost;
-    }
+  laborCost = numCleaners * estimatedHours * hourlyRate;
+  subtotal += laborCost;
+}
 
     const taxRate = 0.08875;
     const tax = subtotal * taxRate;
@@ -496,7 +500,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (largeHomeOptions?.offsetParent !== null && laborCost > 0) {
       const numCleaners = parseInt(cleanerSelect?.value || "0");
-      const hours = parseInt(hoursField?.value || "0");
+      const hours = parseFloat(hoursField?.value || "0");
       const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
       const hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 60 : 55;
     
@@ -516,19 +520,19 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("summary-recurrence").textContent = recurrenceText;
 
     // Calculate and display total duration
-    let totalMinutes = 0;
-    if (largeHomeOptions?.offsetParent !== null) {
-      // ✅ Use estimated hours, not start time!
-      totalMinutes = parseInt(hoursField?.value || "0") * 60;
-    } else {
-      const homeSelect = document.getElementById("id_home_types");
-      const baseMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || "0");
-      totalMinutes += isNaN(baseMinutes) ? 0 : baseMinutes;
+let totalMinutes = 0;
+if (largeHomeOptions?.offsetParent !== null) {
+  const estimatedHours = parseFloat(hoursField?.value || "0");
+  totalMinutes = estimatedHours * 60;
+} else {
+  const homeSelect = document.getElementById("id_home_types");
+  const baseMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || "0");
+  totalMinutes += isNaN(baseMinutes) ? 0 : baseMinutes;
 
-      document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
-        totalMinutes += parseInt(cb.dataset.time || "0") || 0;
-      });
-    }
+  document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+    totalMinutes += parseInt(cb.dataset.time || "0") || 0;
+  });
+}
     
 
     const finalHours = Math.floor(totalMinutes / 60);
