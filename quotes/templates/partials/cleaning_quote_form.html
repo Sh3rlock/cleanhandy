@@ -232,394 +232,387 @@
 <!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    flatpickr("#id_date", {
-      dateFormat: "Y-m-d",
-      minDate: new Date().fp_incr(2), // Today + 2 days,
-      defaultDate: new Date().fp_incr(2), // Today + 2 days,
-      disableMobile: true // fallback for mobile native pickers
-    });
-
-    const dateField = document.getElementById("id_date");
-    const hoursField = document.getElementById("id_hours_requested");
-    const hourSelect = document.getElementById("id_hour");
-
-    function fetchAvailableHours() {
-      const selectedDate = dateField.value;
-      const selectedHours = hoursField.value || 2;
-
-      if (!selectedDate) return;
-
-      hourSelect.innerHTML = "<option>Loading...</option>";
-      hourSelect.disabled = true;
-
-      fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${selectedHours}`)
-        .then(response => response.json())
-        .then(data => {
-          hourSelect.innerHTML = "";
-          hourSelect.disabled = false;
-
-          if (data.available_hours.length === 0) {
-            hourSelect.innerHTML = "<option value=''>No available time</option>";
-          } else {
-            data.available_hours.forEach(hour => {
-              const option = document.createElement("option");
-              option.value = hour;
-              option.textContent = hour;
-              hourSelect.appendChild(option);
-            });
-          }
-        })
-        .catch(() => {
-          hourSelect.innerHTML = "<option value=''>Failed to load</option>";
-          hourSelect.disabled = false;
-        });
-    }
-
-    // Attach Flatpickr change event instead of blur
-    dateField._flatpickr.config.onChange.push(fetchAvailableHours);
-    hoursField.addEventListener("blur", fetchAvailableHours);
+// ================================
+// FLATPICKR + FORM LOGIC + PRICING ENGINE
+// ================================
+document.addEventListener("DOMContentLoaded", function () {
+  // === Flatpickr Setup ===
+  flatpickr("#id_date", {
+    dateFormat: "Y-m-d",
+    minDate: new Date().fp_incr(2),
+    defaultDate: new Date().fp_incr(2),
+    disableMobile: true
   });
-</script>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const sqftSelect = document.getElementById("id_square_feet_options");
-    const homeType = document.getElementById("id_home_types").closest(".form-group") || document.getElementById("id_home_types").parentElement;
-    const extrasContainer = document.getElementById("cleaningExtrasContainer");
-    const largeHomeOptions = document.getElementById("largeHomeOptions");
-    const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
-    const hourSelect = document.querySelector('select[name="est_hours"]');
-    const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
+  // === Shared DOM Elements ===
+  const dateField = document.getElementById("id_date");
+  const hourSelect = document.getElementById("id_hour");
+  const hoursField = document.querySelector('select[name="est_hours"]');
+  const sqftSelect = document.getElementById("id_square_feet_options");
+  const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
+  const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
+  const homeTypeGroup = document.getElementById("id_home_types")?.closest(".form-group");
+  const extrasContainer = document.getElementById("cleaningExtrasContainer");
+  const largeHomeOptions = document.getElementById("largeHomeOptions");
 
-    function resetSummary() {
-      // 1. Reset home type to "Studio"
-      const homeTypeSelect = document.getElementById("id_home_types");
-      if (homeTypeSelect) {
-        for (let i = 0; i < homeTypeSelect.options.length; i++) {
-          if (homeTypeSelect.options[i].textContent.toLowerCase().includes("studio")) {
-            homeTypeSelect.selectedIndex = i;
-            break;
-          }
-        }
-      }
-    
-      // 2. Uncheck all extras
-      document.querySelectorAll(".extra-checkbox").forEach(cb => {
-        cb.checked = false;
-      });
-    
-      // 3. Reset date and time
-      const today = new Date();
-    today.setDate(today.getDate() + 2); // ✅ Add 2 days
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const formattedDateInput = `${yyyy}-${mm}-${dd}`;
-      const formattedDateText = `${mm}/${dd}/${yyyy}`;
-      const time = "09:00"; // 9:00 AM
-    
-      const dateInput = document.getElementById("id_date");
-      if (dateInput) dateInput.value = formattedDateInput;
-    
-      const timeInput = document.getElementById("id_hour");
-      if (timeInput) timeInput.value = time;
-    
-      // 4. Reset recurrence to "One Time"
-      const recurrenceSelect = document.getElementById("id_recurrence_pattern");
-      if (recurrenceSelect) {
-        for (let i = 0; i < recurrenceSelect.options.length; i++) {
-          if (recurrenceSelect.options[i].textContent.toLowerCase().includes("one time")) {
-            recurrenceSelect.selectedIndex = i;
-            break;
-          }
-        }
-      }
-    
-      // 5. Reset duration to base from selected Studio (data-time)
-      const selectedOption = homeTypeSelect?.selectedOptions[0];
-      let baseMinutes = parseInt(selectedOption?.dataset.time || "180"); // fallback to 3 hrs
-    
-      const finalHours = Math.floor(baseMinutes / 60);
-      const finalMinutes = baseMinutes % 60;
-      const hourLabel = finalHours === 1 ? "Hour" : "Hours";
-      const minuteLabel = finalMinutes === 1 ? "Minute" : "Minutes";
-    
-      // 6. Update summary UI
-      const price = parseFloat(selectedOption?.dataset.price || "130");
-      const taxRate = 0.08875;
-      const tax = price * taxRate;
-      const total = price + tax;
-    
-      document.getElementById("summary-items").innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
-          <div>• Studio ($130.00)</div>
-          <div>$${price.toFixed(2)}</div>
-        </div>`;
-    
-      document.getElementById("summary-date").textContent = `${formattedDateText} @ 9:00 AM`;
-      document.getElementById("summary-duration").textContent = `${finalHours} ${hourLabel} ${finalMinutes} ${minuteLabel}`;
-      document.getElementById("summary-recurrence").textContent = "One Time";
-    
-      document.getElementById("subtotalPrice").innerText = price.toFixed(2);
-      document.getElementById("salesTax").innerText = tax.toFixed(2);
-      document.getElementById("totalPrice").innerText = total.toFixed(2);
-    }
-    
-    
-    
+  // === Load available hours dynamically ===
+  function fetchAvailableHours() {
+    const selectedDate = dateField?.value;
+    const selectedHours = parseInt(hoursField?.value || "3");
 
-    function toggleHomeAndExtras() {
-      const selectedOption = sqftSelect?.selectedOptions[0];
-      if (!selectedOption) return;
+    if (!selectedDate || isNaN(selectedHours)) return;
 
-      const selectedName = selectedOption.textContent.trim().toLowerCase();
-      const isUnder1000 = selectedName.includes("under 1000");
+    hourSelect.innerHTML = "<option>Loading...</option>";
+    hourSelect.disabled = true;
 
-      if (isUnder1000) {
-        homeType.style.display = "";
-        extrasContainer.style.display = "";
-        largeHomeOptions.style.display = "none";
-      } else {
-        homeType.style.display = "none";
-        extrasContainer.style.display = "none";
-        largeHomeOptions.style.display = "";
+    fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${selectedHours}`)
+      .then(response => response.json())
+      .then(data => {
+        hourSelect.innerHTML = "";
+        hourSelect.disabled = false;
 
-        // 🔥 Uncheck all extras when switching from 'Under 1000'
-        document.querySelectorAll(".extra-checkbox").forEach(cb => cb.checked = false);
-
-        if (selectedName.includes("1500–2000") || selectedName.includes("1500-2000")) {
-          cleaningTypeSelect.innerHTML = `
-            <option value="">Select Cleaning Type</option>
-            <option value="1500-2000 (Regular)" selected>1500–2000 sq.ft (Regular Cleaning)</option>
-            <option value="1500-2000 (Deep)">1500–2000 sq.ft (Deep Cleaning)</option>
-            <option value="1500-2000 (Move)">1500–2000 sq.ft (Move In/Out Cleaning)</option>
-            <option value="1500-2000 (Post)">1500–2000 sq.ft (Post Renovation)</option>
-          `;
-          cleanerSelect.value = "2";
-          hourSelect.value = "5";
-        } else if (selectedName.includes("custom")) {
-          cleaningTypeSelect.innerHTML = `
-            <option value="custom_cleaning" selected>Hourly Service 55$ per hour/per cleaner</option>
-          `;
-          cleanerSelect.value = "2";
-          hourSelect.value = "5";
-        } else if (selectedName.includes("renovation")) {
-          cleaningTypeSelect.innerHTML = `
-            <option value="post_renovation" selected>Hourly Service 60$ per hour/per cleaner</option>
-          `;
-          cleanerSelect.value = "2";
-          hourSelect.value = "5";
+        if (!data.available_hours || data.available_hours.length === 0) {
+          hourSelect.innerHTML = "<option value=''>No available time</option>";
         } else {
-          cleaningTypeSelect.innerHTML = `
-            <option value="">Select Cleaning Type</option>
-            <option value="1000-1500 (Regular)" selected>1000–1500 sq.ft (Regular Cleaning)</option>
-            <option value="1000-1500 (Deep)">1000–1500 sq.ft (Deep Cleaning)</option>
-            <option value="1000-1500 (Move)">1000–1500 sq.ft (Move In/Out Cleaning)</option>
-            <option value="1000-1500 (Post)">1000–1500 sq.ft (Post Renovation)</option>
-          `;
-          cleanerSelect.value = "2";
-          hourSelect.value = "3";
+          data.available_hours.forEach((hour, index) => {
+            const option = document.createElement("option");
+            option.value = hour;
+            option.textContent = hour;
+            if (index === 0) option.selected = true;
+            hourSelect.appendChild(option);
+          });
+
+          if (data.available_hours.length === 1) {
+            hourSelect.value = data.available_hours[0];
+          }
         }
 
-        cleaningTypeSelect?.dispatchEvent(new Event("change"));
+        updatePrice();
+      })
+      .catch((err) => {
+        console.error("❌ Failed to fetch available hours:", err);
+        hourSelect.innerHTML = "<option value=''>Failed to load</option>";
+        hourSelect.disabled = false;
+      });
+  }
+
+  // === UI Defaults ===
+  function setDefaultSquareFeet() {
+    for (let i = 0; i < sqftSelect.options.length; i++) {
+      if (sqftSelect.options[i].textContent.toLowerCase().includes("under 1000")) {
+        sqftSelect.selectedIndex = i;
+        break;
+      }
+    }
+  }
+
+  function toggleHomeAndExtras() {
+    const selectedOption = sqftSelect?.selectedOptions[0];
+    if (!selectedOption) return;
+
+    const selectedName = selectedOption.textContent.trim().toLowerCase();
+    const isUnder1000 = selectedName.includes("under 1000");
+
+    if (isUnder1000) {
+      homeTypeGroup.style.display = "";
+      extrasContainer.style.display = "";
+      largeHomeOptions.style.display = "none";
+    } else {
+      homeTypeGroup.style.display = "none";
+      extrasContainer.style.display = "none";
+      largeHomeOptions.style.display = "";
+
+      document.querySelectorAll(".extra-checkbox").forEach(cb => cb.checked = false);
+
+      if (selectedName.includes("1500–2000") || selectedName.includes("1500-2000")) {
+        cleaningTypeSelect.innerHTML = `
+          <option value="">Select Cleaning Type</option>
+          <option value="1500-2000 (Regular)" selected>1500–2000 sq.ft (Regular Cleaning)</option>
+          <option value="1500-2000 (Deep)">1500–2000 sq.ft (Deep Cleaning)</option>
+          <option value="1500-2000 (Move)">1500–2000 sq.ft (Move In/Out Cleaning)</option>
+          <option value="1500-2000 (Post)">1500–2000 sq.ft (Post Renovation)</option>
+        `;
+        cleanerSelect.value = "2";
+        hoursField.value = "5";
+      } else if (selectedName.includes("custom")) {
+        cleaningTypeSelect.innerHTML = `
+          <option value="custom_cleaning" selected>Hourly Service 55$ per hour/per cleaner</option>
+        `;
+        cleanerSelect.value = "2";
+        hoursField.value = "5";
+      } else if (selectedName.includes("renovation")) {
+        cleaningTypeSelect.innerHTML = `
+          <option value="post_renovation" selected>Hourly Service 60$ per hour/per cleaner</option>
+        `;
+        cleanerSelect.value = "2";
+        hoursField.value = "5";
+      } else {
+        cleaningTypeSelect.innerHTML = `
+          <option value="">Select Cleaning Type</option>
+          <option value="1000-1500 (Regular)" selected>1000–1500 sq.ft (Regular Cleaning)</option>
+          <option value="1000-1500 (Deep)">1000–1500 sq.ft (Deep Cleaning)</option>
+          <option value="1000-1500 (Move)">1000–1500 sq.ft (Move In/Out Cleaning)</option>
+          <option value="1000-1500 (Post)">1000–1500 sq.ft (Post Renovation)</option>
+        `;
+        cleanerSelect.value = "2";
+        hoursField.value = "3";
       }
 
-      updatePrice();
+      cleaningTypeSelect?.dispatchEvent(new Event("change"));
     }
 
-    cleaningTypeSelect?.addEventListener("change", function () {
-      const value = this.value.toLowerCase();
+    updatePrice();
+  }
 
-      if (value.includes("regular")) {
-        cleanerSelect.value = value.includes("1500-2000") ? "2" : "2";
-        hourSelect.value = value.includes("1500-2000") ? "5" : "3";
-      } else if (value.includes("deep")) {
-        cleanerSelect.value = value.includes("1500-2000") ? "3" : "2";
-        hourSelect.value = "5";
-      } else if (value.includes("move")) {
-        cleanerSelect.value = value.includes("1500-2000") ? "3" : "2";
-        hourSelect.value = "5";
-      } else if (value.includes("post")) {
-        cleanerSelect.value = "3";
-        hourSelect.value = value.includes("1500-2000") ? "8" : "6";
+  cleaningTypeSelect?.addEventListener("change", function () {
+    const value = this.value.toLowerCase();
+
+    if (value.includes("regular")) {
+      cleanerSelect.value = value.includes("1500-2000") ? "2" : "2";
+      hoursField.value = value.includes("1500-2000") ? "5" : "3";
+    } else if (value.includes("deep")) {
+      cleanerSelect.value = value.includes("1500-2000") ? "3" : "2";
+      hoursField.value = "5";
+    } else if (value.includes("move")) {
+      cleanerSelect.value = value.includes("1500-2000") ? "3" : "2";
+      hoursField.value = "5";
+    } else if (value.includes("post")) {
+      cleanerSelect.value = "3";
+      hoursField.value = value.includes("1500-2000") ? "8" : "6";
+    }
+
+    updatePrice();
+  });
+
+  // Run initializers
+  setDefaultSquareFeet();
+  toggleHomeAndExtras();
+  fetchAvailableHours();
+  updatePrice();
+  resetSummary();
+
+  // === Event Bindings ===
+  sqftSelect?.addEventListener("change", toggleHomeAndExtras);
+  sqftSelect?.addEventListener("change", fetchAvailableHours);
+  cleaningTypeSelect?.addEventListener("change", fetchAvailableHours);
+  cleanerSelect?.addEventListener("change", fetchAvailableHours);
+  hoursField?.addEventListener("change", fetchAvailableHours);
+
+  document.querySelectorAll(".extra-checkbox").forEach(cb => cb.addEventListener("change", updatePrice));
+  document.querySelectorAll("input, select").forEach(el => {
+    el.addEventListener("change", updatePrice);
+    el.addEventListener("input", () => {
+      if (el.classList.contains("is-invalid") && el.value) {
+        el.classList.remove("is-invalid");
       }
-
-      updatePrice();
     });
+  });
+  cleanerSelect?.addEventListener("change", updatePrice);
+  hoursField?.addEventListener("change", updatePrice);
+  cleaningTypeSelect?.addEventListener("change", updatePrice);
 
-    function updatePrice() {
-      let subtotal = 0;
-      const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
-      subtotal += sqftPrice;
+   // ================================
+  // PRICE & SUMMARY CALCULATOR
+  // ================================
+  function updatePrice() {
+    let subtotal = 0;
+    const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
+    subtotal += sqftPrice;
 
-      if (homeType?.offsetParent !== null) {
-        const homePrice = parseFloat(document.getElementById("id_home_types")?.selectedOptions[0]?.dataset.price || 0);
-        subtotal += homePrice;
-      }
+    // Home Type (only if visible)
+    if (homeTypeGroup?.offsetParent !== null) {
+      const homeSelect = document.getElementById("id_home_types");
+      const homePrice = parseFloat(homeSelect?.selectedOptions[0]?.dataset.price || 0);
+      subtotal += homePrice;
+    }
 
-      if (extrasContainer?.offsetParent !== null) {
-        document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
-          subtotal += parseFloat(cb.dataset.price || 0);
-        });
-      }
-
-      // Labor cost
-      let laborCost = 0;
-      if (largeHomeOptions?.offsetParent !== null) {
-        const numCleaners = parseInt(cleanerSelect?.value || 0);
-        const hours = parseInt(hourSelect?.value || 0);
-        const cleaningType = cleaningTypeSelect?.value || "";
-
-        let hourlyRate = 55;
-        if (cleaningType.toLowerCase().includes("post") || cleaningType.toLowerCase().includes("renovation")) {
-          hourlyRate = 60;
-        }
-
-        laborCost = numCleaners * hours * hourlyRate;
-        subtotal += laborCost;
-      }
-
-      const taxRate = 0.08875;
-      const tax = subtotal * taxRate;
-      const total = subtotal + tax;
-
-      // Update UI
-      document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
-      document.getElementById("salesTax").innerText = tax.toFixed(2);
-      document.getElementById("totalPrice").innerText = total.toFixed(2);
-
-      // Update summary list
-      const summaryContainer = document.getElementById("summary-items");
-      summaryContainer.innerHTML = "";
-
-      if (sqftSelect) {
-        const sqftLabel = sqftSelect.selectedOptions[0]?.textContent.trim();
-        if (sqftPrice > 0) {
-          summaryContainer.innerHTML += `
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <div><i class="fa-solid fa-house me-2"></i>${sqftLabel}</div>
-              <div>$${sqftPrice.toFixed(2)}</div>
-            </div>`;
-        }
-      }
-
-      // 1.5 – Home Type (only if visible and price > 0)
-      if (homeType?.offsetParent !== null) {
-        const homeTypeSelect = document.getElementById("id_home_types");
-        const selectedOption = homeTypeSelect?.selectedOptions[0];
-        const homeLabel = selectedOption?.textContent.trim();
-        const homePrice = parseFloat(selectedOption?.dataset.price || 0).toFixed(2);
-
-      if (homeLabel && homePrice > 0) {
-          summaryContainer.innerHTML += `
-            <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
-              <div>• ${homeLabel}</div>
-            <div>$${homePrice}</div>
-          </div>`;
-        }
-      }
-
+    // Extras (only if visible)
+    if (extrasContainer?.offsetParent !== null) {
       document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
-        const label = cb.nextElementSibling?.textContent?.trim() || "Extra";
-        const price = parseFloat(cb.dataset.price || 0).toFixed(2);
-        summaryContainer.innerHTML += `
-          <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
-            <div>• ${label}</div>
-            <div>$${price}</div>
-          </div>`;
+        subtotal += parseFloat(cb.dataset.price || 0);
       });
+    }
 
-      if (largeHomeOptions?.offsetParent !== null && laborCost > 0) {
+    // Labor cost for large homes
+    let laborCost = 0;
+    if (largeHomeOptions?.offsetParent !== null) {
+      const numCleaners = parseInt(cleanerSelect?.value || 0);
+      const hours = parseInt(hourSelect?.value || 0);
+      const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
+      let hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 60 : 55;
+
+      laborCost = numCleaners * hours * hourlyRate;
+      subtotal += laborCost;
+    }
+
+    const taxRate = 0.08875;
+    const tax = subtotal * taxRate;
+    const total = subtotal + tax;
+
+    // Update UI values
+    document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
+    document.getElementById("salesTax").innerText = tax.toFixed(2);
+    document.getElementById("totalPrice").innerText = total.toFixed(2);
+
+    // Update summary items list
+    const summaryContainer = document.getElementById("summary-items");
+    summaryContainer.innerHTML = "";
+
+    if (sqftSelect) {
+      const sqftLabel = sqftSelect.selectedOptions[0]?.textContent.trim();
+      if (sqftPrice > 0) {
         summaryContainer.innerHTML += `
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <div><i class="fa-solid fa-broom me-2"></i>${cleanerSelect.value} Cleaners × ${hourSelect.value} Hours</div>
-            <div>$${laborCost.toFixed(2)}</div>
+            <div><i class="fa-solid fa-house me-2"></i>${sqftLabel}</div>
+            <div>$${sqftPrice.toFixed(2)}</div>
           </div>`;
       }
+    }
 
-      // Update schedule info
-      const dateField = document.getElementById("id_date");
-      const timeField = document.getElementById("id_hour");
-      const recurrenceField = document.getElementById("id_recurrence_pattern");
-      const hoursRequested = document.getElementById("id_hours_requested");
+    if (homeTypeGroup?.offsetParent !== null) {
+      const homeSelect = document.getElementById("id_home_types");
+      const homeOption = homeSelect?.selectedOptions[0];
+      const homeLabel = homeOption?.textContent.trim();
+      const homePrice = parseFloat(homeOption?.dataset.price || 0);
 
-      document.getElementById("summary-date").textContent = `${dateField?.value || '-'} @ ${timeField?.value || '-'}`;
-      document.getElementById("summary-recurrence").textContent = recurrenceField?.selectedOptions?.[0]?.textContent || "-";
-
-      const estHoursSelect = document.querySelector('select[name="est_hours"]');
-      const estHours = parseInt(estHoursSelect?.value || "0");
-
-      // Count extra time from selected extras
-      let totalMinutes = 0;
-
-      // If large home is selected, use est_hours directly
-      if (largeHomeOptions?.offsetParent !== null) {
-        const hours = parseInt(hourSelect?.value || "0");
-        totalMinutes = hours * 60;
-      
-      } else {
-        // Otherwise, use home type base + extra minutes from extras
-        const homeTypeSelect = document.getElementById("id_home_types");
-        if (homeTypeSelect?.offsetParent !== null) {
-          const selectedOption = homeTypeSelect.selectedOptions[0];
-          const baseMinutes = parseInt(selectedOption?.dataset.time || "0");
-          if (!isNaN(baseMinutes)) {
-            totalMinutes = baseMinutes;
-          }
-        }
-      
-        document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
-          const extraTime = parseInt(cb.dataset.time || "0");
-          if (!isNaN(extraTime)) {
-            totalMinutes += extraTime;
-          }
-        });
+      if (homeLabel && homePrice > 0) {
+        summaryContainer.innerHTML += `
+          <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
+            <div>• ${homeLabel}</div>
+            <div>$${homePrice.toFixed(2)}</div>
+          </div>`;
       }
+    }
 
-// Convert to hours + minutes
-const finalHours = Math.floor(totalMinutes / 60);
-const finalMinutes = totalMinutes % 60;
+    document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+      const label = cb.nextElementSibling?.textContent?.trim() || "Extra";
+      const price = parseFloat(cb.dataset.price || 0).toFixed(2);
+      summaryContainer.innerHTML += `
+        <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
+          <div>• ${label}</div>
+          <div>$${price}</div>
+        </div>`;
+    });
 
-const hourLabel = finalHours === 1 ? "Hour" : "Hours";
-const minuteLabel = finalMinutes === 1 ? "Minute" : "Minutes";
+    if (largeHomeOptions?.offsetParent !== null && laborCost > 0) {
+      const numCleaners = parseInt(cleanerSelect?.value || "0");
+      const hours = parseInt(hoursField?.value || "0");
+      const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
+      const hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 60 : 55;
+    
+      summaryContainer.innerHTML += `
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <div><i class="fa-solid fa-broom me-2"></i>${numCleaners} Cleaners × ${hours} Hours × $${hourlyRate}/hour</div>
+          <div>$${laborCost.toFixed(2)}</div>
+        </div>`;
+    }
 
-document.getElementById("summary-duration").textContent =
-  `${finalHours} ${hourLabel} ${finalMinutes} ${minuteLabel}`;
-        }
+    // Update schedule info
+    const dateVal = document.getElementById("id_date")?.value || "-";
+    const timeVal = document.getElementById("id_hour")?.value || "-";
+    const recurrenceText = document.getElementById("id_recurrence_pattern")?.selectedOptions?.[0]?.textContent || "-";
 
-    // Force default sqft to "Under 1000"
-    if (sqftSelect) {
-      for (let i = 0; i < sqftSelect.options.length; i++) {
-        if (sqftSelect.options[i].textContent.toLowerCase().includes("under 1000")) {
-          sqftSelect.selectedIndex = i;
+    document.getElementById("summary-date").textContent = `${dateVal} @ ${timeVal}`;
+    document.getElementById("summary-recurrence").textContent = recurrenceText;
+
+    // Calculate and display total duration
+    let totalMinutes = 0;
+    if (largeHomeOptions?.offsetParent !== null) {
+      // ✅ Use estimated hours, not start time!
+      totalMinutes = parseInt(hoursField?.value || "0") * 60;
+    } else {
+      const homeSelect = document.getElementById("id_home_types");
+      const baseMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || "0");
+      totalMinutes += isNaN(baseMinutes) ? 0 : baseMinutes;
+
+      document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+        totalMinutes += parseInt(cb.dataset.time || "0") || 0;
+      });
+    }
+    
+
+    const finalHours = Math.floor(totalMinutes / 60);
+    const finalMinutes = totalMinutes % 60;
+    const hourLabel = finalHours === 1 ? "Hour" : "Hours";
+    const minuteLabel = finalMinutes === 1 ? "Minute" : "Minutes";
+    document.getElementById("summary-duration").textContent = `${finalHours} ${hourLabel} ${finalMinutes} ${minuteLabel}`;
+  }
+
+  function resetSummary() {
+    // 1. Reset home type to "Studio"
+    const homeTypeSelect = document.getElementById("id_home_types");
+    if (homeTypeSelect) {
+      for (let i = 0; i < homeTypeSelect.options.length; i++) {
+        if (homeTypeSelect.options[i].textContent.toLowerCase().includes("studio")) {
+          homeTypeSelect.selectedIndex = i;
           break;
         }
       }
     }
-
-    
-
-    // Bind events
-    sqftSelect?.addEventListener("change", toggleHomeAndExtras);
-    document.querySelectorAll(".extra-checkbox").forEach(cb => cb.addEventListener("change", updatePrice));
-    document.querySelectorAll("input, select").forEach(el => {
-      el.addEventListener("change", updatePrice);
-      el.addEventListener("input", () => {
-        if (el.classList.contains("is-invalid") && el.value) {
-          el.classList.remove("is-invalid");
-        }
-      });
+  
+    // 2. Uncheck all extras
+    document.querySelectorAll(".extra-checkbox").forEach(cb => {
+      cb.checked = false;
     });
-
-    cleanerSelect?.addEventListener("change", updatePrice);
-    hourSelect?.addEventListener("change", updatePrice);
-
-    // Initial setup
-    toggleHomeAndExtras();
-    updatePrice();
-    resetSummary();
-  });
+  
+    // 3. Reset date and time
+    const today = new Date();
+    today.setDate(today.getDate() + 2); // ✅ Add 2 days
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const formattedDateInput = `${yyyy}-${mm}-${dd}`;
+    const formattedDateText = `${mm}/${dd}/${yyyy}`;
+    const time = "09:00"; // 9:00 AM
+  
+    const dateInput = document.getElementById("id_date");
+    if (dateInput) dateInput.value = formattedDateInput;
+  
+    const timeInput = document.getElementById("id_hour");
+    if (timeInput) timeInput.value = time;
+  
+    // 4. Reset recurrence to "One Time"
+    const recurrenceSelect = document.getElementById("id_recurrence_pattern");
+    if (recurrenceSelect) {
+      for (let i = 0; i < recurrenceSelect.options.length; i++) {
+        if (recurrenceSelect.options[i].textContent.toLowerCase().includes("one time")) {
+          recurrenceSelect.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  
+    // 5. Reset duration to base from selected Studio (data-time)
+    const selectedOption = homeTypeSelect?.selectedOptions[0];
+    let baseMinutes = parseInt(selectedOption?.dataset.time || "180"); // fallback to 3 hrs
+  
+    const finalHours = Math.floor(baseMinutes / 60);
+    const finalMinutes = baseMinutes % 60;
+    const hourLabel = finalHours === 1 ? "Hour" : "Hours";
+    const minuteLabel = finalMinutes === 1 ? "Minute" : "Minutes";
+  
+    // 6. Update summary UI
+    const price = parseFloat(selectedOption?.dataset.price || "130");
+    const taxRate = 0.08875;
+    const tax = price * taxRate;
+    const total = price + tax;
+  
+    document.getElementById("summary-items").innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
+        <div>• Studio ($130.00)</div>
+        <div>$${price.toFixed(2)}</div>
+      </div>`;
+  
+    document.getElementById("summary-date").textContent = `${formattedDateText} @ 9:00 AM`;
+    document.getElementById("summary-duration").textContent = `${finalHours} ${hourLabel} ${finalMinutes} ${minuteLabel}`;
+    document.getElementById("summary-recurrence").textContent = "One Time";
+  
+    document.getElementById("subtotalPrice").innerText = price.toFixed(2);
+    document.getElementById("salesTax").innerText = tax.toFixed(2);
+    document.getElementById("totalPrice").innerText = total.toFixed(2);
+  }
+});
 </script>
+
 
     
