@@ -258,7 +258,22 @@ document.addEventListener("DOMContentLoaded", function () {
   // === Load available hours dynamically ===
   function fetchAvailableHours() {
     const selectedDate = dateField?.value;
-    const selectedHours = parseInt(hoursField?.value || "3");
+    let selectedHours = 3; // default fallback
+
+    if (largeHomeOptions?.offsetParent !== null) {
+      // Use selected value for large homes
+      selectedHours = parseInt(hoursField?.value || "3");
+    } else {
+      // Use home type + extras for small homes
+      const homeSelect = document.getElementById("id_home_types");
+      let totalMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || "0");
+
+  document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+    totalMinutes += parseInt(cb.dataset.time || "0") || 0;
+  });
+
+  selectedHours = Math.ceil(totalMinutes / 60); // round up to next full hour
+}
 
     if (!selectedDate || isNaN(selectedHours)) return;
 
