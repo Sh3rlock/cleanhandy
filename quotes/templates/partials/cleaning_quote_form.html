@@ -399,8 +399,8 @@ document.addEventListener("DOMContentLoaded", function () {
   hoursField?.addEventListener("change", fetchAvailableHours);
 
   // Refresh on blur (when user clicks out of the input)
-  dateField.addEventListener("blur", fetchAvailableHours);
-  hoursField.addEventListener("blur", fetchAvailableHours);
+  dateField.addEventListener("change", fetchAvailableHours);
+  hoursField.addEventListener("change", fetchAvailableHours);
 
   document.querySelectorAll(".extra-checkbox").forEach(cb => cb.addEventListener("change", updatePrice));
   document.querySelectorAll("input, select").forEach(el => {
