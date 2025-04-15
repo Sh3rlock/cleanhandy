@@ -27,10 +27,10 @@ SECRET_KEY = 'django-insecure-b@l@av@rh*6)xlvgfrhu0a+*h9#l9pb&zdebab*+$(mkg)d73w
 DEBUG = True
 
 # For localhost
-# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*']
 
 # For production
-ALLOWED_HOSTS = ['cleanhandy-production.up.railway.app']
+# ALLOWED_HOSTS = ['cleanhandy-production.up.railway.app']
 
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
 
@@ -46,9 +46,11 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "CleanHandy"
 EMAIL_HOST_USER = "matyass91@gmail.com"
 EMAIL_HOST_PASSWORD = "weqwmobbdznudgff"
+DEFAULT_FROM_EMAIL = "matyass91@gmail.com"
 
 
-LOGIN_REDIRECT_URL = '/admin/'
+LOGIN_REDIRECT_URL = 'profile'
+LOGOUT_REDIRECT_URL = 'home'
 
 # Application definition
 
@@ -65,6 +67,8 @@ INSTALLED_APPS = [
     "customers",
     "adminpanel",
     "blog",
+    "accounts",
+    "giftcards",
 ]
 
 MIDDLEWARE = [

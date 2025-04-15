@@ -17,9 +17,9 @@
           </li>
         {% endif %}
   
-        {% if quote.home_types %}
+        {% if not quote.is_large_home and quote.home_types %}
           <li class="list-group-item">
-            Home Type ({{ quote.home_types.name }}): ${{ quote.home_types.price }}
+          Home Type ({{ quote.home_types.name }}): ${{ quote.home_types.price }}
           </li>
         {% endif %}
   

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial; }
+    .card {
+      border: 2px dashed #ccc;
+      padding: 20px;
+      width: 500px;
+      margin: auto;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>🎁 CleanHandy Gift Card</h2>
+    <p><strong>To:</strong> {{ giftcard.recipient_email }}</p>
+    <p><strong>Message:</strong> {{ giftcard.message|linebreaksbr }}</p>
+    <p><strong>Amount:</strong> {{ giftcard.amount }} €</p>
+    <p><strong>Gift Card Code:</strong> {{ giftcard.code }}</p>
+    <p>Use this code when booking a cleaning service to redeem your gift!</p>
+    <p><small>Issued on: {{ giftcard.created_at|date:"F j, Y" }}</small></p>
+  </div>
+</body>
+</html>

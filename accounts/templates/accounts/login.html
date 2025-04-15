@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <div class="card shadow-lg p-4" style="width: 100%; max-width: 420px; border-radius: 1rem;">
+    <h3 class="text-center mb-4">Welcome Back 👋</h3>
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      {% for field in form %}
+        <div class="mb-3">
+          <label for="{{ field.id_for_label }}" class="cmn-input">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <div class="text-danger small">{{ field.errors|striptags }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-block">Login</button>
+      </div>
+
+      <p class="text-center mt-3">
+        Don't have an account?
+        <a href="{% url 'register' %}">Register</a>
+      </p>
+    </form>
+  </div>
+</div>
+{% endblock %}

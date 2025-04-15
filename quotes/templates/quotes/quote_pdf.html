@@ -3,53 +3,145 @@
 <head>
   <meta charset="utf-8">
   <style>
-    body { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; }
-    h2 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
-    .section { margin-bottom: 20px; }
-    .bold { font-weight: bold; }
+    body {
+      font-family: 'Arial', sans-serif;
+      font-size: 12px;
+      color: #333;
+      padding: 10px 15px;
+      line-height: 1.4;
+    }
+    
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+
+    h2 {
+      font-size: 24px;
+      text-align: center;
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 10px;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .section h4 {
+      font-size: 16px;
+      border-bottom: 1px solid #ccc;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      color: #2c3e50;
+    }
+
+    .info {
+      margin-left: 20px;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    ul {
+      margin-left: 40px;
+    }
+
+    .total {
+      font-weight: bold;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 60px;
+      font-size: 12px;
+      color: #999;
+    }
   </style>
 </head>
 <body>
   <h2>Cleaning Quote Summary</h2>
 
   <div class="section">
-    <p><span class="bold">Customer:</span> {{ quote.customer.name }} ({{ quote.customer.email }})</p>
-    <p><span class="bold">Phone:</span> {{ quote.customer.phone }}</p>
+    <h4>💰 Price Breakdown</h4>
+    <div class="info">
+      {% if booking.square_feet_options %}
+        <p>Square Footage: {{ booking.square_feet_options.name }}</p>
+      {% endif %}
+
+      {% if not booking.is_large_home and booking.home_types %}
+        <p>Home Type: {{ booking.home_types.name }} — ${{ booking.home_types.price }}</p>
+      {% endif %}
+
+      {% if booking.extras.all %}
+        <p>Extras:</p>
+        <ul>
+          {% for extra in booking.extras.all %}
+            <li>+ {{ extra.name }} — ${{ extra.price }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% if booking.is_large_home %}
+        <p>Cleaning Type: {{ booking.cleaning_type|title }}</p>
+        <p>Number of Cleaners: {{ booking.num_cleaners }}</p>
+        <p>
+          Labor Cost: ${{ booking.num_cleaners }} × {{ booking.hours_requested }} hr ×
+          {% if booking.cleaning_type and booking.cleaning_type|lower == "post-renovation" %}$60{% else %}$55{% endif %}
+          = ${{ booking.calculate_subtotal }}
+        </p>
+      {% endif %}
+
+      <p>Subtotal: ${{ booking.calculate_subtotal }}</p>
+      <p>Sales Tax (8.875%): ${{ booking.calculate_tax }}</p>
+      <p class="total">Total: ${{ booking.price }}</p>
+    </div>
   </div>
 
   <div class="section">
-    <h3>Price Breakdown</h3>
-    {% if quote.square_feet_options %}
-    <p>Square Footage ({{ quote.square_feet_options.name }}): ${{ quote.square_feet_options.price }}</p>
-    {% endif %}
-    {% if quote.home_types %}
-    <p>Home Type ({{ quote.home_types.name }}): ${{ quote.home_types.price }}</p>
-    {% endif %}
-    {% if quote.extras.all %}
-    <p>Extras:</p>
-    <ul>
-      {% for extra in quote.extras.all %}
-        <li>{{ extra.name }} — ${{ extra.price }}</li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-    <p>Subtotal: ${{ quote.calculate_subtotal }}</p>
-    <p>Sales Tax: ${{ quote.calculate_tax }}</p>
-    <p class="bold">Total: ${{ quote.price }}</p>
+    <h4>📅 Schedule Info</h4>
+    <div class="info">
+      <p>Date: {{ booking.date }}</p>
+      <p>Time: {{ booking.hour }}</p>
+      <p>Duration: {{ booking.hours_requested }} hour(s)</p>
+      <p>Recurring:
+        {% if booking.recurrence_pattern != "one_time" %}
+          {{ booking.get_recurrence_pattern_display }}
+        {% else %}
+          One-time
+        {% endif %}
+      </p>
+    </div>
   </div>
 
   <div class="section">
-    <h3>Schedule</h3>
-    <p>Date: {{ quote.date }}</p>
-    <p>Time: {{ quote.hour }}</p>
-    <p>Duration: {{ quote.hours_requested }} hour(s)</p>
-    <p>Recurring: {{ quote.get_recurrence_pattern_display }}</p>
+    <h4>🏠 Home Info</h4>
+    <div class="info">
+      {% if booking.home_types %}
+        <p>Home Type: {{ booking.home_types.name }}</p>
+      {% endif %}
+      {% if booking.square_feet_options %}
+        <p>Square Feet: {{ booking.square_feet_options.name }}</p>
+      {% endif %}
+      <p>Address: {{ booking.address }}{% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}</p>
+      <p>ZIP: {{ booking.zip_code }}</p>
+    </div>
   </div>
 
   <div class="section">
-    <h3>Address</h3>
-    <p>{{ quote.address }}, Apt {{ quote.apartment }}</p>
-    <p>{{ quote.city }}, {{ quote.state }} {{ quote.zip_code }}</p>
+    <h4>👤 Customer Info</h4>
+    <div class="info">
+      <p>Name: {{ booking.name }}</p>
+      <p>Email: {{ booking.email }}</p>
+      <p>Phone: {{ booking.phone }}</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    This quote was generated automatically by CleanHandy. We look forward to working with you!
   </div>
 </body>
 </html>

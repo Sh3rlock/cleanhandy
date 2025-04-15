@@ -47,11 +47,15 @@ class SquareFeetOption(models.Model):
         return f"{self.name}"
 
 class Quote(models.Model):
-    customer = models.ForeignKey("customers.Customer", on_delete=models.CASCADE, null=True, blank=True)
+    customer = models.ForeignKey("accounts.CustomerProfile", on_delete=models.CASCADE, null=True, blank=True)
     service = models.ForeignKey("quotes.Service", on_delete=models.CASCADE)
     extras = models.ManyToManyField("CleaningExtra", blank=True)
     home_types = models.ForeignKey("HomeType", on_delete=models.CASCADE, null=True, blank=True)
     square_feet_options = models.ForeignKey("SquareFeetOption", on_delete=models.CASCADE, null=True, blank=True)
+
+     # Cleaning-specific fields
+    cleaning_type = models.CharField(max_length=100, null=True, blank=True)
+    num_cleaners = models.PositiveIntegerField(null=True, blank=True)
 
     # System Fields
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -99,8 +103,8 @@ class Quote(models.Model):
     zip_code = models.CharField(max_length=10, null=True, blank=True)
     
     def __str__(self):
-        return f"Quote {self.id} - {self.customer.name if self.customer else 'No Name'} ({self.status})"
-
+        return f"Quote {self.id} - {self.customer.full_name if self.customer else 'No Name'} ({self.status})"
+     
     def get_time_slots(self):
         """
         Returns a list of hourly time slot strings based on the starting hour and requested duration.
@@ -117,8 +121,11 @@ class Quote(models.Model):
             start = base_datetime + timedelta(hours=i)
             end = base_datetime + timedelta(hours=i + 1)
             slots.append(f"{start.strftime('%H:%M')} - {end.strftime('%H:%M')}")
-        
+
         return slots
+    
+    def is_large_home(self):
+        return not self.square_feet_options.name.lower().startswith("under 1000")
     
     def calculate_subtotal(self):
         subtotal = Decimal("0.00")
@@ -126,22 +133,33 @@ class Quote(models.Model):
         if self.square_feet_options:
             subtotal += Decimal(self.square_feet_options.price)
 
-        if self.home_types:
+        # ✅ Only include home type price if it's a small home
+        if not self.is_large_home() and self.home_types:
             subtotal += Decimal(self.home_types.price)
 
+        # ✅ Extras always apply (for small homes only)
         for extra in self.extras.all():
             subtotal += Decimal(extra.price)
 
+        # ✅ Labor cost only for large homes
+        if self.is_large_home() and self.hours_requested and self.num_cleaners:
+            rate = Decimal("60") if self.cleaning_type and ("post" in self.cleaning_type.lower() or "renovation" in self.cleaning_type.lower()) else Decimal("55")
+            subtotal += Decimal(self.num_cleaners) * Decimal(self.hours_requested) * rate
+
         return subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
 
     def calculate_tax(self):
         tax_rate = Decimal("0.08875")
+        # ✅ Subtotal already includes labor, no need to add again
         return (self.calculate_subtotal() * tax_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
 
     def calculate_total_price(self):
         subtotal = self.calculate_subtotal()
         tax = self.calculate_tax()
         return (subtotal + tax).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
     
 
 class NewsletterSubscriber(models.Model):
@@ -150,3 +168,127 @@ class NewsletterSubscriber(models.Model):
 
     def __str__(self):
         return self.email
+    
+
+
+class Booking(models.Model):
+    service_cat = models.ForeignKey("quotes.ServiceCategory", on_delete=models.CASCADE)
+    extras = models.ManyToManyField("CleaningExtra", blank=True)
+    home_types = models.ForeignKey("HomeType", on_delete=models.CASCADE, null=True, blank=True)
+    square_feet_options = models.ForeignKey("SquareFeetOption", on_delete=models.CASCADE, null=True, blank=True)
+
+     # Cleaning-specific fields
+    cleaning_type = models.CharField(max_length=100, null=True, blank=True)
+    num_cleaners = models.PositiveIntegerField(null=True, blank=True)
+
+    # System Fields
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    quote_email_sent_at = models.DateTimeField(null=True, blank=True)
+    last_admin_note = models.TextField(null=True, blank=True)
+    approval_token = models.CharField(max_length=64, blank=True, null=True)
+    pdf_file = models.FileField(upload_to="quotes/pdfs/", null=True, blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("confirmed", "Confirmed"),
+            ("declined", "Declined"),
+            ("accepted", "Accepted"),
+            ("booked", "Booked"),
+            ("expired", "Expired"),
+        ],
+        default="pending",
+    )
+
+
+    # Scheduling
+    date = models.DateField()
+    hour = models.TimeField()
+    hours_requested = models.IntegerField(null=True, blank=True)
+    recurrence_pattern = models.CharField(
+        max_length=20,
+        choices=[
+            ("one_time", "One Time"),
+            ("weekly", "Weekly"),
+            ("biweekly", "Biweekly"),
+            ("monthly", "Monthly"),
+        ],
+        default="one_time",
+    )
+    job_description = models.TextField(null=True, blank=True)
+
+    # Contract Info
+    name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=100)
+    phone = models.CharField(max_length=15, null=True, blank=True)
+
+     # Address Info
+    address = models.CharField(max_length=255, null=True, blank=True)
+    apartment = models.CharField(max_length=50, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True, default="New York")
+    state = models.CharField(max_length=50, null=True, blank=True, default="NY")
+    zip_code = models.CharField(max_length=10, null=True, blank=True)
+    
+    def __str__(self):
+        return f"Booking {self.id} - {self.name if self.name else 'No Name'} ({self.status})"
+     
+    def get_time_slots(self):
+        """
+        Returns a list of hourly time slot strings based on the starting hour and requested duration.
+        Ensures at least 2 hours are used even if `hours_requested` is null or less.
+        """
+        if not self.hour:
+            return []
+
+        duration = max(self.hours_requested or 2, 2)
+        slots = []
+
+        base_datetime = datetime.combine(self.date, self.hour)
+        for i in range(duration):
+            start = base_datetime + timedelta(hours=i)
+            end = base_datetime + timedelta(hours=i + 1)
+            slots.append(f"{start.strftime('%H:%M')} - {end.strftime('%H:%M')}")
+
+        return slots
+    
+    def is_large_home(self):
+        return not self.square_feet_options.name.lower().startswith("under 1000")
+    
+    def calculate_subtotal(self):
+        subtotal = Decimal("0.00")
+
+        if self.square_feet_options:
+            subtotal += Decimal(self.square_feet_options.price)
+
+        # ✅ Only include home type price if it's a small home
+        if not self.is_large_home() and self.home_types:
+            subtotal += Decimal(self.home_types.price)
+
+        # ✅ Extras always apply (for small homes only)
+        for extra in self.extras.all():
+            subtotal += Decimal(extra.price)
+
+        # ✅ Labor cost only for large homes
+        if self.is_large_home() and self.hours_requested and self.num_cleaners:
+            rate = Decimal("60") if self.cleaning_type and ("post" in self.cleaning_type.lower() or "renovation" in self.cleaning_type.lower()) else Decimal("55")
+            subtotal += Decimal(self.num_cleaners) * Decimal(self.hours_requested) * rate
+
+        return subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+    def calculate_tax(self):
+        tax_rate = Decimal("0.08875")
+        # ✅ Subtotal already includes labor, no need to add again
+        return (self.calculate_subtotal() * tax_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+    def calculate_total_price(self):
+        subtotal = self.calculate_subtotal()
+        tax = self.calculate_tax()
+        return (subtotal + tax).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+
+

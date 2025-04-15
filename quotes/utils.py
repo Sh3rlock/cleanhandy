@@ -1,5 +1,5 @@
 from datetime import time, timedelta, datetime
-from quotes.models import Quote
+from quotes.models import Quote, Booking
 from adminpanel.models import BlockedTimeSlot
 from datetime import datetime, timedelta, time
 from django.http import JsonResponse
@@ -11,6 +11,7 @@ from weasyprint import HTML
 from io import BytesIO
 from django.core.mail import EmailMessage
 from django.http import HttpRequest
+from django.conf import settings
 
 def get_available_hours_for_date(date, hours_requested=2):
     start_hour = 9
@@ -28,7 +29,7 @@ def get_available_hours_for_date(date, hours_requested=2):
 
     # Collect unavailable time ranges
     unavailable_ranges = []
-    for quote in Quote.objects.filter(date=date):
+    for quote in Booking.objects.filter(date=date):
         duration = max(quote.hours_requested or 2, 2)
         start = datetime.combine(date, quote.hour)
         end = start + timedelta(hours=duration)
@@ -55,56 +56,74 @@ def get_available_hours_for_date(date, hours_requested=2):
     return valid_slots
 
 def send_quote_email_handyman(quote):
-    subject = f"Quote Request - {quote.customer.name}"
+    subject = f"Quote Request - {quote.name}"
     text_content = (
-        f"New quote request from {quote.customer.name}.\n"
+        f"New quote request from {quote.name}.\n"
         f"Service: {quote.service}\n"
         f"Date: {quote.date}\n"
         f"Status: {quote.status}\n\n"
         f"Customer Contact:\n"
-        f"Name: {quote.customer.name}\n"
-        f"Email: {quote.customer.email}\n"
-        f"Phone: {quote.customer.phone}"
+        f"Name: {quote.name}\n"
+        f"Email: {quote.email}\n"
+        f"Phone: {quote.phone}"
     )
 
     html_content = f"""
     <h2>New Quote Request</h2>
-    <p><strong>Customer:</strong> {quote.customer.name}</p>
+    <p><strong>Customer:</strong> {quote.name}</p>
     <p><strong>Service:</strong> {quote.service}</p>
     <p><strong>Date:</strong> {quote.date}</p>
     <p><strong>Status:</strong> {quote.status}</p>
     <h3>Contact Information</h3>
-    <p><strong>Email:</strong> {quote.customer.email}</p>
-    <p><strong>Phone:</strong> {quote.customer.phone}</p>
+    <p><strong>Email:</strong> {quote.email}</p>
+    <p><strong>Phone:</strong> {quote.phone}</p>
     """
 
-    msg = EmailMultiAlternatives(subject, text_content, "matyass91@gmail.com", [quote.customer.email, "matyass91@gmail.com"])
+    msg = EmailMultiAlternatives(subject, text_content, "matyass91@gmail.com", [quote.email, "matyass91@gmail.com"])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
 
-def send_quote_email_cleaning(quote):
-    # Render HTML for PDF
-    pdf_html = render_to_string("quotes/quote_pdf.html", {"quote": quote})
+from django.conf import settings
+
+def send_quote_email_cleaning(booking):
+    # Render PDF HTML and generate PDF
+    pdf_html = render_to_string("quotes/quote_pdf.html", {"booking": booking})
     pdf_buffer = BytesIO()
     HTML(string=pdf_html).write_pdf(target=pdf_buffer)
     pdf_buffer.seek(0)
 
     # Save PDF to model
-    filename = f"quote-{quote.id}.pdf"
-    quote.pdf_file.save(filename, ContentFile(pdf_buffer.read()), save=True)
-    pdf_buffer.seek(0)  # Reset if also attaching to email
+    filename = f"quote-{booking.id}.pdf"
+    booking.pdf_file.save(filename, ContentFile(pdf_buffer.read()), save=True)
+    pdf_buffer.seek(0)
 
-    # Send email
-    html_message = render_to_string("quotes/email_quote_summary.html", {"quote": quote})
-    email = EmailMessage(
+    # Email to customer
+    html_message = render_to_string("quotes/email_quote_summary.html", {"booking": booking})
+    customer_email = EmailMessage(
         subject="Your Cleaning Quote",
         body=html_message,
         from_email="matyass91@gmail.com",
-        to=[quote.customer.email],
+        to=[booking.email],
     )
-    email.content_subtype = "html"
-    email.attach(filename, pdf_buffer.read(), "application/pdf")
-    email.send()
+    customer_email.content_subtype = "html"
+    customer_email.attach(filename, pdf_buffer.read(), "application/pdf")
+    customer_email.send()
+
+    # Reset PDF buffer for second email
+    pdf_buffer.seek(0)
+
+    # Email to admin/staff
+    admin_message = render_to_string("quotes/email_quote_admin.html", {"booking": booking})
+    admin_email = EmailMessage(
+        subject=f"New Cleaning Booking from {booking.name}",
+        body=admin_message,
+        from_email="matyass91@gmail.com",
+        to=[settings.DEFAULT_FROM_EMAIL],  # or use a hardcoded staff email here
+    )
+    admin_email.content_subtype = "html"
+    admin_email.attach(filename, pdf_buffer.read(), "application/pdf")
+    admin_email.send()
+
 
 
 def process_handyman_quote(form, request, service=None):

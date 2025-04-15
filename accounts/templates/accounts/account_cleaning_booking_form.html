@@ -1,0 +1,755 @@
+{% extends "accounts/partials/account_base.html" %}
+{% load static %}
+{% block account_content %}
+
+<style>
+  .modal-backdrop.show {
+    opacity: 0.5;
+  }
+
+  .modal.show {
+    z-index: 1050;
+  }
+
+  .modal {
+    background: rgba(0, 0, 0, 0.5);
+  }
+</style>
+
+
+<form method="post" id="quoteForm">
+  {% csrf_token %}
+
+  <input type="hidden" name="hours_requested" id="hidden_hours_requested">
+  <input type="hidden" name="num_cleaners" id="hidden_num_cleaners">
+  <input type="hidden" name="cleaning_type" id="hidden_cleaning_type">
+  <input type="hidden" name="service_cat" value="{{ service_cat.id }}">
+
+  <!-- Step 1: Choose Service Type -->
+  <div class="step mb-4" id="step1">
+      <div class="col-12">
+        <div class="form-group">
+          <label for="id_square_feet_options">Square Feet</label>
+          <select name="square_feet_options" id="id_square_feet_options" class="cmn-input">
+            {% for option in form.fields.square_feet_options.queryset %}
+              <option value="{{ option.id }}" data-price="{{ option.price }}">{{ option.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+      <div class="form-group">
+        <label for="id_home_types">Home Type</label>
+        <select name="home_types" id="id_home_types" class="cmn-input">
+          {% for option in form.fields.home_types.queryset %}
+            <option value="{{ option.id }}"
+                    data-price="{{ option.price }}"
+                    data-time="{{ option.extra_minutes }}">
+              {{ option.name }} (${{ option.price }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div id="cleaningExtrasContainer" class="mb-4">
+        <h4 class="mt-4">Select Optional Extras</h4>
+        <div class="row">
+          {% for extra in cleaning_extras %}
+            <div class="col-12 col-md-6 mb-2">
+              <div class="form-check p-3 border rounded shadow-sm h-100">
+                <input 
+                  class="form-check-input extra-checkbox" 
+                  type="checkbox" 
+                  id="extra{{ extra.id }}" 
+                  name="extras" 
+                  value="{{ extra.id }}" 
+                  data-price="{{ extra.price }}" 
+                  data-time="{{ extra.extra_minutes }}"
+                />
+                <label class="form-check-label ms-2" for="extra{{ extra.id }}">
+                  {{ extra.name }} <small class="text-muted">(+${{ extra.price }})</small>
+                </label>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Large Home Options -->
+  <div id="largeHomeOptions" class="mb-4" style="display: none;">
+    <h4>Large Home Cleaning Details</h4>
+    <div class="row">
+      <div class="col-12">
+        <select name="cleaning_type" class="cmn-input">
+          <option value="">Select Cleaning Type</option>
+          <option value="1000-1500 (Regular)" selected>1000–1500 sq.ft (Regular Cleaning)</option>
+          <option value="1000-1500 (Deep)">1000–1500 sq.ft (Deep Cleaning)</option>
+          <option value="1000-1500 (Move)">1000–1500 sq.ft (Move In/Out Cleaning)</option>
+          <option value="1000-1500 (Post)">1000–1500 sq.ft (Post Renovation)</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-6">
+        <select name="num_cleaners" class="cmn-input">
+          <option value="1">1 Cleaner</option>
+          <option value="2" selected>2 Cleaners</option>
+          <option value="3">3 Cleaners</option>
+        </select>
+      </div>
+      <div class="col-6">
+        <select name="est_hours" class="cmn-input">
+          <option value=""># of Hours</option>
+          <option value="2">2 Hours</option>
+          <option value="3" selected>3 Hours</option>
+          <option value="4">4 Hours</option>
+          <option value="5">5 Hours</option>
+          <option value="6">6 Hours</option>
+          <option value="7">7 Hours</option>
+          <option value="8">8 Hours</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Contact Info -->
+  <div class="step hidden-step" id="step3">
+    <h4>Contact Info</h4>
+
+    {{ form.name }}
+    {{ form.email }}
+    {{ form.phone }}
+    {{ form.city }}
+    {{ form.state }}
+    
+    {% if saved_addresses %}
+  <div class="form-group mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <label for="addressSelect" class="mb-0"><p>Please select you address from the list</p></label>
+      <button type="button" class="btn-1" onclick="openAddAddressModal()">
+        + Add New Address
+      </button>
+    </div>
+    <select id="addressSelect" class="cmn-input">
+      <option value="">Select Address</option>
+      {% for addr in saved_addresses %}
+        <option 
+          data-street="{{ addr.street_address }}"
+          data-apt="{{ addr.apt_suite }}"
+          data-zip="{{ addr.zip_code }}"
+          data-city="{{ addr.city }}"
+          data-state="{{ addr.state }}"
+        >
+          {{ addr.street_address }}, Apt {{ addr.apt_suite }}, {{ addr.zip_code }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+{% endif %}
+
+
+
+    <div class="row">
+      <div class="col-9">
+        {{ form.address }}
+      </div>
+      <div class="col-3">
+        {{ form.apartment }}
+      </div>
+    </div>
+
+    {{ form.zip_code }}
+
+    <h4 class="mt-4">Discount Code</h4>
+    <div class="row">
+      <div class="col-8">
+        <input type="text" name="discount" class="cmn-input" placeholder="Discount Code">
+      </div>
+      <div class="col-4">
+        <button type="submit" class="btn-1 w-100" style="padding:16px;">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Schedule Info -->
+  <div class="step hidden-step" id="step2">
+    <h4 class="mt-4">Schedule</h4>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.date.id_for_label }}">Date</label>
+        <div style="position: relative;">
+          {{ form.date }}
+          <i class="icon-calendar" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;"></i>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="{{ form.hour.id_for_label }}">Start Time</label>
+        {{ form.hour }}
+      </div>
+    </div>
+
+    {{ form.recurrence_pattern.label_tag }}
+    {{ form.recurrence_pattern }}
+
+    {{ form.job_description.label_tag }}
+    {{ form.job_description }}
+  </div>
+
+  <!-- Price Summary -->
+  <div class="service-summary mt-4 p-3 border rounded shadow-sm" style="background: #fff;">
+    <div id="summary-items" class="mb-3"></div>
+
+    <div class="d-flex align-items-center mb-1">
+      <i class="fa-solid fa-calendar-days me-2 text-muted"></i>
+      <span id="summary-date">–</span>
+    </div>
+    <div class="d-flex align-items-center mb-1">
+      <i class="fa-regular fa-clock me-2 text-muted"></i>
+      <span id="summary-duration">–</span>
+    </div>
+    <div class="d-flex align-items-center mb-3">
+      <i class="fa-solid fa-rotate me-2 text-muted"></i>
+      <span id="summary-recurrence">–</span>
+    </div>
+
+    <hr>
+
+    <div class="d-flex justify-content-between">
+      <strong>SUB-TOTAL</strong>
+      <strong>$<span id="subtotalPrice">0.00</span></strong>
+    </div>
+    <div class="d-flex justify-content-between">
+      <span>SALES TAX</span>
+      <span>$<span id="salesTax">0.00</span></span>
+    </div>
+    <div class="d-flex justify-content-between mt-2" style="font-size: 1.3rem;">
+      <strong>TOTAL</strong>
+      <strong style="color: orange;">$<span id="totalPrice">0.00</span></strong>
+    </div>
+  </div>
+
+  <!-- Terms -->
+  <div class="checkbox-wrap">
+    <input type="checkbox" id="terms" required>
+    <label for="terms">I agree with all the terms & conditions</label>
+  </div>
+
+  <button type="submit" class="btn-1 w-100">Book Service</button>
+</form>
+
+
+<!-- Custom Add Address Modal -->
+<div id="customAddAddressModal" class="custom-modal">
+  <div class="custom-modal-content">
+    <div class="custom-modal-header">
+      <h5>Add New Address</h5>
+      <span class="custom-modal-close" onclick="closeAddAddressModal()">&times;</span>
+    </div>
+    <form method="post" action="{% url 'add_customer_address' %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div class="form-group mb-2">
+          <label>Street Address</label>
+          <input type="text" name="street_address" class="cmn-input" required>
+        </div>
+        <div class="form-group mb-2">
+          <label>Apt / Suite</label>
+          <input type="text" name="apt_suite" class="cmn-input">
+        </div>
+        <div class="form-group mb-2">
+          <label>ZIP Code</label>
+          <input type="text" name="zip_code" class="cmn-input" required>
+        </div>
+       
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddAddressModal()">Cancel</button>
+        <button type="submit" class="btn-1">Save Address</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+// ================================
+// FLATPICKR + FORM LOGIC + PRICING ENGINE
+// ================================
+document.addEventListener("DOMContentLoaded", function () {
+  // === Flatpickr Setup ===
+  flatpickr("#id_date", {
+    dateFormat: "Y-m-d",
+    minDate: new Date().fp_incr(2),
+    defaultDate: new Date().fp_incr(2),
+    disableMobile: true
+  });
+
+  // === Shared DOM Elements ===
+  const dateField = document.getElementById("id_date");
+  const hourSelect = document.getElementById("id_hour");
+  const hoursField = document.querySelector('select[name="est_hours"]');
+  const sqftSelect = document.getElementById("id_square_feet_options");
+  const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
+  const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
+  const homeTypeGroup = document.getElementById("id_home_types")?.closest(".form-group");
+  const extrasContainer = document.getElementById("cleaningExtrasContainer");
+  const largeHomeOptions = document.getElementById("largeHomeOptions");
+
+  function isSmallHomeSelected() {
+    const selectedOption = sqftSelect?.selectedOptions[0];
+    if (!selectedOption) return false;
+    return selectedOption.textContent.toLowerCase().includes("under 1000");
+  }
+
+  // === Load available hours dynamically ===
+  function fetchAvailableHours() {
+    const selectedDate = dateField?.value;
+    let selectedHours = 3; // default fallback
+
+    if (largeHomeOptions?.offsetParent !== null) {
+      // Use selected value for large homes
+      selectedHours = parseInt(hoursField?.value || "3");
+    } else {
+      // Use home type + extras for small homes
+      const homeSelect = document.getElementById("id_home_types");
+      let totalMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || "0");
+
+  document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+    totalMinutes += parseInt(cb.dataset.time || "0") || 0;
+  });
+
+  selectedHours = Math.ceil(totalMinutes / 60); // round up to next full hour
+}
+
+    if (!selectedDate || isNaN(selectedHours)) return;
+
+    hourSelect.innerHTML = "<option>Loading...</option>";
+    hourSelect.disabled = true;
+
+    fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${selectedHours}`)
+      .then(response => response.json())
+      .then(data => {
+        hourSelect.innerHTML = "";
+        hourSelect.disabled = false;
+
+        if (!data.available_hours || data.available_hours.length === 0) {
+          hourSelect.innerHTML = "<option value=''>No available time</option>";
+        } else {
+          data.available_hours.forEach((hour, index) => {
+            const option = document.createElement("option");
+            option.value = hour;
+            option.textContent = hour;
+            if (index === 0) option.selected = true;
+            hourSelect.appendChild(option);
+          });
+
+          if (data.available_hours.length === 1) {
+            hourSelect.value = data.available_hours[0];
+          }
+        }
+
+        updatePrice();
+      })
+      .catch((err) => {
+        console.error("❌ Failed to fetch available hours:", err);
+        hourSelect.innerHTML = "<option value=''>Failed to load</option>";
+        hourSelect.disabled = false;
+      });
+  }
+
+  // === UI Defaults ===
+  function setDefaultSquareFeet() {
+    for (let i = 0; i < sqftSelect.options.length; i++) {
+      if (sqftSelect.options[i].textContent.toLowerCase().includes("under 1000")) {
+        sqftSelect.selectedIndex = i;
+        break;
+      }
+    }
+  }
+
+  function toggleHomeAndExtras() {
+    const selectedOption = sqftSelect?.selectedOptions[0];
+    if (!selectedOption) return;
+
+    const selectedName = selectedOption.textContent.trim().toLowerCase();
+    const isUnder1000 = selectedName.includes("under 1000");
+
+    if (isUnder1000) {
+      homeTypeGroup.style.display = "";
+      extrasContainer.style.display = "";
+      largeHomeOptions.style.display = "none";
+    } else {
+      homeTypeGroup.style.display = "none";
+      extrasContainer.style.display = "none";
+      largeHomeOptions.style.display = "";
+
+      document.querySelectorAll(".extra-checkbox").forEach(cb => cb.checked = false);
+
+      if (selectedName.includes("1500–2000") || selectedName.includes("1500-2000")) {
+        cleaningTypeSelect.innerHTML = `
+          <option value="">Select Cleaning Type</option>
+          <option value="1500-2000 (Regular)" selected>1500–2000 sq.ft (Regular Cleaning)</option>
+          <option value="1500-2000 (Deep)">1500–2000 sq.ft (Deep Cleaning)</option>
+          <option value="1500-2000 (Move)">1500–2000 sq.ft (Move In/Out Cleaning)</option>
+          <option value="1500-2000 (Post)">1500–2000 sq.ft (Post Renovation)</option>
+        `;
+        cleanerSelect.value = "2";
+        hoursField.value = "5";
+      } else if (selectedName.includes("custom")) {
+        cleaningTypeSelect.innerHTML = `
+          <option value="custom_cleaning" selected>Hourly Service 55$ per hour/per cleaner</option>
+        `;
+        cleanerSelect.value = "2";
+        hoursField.value = "5";
+      } else if (selectedName.includes("renovation")) {
+        cleaningTypeSelect.innerHTML = `
+          <option value="post_renovation" selected>Hourly Service 60$ per hour/per cleaner</option>
+        `;
+        cleanerSelect.value = "2";
+        hoursField.value = "5";
+      } else {
+        cleaningTypeSelect.innerHTML = `
+          <option value="">Select Cleaning Type</option>
+          <option value="1000-1500 (Regular)" selected>1000–1500 sq.ft (Regular Cleaning)</option>
+          <option value="1000-1500 (Deep)">1000–1500 sq.ft (Deep Cleaning)</option>
+          <option value="1000-1500 (Move)">1000–1500 sq.ft (Move In/Out Cleaning)</option>
+          <option value="1000-1500 (Post)">1000–1500 sq.ft (Post Renovation)</option>
+        `;
+        cleanerSelect.value = "2";
+        hoursField.value = "3";
+      }
+
+      cleaningTypeSelect?.dispatchEvent(new Event("change"));
+    }
+
+    updatePrice();
+  }
+
+  cleaningTypeSelect?.addEventListener("change", function () {
+    const value = this.value.toLowerCase();
+
+    if (value.includes("regular")) {
+      cleanerSelect.value = value.includes("1500-2000") ? "2" : "2";
+      hoursField.value = value.includes("1500-2000") ? "5" : "3";
+    } else if (value.includes("deep")) {
+      cleanerSelect.value = value.includes("1500-2000") ? "3" : "2";
+      hoursField.value = "5";
+    } else if (value.includes("move")) {
+      cleanerSelect.value = value.includes("1500-2000") ? "3" : "2";
+      hoursField.value = "5";
+    } else if (value.includes("post")) {
+      cleanerSelect.value = "3";
+      hoursField.value = value.includes("1500-2000") ? "8" : "6";
+    }
+
+    updatePrice();
+  });
+
+  // Run initializers
+  setDefaultSquareFeet();
+  toggleHomeAndExtras();
+  fetchAvailableHours();
+  updatePrice();
+  resetSummary();
+
+  // === Event Bindings ===
+  sqftSelect?.addEventListener("change", toggleHomeAndExtras);
+  sqftSelect?.addEventListener("change", fetchAvailableHours);
+  cleaningTypeSelect?.addEventListener("change", fetchAvailableHours);
+  cleanerSelect?.addEventListener("change", fetchAvailableHours);
+  hoursField?.addEventListener("change", fetchAvailableHours);
+
+  // Refresh on blur (when user clicks out of the input)
+  dateField.addEventListener("change", fetchAvailableHours);
+  hoursField.addEventListener("change", fetchAvailableHours);
+
+  document.querySelectorAll(".extra-checkbox").forEach(cb => cb.addEventListener("change", updatePrice));
+  document.querySelectorAll("input, select").forEach(el => {
+    el.addEventListener("change", updatePrice);
+    el.addEventListener("input", () => {
+      if (el.classList.contains("is-invalid") && el.value) {
+        el.classList.remove("is-invalid");
+      }
+    });
+  });
+  cleanerSelect?.addEventListener("change", updatePrice);
+  hoursField?.addEventListener("change", updatePrice);
+  cleaningTypeSelect?.addEventListener("change", updatePrice);
+
+   // ================================
+  // PRICE & SUMMARY CALCULATOR
+  // ================================
+  function updatePrice() {
+    let subtotal = 0;
+    const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
+    subtotal += sqftPrice;
+
+    // Home Type (only if visible)
+    if (isSmallHomeSelected()) {
+      const homeSelect = document.getElementById("id_home_types");
+      const homePrice = parseFloat(homeSelect?.selectedOptions[0]?.dataset.price || 0);
+      subtotal += homePrice;
+    }
+
+    // Extras (only if visible)
+    if (extrasContainer?.offsetParent !== null) {
+      document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+        subtotal += parseFloat(cb.dataset.price || 0);
+      });
+    }
+
+    // Labor cost for large homes
+let laborCost = 0;
+if (largeHomeOptions?.offsetParent !== null) {
+  const numCleaners = parseInt(cleanerSelect?.value || 0);
+  const estimatedHours = parseFloat(hoursField?.value || 0); // ✅ correct value
+  const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
+  let hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 60 : 55;
+
+  laborCost = numCleaners * estimatedHours * hourlyRate;
+  subtotal += laborCost;
+}
+
+    const taxRate = 0.08875;
+    const tax = subtotal * taxRate;
+    const total = subtotal + tax;
+
+    // Update UI values
+    document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
+    document.getElementById("salesTax").innerText = tax.toFixed(2);
+    document.getElementById("totalPrice").innerText = total.toFixed(2);
+
+    // Update summary items list
+    const summaryContainer = document.getElementById("summary-items");
+    summaryContainer.innerHTML = "";
+
+    if (sqftSelect) {
+      const sqftLabel = sqftSelect.selectedOptions[0]?.textContent.trim();
+      if (sqftPrice > 0) {
+        summaryContainer.innerHTML += `
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div><i class="fa-solid fa-house me-2"></i>${sqftLabel}</div>
+            <div>$${sqftPrice.toFixed(2)}</div>
+          </div>`;
+      }
+    }
+
+    if (isSmallHomeSelected()) {
+      const homeSelect = document.getElementById("id_home_types");
+      const homeOption = homeSelect?.selectedOptions[0];
+      const homeLabel = homeOption?.textContent.trim();
+      const homePrice = parseFloat(homeOption?.dataset.price || 0);
+    
+      if (homeLabel && homePrice > 0) {
+        summaryContainer.innerHTML += `
+          <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
+            <div>• ${homeLabel}</div>
+            <div>$${homePrice.toFixed(2)}</div>
+          </div>`;
+      }
+    }
+
+    document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+      const label = cb.nextElementSibling?.textContent?.trim() || "Extra";
+      const price = parseFloat(cb.dataset.price || 0).toFixed(2);
+      summaryContainer.innerHTML += `
+        <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
+          <div>• ${label}</div>
+          <div>$${price}</div>
+        </div>`;
+    });
+
+    if (largeHomeOptions?.offsetParent !== null && laborCost > 0) {
+      const numCleaners = parseInt(cleanerSelect?.value || "0");
+      const hours = parseFloat(hoursField?.value || "0");
+      const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
+      const hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 60 : 55;
+    
+      summaryContainer.innerHTML += `
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <div><i class="fa-solid fa-broom me-2"></i>${numCleaners} Cleaners × ${hours} Hours × $${hourlyRate}/hour</div>
+          <div>$${laborCost.toFixed(2)}</div>
+        </div>`;
+    }
+
+    // Update schedule info
+    const dateVal = document.getElementById("id_date")?.value || "-";
+    const timeVal = document.getElementById("id_hour")?.value || "-";
+    const recurrenceText = document.getElementById("id_recurrence_pattern")?.selectedOptions?.[0]?.textContent || "-";
+
+    document.getElementById("summary-date").textContent = `${dateVal} @ ${timeVal}`;
+    document.getElementById("summary-recurrence").textContent = recurrenceText;
+
+    // Calculate and display total duration
+let totalMinutes = 0;
+if (largeHomeOptions?.offsetParent !== null) {
+  const estimatedHours = parseFloat(hoursField?.value || "0");
+  totalMinutes = estimatedHours * 60;
+} else {
+  const homeSelect = document.getElementById("id_home_types");
+  const baseMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || "0");
+  totalMinutes += isNaN(baseMinutes) ? 0 : baseMinutes;
+
+  document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+    totalMinutes += parseInt(cb.dataset.time || "0") || 0;
+  });
+}
+    
+
+    const finalHours = Math.floor(totalMinutes / 60);
+    const finalMinutes = totalMinutes % 60;
+    const hourLabel = finalHours === 1 ? "Hour" : "Hours";
+    const minuteLabel = finalMinutes === 1 ? "Minute" : "Minutes";
+    document.getElementById("summary-duration").textContent = `${finalHours} ${hourLabel} ${finalMinutes} ${minuteLabel}`;
+  }
+
+  function resetSummary() {
+    // 1. Reset home type to "Studio"
+    const homeTypeSelect = document.getElementById("id_home_types");
+    if (homeTypeSelect) {
+      for (let i = 0; i < homeTypeSelect.options.length; i++) {
+        if (homeTypeSelect.options[i].textContent.toLowerCase().includes("studio")) {
+          homeTypeSelect.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  
+    // 2. Uncheck all extras
+    document.querySelectorAll(".extra-checkbox").forEach(cb => {
+      cb.checked = false;
+    });
+  
+    // 3. Reset date and time
+    const today = new Date();
+    today.setDate(today.getDate() + 2); // ✅ Add 2 days
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const formattedDateInput = `${yyyy}-${mm}-${dd}`;
+    const formattedDateText = `${mm}/${dd}/${yyyy}`;
+    const time = "09:00"; // 9:00 AM
+  
+    const dateInput = document.getElementById("id_date");
+    if (dateInput) dateInput.value = formattedDateInput;
+  
+    const timeInput = document.getElementById("id_hour");
+    if (timeInput) timeInput.value = time;
+  
+    // 4. Reset recurrence to "One Time"
+    const recurrenceSelect = document.getElementById("id_recurrence_pattern");
+    if (recurrenceSelect) {
+      for (let i = 0; i < recurrenceSelect.options.length; i++) {
+        if (recurrenceSelect.options[i].textContent.toLowerCase().includes("one time")) {
+          recurrenceSelect.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  
+    // 5. Reset duration to base from selected Studio (data-time)
+    const selectedOption = homeTypeSelect?.selectedOptions[0];
+    let baseMinutes = parseInt(selectedOption?.dataset.time || "180"); // fallback to 3 hrs
+  
+    const finalHours = Math.floor(baseMinutes / 60);
+    const finalMinutes = baseMinutes % 60;
+    const hourLabel = finalHours === 1 ? "Hour" : "Hours";
+    const minuteLabel = finalMinutes === 1 ? "Minute" : "Minutes";
+  
+    // 6. Update summary UI
+    const price = parseFloat(selectedOption?.dataset.price || "130");
+    const taxRate = 0.08875;
+    const tax = price * taxRate;
+    const total = price + tax;
+  
+    document.getElementById("summary-items").innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
+        <div>• Studio ($130.00)</div>
+        <div>$${price.toFixed(2)}</div>
+      </div>`;
+  
+    document.getElementById("summary-date").textContent = `${formattedDateText} @ 9:00 AM`;
+    document.getElementById("summary-duration").textContent = `${finalHours} ${hourLabel} ${finalMinutes} ${minuteLabel}`;
+    document.getElementById("summary-recurrence").textContent = "One Time";
+  
+    document.getElementById("subtotalPrice").innerText = price.toFixed(2);
+    document.getElementById("salesTax").innerText = tax.toFixed(2);
+    document.getElementById("totalPrice").innerText = total.toFixed(2);
+  }
+
+  function syncHiddenFields() {
+    // If large home section is visible, use that data
+    if (document.getElementById("largeHomeOptions")?.offsetParent !== null) {
+      const cleaners = document.querySelector('select[name="num_cleaners"]')?.value;
+      const hours = document.querySelector('select[name="est_hours"]')?.value;
+      const type = document.querySelector('select[name="cleaning_type"]')?.value;
+  
+      document.getElementById("hidden_hours_requested").value = hours;
+      document.getElementById("hidden_num_cleaners").value = cleaners;
+      document.getElementById("hidden_cleaning_type").value = type;
+    } else {
+      // For small homes: use computed time from summary
+      const homeSelect = document.getElementById("id_home_types");
+      let totalMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || "0");
+  
+      document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+        totalMinutes += parseInt(cb.dataset.time || "0") || 0;
+      });
+  
+      const roundedHours = Math.ceil(totalMinutes / 60);
+  
+      document.getElementById("hidden_hours_requested").value = roundedHours;
+      document.getElementById("hidden_num_cleaners").value = 1;
+      document.getElementById("hidden_cleaning_type").value = ""; // optional
+    }
+  }
+  document.getElementById("quoteForm").addEventListener("submit", function () {
+    syncHiddenFields(); // ✅ ensures all values are ready
+  });
+});
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const addrSelect = document.getElementById("addressSelect");
+    if (addrSelect) {
+      addrSelect.addEventListener("change", function () {
+        const selected = this.selectedOptions[0];
+        if (!selected) return;
+  
+        document.getElementById("id_address").value = selected.dataset.street || "";
+        document.getElementById("id_apartment").value = selected.dataset.apt || "";
+        document.getElementById("id_zip_code").value = selected.dataset.zip || "";
+        document.getElementById("id_city").value = selected.dataset.city || "New York";
+        document.getElementById("id_state").value = selected.dataset.state || "NY";
+      });
+    }
+  });
+  </script>
+
+  <script>
+    function openAddAddressModal() {
+      document.getElementById("customAddAddressModal").style.display = "block";
+    }
+  
+    function closeAddAddressModal() {
+      document.getElementById("customAddAddressModal").style.display = "none";
+    }
+  
+    window.addEventListener("click", function (event) {
+      const modal = document.getElementById("customAddAddressModal");
+      if (event.target === modal) {
+        closeAddAddressModal();
+      }
+    });
+  </script>
+
+{% endblock %}
+
+
+    

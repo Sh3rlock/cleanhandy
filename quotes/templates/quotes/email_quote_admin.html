@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #333; }
+    h2 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+  </style>
+</head>
+<body>
+  <h2>New Cleaning booking Submitted</h2>
+
+  <p><strong>Customer:</strong> {{ booking.name }} ({{ booking.email }})</p>
+  <p><strong>Phone:</strong> {{ booking.phone }}</p>
+
+  <p><strong>Service Address:</strong> {{ booking.address }}, Apt {{ booking.apartment }}, {{ booking.city }} {{ booking.zip_code }}</p>
+  <p><strong>Date & Time:</strong> {{ booking.date }} at {{ booking.hour }}</p>
+
+  <p><strong>Total Price:</strong> ${{ booking.price }}</p>
+
+  <p>See full details in the attached PDF.</p>
+</body>
+</html>
