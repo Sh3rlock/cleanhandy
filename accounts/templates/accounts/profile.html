@@ -137,11 +137,20 @@
             <li class="nav-item">
               <a href="{% url 'my_bookings' %}" class="nav-link {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}">Booking History</a>
             </li>
-            <li class="nav-item">
-              <a href="{% url 'purchase_gift_card' %}" class="nav-link">Gift Card</a>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="bookNowDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Book Now
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="bookNowDropdown">
+                <li><a class="dropdown-item" href="{% url 'request_cleaning_booking' service_cat.id %}">Cleaning</a></li>
+                <li><a class="dropdown-item" href="">Handyman</a></li>
+              </ul>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link">Help</a>
+              <a href="{% url 'purchase_gift_card' %}" class="nav-link {% if request.resolver_match.url_name == 'giftcard' %}active{% endif %}">Gift Card</a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'help' %}" class="nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}">Help</a>
             </li>
             <li class="nav-item">
               <a href="#" class="nav-link">Billing Info</a>

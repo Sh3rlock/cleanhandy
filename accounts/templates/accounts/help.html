@@ -1,0 +1,97 @@
+{% extends "accounts/partials/account_base.html" %}
+{% load static %}
+{% block account_content %}
+  <!-- contact details -->
+  <section class="contact-details">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-md-6">
+                <div class="contact-details-content">
+                    <div class="contact-details-icon">
+                        <i class="fa-light fa-envelope"></i>
+                    </div>
+                    <div class="contact-details-info">
+                        <h6>Send Email</h6>
+                        <a href="mailto:example@gmail.com">example@gmail.com</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="contact-details-content">
+                    <div class="contact-details-icon">
+                        <i class="icon-call"></i>
+                    </div>
+                    <div class="contact-details-info">
+                        <h6>Call Us Now</h6>
+                        <a href="tel:+880123(4567)890">+880 123 (4567) 890</a>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="col-lg-4 col-md-6">
+                <div class="contact-details-content">
+                    <div class="contact-details-icon">
+                        <i class="fa-sharp fa-light fa-alarm-clock"></i>
+                    </div>
+                    <div class="contact-details-info">
+                        <h6>Update Info</h6>
+                        <a href="#0">24/7 Support</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- contact details -->
+
+
+<!-- contact -->
+<section class="contact mt-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-5">
+                <div class="contact-left-container text-center">
+                    <div class="contact-image">
+                        <img src="{% static '/assets/images/banner/banner_img.webp' %}" style="width: auto;" alt="img" />
+                    </div>
+                    <div class="contact-shape">
+                    </div>
+                   
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="contact-form">
+                    <h3>Sent A Message</h3>
+                    <form>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <input type="text" class="cmn-input" name="name" placeholder="Enter Name">
+                            </div>
+                            <div class="col-lg-6">
+                                <input type="email" class="cmn-input" name="email" placeholder="Your Email">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <input type="text" class="cmn-input" name="subject" placeholder="subject">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <textarea class="cmn-input" name="massage">Write your message</textarea>
+                                <div class="checkbox-input">
+                                    <input type="checkbox" class="form-check-input">
+                                    <label>I agree with all the terms & conditions</label>
+                                </div>
+                                <button type="submit" class="btn-1">Submit Now <i class="icon-arrow-1"></i></button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- contact -->
+{% endblock %}

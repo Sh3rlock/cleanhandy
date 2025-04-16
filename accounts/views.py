@@ -277,5 +277,11 @@ def cancel_booking(request, booking_id):
 
     return redirect("booking_detail", booking_id=booking.id)
 
+def help(request):
+    service_cat = ServiceCategory.objects.filter(name__iexact='cleaning').first()
+    return render(request, "accounts/help.html", {
+        "service_cat": service_cat,
+    })
+
 
 

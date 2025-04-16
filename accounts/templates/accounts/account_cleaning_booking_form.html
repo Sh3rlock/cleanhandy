@@ -3,6 +3,34 @@
 {% block account_content %}
 
 <style>
+  :root {
+    --bs-primary: #F15A29;
+  }
+  
+  .btn-primary {
+    background-color: #F15A29;
+    border-color: #F15A29;
+  }
+  
+  .btn-primary:hover,
+  .btn-primary:focus {
+    background-color: #d44f24;
+    border-color: #d44f24;
+  }
+
+  /* Outline primary button */
+.btn-outline-primary {
+  color: #F15A29;
+  border-color: #F15A29;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  background-color: #F15A29;
+  color: #fff;
+  border-color: #F15A29;
+}
+
   .modal-backdrop.show {
     opacity: 0.5;
   }
@@ -14,12 +42,31 @@
   .modal {
     background: rgba(0, 0, 0, 0.5);
   }
+
+  #stickySummary.fixed {
+    position: fixed;
+    top: 80px; /* adjust for your navbar */
+    z-index: 1000;
+  }
+  
+  #stickySummaryWrapper {
+    position: relative;
+  }
+  
+  @media (max-width: 991px) {
+    #stickySummary.fixed {
+      position: static;
+      width: 100%;
+    }
+  }
+  
 </style>
 
 
 <form method="post" id="quoteForm">
   {% csrf_token %}
-
+  <div class="row">
+    <div class="col-lg-8">
   <input type="hidden" name="hours_requested" id="hidden_hours_requested">
   <input type="hidden" name="num_cleaners" id="hidden_num_cleaners">
   <input type="hidden" name="cleaning_type" id="hidden_cleaning_type">
@@ -117,49 +164,113 @@
   <div class="step hidden-step" id="step3">
     <h4>Contact Info</h4>
 
-    {{ form.name }}
-    {{ form.email }}
-    {{ form.phone }}
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        {{ form.name.label_tag }}
+        {{ form.name }}
+        {% if form.name.errors %}
+          <div class="text-danger small">{{ form.name.errors.0 }}</div>
+        {% endif %}
+      </div>
+    
+      <div class="col-md-4 mb-3">
+        {{ form.email.label_tag }}
+        {{ form.email }}
+        {% if form.email.errors %}
+          <div class="text-danger small">{{ form.email.errors.0 }}</div>
+        {% endif %}
+      </div>
+      <div class="col-md-4 mb-3">
+        {{ form.phone.label_tag }}
+        {{ form.phone }}
+        {% if form.email.errors %}
+          <div class="text-danger small">{{ form.phone.errors.0 }}</div>
+        {% endif %}
+      </div>
+    </div>
     {{ form.city }}
     {{ form.state }}
     
     {% if saved_addresses %}
-  <div class="form-group mb-3">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <label for="addressSelect" class="mb-0"><p>Please select you address from the list</p></label>
-      <button type="button" class="btn-1" onclick="openAddAddressModal()">
-        + Add New Address
-      </button>
-    </div>
-    <select id="addressSelect" class="cmn-input">
-      <option value="">Select Address</option>
-      {% for addr in saved_addresses %}
-        <option 
-          data-street="{{ addr.street_address }}"
-          data-apt="{{ addr.apt_suite }}"
-          data-zip="{{ addr.zip_code }}"
-          data-city="{{ addr.city }}"
-          data-state="{{ addr.state }}"
-        >
-          {{ addr.street_address }}, Apt {{ addr.apt_suite }}, {{ addr.zip_code }}
-        </option>
-      {% endfor %}
-    </select>
-  </div>
+    <div class="card mb-4 shadow-sm" style="border: 1px solid #F15A29;">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-0">Select Address</h5>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddAddressModal()">
+            + Add New Address
+          </button>
+        </div>
+    
+        <div class="form-group mb-3">
+          <label for="addressSelect" class="form-label">Your Saved Addresses</label>
+          <select id="addressSelect" class="form-select">
+            <option value="">Select Address</option>
+            {% for addr in saved_addresses %}
+              <option 
+                data-street="{{ addr.street_address }}"
+                data-apt="{{ addr.apt_suite }}"
+                data-zip="{{ addr.zip_code }}"
+                data-city="{{ addr.city }}"
+                data-state="{{ addr.state }}"
+              >
+                {{ addr.street_address }}, Apt {{ addr.apt_suite }}, {{ addr.zip_code }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+    
+        <!-- Address details row (if dynamically shown) -->
+        <div id="selectedAddressDetails" class="row g-2 d-none">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Street</label>
+            <p class="form-control-plaintext" id="addressStreet">–</p>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Apt/Suite</label>
+            <p class="form-control-plaintext" id="addressApt">–</p>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">ZIP Code</label>
+            <p class="form-control-plaintext" id="addressZip">–</p>
+          </div>
+        </div>
+    
+    
 {% endif %}
 
 
 
-    <div class="row">
-      <div class="col-9">
-        {{ form.address }}
-      </div>
-      <div class="col-3">
-        {{ form.apartment }}
-      </div>
-    </div>
+<div class="row g-3">
+  <!-- Street Address -->
+  <div class="col-md-6">
+    <label for="{{ form.address.id_for_label }}" class="form-label">Street Address</label>
+    {{ form.address }}
+    {% if form.address.errors %}
+      <div class="text-danger small">{{ form.address.errors.0 }}</div>
+    {% endif %}
+  </div>
 
+  <!-- Apartment / Suite -->
+  <div class="col-md-3">
+    <label for="{{ form.apartment.id_for_label }}" class="form-label">Apt/Suite</label>
+    {{ form.apartment }}
+    {% if form.apartment.errors %}
+      <div class="text-danger small">{{ form.apartment.errors.0 }}</div>
+    {% endif %}
+  </div>
+
+  <!-- ZIP Code -->
+  <div class="col-md-3">
+    <label for="{{ form.zip_code.id_for_label }}" class="form-label">ZIP Code</label>
     {{ form.zip_code }}
+    {% if form.zip_code.errors %}
+      <div class="text-danger small">{{ form.zip_code.errors.0 }}</div>
+    {% endif %}
+  </div>
+</div>
+</div>
+</div>
+
 
     <h4 class="mt-4">Discount Code</h4>
     <div class="row">
@@ -167,7 +278,7 @@
         <input type="text" name="discount" class="cmn-input" placeholder="Discount Code">
       </div>
       <div class="col-4">
-        <button type="submit" class="btn-1 w-100" style="padding:16px;">Apply</button>
+        <button type="submit" class="btn-1 w-100">Apply</button>
       </div>
     </div>
   </div>
@@ -175,67 +286,79 @@
   <!-- Step 2: Schedule Info -->
   <div class="step hidden-step" id="step2">
     <h4 class="mt-4">Schedule</h4>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="{{ form.date.id_for_label }}">Date</label>
+    <div class="row g-3 align-items-end">
+      <!-- Date -->
+      <div class="col-md-4">
+        <label for="{{ form.date.id_for_label }}" class="form-label">Date</label>
         <div style="position: relative;">
           {{ form.date }}
-          <i class="icon-calendar" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;"></i>
+          <i class="icon-calendar" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); pointer-events:none;"></i>
         </div>
       </div>
-      <div class="form-group">
-        <label for="{{ form.hour.id_for_label }}">Start Time</label>
+    
+      <!-- Start Time -->
+      <div class="col-md-4">
+        <label for="{{ form.hour.id_for_label }}" class="form-label">Start Time</label>
         {{ form.hour }}
       </div>
+    
+      <!-- Recurrence Pattern -->
+      <div class="col-md-4">
+        <label for="{{ form.recurrence_pattern.id_for_label }}" class="form-label">Recurrence</label>
+        {{ form.recurrence_pattern }}
+      </div>
     </div>
-
-    {{ form.recurrence_pattern.label_tag }}
-    {{ form.recurrence_pattern }}
+    
 
     {{ form.job_description.label_tag }}
     {{ form.job_description }}
   </div>
+</div>
+<div class="col-lg-4">
+  <div id="stickySummaryWrapper">
+    <div id="stickySummary" class="service-summary mt-4 p-3 border rounded shadow-sm bg-white">
+      <div id="summary-items" class="mb-3"></div>
 
-  <!-- Price Summary -->
-  <div class="service-summary mt-4 p-3 border rounded shadow-sm" style="background: #fff;">
-    <div id="summary-items" class="mb-3"></div>
+      <div class="d-flex align-items-center mb-1">
+        <i class="fa-solid fa-calendar-days me-2 text-muted"></i>
+        <span id="summary-date">–</span>
+      </div>
+      <div class="d-flex align-items-center mb-1">
+        <i class="fa-regular fa-clock me-2 text-muted"></i>
+        <span id="summary-duration">–</span>
+      </div>
+      <div class="d-flex align-items-center mb-3">
+        <i class="fa-solid fa-rotate me-2 text-muted"></i>
+        <span id="summary-recurrence">–</span>
+      </div>
 
-    <div class="d-flex align-items-center mb-1">
-      <i class="fa-solid fa-calendar-days me-2 text-muted"></i>
-      <span id="summary-date">–</span>
-    </div>
-    <div class="d-flex align-items-center mb-1">
-      <i class="fa-regular fa-clock me-2 text-muted"></i>
-      <span id="summary-duration">–</span>
-    </div>
-    <div class="d-flex align-items-center mb-3">
-      <i class="fa-solid fa-rotate me-2 text-muted"></i>
-      <span id="summary-recurrence">–</span>
+      <hr>
+
+      <div class="d-flex justify-content-between">
+        <strong>SUB-TOTAL</strong>
+        <strong>$<span id="subtotalPrice">0.00</span></strong>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span>SALES TAX</span>
+        <span>$<span id="salesTax">0.00</span></span>
+      </div>
+      <div class="d-flex justify-content-between mt-2" style="font-size: 1.3rem;">
+        <strong>TOTAL</strong>
+        <strong style="color: orange;">$<span id="totalPrice">0.00</span></strong>
+      </div>
+
+    <!-- Terms -->
+    <div class="checkbox-wrap mt-3">
+      <input type="checkbox" id="terms" required>
+      <label for="terms">I agree with all the terms & conditions</label>
     </div>
 
-    <hr>
-
-    <div class="d-flex justify-content-between">
-      <strong>SUB-TOTAL</strong>
-      <strong>$<span id="subtotalPrice">0.00</span></strong>
-    </div>
-    <div class="d-flex justify-content-between">
-      <span>SALES TAX</span>
-      <span>$<span id="salesTax">0.00</span></span>
-    </div>
-    <div class="d-flex justify-content-between mt-2" style="font-size: 1.3rem;">
-      <strong>TOTAL</strong>
-      <strong style="color: orange;">$<span id="totalPrice">0.00</span></strong>
+    <button type="submit" class="btn-1 w-100 mt-3">Book Service</button>
     </div>
   </div>
+</div>
 
-  <!-- Terms -->
-  <div class="checkbox-wrap">
-    <input type="checkbox" id="terms" required>
-    <label for="terms">I agree with all the terms & conditions</label>
   </div>
-
-  <button type="submit" class="btn-1 w-100">Book Service</button>
 </form>
 
 
@@ -748,6 +871,36 @@ if (largeHomeOptions?.offsetParent !== null) {
       }
     });
   </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const summary = document.getElementById("stickySummary");
+      const wrapper = document.getElementById("stickySummaryWrapper");
+    
+      const offsetTop = wrapper.offsetTop;
+    
+      function handleScroll() {
+        const wrapperRect = wrapper.getBoundingClientRect();
+    
+        if (window.scrollY > offsetTop - 80) {
+          summary.classList.add("fixed");
+          summary.style.width = `${wrapper.offsetWidth}px`; // set exact width
+        } else {
+          summary.classList.remove("fixed");
+          summary.style.width = ""; // reset
+        }
+      }
+    
+      window.addEventListener("scroll", handleScroll);
+      window.addEventListener("resize", () => {
+        if (summary.classList.contains("fixed")) {
+          summary.style.width = `${wrapper.offsetWidth}px`;
+        }
+      });
+    });
+    </script>
+    
+    
 
 {% endblock %}
 

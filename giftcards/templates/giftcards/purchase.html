@@ -1,6 +1,56 @@
-<h2>Buy a Gift Card</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Purchase</button>
-</form>
+
+{% extends "accounts/partials/account_base.html" %}
+{% load static %}
+{% block account_content %}
+  
+    <div class="col-7">
+        <h2>Buy a Gift Card</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn-1 w-100">Purchase</button>
+        </form>
+    </div>
+    <div class="col-5">
+        <h2>Gift Card Details</h2>
+        <div class="giftcard-preview p-4 rounded shadow-sm" style="
+    background: linear-gradient(135deg, #f15a29, #f7941d);
+    color: white;
+    border-radius: 16px;
+    width: 100%;
+    min-height: 270px;
+    position: relative;
+    font-family: 'Segoe UI', sans-serif;
+">
+  <div class="d-flex justify-content-between align-items-start mb-3">
+    <h4 class="fw-bold mb-0">CleanHandy Gift Card</h4>
+    <i class="fa-solid fa-gift fa-xl"></i>
+  </div>
+
+  <div class="giftcard-content">
+    <p class="mb-1">To: <strong id="gc-to">Recipient Name</strong></p>
+    <p class="mb-1">From: <strong id="gc-from">Your Name</strong></p>
+    <p class="mb-3">Message: <em id="gc-message">Enjoy your sparkling clean home!</em></p>
+  </div>
+
+  <div class="position-absolute bottom-0 start-0 p-3 w-100" style="background: rgba(255,255,255,0.1); border-top: 1px dashed rgba(255,255,255,0.5);">
+    <div class="d-flex justify-content-between">
+      <div><strong>Amount</strong></div>
+      <div><strong id="gc-amount">€100</strong></div>
+    </div>
+    <div class="d-flex justify-content-between">
+      <div><small>Gift Card Code</small></div>
+      <div><small id="gc-code">ABCD-1234</small></div>
+    </div>
+  </div>
+</div>
+
+    </div>
+
+<script>
+    document.getElementById('gc-to').textContent = "John Doe";
+document.getElementById('gc-from').textContent = "Jane Smith";
+document.getElementById('gc-amount').textContent = "€50";
+document.getElementById('gc-code').textContent = "GH56-WXYZ";
+</script>
+{% endblock %}

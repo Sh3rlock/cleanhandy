@@ -4,11 +4,13 @@ from .models import GiftCard
 from .forms import GiftCardPurchaseForm
 from .utils import generate_giftcard_pdf, send_giftcard_email
 from .models import GiftCard
+from quotes.models import ServiceCategory
 
 def giftcard_success(request):
     return render(request, "giftcards/giftcard_success.html")
 
 def purchase_gift_card(request):
+    service_cat = ServiceCategory.objects.filter(name__iexact='cleaning').first()
     if request.method == "POST":
         form = GiftCardPurchaseForm(request.POST)
         if form.is_valid():
@@ -23,7 +25,7 @@ def purchase_gift_card(request):
             return redirect("giftcard_success")
     else:
         form = GiftCardPurchaseForm()
-    return render(request, "giftcards/purchase.html", {"form": form})
+    return render(request, "giftcards/purchase.html", {"form": form, "service_cat": service_cat})
 
 
 def check_giftcard_balance(request):
