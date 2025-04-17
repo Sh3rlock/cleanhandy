@@ -1,56 +1,94 @@
-
 {% extends "accounts/partials/account_base.html" %}
 {% load static %}
 {% block account_content %}
   
-    <div class="col-7">
-        <h2>Buy a Gift Card</h2>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn-1 w-100">Purchase</button>
-        </form>
+<div class="col-7">
+  <h2>Buy a Gift Card</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="row mb-3">
+      <div class="col">
+        <label for="to_input" class="form-label">To</label>
+        <input type="text" id="to_input" name="to" class="cmn-input" placeholder="Recipient Name">
+      </div>
+      <div class="col">
+        <label for="from_input" class="form-label">From</label>
+        <input type="text" id="from_input" name="from" class="cmn-input" placeholder="Your Name">
+      </div>
     </div>
-    <div class="col-5">
-        <h2>Gift Card Details</h2>
-        <div class="giftcard-preview p-4 rounded shadow-sm" style="
-    background: linear-gradient(135deg, #f15a29, #f7941d);
-    color: white;
-    border-radius: 16px;
-    width: 100%;
-    min-height: 270px;
-    position: relative;
-    font-family: 'Segoe UI', sans-serif;
-">
-  <div class="d-flex justify-content-between align-items-start mb-3">
-    <h4 class="fw-bold mb-0">CleanHandy Gift Card</h4>
-    <i class="fa-solid fa-gift fa-xl"></i>
-  </div>
-
-  <div class="giftcard-content">
-    <p class="mb-1">To: <strong id="gc-to">Recipient Name</strong></p>
-    <p class="mb-1">From: <strong id="gc-from">Your Name</strong></p>
-    <p class="mb-3">Message: <em id="gc-message">Enjoy your sparkling clean home!</em></p>
-  </div>
-
-  <div class="position-absolute bottom-0 start-0 p-3 w-100" style="background: rgba(255,255,255,0.1); border-top: 1px dashed rgba(255,255,255,0.5);">
-    <div class="d-flex justify-content-between">
-      <div><strong>Amount</strong></div>
-      <div><strong id="gc-amount">€100</strong></div>
+  
+    <div class="mb-3">
+      <label for="message_input" class="form-label">Message</label>
+      <textarea id="message_input" name="message" class="cmn-input" placeholder="Write your message here...">Enjoy your sparkling clean home!</textarea>
     </div>
-    <div class="d-flex justify-content-between">
-      <div><small>Gift Card Code</small></div>
-      <div><small id="gc-code">ABCD-1234</small></div>
+  
+    <div class="mb-3">
+      <label for="amount_input" class="form-label">Amount ($)</label>
+      <input type="number" id="amount_input" name="amount" class="cmn-input" placeholder="e.g. 50">
+    </div>
+  
+    <button type="submit" class="btn-1 w-100">Purchase</button>
+  </form>
+  
+</div>
+
+<div class="col-5">
+  <h2>Gift Card Details</h2>
+  <div class="giftcard-preview p-4 rounded shadow-sm" style="
+      background: linear-gradient(135deg, #f15a29, #f7941d);
+      color: white;
+      border-radius: 16px;
+      width: 100%;
+      min-height: 270px;
+      position: relative;
+      font-family: 'Segoe UI', sans-serif;
+  ">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <h4 class="fw-bold mb-0">CleanHandy Gift Card</h4>
+      <i class="fa-solid fa-gift fa-xl"></i>
+    </div>
+
+    <div class="giftcard-content">
+      <p class="mb-1">To: <strong id="gc-to">Recipient Name</strong></p>
+      <p class="mb-1">From: <strong id="gc-from">Your Name</strong></p>
+      <p class="mb-3">Message: <em id="gc-message">Enjoy your sparkling clean home!</em></p>
+    </div>
+
+    <div class="position-absolute bottom-0 start-0 p-3 w-100" style="background: rgba(255,255,255,0.1); border-top: 1px dashed rgba(255,255,255,0.5);">
+      <div class="d-flex justify-content-between">
+        <div><strong>Amount</strong></div>
+        <div><strong id="gc-amount">€100</strong></div>
+      </div>
+      <div class="d-flex justify-content-between">
+        <div><small>Gift Card Code</small></div>
+        <div><small id="gc-code">ABCD-1234</small></div>
+      </div>
     </div>
   </div>
 </div>
 
-    </div>
-
 <script>
-    document.getElementById('gc-to').textContent = "John Doe";
-document.getElementById('gc-from').textContent = "Jane Smith";
-document.getElementById('gc-amount').textContent = "€50";
-document.getElementById('gc-code').textContent = "GH56-WXYZ";
+  const updatePreview = () => {
+    document.getElementById('gc-to').textContent = document.getElementById('to_input').value || "Recipient Name";
+    document.getElementById('gc-from').textContent = document.getElementById('from_input').value || "Your Name";
+    document.getElementById('gc-message').textContent = document.getElementById('message_input').value || "Enjoy your sparkling clean home!";
+    
+    const amount = document.getElementById('amount_input').value;
+    document.getElementById('gc-amount').textContent = amount ? `€${amount}` : "€100";
+  };
+
+  document.getElementById('to_input').addEventListener('input', updatePreview);
+  document.getElementById('from_input').addEventListener('input', updatePreview);
+  document.getElementById('message_input').addEventListener('input', updatePreview);
+  document.getElementById('amount_input').addEventListener('input', updatePreview);
+
+  // Optional: generate a random code when the page loads
+  const generateCode = () => {
+    const code = Math.random().toString(36).substring(2, 6).toUpperCase() + '-' +
+                 Math.random().toString(36).substring(2, 6).toUpperCase();
+    document.getElementById('gc-code').textContent = code;
+  };
+  generateCode();
 </script>
+
 {% endblock %}

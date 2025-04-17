@@ -166,7 +166,7 @@ class NewsletterForm(forms.ModelForm):
         widgets = {
             'email': forms.EmailInput(attrs={
                 'placeholder': 'Enter Your Email',
-                'class': 'cmn-input mb-0',
+                'class': 'cmn-input mb-0 newsletter-input',
                 'id': 'email',
             })
         }

@@ -4,6 +4,34 @@
 {% block content %}
 
 <style>
+  :root {
+    --bs-primary: #F15A29;
+  }
+  
+  .btn-primary {
+    background-color: #F15A29;
+    border-color: #F15A29;
+  }
+  
+  .btn-primary:hover,
+  .btn-primary:focus {
+    background-color: #d44f24;
+    border-color: #d44f24;
+  }
+
+  /* Outline primary button */
+.btn-outline-primary {
+  color: #F15A29;
+  border-color: #F15A29;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  background-color: #F15A29;
+  color: #fff;
+  border-color: #F15A29;
+}
+
   .nav-link {
     padding: 10px 18px;
     font-weight: 500;
@@ -76,7 +104,7 @@
     border-radius: 8px;
     border: 1px solid #F15A29;
     background: var(--white-color);
-    padding: 10px 10px !important;
+    padding: 10px 10px;
     width: 100%;
     margin-bottom: 5px !important;
   }
@@ -118,7 +146,7 @@
 </section>
 <!-- common banner -->
 
-<section class="service-details" style="margin-top:-50px">
+<section class="service-details mb-4" style="margin-top:-50px">
   <div class="container">
 
     <!-- Horizontal Navigation Bar -->
@@ -170,5 +198,6 @@
           {% block account_content %}
           {% endblock %}
 </div>
+</section>
 
 {% endblock %}

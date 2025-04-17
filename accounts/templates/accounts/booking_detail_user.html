@@ -1,6 +1,11 @@
 {% extends "accounts/partials/account_base.html" %}
 {% load static %}
 {% block account_content %}
+<style>
+  .card {
+    border: 1px solid #F15A29;
+  }
+</style>
 <div class="col-8">
   <div class="container py-4">
     <h2>📋 Booking Details</h2>
@@ -30,93 +35,107 @@
     </div>
 
     <!-- Booking Summary -->
-    <div class="card mt-4">
+    <div class="card mt-4 shadow-sm position-relative">
       <div class="card-body">
-        <h4>📦 Summary</h4>
-        <p><strong>Service:</strong> {{ booking.service_cat.name }}</p>
-        <p><strong>Date:</strong> {{ booking.date }} at {{ booking.hour }}</p>
-        <p>
-          <strong>Status:</strong>
-          <span class="badge 
-            {% if booking.status == 'pending' %}bg-warning text-dark
-            {% elif booking.status == 'confirmed' %}bg-success
-            {% elif booking.status == 'cancelled' %}bg-danger
-            {% else %}bg-secondary
-            {% endif %}
-          ">
-            {{ booking.status|title }}
-          </span>
-        </p>
-        {% if booking.pdf_file %}
-          <p><a href="{{ booking.pdf_file.url }}" target="_blank" class="btn btn-md btn-outline-dark">🧾 Download PDF</a></p>
-        {% endif %}
-
-        {% if booking.status == "pending" or booking.status == "confirmed" %}
-          <div class="d-flex gap-2 mt-3">
-            <a href="{% url 'reschedule_booking' booking.id %}" class="btn btn-outline-primary">📅 Reschedule</a>
-            <form method="post" action="{% url 'cancel_booking' booking.id %}">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this booking?')">❌ Cancel</button>
-            </form>
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <h5 class="mb-0">📦 Booking Summary</h5>
+    
+          {% if booking.pdf_file %}
+            <a href="{{ booking.pdf_file.url }}" target="_blank" class="btn btn-md btn-outline-dark">
+              🧾 Download PDF
+            </a>
+          {% endif %}
+        </div>
+    
+        <div class="row align-items-center">
+          <!-- Left: Info -->
+          <div class="col-md-8">
+            <p class="mb-2"><strong>Service:</strong> {{ booking.service_cat.name }}</p>
+            <p class="mb-2"><strong>Date:</strong> {{ booking.date }} at {{ booking.hour }}</p>
+            <p class="mb-2"><strong>Cleaners:</strong> {{ booking.num_cleaners }}, <strong>Hours:</strong> {{ booking.hours_requested }}</p>
+            <p class="mb-2">
+              <strong>Total Price:</strong>
+              <span class="badge rounded-pill" style="background-color: #F15A29; color: #fff; font-size: 1rem;">
+                ${{ booking.price|floatformat:2 }}
+              </span>
+            </p>
+            <p class="mb-2">
+              <strong>Status:</strong>
+              <span class="badge 
+                {% if booking.status == 'pending' %}bg-warning text-dark
+                {% elif booking.status == 'confirmed' %}bg-success
+                {% elif booking.status == 'cancelled' %}bg-danger
+                {% else %}bg-secondary
+                {% endif %}
+              ">
+                {{ booking.status|title }}
+              </span>
+            </p>
           </div>
-        {% endif %}
+    
+          <!-- Right: Action Buttons -->
+          <div class="col-md-4 text-md-end text-start mt-3 mt-md-0">
+            {% if booking.status == "pending" or booking.status == "confirmed" %}
+              <div class="d-flex flex-md-column gap-2 justify-content-md-end">
+                <a href="{% url 'reschedule_booking' booking.id %}" class="btn btn-outline-primary w-100">
+                  📅 Reschedule
+                </a>
+                <form method="post" action="{% url 'cancel_booking' booking.id %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-danger w-100"
+                    onclick="return confirm('Are you sure you want to cancel this booking?')">
+                    ❌ Cancel
+                  </button>
+                </form>
+              </div>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </div>
+    
+    
+    
 
-    <!-- Price Breakdown -->
-    <div class="card mt-4">
+    <!-- Compact 2-column layout for sections -->
+<div class="row mt-4 g-4">
+
+  <!-- Price Breakdown -->
+  <div class="col-md-6">
+    <div class="card h-100 shadow-sm">
       <div class="card-body">
-        <h4>💰 Price Breakdown</h4>
-        <ul class="list-group list-group-flush">
+        <h5 class="mb-3">💰 Price Breakdown</h5>
+        <ul class="list-group list-group-flush small">
           {% if booking.square_feet_options %}
-            <li class="list-group-item">Square Footage ({{ booking.square_feet_options.name }})</li>
+            <li class="list-group-item">Square Footage: {{ booking.square_feet_options.name }}</li>
           {% endif %}
-
           {% if not booking.is_large_home and booking.home_types %}
-            <li class="list-group-item">Home Type ({{ booking.home_types.name }}): ${{ booking.home_types.price }}</li>
+            <li class="list-group-item">Home Type: {{ booking.home_types.name }} (${{ booking.home_types.price }})</li>
           {% endif %}
-
-          {% if booking.extras.all %}
-            {% with booking.extras.all as extras %}
-              {% if extras %}
-                <li class="list-group-item">Extras:</li>
-                {% for extra in extras %}
-                  <li class="list-group-item ps-4">+ {{ extra.name }} — ${{ extra.price }}</li>
-                {% endfor %}
-              {% endif %}
-            {% endwith %}
-          {% endif %}
-
+          {% for extra in booking.extras.all %}
+            <li class="list-group-item ps-4">+ {{ extra.name }} — ${{ extra.price }}</li>
+          {% endfor %}
           {% if booking.is_large_home %}
-            <li class="list-group-item">Cleaning Type: {{ booking.cleaning_type|title }}</li>
-            <li class="list-group-item">Number of Cleaners: {{ booking.num_cleaners }}</li>
-            <li class="list-group-item">
-              Labor Cost:
-              ${{ booking.num_cleaners|floatformat:0 }} × {{ booking.hours_requested|floatformat:0 }} hr × 
-              {% if booking.cleaning_type and booking.cleaning_type|lower == "post-renovation" %}
-                $60
-              {% else %}
-                $55
-              {% endif %}
-              = ${{ booking.calculate_subtotal|floatformat:2 }}
-            </li>
+            <li class="list-group-item">Cleaners: {{ booking.num_cleaners }}</li>
+            <li class="list-group-item">Labor Cost: {{ booking.calculate_subtotal|floatformat:2 }}</li>
           {% endif %}
-
           <li class="list-group-item">Subtotal: ${{ booking.calculate_subtotal }}</li>
-          <li class="list-group-item">Sales Tax (8.875%): ${{ booking.calculate_tax }}</li>
+          <li class="list-group-item">Tax: ${{ booking.calculate_tax }}</li>
         </ul>
-        <h5 class="mt-3 text-primary">💵 Total Price: <strong>${{ booking.price }}</strong></h5>
+        <h6 class="mt-3 text-primary fw-bold">Total: ${{ booking.price }}</h6>
       </div>
     </div>
+  </div>
 
-    <!-- Schedule Info -->
-    <div class="card mt-4">
+  <!-- Schedule Info -->
+  <div class="col-md-6">
+    <div class="card h-100 shadow-sm">
       <div class="card-body">
-        <h4>📅 Scheduled Info</h4>
-        <p><strong>Date:</strong> {{ booking.date }}</p>
-        <p><strong>Time:</strong> {{ booking.hour|time:"H:i" }}</p>
-        <p><strong>Duration:</strong> {{ booking.hours_requested }} hour(s)</p>
-        <p><strong>Recurring:</strong> 
+        <h5 class="mb-3">📅 Schedule</h5>
+        <p class="mb-2"><strong>Date:</strong> {{ booking.date }}</p>
+        <p class="mb-2"><strong>Time:</strong> {{ booking.hour|time:"H:i" }}</p>
+        <p class="mb-2"><strong>Duration:</strong> {{ booking.hours_requested }} hour(s)</p>
+        <p class="mb-0"><strong>Recurring:</strong> 
           {% if booking.recurrence_pattern != "one_time" %}
             {{ booking.get_recurrence_pattern_display }}
           {% else %}
@@ -125,31 +144,39 @@
         </p>
       </div>
     </div>
+  </div>
 
-    <!-- Home Info -->
-    <div class="card mt-4">
+  <!-- Home Info -->
+  <div class="col-md-6">
+    <div class="card h-100 shadow-sm">
       <div class="card-body">
-        <h4>🏠 Home Info</h4>
+        <h5 class="mb-3">🏠 Home Info</h5>
         {% if booking.home_types %}
-          <p><strong>Home Type:</strong> {{ booking.home_types.name }}</p>
+          <p class="mb-2"><strong>Home Type:</strong> {{ booking.home_types.name }}</p>
         {% endif %}
         {% if booking.square_feet_options %}
-          <p><strong>Square Feet:</strong> {{ booking.square_feet_options.name }}</p>
+          <p class="mb-2"><strong>Square Feet:</strong> {{ booking.square_feet_options.name }}</p>
         {% endif %}
-        <p><strong>Address:</strong> {{ booking.address }}{% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}</p>
-        <p><strong>ZIP:</strong> {{ booking.zip_code }}</p>
+        <p class="mb-2"><strong>Address:</strong> {{ booking.address }}{% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}</p>
+        <p class="mb-0"><strong>ZIP:</strong> {{ booking.zip_code }}</p>
       </div>
     </div>
+  </div>
 
-    <!-- Customer Info -->
-    <div class="card mt-4">
+  <!-- Customer Info -->
+  <div class="col-md-6">
+    <div class="card h-100 shadow-sm">
       <div class="card-body">
-        <h4>👤 Customer Info</h4>
-        <p><strong>Name:</strong> {{ booking.name }}</p>
-        <p><strong>Email:</strong> {{ booking.email }}</p>
-        <p><strong>Phone:</strong> {{ booking.phone }}</p>
+        <h5 class="mb-3">👤 Customer Info</h5>
+        <p class="mb-2"><strong>Name:</strong> {{ booking.name }}</p>
+        <p class="mb-2"><strong>Email:</strong> {{ booking.email }}</p>
+        <p class="mb-0"><strong>Phone:</strong> {{ booking.phone }}</p>
       </div>
     </div>
+  </div>
+
+</div>
+
 
     <div class="mt-4 text-center">
       <a href="{% url 'my_bookings' %}" class="btn-1">← Back to My Bookings</a>
