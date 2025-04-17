@@ -97,6 +97,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'quotes.context_processors.all_services',
                 'quotes.context_processors.newsletter_form',
+                'quotes.context_processors.cleaning_service_category',
             ],
         },
     },

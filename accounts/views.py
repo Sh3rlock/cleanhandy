@@ -20,39 +20,115 @@ from .forms import RescheduleBookingForm  # We'll create this next
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
-from .forms import CustomUserRegistrationForm
+from .forms import CustomUserRegistrationForm, CustomLoginForm
 from django.contrib.auth.forms import AuthenticationForm
 
 from django.http import JsonResponse
 from django.contrib.auth.forms import AuthenticationForm
 
+
+from django.contrib.auth.models import User
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib import messages
+
+from django.db import IntegrityError, transaction
+
+from django.contrib.auth import authenticate, login
+
 def register(request):
     if request.method == "POST":
         form = CustomUserRegistrationForm(request.POST)
-
-        if request.headers.get("x-requested-with") == "XMLHttpRequest":
-            if form.is_valid():
-                user = form.save()
-                login(request, user)
-                return JsonResponse({"success": True})
-            else:
-                errors = []
-                for field_errors in form.errors.values():
-                    errors.extend(field_errors)
-                return JsonResponse({"success": False, "errors": errors})
-
-        # fallback if not AJAX
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect("home")
-        else:
-            return render(request, "home.html", {
-                "register_form": form,
-                "login_form": AuthenticationForm()
-            })
+            try:
+                with transaction.atomic():
+                    # Save user but don't commit to DB until password is set
+                    user = form.save(commit=False)
+                    user.set_password(form.cleaned_data["password1"])
+                    user.is_active = False
+                    user.save()
 
-    return redirect("home")
+                    # Prevent profile duplication
+                    CustomerProfile.objects.get_or_create(
+                        user=user,
+                        defaults={"full_name": user.username}
+                    )
+
+                    # Send email confirmation
+                    current_site = get_current_site(request)
+                    subject = 'Activate your account'
+                    message = render_to_string('accounts/activation_email.html', {
+                        'user': user,
+                        'domain': current_site.domain,
+                        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                        'token': default_token_generator.make_token(user),
+                    })
+                    user.email_user(subject, message)
+
+                    messages.success(request, "Check your email to activate your account.")
+                    return redirect("login")
+            except IntegrityError:
+                messages.error(request, "Something went wrong. Please try again.")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = CustomUserRegistrationForm()
+
+    return render(request, "accounts/register.html", {"form": form})
+
+
+
+def activate(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (User.DoesNotExist, ValueError, TypeError, OverflowError):
+        user = None
+
+    if user and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        messages.success(request, "Your account is now active. You can log in.")
+        return redirect("login")
+    else:
+        messages.error(request, "The activation link is invalid or has expired.")
+        return redirect("register")
+    
+
+def login_view(request):
+    if request.method == "POST":
+        form = CustomLoginForm(data=request.POST)
+        if form.is_valid():
+            login_input = form.cleaned_data["username"]
+            password = form.cleaned_data["password"]
+
+            # First try by username
+            user = authenticate(request, username=login_input, password=password)
+
+            # If not found, try by email
+            if user is None:
+                try:
+                    user_obj = User.objects.get(email__iexact=login_input)
+                    if not user_obj.is_active:
+                        messages.error(request, "Your account is inactive. Please check your email to activate.")
+                        return render(request, "accounts/login.html", {"form": form})
+                    user = authenticate(request, username=user_obj.username, password=password)
+                except User.DoesNotExist:
+                    user = None
+
+            if user is not None:
+                login(request, user)
+                messages.success(request, "You are now logged in.")
+                return redirect("home")
+            else:
+                messages.error(request, "Invalid login credentials.")
+    else:
+        form = CustomLoginForm()
+
+    return render(request, "accounts/login.html", {"form": form})
 
 
 

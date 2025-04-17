@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-  <div class="card shadow-lg p-4" style="width: 100%; max-width: 420px; border-radius: 1rem;">
+  <div class="card shadow-lg p-4 mb-4 mt-4" style="width: 100%; max-width: 500px; border-radius: 1rem; border:1px solid #F15A29;">
     <h3 class="text-center mb-4">Welcome Back 👋</h3>
     <form method="post" novalidate>
       {% csrf_token %}
@@ -15,7 +15,7 @@
 
       {% for field in form %}
         <div class="mb-3">
-          <label for="{{ field.id_for_label }}" class="cmn-input">{{ field.label }}</label>
+          <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
           {{ field }}
           {% if field.errors %}
             <div class="text-danger small">{{ field.errors|striptags }}</div>
@@ -24,12 +24,13 @@
       {% endfor %}
 
       <div class="d-grid">
-        <button type="submit" class="btn btn-primary btn-block">Login</button>
+        <button type="submit" class="btn-1 btn-block">Login</button>
       </div>
 
       <p class="text-center mt-3">
         Don't have an account?
         <a href="{% url 'register' %}">Register</a>
+        <a href="{% url 'password_reset' %}" class="d-block mt-2">Forgot your password?</a>
       </p>
     </form>
   </div>
