@@ -86,7 +86,7 @@
   }
 
   .bg-layer {
-    height: 60% !important;
+    height: 80% !important;
   }
 
   .common-banner {
@@ -114,6 +114,16 @@
             <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> My Profile</li>
           </ul>
       </div>
+      {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
+        {% endif %}
   </div>
 </section>
 <!-- common banner -->
@@ -142,8 +152,8 @@
                 Book Now
               </a>
               <ul class="dropdown-menu" aria-labelledby="bookNowDropdown">
-                <li><a class="dropdown-item" href="{% url 'request_cleaning_booking' service_cat.id %}">Cleaning</a></li>
-                <li><a class="dropdown-item" href="">Handyman</a></li>
+                <li><a class="dropdown-item" href="{% url 'request_cleaning_booking' %}">Cleaning</a></li>
+                <li><a class="dropdown-item" href="{% url 'request_handyman_booking' %}">Handyman</a></li>
               </ul>
             </li>
             <li class="nav-item">
@@ -240,7 +250,7 @@
           <div class="card-body">
             <h4 class="mb-3">🧼 Book Cleaning</h4>
             <p class="mb-4">Schedule a professional cleaning with flexible extras and recurring options.</p>
-            <a href="{% url 'request_cleaning_booking' service_cat.id %}" class="btn-1 w-100">Book Cleaning</a>
+            <a href="{% url 'request_cleaning_booking' %}" class="btn-1 w-100">Book Cleaning</a>
           </div>
         </div>
       </div>
@@ -249,7 +259,7 @@
           <div class="card-body">
             <h4 class="mb-3">🛠️ Book Handyman</h4>
             <p class="mb-4">Need help with home repairs, installations, or improvements?</p>
-            <a href="" class="btn-1 w-100">Book Handyman</a>
+            <a href="{% url 'request_handyman_booking' %}" class="btn-1 w-100">Book Handyman</a>
           </div>
         </div>
       </div>

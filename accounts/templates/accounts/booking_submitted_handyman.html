@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <section class="contact-details">
+    <div class="container">
+      <h2>🛠️ Handyman booking Submitted</h2>
+      <p>Thank you, {{ booking.customer.name }}! We've received your handyman service request. One of our team members will review the details and get back to you with a personalized booking shortly.</p>
+
+      <div class="card mt-4">
+        <div class="card-body">
+          <h4>📋 Request Summary</h4>
+          <p>
+            <strong>Requested Service:</strong> {{ booking.service_cat.name }}
+          </p>
+          <p>
+            <strong>Date:</strong> {{ booking.date }}
+          </p>
+          <p>
+            <strong>Preferred Time:</strong> {{ booking.hour|time:"H:i" }}
+          </p>
+          <p>
+            <strong>Duration:</strong> {{ booking.hours_requested }} hour(s)
+          </p>
+          <p>
+            <strong>ZIP Code:</strong> {{ booking.zip_code }}
+          </p>
+          <p>
+            <strong>Description:</strong><br />{{ booking.job_description }}
+          </p>
+        </div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-body">
+          <h4>👤 Customer Info</h4>
+          <p>
+            <strong>Name:</strong> {{ booking.name }}
+          </p>
+          <p>
+            <strong>Email:</strong> {{ booking.email }}
+          </p>
+          <p>
+            <strong>Phone:</strong> {{ booking.phone }}
+          </p>
+        </div>
+      </div>
+
+      <p class="mt-4">If any changes are needed, feel free to contact us. We’ll be in touch soon!</p>
+    </div>
+  </section>
+{% endblock %}

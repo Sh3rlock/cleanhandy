@@ -17,4 +17,9 @@ def cleaning_service_category(request):
         'cleaning_service_cat': ServiceCategory.objects.filter(name__iexact='cleaning').first()
     }
 
+def handyman_service_category(request):
+    return {
+        'handyman_service_cat': ServiceCategory.objects.filter(name__iexact='handyman').first()
+    }
+
 

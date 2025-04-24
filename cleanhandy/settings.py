@@ -27,10 +27,10 @@ SECRET_KEY = 'django-insecure-b@l@av@rh*6)xlvgfrhu0a+*h9#l9pb&zdebab*+$(mkg)d73w
 DEBUG = True
 
 # For localhost
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
 
 # For production
-# ALLOWED_HOSTS = ['cleanhandy-production.up.railway.app']
+ALLOWED_HOSTS = ['cleanhandy-production.up.railway.app']
 
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
 

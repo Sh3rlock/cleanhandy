@@ -324,7 +324,12 @@ class HandymanBookingForm(forms.ModelForm):
         fields = ["service_cat", "name", "email", "phone", "address", "apartment", "zip_code", "job_description", "hours_requested", "date", "hour"]
 
         widgets = {
-                "service_cat": forms.Select(attrs={"class": "cmn-input"})
+                "service_cat": forms.Select(attrs={"class": "cmn-input"}),
+                "name": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Full Name"}),
+                "email": forms.EmailInput(attrs={"class": "cmn-input", "placeholder": "Email"}),
+                "phone": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Phone Number (Optional)"}),
+                "address": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Street Address"}),
+                "apartment": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Apt/Suite #"}),
         }
 
     def __init__(self, *args, **kwargs):

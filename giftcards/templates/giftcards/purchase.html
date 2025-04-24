@@ -8,13 +8,18 @@
     {% csrf_token %}
     <div class="row mb-3">
       <div class="col">
-        <label for="to_input" class="form-label">To</label>
-        <input type="text" id="to_input" name="to" class="cmn-input" placeholder="Recipient Name">
-      </div>
-      <div class="col">
         <label for="from_input" class="form-label">From</label>
         <input type="text" id="from_input" name="from" class="cmn-input" placeholder="Your Name">
       </div>
+      <div class="col">
+        <label for="to_input" class="form-label">To</label>
+        <input type="text" id="to_input" name="to" class="cmn-input" placeholder="Recipient Name">
+      </div>
+      <div class="mb-3">
+        <label for="to_input" class="form-label">To Email</label>
+        <input type="text" id="to_email_input" name="to_email" class="cmn-input" placeholder="Recipient Email">
+      </div>
+      
     </div>
   
     <div class="mb-3">

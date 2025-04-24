@@ -13,8 +13,10 @@ urlpatterns = [
     path('my-bookings/', views.my_bookings, name='my_bookings'),
     path('booking/<int:booking_id>/', views.booking_detail, name='booking_detail'),
 
-    path("cleaning/request/<int:service_cat_id>/", views.request_cleaning_booking, name="request_cleaning_booking"),
+    path("cleaning/request/", views.request_cleaning_booking, name="request_cleaning_booking"),
+    path("handyman/request/", views.request_handyman_booking, name="request_handyman_booking"),
     path("submitted/<int:booking_id>/", views.booking_submitted_cleaning, name="booking_submitted_cleaning"),
+    path("submitted_handyman/<int:booking_id>/", views.booking_submitted_handyman, name="booking_submitted_handyman"),
     path("profile/add-address/", views.add_customer_address, name="add_customer_address"),
 
     path("booking/<int:booking_id>/reschedule/", views.reschedule_booking, name="reschedule_booking"),

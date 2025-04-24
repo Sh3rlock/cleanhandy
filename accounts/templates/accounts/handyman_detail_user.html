@@ -52,7 +52,6 @@
           <div class="col-md-8">
             <p class="mb-2"><strong>Service:</strong> {{ booking.service_cat.name }}</p>
             <p class="mb-2"><strong>Date:</strong> {{ booking.date }} at {{ booking.hour }}</p>
-            <p class="mb-2"><strong>Cleaners:</strong> {{ booking.num_cleaners }}, <strong>Hours:</strong> {{ booking.hours_requested }}</p>
             <p class="mb-2">
               <strong>Total Price:</strong>
               <span class="badge rounded-pill" style="background-color: #F15A29; color: #fff; font-size: 1rem;">
@@ -105,23 +104,6 @@
     <div class="card h-100 shadow-sm">
       <div class="card-body">
         <h5 class="mb-3">💰 Price Breakdown</h5>
-        <ul class="list-group list-group-flush small">
-          {% if booking.square_feet_options %}
-            <li class="list-group-item">Square Footage: {{ booking.square_feet_options.name }}</li>
-          {% endif %}
-          {% if not booking.is_large_home and booking.home_types %}
-            <li class="list-group-item">Home Type: {{ booking.home_types.name }} (${{ booking.home_types.price }})</li>
-          {% endif %}
-          {% for extra in booking.extras.all %}
-            <li class="list-group-item ps-4">+ {{ extra.name }} — ${{ extra.price }}</li>
-          {% endfor %}
-          {% if booking.is_large_home %}
-            <li class="list-group-item">Cleaners: {{ booking.num_cleaners }}</li>
-            <li class="list-group-item">Labor Cost: {{ booking.calculate_subtotal|floatformat:2 }}</li>
-          {% endif %}
-          <li class="list-group-item">Subtotal: ${{ booking.calculate_subtotal }}</li>
-          <li class="list-group-item">Tax: ${{ booking.calculate_tax }}</li>
-        </ul>
         <h6 class="mt-3 text-primary fw-bold">Total: ${{ booking.price }}</h6>
       </div>
     </div>

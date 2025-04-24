@@ -122,7 +122,7 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, "You are now logged in.")
-                return redirect("home")
+                return redirect("profile")
             else:
                 messages.error(request, "Invalid login credentials.")
     else:
@@ -202,19 +202,28 @@ def my_bookings(request):
         'service_cat': service_cat,
     })
 
+
 @login_required
 def booking_detail(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
-    service_cat = ServiceCategory.objects.filter(name__iexact='cleaning').first()
 
     # Check if the logged-in user's email matches the booking's email
     if booking.email != request.user.email:
         return HttpResponseForbidden("You are not allowed to view this booking.")
 
-    return render(request, 'accounts/booking_detail_user.html', {
+    # Determine template based on service category
+    service_cat_name = booking.service_cat.name.lower() if booking.service_cat else ''
+
+    if service_cat_name == 'cleaning':
+        template_name = 'accounts/booking_detail_user.html'
+    else:
+        template_name = 'accounts/handyman_detail_user.html'
+
+    return render(request, template_name, {
         'booking': booking,
-        'service_cat': service_cat,
+        'service_cat': booking.service_cat,
     })
+
 
 
 # Booking a service
@@ -224,14 +233,20 @@ def booking_submitted_cleaning(request, booking_id):
         "booking": booking
     })
 
-def request_cleaning_booking(request, service_cat_id):
-    service_cat = get_object_or_404(ServiceCategory, id=service_cat_id)
+def booking_submitted_handyman(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    return render(request, "accounts/booking_submitted_handyman.html", {
+        "booking": booking
+    })
+
+def request_cleaning_booking(request):
+    service_cat = ServiceCategory.objects.filter(name__iexact='cleaning').first()
     extras = CleaningExtra.objects.all()
 
     # Related services for sidebar
     cleaning_category = ServiceCategory.objects.filter(name__iexact='cleaning').first()
     related_services = (
-        Service.objects.filter(category=cleaning_category).exclude(id=service_cat_id)
+        Service.objects.filter(category=cleaning_category)
         if cleaning_category else Service.objects.none()
     )
 
@@ -301,6 +316,61 @@ def request_cleaning_booking(request, service_cat_id):
         "related_services": related_services,
         "saved_addresses": saved_addresses,
     })
+
+def request_handyman_booking(request):
+    service_cat = ServiceCategory.objects.filter(name__iexact='handyman').first()
+
+    cleaning_category = ServiceCategory.objects.filter(name__iexact='handyman').first()
+
+    related_services = Service.objects.filter(
+        category=cleaning_category
+    ) if cleaning_category else Service.objects.none()
+
+    # Increment the view count for the service
+    # service_cat.view_count += 1
+    # service_cat.save(update_fields=["view_count"])
+    if request.method == "GET":
+        initial_data = {}
+        saved_addresses = []
+
+        if request.user.is_authenticated:
+            initial_data["email"] = request.user.email
+
+            if hasattr(request.user, "profile"):
+                profile = request.user.profile
+                initial_data["name"] = profile.full_name
+                initial_data["phone"] = profile.phone
+
+                addresses = profile.addresses.all()
+                saved_addresses = addresses
+
+                if addresses.exists():
+                    default_address = addresses.first()
+                    initial_data.update({
+                        "address": default_address.street_address,
+                        "apartment": default_address.apt_suite,
+                        "zip_code": default_address.zip_code,
+                        "city": default_address.city or "New York",
+                        "state": default_address.state or "NY",
+                    })
+
+        form = HandymanBookingForm(initial=initial_data)
+
+    if request.method == "POST":
+        form = HandymanBookingForm(request.POST)
+        if form.is_valid():
+            booking = form.save(commit=False)
+            booking.service_cat = service_cat
+
+            # Save first to set M2M
+            booking.save()
+            return redirect("booking_submitted_handyman", booking_id=booking.id)
+    else:
+        # Merge 'service' into the original initial_data dictionary
+        initial_data['service'] = service_cat.id
+        form = HandymanBookingForm(initial=initial_data)
+    return render(request, "accounts/request_handyman_booking.html", {"form": form, "service_cat": service_cat, "related_services": related_services, "saved_addresses": saved_addresses})
+
 
 
 @login_required

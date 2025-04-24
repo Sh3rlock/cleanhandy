@@ -17,6 +17,13 @@
 
   <body>
     <style>
+      .bg-layer {
+        height: 80% !important;
+      }
+
+      .common-banner {
+        padding: 30px 0 70px !important;
+      }
       /* General placeholder style */
       input::placeholder {
         color: #999;  /* or any lighter grey */
@@ -25,6 +32,34 @@
       .newsletter-input{
         padding: 19px 5px 19px 16px !important;
       }
+
+      :root {
+        --bs-primary: #F15A29;
+      }
+      
+      .btn-primary {
+        background-color: #F15A29;
+        border-color: #F15A29;
+      }
+      
+      .btn-primary:hover,
+      .btn-primary:focus {
+        background-color: #d44f24;
+        border-color: #d44f24;
+      }
+    
+      /* Outline primary button */
+    .btn-outline-primary {
+      color: #F15A29;
+      border-color: #F15A29;
+    }
+    
+    .btn-outline-primary:hover,
+    .btn-outline-primary:focus {
+      background-color: #F15A29;
+      color: #fff;
+      border-color: #F15A29;
+    }
     </style>
     <div class="page-wrapper">
       
@@ -128,7 +163,19 @@
                   </div>
                   <div class="header-right-btn-area">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'profile' %}" class="btn-1">My Profile</a>
+                      <a class="btn btn-sm btn-outline-primary" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
+                    {% else %}
+                      <a class="btn btn-sm btn-outline-primary" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                      <a class="btn btn-sm btn-outline-primary" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+                    {% else %}
+                      <a class="btn btn-sm btn-outline-primary" href="{% url 'handyman_booking' %}">Book Handyman</a>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">My Profile</a>
                     {% else %}
                     <!-- Example buttons to trigger the modals -->
                     <a href="{% url 'login' %}" class="btn-1" >Sign In</a>

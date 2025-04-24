@@ -17,7 +17,7 @@
     }
 
     .bg-layer {
-        height: 60% !important;
+        height: 80% !important;
     }
 
     .common-banner {
@@ -166,6 +166,16 @@ select::-ms-expand {
               <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Service Details</li>
             </ul>
         </div>
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
+        {% endif %}
     </div>
   </section>
   <!-- common banner -->
@@ -187,7 +197,7 @@ select::-ms-expand {
             </div>
         </div>
         <div class="row">
-            <div class="col-lg-7">
+            <div class="col-lg-8">
                 <div class="service-details-image">
                     <img src="{{ service.service_detail_image.url }}" alt="image"> 
                </div>
@@ -197,12 +207,10 @@ select::-ms-expand {
                </div>
             </div>
   
-            <div class="col-lg-5 margin-200">
+            <div class="col-lg-4 margin-200">
                 <div class="service-form-card">
-                  <h2 class="form-title">Handyman Service</h2>
-                  <div class="form-style">
-                    {% include "partials/handyman_quote_form.html" %}
-                  </div>
+                  <h2 class="form-title">Handyman Service Sidebar Content</h2>
+                  
                 </div>
               </div>
         </div>

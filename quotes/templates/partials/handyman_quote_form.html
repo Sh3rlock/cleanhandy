@@ -1,151 +1,147 @@
-<!-- Flatpickr CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
 <form method="post">
-    {% csrf_token %}
-    
-    <!-- Service -->
-    <label for="{{ form.service.id_for_label }}">Service</label>
-    {{ form.service }}
+  {% csrf_token %}
+  
+  <input type="hidden" name="service_cat" value="{{ service_cat.id }}">
 
-    <!-- ZIP Code -->
-    {{ form.zip_code }}
+  <!-- Job Description -->
+  <label for="{{ form.job_description.id_for_label }}">Tell us about the job</label>
+  {{ form.job_description }}
 
-    <!-- Job Description -->
-    <label for="{{ form.job_description.id_for_label }}">Tell us about the job</label>
-    {{ form.job_description }}
+  <!-- Step 3: Contact Info -->
+<div class="step hidden-step" id="step3">
+  <h4>Contact Info</h4>
 
-    <!-- Grid Row: Hours / Date / Hour -->
-    <div class="form-row">
-      <div class="form-group">
-        <label for="{{ form.hours_requested.id_for_label }}">Hours</label>
-        {{ form.hours_requested }}
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      {{ form.name.label_tag }}
+      {{ form.name }}
+      {% if form.name.errors %}
+        <div class="text-danger small">{{ form.name.errors.0 }}</div>
+      {% endif %}
+    </div>
+  
+    <div class="col-md-4 mb-3">
+      {{ form.email.label_tag }}
+      {{ form.email }}
+      {% if form.email.errors %}
+        <div class="text-danger small">{{ form.email.errors.0 }}</div>
+      {% endif %}
+    </div>
+    <div class="col-md-4 mb-3">
+      {{ form.phone.label_tag }}
+      {{ form.phone }}
+      {% if form.email.errors %}
+        <div class="text-danger small">{{ form.phone.errors.0 }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {{ form.city }}
+  {{ form.state }}
+  
+  {% if saved_addresses %}
+  <div class="card mb-4 shadow-sm" style="border: 1px solid #F15A29;">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="card-title mb-0">Select Address</h5>
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddAddressModal()">
+          + Add New Address
+        </button>
       </div>
-      <div class="form-group">
-        <label for="{{ form.date.id_for_label }}">Date</label>
-        <div style="position: relative;">
-          {{ form.date }}
-          <i class="icon-calendar" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;"></i>
+  
+      <div class="form-group mb-3">
+        <label for="addressSelect" class="form-label">Your Saved Addresses</label>
+        <select id="addressSelect" class="form-select">
+          <option value="">Select Address</option>
+          {% for addr in saved_addresses %}
+            <option 
+              data-street="{{ addr.street_address }}"
+              data-apt="{{ addr.apt_suite }}"
+              data-zip="{{ addr.zip_code }}"
+              data-city="{{ addr.city }}"
+              data-state="{{ addr.state }}"
+            >
+              {{ addr.street_address }}, Apt {{ addr.apt_suite }}, {{ addr.zip_code }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+  
+      <!-- Address details row (if dynamically shown) -->
+      <div id="selectedAddressDetails" class="row g-2 d-none">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Street</label>
+          <p class="form-control-plaintext" id="addressStreet">–</p>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Apt/Suite</label>
+          <p class="form-control-plaintext" id="addressApt">–</p>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">ZIP Code</label>
+          <p class="form-control-plaintext" id="addressZip">–</p>
         </div>
       </div>
-      <div class="form-group">
-        <label for="{{ form.hour.id_for_label }}">Time</label>
-        {{ form.hour }}
+  
+  
+{% endif %}
+
+
+
+<div class="row g-3">
+<!-- Street Address -->
+<div class="col-md-6">
+  <label for="{{ form.address.id_for_label }}" class="form-label">Street Address</label>
+  {{ form.address }}
+  {% if form.address.errors %}
+    <div class="text-danger small">{{ form.address.errors.0 }}</div>
+  {% endif %}
+</div>
+
+<!-- Apartment / Suite -->
+<div class="col-md-3">
+  <label for="{{ form.apartment.id_for_label }}" class="form-label">Apt/Suite</label>
+  {{ form.apartment }}
+  {% if form.apartment.errors %}
+    <div class="text-danger small">{{ form.apartment.errors.0 }}</div>
+  {% endif %}
+</div>
+
+<!-- ZIP Code -->
+<div class="col-md-3">
+  <label for="{{ form.zip_code.id_for_label }}" class="form-label">ZIP Code</label>
+  {{ form.zip_code }}
+  {% if form.zip_code.errors %}
+    <div class="text-danger small">{{ form.zip_code.errors.0 }}</div>
+  {% endif %}
+</div>
+</div>
+</div>
+</div>
+
+  <!-- Grid Row: Hours / Date / Hour -->
+  <div class="form-row">
+    <div class="form-group">
+      <label for="{{ form.hours_requested.id_for_label }}">Hours</label>
+      {{ form.hours_requested }}
+    </div>
+    <div class="form-group">
+      <label for="{{ form.date.id_for_label }}">Date</label>
+      <div style="position: relative;">
+        {{ form.date }}
+        <i class="icon-calendar" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;"></i>
       </div>
     </div>
-
-    <!-- Manual fields -->
-    <input type="text" name="name" class="cmn-input" placeholder="Name" required>
-    <input type="email" name="email" class="cmn-input" placeholder="Email" required>
-    <input type="text" name="phone" class="cmn-input" placeholder="Phone (optional)">
-
-    <!-- Terms -->
-    <div class="checkbox-wrap">
-      <input type="checkbox" id="terms" required>
-      <label for="terms">I agree with all the terms & conditions</label>
+    <div class="form-group">
+      <label for="{{ form.hour.id_for_label }}">Time</label>
+      {{ form.hour }}
     </div>
+  </div>
 
-    <button type="submit" class="btn-submit">
-      Get Price <i class="icon-arrow-1"></i>
-    </button>
-  </form>
+  <!-- Terms -->
+  <div class="checkbox-wrap mt-3">
+    <input type="checkbox" id="terms" required>
+    <label for="terms">I agree with all the terms & conditions</label>
+  </div>
 
-
-<!-- Flatpickr JS -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    flatpickr("#id_date", {
-      dateFormat: "Y-m-d",
-      minDate: "today",
-      defaultDate: "today",
-      disableMobile: true // fallback for mobile native pickers
-    });
-
-    const dateField = document.getElementById("id_date");
-    const hoursField = document.getElementById("id_hours_requested");
-    const hourSelect = document.getElementById("id_hour");
-
-    function fetchAvailableHours() {
-      const selectedDate = dateField.value;
-      const selectedHours = hoursField.value || 2;
-
-      if (!selectedDate) return;
-
-      hourSelect.innerHTML = "<option>Loading...</option>";
-      hourSelect.disabled = true;
-
-      fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${selectedHours}`)
-        .then(response => response.json())
-        .then(data => {
-          hourSelect.innerHTML = "";
-          hourSelect.disabled = false;
-
-          if (data.available_hours.length === 0) {
-            hourSelect.innerHTML = "<option value=''>No available time</option>";
-          } else {
-            data.available_hours.forEach(hour => {
-              const option = document.createElement("option");
-              option.value = hour;
-              option.textContent = hour;
-              hourSelect.appendChild(option);
-            });
-          }
-        })
-        .catch(() => {
-          hourSelect.innerHTML = "<option value=''>Failed to load</option>";
-          hourSelect.disabled = false;
-        });
-    }
-
-    // Attach Flatpickr change event instead of blur
-    dateField._flatpickr.config.onChange.push(fetchAvailableHours);
-    hoursField.addEventListener("blur", fetchAvailableHours);
-  });
-</script>
-
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-      const dateField = document.getElementById("id_date");
-      const hoursField = document.getElementById("id_hours_requested");
-      const hourSelect = document.getElementById("id_hour");
-  
-      function fetchAvailableHours() {
-          const selectedDate = dateField.value;
-          const selectedHours = hoursField.value || 2;
-  
-          if (!selectedDate) return;
-  
-          // Disable the dropdown & show loading
-          hourSelect.innerHTML = "<option>Loading...</option>";
-          hourSelect.disabled = true;
-  
-          fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${selectedHours}`)
-              .then(response => response.json())
-              .then(data => {
-                  hourSelect.innerHTML = "";
-                  hourSelect.disabled = false;
-  
-                  if (data.available_hours.length === 0) {
-                      hourSelect.innerHTML = "<option value=''>No available time</option>";
-                  } else {
-                      data.available_hours.forEach(hour => {
-                          const option = document.createElement("option");
-                          option.value = hour;
-                          option.textContent = hour;
-                          hourSelect.appendChild(option);
-                      });
-                  }
-              })
-              .catch(() => {
-                  hourSelect.innerHTML = "<option value=''>Failed to load</option>";
-                  hourSelect.disabled = false;
-              });
-      }
-  
-      // Refresh on blur (when user clicks out of the input)
-      dateField.addEventListener("blur", fetchAvailableHours);
-      hoursField.addEventListener("blur", fetchAvailableHours);
-  });
-  </script>
+  <button type="submit" class="btn-1 w-100 mt-3">Get Price <i class="icon-arrow-1"></i></button>
+</form>

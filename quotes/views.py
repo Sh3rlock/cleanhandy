@@ -278,7 +278,83 @@ def request_handyman_booking(request, service_cat_id):
             return redirect("quote_submitted_handyman", quote_id=booking.id)
     else:
         form = HandymanBookingForm(initial={'service': service_cat.id})
-    return render(request, "quotes/request_handyman_quote.html", {"form": form, "service_cat": service_cat, "related_services": related_services})
+    return render(request, "request/request_handyman_booking.html", {"form": form, "service_cat": service_cat, "related_services": related_services})
+
+def cleaning_booking(request):
+    service_cat = ServiceCategory.objects.filter(name__iexact='cleaning').first()
+    extras = CleaningExtra.objects.all()
+
+    # Related services for sidebar
+    cleaning_category = ServiceCategory.objects.filter(name__iexact='cleaning').first()
+    related_services = (
+        Service.objects.filter(category=cleaning_category)
+        if cleaning_category else Service.objects.none()
+    )
+
+
+    if request.method == "POST":
+        form = CleaningBookingForm(request.POST)
+        if form.is_valid():
+            booking = form.save(commit=False)
+            booking.service_cat = service_cat
+
+            # Save first to set M2M
+            booking.save()
+
+            selected_extra_ids = request.POST.getlist("extras")
+            if selected_extra_ids:
+                selected_extras = CleaningExtra.objects.filter(id__in=selected_extra_ids)
+                booking.extras.set(selected_extras)
+
+            # Server-side price calculation
+            booking.price = booking.calculate_total_price()
+            booking.save()
+
+            try:
+                send_quote_email_cleaning(booking)
+            except Exception as e:
+                print("❌ Email send failed:", e)
+
+            return redirect("booking_submitted_cleaning", booking_id=booking.id)
+        else:
+            print("❌ Form errors:", form.errors)
+            return HttpResponseBadRequest("Invalid form submission")
+
+    else:
+        form = CleaningBookingForm()
+
+    return render(request, "booking/cleaning_booking.html", {
+        "form": form,
+        "cleaning_extras": extras,
+        "service_cat": service_cat,
+        "related_services": related_services,
+    })
+
+def handyman_booking(request):
+    service_cat = ServiceCategory.objects.filter(name__iexact='handyman').first()
+
+    cleaning_category = ServiceCategory.objects.filter(name__iexact='handyman').first()
+
+    related_services = Service.objects.filter(
+        category=cleaning_category
+    ) if cleaning_category else Service.objects.none()
+
+    # Increment the view count for the service
+    # service_cat.view_count += 1
+    # service_cat.save(update_fields=["view_count"])
+
+    if request.method == "POST":
+        form = HandymanBookingForm(request.POST)
+        if form.is_valid():
+            booking = form.save(commit=False)
+            booking.service_cat = service_cat
+
+            # Save first to set M2M
+            booking.save()
+            return redirect("booking_submitted_handyman", booking_id=booking.id)
+    else:
+        form = HandymanBookingForm()
+    return render(request, "booking/handyman_booking.html", {"form": form, "service_cat": service_cat, "related_services": related_services})
 
 
 

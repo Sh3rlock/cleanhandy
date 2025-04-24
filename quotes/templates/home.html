@@ -104,7 +104,7 @@
 <!-- preloader end --> 
   <!-- banner-section -->
   <section class="banner-section-one banner-section">
-    <div class="bg-layer" style="background-image: url({% static '/assets/images/banner/banner-1-bg.jpg' %});"></div>
+    <div class="bg-layer" style=" height: 100% !important; background-image: url({% static '/assets/images/banner/banner-1-bg.jpg' %});"></div>
    
     <div class="container">
       <div class="swiper-container banner-slider-1">
@@ -116,12 +116,24 @@
                   <div class="banner-content-box-inner">
                     <h2>Choose Experts to Complete Your <span>Job <img src="{% static '/assets/images/shape/banner-title-shape.png' %}" alt="shape" /></span> Done</h2>
                     <p>Check availability, and book services with confidence.</p>
+                    <div class="banner-location">
+                      <a href=""><i class="fa-sharp fa-solid fa-location-dot"></i> New York</a>
+                    </div>
+                    
                     <div class="banner-form">
-                      <div class="banner-location">
-                        <a href="contact.html"><i class="fa-sharp fa-solid fa-location-dot"></i> New York</a>
+                      <div class="banner-search">
+                        {% if user.is_authenticated %}
+                          <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
+                        {% else %}
+                          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
+                        {% endif %}
                       </div>
                       <div class="banner-search">
-                        <a class="btn-1" href="#categories">Check Our Services</a>
+                        {% if user.is_authenticated %}
+                          <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+                        {% else %}
+                          <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
+                        {% endif %}
                       </div>
                     </div>
                     <div class="customer-box">
