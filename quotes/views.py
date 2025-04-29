@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber
+from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber, Booking
 from customers.models import Customer  # Import Customer from the correct app
 from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm, CleaningBookingForm, HandymanBookingForm
 from django.core.mail import send_mail
@@ -14,7 +14,7 @@ from django.conf import settings
 from django.http import HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404
 
-from .utils import process_handyman_quote, process_cleaning_quote
+from .utils import process_handyman_quote, send_quote_email_handyman
 from django.contrib import messages
 
 from giftcards.models import GiftCard
@@ -123,7 +123,7 @@ def request_handyman_quote(request, service_id):
     return render(request, "quotes/request_handyman_quote.html", {"form": form, "service": service, "related_services": related_services})
 
 def quote_submitted_handyman(request, quote_id):
-    quote = get_object_or_404(Quote, id=quote_id)
+    quote = get_object_or_404(Booking, id=quote_id)
     return render(request, "quotes/quote_submitted_handyman.html", {"quote": quote})
 
 def quote_submitted(request, quote_id):
@@ -133,7 +133,7 @@ def quote_submitted(request, quote_id):
     })
 
 def cleaning_services(request):
-    services = Service.objects.filter(category__name="Cleaning")
+    services = Booking.objects.filter(category__name="Cleaning")
     return render(request, "quotes/cleaning_services.html", {"services": services})
 
 def handyman_services(request):
@@ -305,11 +305,27 @@ def cleaning_booking(request):
             if selected_extra_ids:
                 selected_extras = CleaningExtra.objects.filter(id__in=selected_extra_ids)
                 booking.extras.set(selected_extras)
+            
 
-            # Server-side price calculation
+            # --- Handle Gift Card ---
+            giftcard = form.cleaned_data.get("gift_card_code")
+            if giftcard:
+                booking.gift_card = giftcard
+                booking.gift_card_discount = min(
+                    giftcard.balance,
+                    booking.calculate_total_price()
+                )
+
+            # Final price after discount
             booking.price = booking.calculate_total_price()
             booking.save()
 
+            # --- Deduct Gift Card balance if used ---
+            if giftcard and booking.gift_card_discount:
+                giftcard.balance -= booking.gift_card_discount
+                if giftcard.balance <= 0:
+                    giftcard.is_active = False
+                giftcard.save()
             try:
                 send_quote_email_cleaning(booking)
             except Exception as e:
@@ -351,7 +367,12 @@ def handyman_booking(request):
 
             # Save first to set M2M
             booking.save()
-            return redirect("booking_submitted_handyman", booking_id=booking.id)
+
+            try:
+                send_quote_email_handyman(booking)
+            except Exception as e:
+                print("❌ Email send failed:", e)
+            return redirect("quote_submitted_handyman", quote_id=booking.id)
     else:
         form = HandymanBookingForm()
     return render(request, "booking/handyman_booking.html", {"form": form, "service_cat": service_cat, "related_services": related_services})

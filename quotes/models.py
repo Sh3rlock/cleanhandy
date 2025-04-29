@@ -1,5 +1,6 @@
 from django.db import models
 from customers.models import Customer  # Import the correct Customer model
+from giftcards.models import GiftCard
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -230,6 +231,20 @@ class Booking(models.Model):
     city = models.CharField(max_length=100, null=True, blank=True, default="New York")
     state = models.CharField(max_length=50, null=True, blank=True, default="NY")
     zip_code = models.CharField(max_length=10, null=True, blank=True)
+
+    # --- New Gift Card fields ---
+    gift_card = models.ForeignKey(
+        "giftcards.GiftCard", 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name="bookings"
+    )
+    gift_card_discount = models.DecimalField(
+        max_digits=8, decimal_places=2, 
+        null=True, blank=True, 
+        help_text="Amount discounted using gift card."
+    )
     
     def __str__(self):
         return f"Booking {self.id} - {self.name if self.name else 'No Name'} ({self.status})"
@@ -287,7 +302,14 @@ class Booking(models.Model):
     def calculate_total_price(self):
         subtotal = self.calculate_subtotal()
         tax = self.calculate_tax()
-        return (subtotal + tax).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        total = subtotal + tax
+
+        if self.gift_card_discount:
+            total -= self.gift_card_discount
+            if total < 0:
+                total = Decimal("0.00")
+
+        return total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 

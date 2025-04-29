@@ -16,6 +16,9 @@
   <p><strong>Service Address:</strong> {{ booking.address }}, Apt {{ booking.apartment }}, {{ booking.city }} {{ booking.zip_code }}</p>
   <p><strong>Date & Time:</strong> {{ booking.date }} at {{ booking.hour }}</p>
 
+  {% if booking.gift_card_discount > 0 %}
+      <p>Gift Card Discount: ${{ booking.gift_card_discount }}</p>
+  {% endif %}
   <p><strong>Total Price:</strong> ${{ booking.price }}</p>
 
   <p>See full details in the attached PDF.</p>

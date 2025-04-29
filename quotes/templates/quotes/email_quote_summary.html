@@ -46,6 +46,9 @@
 
     <p class="list-item">Subtotal: ${{ booking.calculate_subtotal }}</p>
     <p class="list-item">Sales Tax: ${{ booking.calculate_tax }}</p>
+    {% if booking.gift_card_discount > 0 %}
+      <p class="list-item">Gift Card Discount: ${{ booking.gift_card_discount }}</p>
+    {% endif %}
     <p class="list-item bold">Total: ${{ booking.price }}</p>
   </div>
 

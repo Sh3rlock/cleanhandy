@@ -1,3 +1,12 @@
-<h2>🎉 Thank you for your purchase!</h2>
-<p>The gift card has been sent to the recipient via email.</p>
-<a href="/">Back to homepage</a>
+{% extends "accounts/partials/account_base.html" %}
+{% load static %}
+{% block account_content %}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 50vh; flex-direction: column;">
+    <h2 class="text-center">🎉 Thank you for your purchase!</h2>
+    <p class="text-center">The gift card has been sent to the recipient via email.</p>
+    <a href="/" class="btn-1 mt-4">← Back to home</a>
+  </div>
+  
+
+{% endblock %}

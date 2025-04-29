@@ -6,34 +6,35 @@
   <h2>Buy a Gift Card</h2>
   <form method="post">
     {% csrf_token %}
+    
     <div class="row mb-3">
       <div class="col">
-        <label for="from_input" class="form-label">From</label>
-        <input type="text" id="from_input" name="from" class="cmn-input" placeholder="Your Name">
+        <label for="{{ form.purchaser_name.id_for_label }}" class="form-label">From</label>
+        {{ form.purchaser_name }}
       </div>
       <div class="col">
-        <label for="to_input" class="form-label">To</label>
-        <input type="text" id="to_input" name="to" class="cmn-input" placeholder="Recipient Name">
+        <label for="{{ form.recipient_name.id_for_label }}" class="form-label">To</label>
+        {{ form.recipient_name }}
       </div>
       <div class="mb-3">
-        <label for="to_input" class="form-label">To Email</label>
-        <input type="text" id="to_email_input" name="to_email" class="cmn-input" placeholder="Recipient Email">
+        <label for="{{ form.recipient_email.id_for_label }}" class="form-label">To Email</label>
+        {{ form.recipient_email }}
       </div>
-      
     </div>
   
     <div class="mb-3">
-      <label for="message_input" class="form-label">Message</label>
-      <textarea id="message_input" name="message" class="cmn-input" placeholder="Write your message here...">Enjoy your sparkling clean home!</textarea>
+      <label for="{{ form.message.id_for_label }}" class="form-label">Message</label>
+      {{ form.message }}
     </div>
   
     <div class="mb-3">
-      <label for="amount_input" class="form-label">Amount ($)</label>
-      <input type="number" id="amount_input" name="amount" class="cmn-input" placeholder="e.g. 50">
+      <label for="{{ form.amount.id_for_label }}" class="form-label">Amount (€)</label>
+      {{ form.amount }}
     </div>
   
     <button type="submit" class="btn-1 w-100">Purchase</button>
   </form>
+  
   
 </div>
 
@@ -74,18 +75,19 @@
 
 <script>
   const updatePreview = () => {
-    document.getElementById('gc-to').textContent = document.getElementById('to_input').value || "Recipient Name";
-    document.getElementById('gc-from').textContent = document.getElementById('from_input').value || "Your Name";
-    document.getElementById('gc-message').textContent = document.getElementById('message_input').value || "Enjoy your sparkling clean home!";
+    document.getElementById('gc-to').textContent = document.getElementsByName('recipient_name')[0].value || "Recipient Name";
+    document.getElementById('gc-from').textContent = document.getElementsByName('purchaser_name')[0].value || "Your Name";
+    document.getElementById('gc-message').textContent = document.getElementsByName('message')[0].value || "Enjoy your sparkling clean home!";
     
-    const amount = document.getElementById('amount_input').value;
+    const amount = document.getElementsByName('amount')[0].value;
     document.getElementById('gc-amount').textContent = amount ? `€${amount}` : "€100";
   };
-
-  document.getElementById('to_input').addEventListener('input', updatePreview);
-  document.getElementById('from_input').addEventListener('input', updatePreview);
-  document.getElementById('message_input').addEventListener('input', updatePreview);
-  document.getElementById('amount_input').addEventListener('input', updatePreview);
+  
+  document.getElementsByName('recipient_name')[0].addEventListener('input', updatePreview);
+  document.getElementsByName('purchaser_name')[0].addEventListener('input', updatePreview);
+  document.getElementsByName('message')[0].addEventListener('input', updatePreview);
+  document.getElementsByName('amount')[0].addEventListener('input', updatePreview);
+  
 
   // Optional: generate a random code when the page loads
   const generateCode = () => {

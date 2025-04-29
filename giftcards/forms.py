@@ -5,7 +5,13 @@ from .models import GiftCard
 class GiftCardPurchaseForm(forms.ModelForm):
     class Meta:
         model = GiftCard
-        fields = ["amount", "purchaser_email", "recipient_email", "message"]
+        fields = [
+            "amount",
+            "purchaser_name",  
+            "recipient_name",     
+            "recipient_email",
+            "message"
+        ]
         widgets = {
             "message": forms.Textarea(attrs={"rows": 4}),
         }
@@ -21,4 +27,5 @@ class GiftCardPurchaseForm(forms.ModelForm):
         if amount <= 0:
             raise forms.ValidationError("Amount must be greater than zero.")
         return amount
+
 

@@ -11,11 +11,17 @@ class GiftCard(models.Model):
     code = models.CharField(max_length=12, unique=True, default=generate_giftcard_code)
     amount = models.DecimalField(max_digits=8, decimal_places=2)
     balance = models.DecimalField(max_digits=8, decimal_places=2)
+    purchaser_name = models.CharField(max_length=255) 
     purchaser_email = models.EmailField()
+    recipient_name = models.CharField(max_length=255) 
     recipient_email = models.EmailField()
     message = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Gift Card {self.code} for {self.recipient_name}"
+
 
 # models.py
 class DiscountCode(models.Model):

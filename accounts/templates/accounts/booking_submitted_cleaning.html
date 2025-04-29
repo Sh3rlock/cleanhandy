@@ -65,6 +65,9 @@
           <li class="list-group-item">
             Sales Tax (8.875%): ${{ booking.calculate_tax }}
           </li>
+          {% if booking.gift_card_discount > 0 %}
+            <li class="list-group-item">Gift Card Discount: ${{ booking.gift_card_discount }}</li>
+          {% endif %}
         </ul>
 
         <h5 class="mt-3">💵 Total Price: <strong>${{ booking.price }}</strong></h5>

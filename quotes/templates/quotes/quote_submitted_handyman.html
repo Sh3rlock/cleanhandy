@@ -10,7 +10,7 @@
         <div class="card-body">
           <h4>📋 Request Summary</h4>
           <p>
-            <strong>Requested Service:</strong> {{ quote.service.name }}
+            <strong>Requested Service:</strong> {{ quote.service_cat }}
           </p>
           <p>
             <strong>Date:</strong> {{ quote.date }}
@@ -34,13 +34,13 @@
         <div class="card-body">
           <h4>👤 Customer Info</h4>
           <p>
-            <strong>Name:</strong> {{ quote.customer.name }}
+            <strong>Name:</strong> {{ quote.name }}
           </p>
           <p>
-            <strong>Email:</strong> {{ quote.customer.email }}
+            <strong>Email:</strong> {{ quote.email }}
           </p>
           <p>
-            <strong>Phone:</strong> {{ quote.customer.phone }}
+            <strong>Phone:</strong> {{ quote.phone }}
           </p>
         </div>
       </div>

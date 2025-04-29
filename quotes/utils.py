@@ -59,24 +59,27 @@ def send_quote_email_handyman(quote):
     subject = f"Quote Request - {quote.name}"
     text_content = (
         f"New quote request from {quote.name}.\n"
-        f"Service: {quote.service}\n"
+        f"Service: {quote.service_cat}\n"
         f"Date: {quote.date}\n"
         f"Status: {quote.status}\n\n"
         f"Customer Contact:\n"
         f"Name: {quote.name}\n"
         f"Email: {quote.email}\n"
-        f"Phone: {quote.phone}"
+        f"Phone: {quote.phone}\n"
+        f"Job Description:{quote.job_description}\n"
     )
 
     html_content = f"""
-    <h2>New Quote Request</h2>
+    <h2>New Booking Request</h2>
     <p><strong>Customer:</strong> {quote.name}</p>
-    <p><strong>Service:</strong> {quote.service}</p>
+    <p><strong>Service:</strong> {quote.service_cat}</p>
     <p><strong>Date:</strong> {quote.date}</p>
     <p><strong>Status:</strong> {quote.status}</p>
     <h3>Contact Information</h3>
     <p><strong>Email:</strong> {quote.email}</p>
     <p><strong>Phone:</strong> {quote.phone}</p>
+    <h3>Job Description</h3>
+    <p>{quote.job_description}</p>
     """
 
     msg = EmailMultiAlternatives(subject, text_content, "matyass91@gmail.com", [quote.email, "matyass91@gmail.com"])

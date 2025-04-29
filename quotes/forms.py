@@ -2,6 +2,7 @@ from django import forms
 from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber, Booking
 from datetime import time, datetime, timedelta
 from django.core.exceptions import ValidationError
+from giftcards.models import GiftCard
 
 class CleaningQuoteForm(forms.ModelForm):
     zip_code = forms.CharField(
@@ -230,6 +231,12 @@ class CleaningBookingForm(forms.ModelForm):
         widget=forms.NumberInput(attrs={"class": "cmn-input"})
     )
 
+    gift_card_code = forms.CharField(
+        label="Gift Card Code (optional)",
+        required=False,
+        widget=forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Enter Gift Card Code"})
+    )
+
     class Meta:
         model = Booking
         fields = [
@@ -277,6 +284,19 @@ class CleaningBookingForm(forms.ModelForm):
             t += timedelta(minutes=30)
 
         self.fields["hour"].choices = time_slots
+
+    def clean_gift_card_code(self):
+        """ Validate the gift card code if provided """
+        code = self.cleaned_data.get("gift_card_code")
+        if code:
+            try:
+                giftcard = GiftCard.objects.get(code=code.strip(), is_active=True)
+                if giftcard.balance <= 0:
+                    raise forms.ValidationError("This gift card has no remaining balance.")
+                return giftcard
+            except GiftCard.DoesNotExist:
+                raise forms.ValidationError("Invalid or expired gift card code.")
+        return None
 
 
 class HandymanBookingForm(forms.ModelForm):

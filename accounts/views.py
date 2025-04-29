@@ -13,7 +13,7 @@ from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from quotes.models import Quote
 from customers.models import Customer
 from django.shortcuts import get_object_or_404
-from quotes.utils import send_quote_email_cleaning
+from quotes.utils import send_quote_email_cleaning, send_quote_email_handyman
 from django.views.decorators.http import require_POST
 
 from .forms import RescheduleBookingForm  # We'll create this next
@@ -322,6 +322,8 @@ def request_handyman_booking(request):
 
     cleaning_category = ServiceCategory.objects.filter(name__iexact='handyman').first()
 
+    saved_addresses = []
+
     related_services = Service.objects.filter(
         category=cleaning_category
     ) if cleaning_category else Service.objects.none()
@@ -331,7 +333,6 @@ def request_handyman_booking(request):
     # service_cat.save(update_fields=["view_count"])
     if request.method == "GET":
         initial_data = {}
-        saved_addresses = []
 
         if request.user.is_authenticated:
             initial_data["email"] = request.user.email
@@ -364,6 +365,10 @@ def request_handyman_booking(request):
 
             # Save first to set M2M
             booking.save()
+            try:
+                send_quote_email_handyman(booking)
+            except Exception as e:
+                print("❌ Email send failed:", e)
             return redirect("booking_submitted_handyman", booking_id=booking.id)
     else:
         # Merge 'service' into the original initial_data dictionary

@@ -232,10 +232,10 @@
       <h4 class="mt-4">Discount Code</h4>
       <div class="row">
         <div class="col-8">
-          <input type="text" name="discount" class="cmn-input" placeholder="Discount Code">
+          <input type="text" name="gift_card_code" id="gift_card_code" class="cmn-input" placeholder="Gift Card Code">
         </div>
         <div class="col-4">
-          <button type="submit" class="btn-1 w-100">Apply</button>
+          <button type="button" id="applyGiftCard" class="btn-1 w-100">Apply</button>
         </div>
       </div>
 
@@ -299,6 +299,10 @@
           <span>SALES TAX</span>
           <span>$<span id="salesTax">0.00</span></span>
         </div>
+        <div id="giftCardApplied" class="d-flex justify-content-between mt-2" style="display:none;">
+          <strong>GIFT CARD</strong>
+          <strong style="color: green;">- $<span id="giftCardAmount">0.00</span></strong>
+        </div>
         <div class="d-flex justify-content-between mt-2" style="font-size: 1.3rem;">
           <strong>TOTAL</strong>
           <strong style="color: orange;">$<span id="totalPrice">0.00</span></strong>
@@ -326,6 +330,7 @@
   
   <!-- Flatpickr JS -->
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="{% static 'assets/js/giftcard.js' %}"></script>
   <script>
   // ================================
   // FLATPICKR + FORM LOGIC + PRICING ENGINE
@@ -499,6 +504,14 @@
   
       updatePrice();
     });
+
+    document.getElementById("applyGiftCard")?.addEventListener("click", function () {
+      const code = document.getElementById("gift_card_code")?.value.trim();
+      applyGiftCard(code, function (discount) {
+        updatePrice();         // ✅ YOUR existing function to recalculate price
+        updateGiftCardUI(discount);
+      });
+    });
   
     // Run initializers
     setDefaultSquareFeet();
@@ -565,14 +578,30 @@
     subtotal += laborCost;
   }
   
-      const taxRate = 0.08875;
-      const tax = subtotal * taxRate;
-      const total = subtotal + tax;
+  const taxRate = 0.08875;
+  const tax = subtotal * taxRate;
+  let total = subtotal + tax;
   
-      // Update UI values
-      document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
-      document.getElementById("salesTax").innerText = tax.toFixed(2);
-      document.getElementById("totalPrice").innerText = total.toFixed(2);
+  // ✅ Apply gift card if any
+  const discount = parseFloat(appliedGiftCardAmount || 0);
+  if (discount > 0) {
+    total = Math.max(total - discount, 0);
+  
+    const giftEl = document.getElementById("giftCardApplied");
+    const giftAmtEl = document.getElementById("giftCardAmount");
+  
+    if (giftEl && giftAmtEl) {
+      giftEl.style.display = "flex";
+      giftAmtEl.innerText = discount.toFixed(2);
+    }
+  } else {
+    document.getElementById("giftCardApplied").style.display = "none";
+  }
+  
+  // ✅ Update the total UI here with the *updated* total:
+  document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
+  document.getElementById("salesTax").innerText = tax.toFixed(2);
+  document.getElementById("totalPrice").innerText = total.toFixed(2);
   
       // Update summary items list
       const summaryContainer = document.getElementById("summary-items");
