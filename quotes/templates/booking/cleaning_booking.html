@@ -581,22 +581,27 @@
   const taxRate = 0.08875;
   const tax = subtotal * taxRate;
   let total = subtotal + tax;
+
   
-  // ✅ Apply gift card if any
-  const discount = parseFloat(appliedGiftCardAmount || 0);
-  if (discount > 0) {
-    total = Math.max(total - discount, 0);
-  
-    const giftEl = document.getElementById("giftCardApplied");
-    const giftAmtEl = document.getElementById("giftCardAmount");
-  
-    if (giftEl && giftAmtEl) {
-      giftEl.style.display = "flex";
-      giftAmtEl.innerText = discount.toFixed(2);
-    }
-  } else {
-    document.getElementById("giftCardApplied").style.display = "none";
-  }
+  let discount = 0;
+
+// ✅ Apply gift card if any
+if (giftCardActive && giftCardBalance > 0) {
+  discount = Math.min(giftCardBalance, total);
+  appliedGiftCardAmount = discount;
+  total = total - discount;
+}
+
+// ✅ Update UI
+const giftEl = document.getElementById("giftCardApplied");
+const giftAmtEl = document.getElementById("giftCardAmount");
+
+if (discount > 0 && giftEl && giftAmtEl) {
+  giftEl.style.display = "flex";
+  giftAmtEl.innerText = discount.toFixed(2);
+} else if (giftEl) {
+  giftEl.style.display = "none";
+}
   
   // ✅ Update the total UI here with the *updated* total:
   document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);

@@ -1,4 +1,6 @@
-let appliedGiftCardAmount = 0;
+let appliedGiftCardAmount = 0;  // actual value to deduct
+let giftCardBalance = 0;          // full value from API
+let giftCardActive = false;
 
 function applyGiftCard(code, callback) {
   if (!code) {
@@ -11,6 +13,9 @@ function applyGiftCard(code, callback) {
     .then(data => {
       if (data.valid) {
         appliedGiftCardAmount = parseFloat(data.amount || 0);
+        giftCardBalance = parseFloat(data.amount || 0);
+        appliedGiftCardAmount = giftCardBalance;
+        giftCardActive = true;
         alert(`✅ Gift Card Applied: -$${appliedGiftCardAmount.toFixed(2)}`);
       } else {
         alert("❌ Invalid or expired gift card.");
