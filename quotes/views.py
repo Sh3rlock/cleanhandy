@@ -305,39 +305,56 @@ def cleaning_booking(request):
             if selected_extra_ids:
                 selected_extras = CleaningExtra.objects.filter(id__in=selected_extra_ids)
                 booking.extras.set(selected_extras)
-            
 
-            # --- Handle Gift Card ---
-            giftcard = form.cleaned_data.get("gift_card_code")
-            if giftcard:
-                booking.gift_card = giftcard
-                booking.gift_card_discount = min(
-                    giftcard.balance,
-                    booking.calculate_total_price()
-                )
+            # --- Handle Gift Card or Discount Code ---
+            code_data = form.cleaned_data.get("gift_card_code")
+
+            if code_data:
+                code_type, code_obj = code_data
+
+                if code_type == "giftcard":
+                    booking.gift_card = code_obj
+                    booking.gift_card_discount = min(code_obj.balance, booking.calculate_total_price())
+
+                elif code_type == "discount":
+                    if code_obj.discount_type == "fixed":
+                        booking.gift_card_discount = min(code_obj.value, booking.calculate_total_price())
+                    elif code_obj.discount_type == "percent":
+                        booking.gift_card_discount = booking.calculate_total_price() * (code_obj.value / 100)
+                    code_obj.times_used += 1
+                    code_obj.save()
 
             # Final price after discount
             booking.price = booking.calculate_total_price()
             booking.save()
 
             # --- Deduct Gift Card balance if used ---
-            if giftcard and booking.gift_card_discount:
-                giftcard.balance -= booking.gift_card_discount
-                if giftcard.balance <= 0:
-                    giftcard.is_active = False
-                giftcard.save()
+            if code_data:
+                code_type, code_obj = code_data
+                if code_type == "giftcard" and booking.gift_card_discount:
+                    code_obj.balance -= booking.gift_card_discount
+                    if code_obj.balance <= 0:
+                        code_obj.is_active = False
+                    code_obj.save()
+
             try:
                 send_quote_email_cleaning(booking)
             except Exception as e:
                 print("❌ Email send failed:", e)
 
             return redirect("booking_submitted_cleaning", booking_id=booking.id)
+
         else:
             print("❌ Form errors:", form.errors)
-            return HttpResponseBadRequest("Invalid form submission")
-
+            return render(request, "booking/cleaning_booking.html", {
+                "form": form,
+                "cleaning_extras": extras,
+                "service_cat": service_cat,
+                "related_services": related_services,
+            })
     else:
         form = CleaningBookingForm()
+
 
     return render(request, "booking/cleaning_booking.html", {
         "form": form,

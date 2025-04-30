@@ -54,6 +54,8 @@
     </div>
   </section>
   <!-- common banner -->
+  
+
 
 <section class="mb-4">
 <div class="container">
@@ -71,6 +73,25 @@
     {% csrf_token %}
     <div class="row">
       <div class="col-lg-8">
+        
+
+    <!-- Errors -->
+    {% if form.errors %}
+      <div class="alert alert-danger rounded shadow-sm">
+        <ul class="mb-0">
+          {% for field in form.visible_fields %}
+            {% for error in field.errors %}
+              <li>{{ field.label }}: {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+  
+          {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+  {% endif %}
+  
     <input type="hidden" name="hours_requested" id="hidden_hours_requested">
     <input type="hidden" name="num_cleaners" id="hidden_num_cleaners">
     <input type="hidden" name="cleaning_type" id="hidden_cleaning_type">
@@ -232,10 +253,11 @@
       <h4 class="mt-4">Discount Code</h4>
       <div class="row">
         <div class="col-8">
-          <input type="text" name="gift_card_code" id="gift_card_code" class="cmn-input" placeholder="Gift Card Code">
+          <input type="text" id="gift_card_code" name="gift_card_code" class="cmn-input" placeholder="Enter Gift Card or Discount Code">
         </div>
-        <div class="col-4">
-          <button type="button" id="applyGiftCard" class="btn-1 w-100">Apply</button>
+        <div class="col-4 d-flex gap-2">
+          <button type="button" id="applyGiftCard" class="btn btn-primary w-50">Apply</button>
+          <button type="button" id="removeGiftCard" class="btn btn-outline-danger w-50">Remove</button>
         </div>
       </div>
 
@@ -257,6 +279,9 @@
         <div class="col-md-4">
           <label for="{{ form.hour.id_for_label }}" class="form-label">Start Time</label>
           {{ form.hour }}
+          {% if form.hour.errors %}
+            <div class="text-danger small">{{ form.hour.errors.0 }}</div>
+          {% endif %}
         </div>
       
         <!-- Recurrence Pattern -->
@@ -299,10 +324,11 @@
           <span>SALES TAX</span>
           <span>$<span id="salesTax">0.00</span></span>
         </div>
-        <div id="giftCardApplied" class="d-flex justify-content-between mt-2" style="display:none;">
-          <strong>GIFT CARD</strong>
-          <strong style="color: green;">- $<span id="giftCardAmount">0.00</span></strong>
+        <div id="giftCardApplied" style="display:none;" class="d-flex justify-content-between mt-2">
+          <strong>Discount:</strong>
+          <strong id="giftCardAmount" style="color: green;">0.00</strong>
         </div>
+        
         <div class="d-flex justify-content-between mt-2" style="font-size: 1.3rem;">
           <strong>TOTAL</strong>
           <strong style="color: orange;">$<span id="totalPrice">0.00</span></strong>
@@ -393,7 +419,7 @@
           hourSelect.disabled = false;
   
           if (!data.available_hours || data.available_hours.length === 0) {
-            hourSelect.innerHTML = "<option value=''>No available time</option>";
+            hourSelect.innerHTML = "<option disabled selected>No available time</option>";
           } else {
             data.available_hours.forEach((hour, index) => {
               const option = document.createElement("option");
@@ -505,12 +531,30 @@
       updatePrice();
     });
 
-    document.getElementById("applyGiftCard")?.addEventListener("click", function () {
+    document.getElementById("applyGiftCard")?.addEventListener("click", () => {
       const code = document.getElementById("gift_card_code")?.value.trim();
-      applyGiftCard(code, function (discount) {
-        updatePrice();         // ✅ YOUR existing function to recalculate price
-        updateGiftCardUI(discount);
+      applyGiftCardOrDiscount(code, () => {
+        updatePrice();
       });
+    });
+
+    document.getElementById("removeGiftCard")?.addEventListener("click", () => {
+      // Clear all discount/gift states
+      giftCardActive = false;
+      giftCardBalance = 0;
+      appliedGiftCardAmount = 0;
+      discountCode = null;
+      appliedDiscountAmount = 0;
+    
+      // Clear input field
+      document.getElementById("gift_card_code").value = "";
+    
+      // Update price and UI
+      updatePrice();
+    
+      // Optional: hide applied discount line
+      const el = document.getElementById("giftCardApplied");
+      if (el) el.style.display = "none";
     });
   
     // Run initializers
@@ -579,34 +623,52 @@
   }
   
   const taxRate = 0.08875;
-  const tax = subtotal * taxRate;
-  let total = subtotal + tax;
+const tax = subtotal * taxRate;
+let total = subtotal + tax;
 
-  
-  let discount = 0;
+let discount = 0;
+let discountLabel = "";
 
-// ✅ Apply gift card if any
+// ✅ Apply gift card if active
 if (giftCardActive && giftCardBalance > 0) {
   discount = Math.min(giftCardBalance, total);
   appliedGiftCardAmount = discount;
-  total = total - discount;
+  appliedDiscountAmount = 0;
+  discountLabel = "Gift Card";
 }
 
-// ✅ Update UI
+// ✅ Otherwise, apply discount code
+else if (discountCode) {
+  if (discountCode.type === "fixed") {
+    discount = Math.min(discountCode.value, total);
+  } else if (discountCode.type === "percent") {
+    discount = total * (discountCode.value / 100);
+  }
+  appliedDiscountAmount = discount;
+  appliedGiftCardAmount = 0;
+  discountLabel = "Discount";
+}
+
+// ✅ Apply the discount to total
+total = total - discount;
+
+// ✅ Update the summary UI
 const giftEl = document.getElementById("giftCardApplied");
 const giftAmtEl = document.getElementById("giftCardAmount");
 
 if (discount > 0 && giftEl && giftAmtEl) {
   giftEl.style.display = "flex";
+  giftEl.querySelector("strong").innerText = `${discountLabel}: -$${discount.toFixed(2)}`;
   giftAmtEl.innerText = discount.toFixed(2);
 } else if (giftEl) {
   giftEl.style.display = "none";
+  giftAmtEl.innerText = "0.00";
 }
-  
-  // ✅ Update the total UI here with the *updated* total:
-  document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
-  document.getElementById("salesTax").innerText = tax.toFixed(2);
-  document.getElementById("totalPrice").innerText = total.toFixed(2);
+
+// ✅ Update the total UI
+document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
+document.getElementById("salesTax").innerText = tax.toFixed(2);
+document.getElementById("totalPrice").innerText = total.toFixed(2);
   
       // Update summary items list
       const summaryContainer = document.getElementById("summary-items");

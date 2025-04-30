@@ -1,6 +1,6 @@
 # views.py
 from django.shortcuts import render, redirect
-from .models import GiftCard
+from .models import GiftCard, DiscountCode
 from .forms import GiftCardPurchaseForm
 from .utils import generate_giftcard_pdf, send_giftcard_email
 from .models import GiftCard
@@ -59,14 +59,37 @@ def check_giftcard_balance(request):
         "error": error
     })
 
-def validate_gift_card(request):
+def validate_discount_or_giftcard(request):
     code = request.GET.get("code", "").strip()
+
+    # 1. Try Gift Card
     try:
         giftcard = GiftCard.objects.get(code=code, is_active=True)
         if giftcard.balance > 0:
-            return JsonResponse({"valid": True, "amount": str(giftcard.balance)})
+            return JsonResponse({
+                "type": "giftcard",
+                "valid": True,
+                "amount": str(giftcard.balance)
+            })
     except GiftCard.DoesNotExist:
         pass
+
+    # 2. Try Discount Code
+    try:
+        discount = DiscountCode.objects.get(code__iexact=code, is_active=True)
+        if discount.is_valid():
+            return JsonResponse({
+                "type": "discount",
+                "valid": True,
+                "discount_type": discount.discount_type,
+                "value": str(discount.value)
+            })
+    except DiscountCode.DoesNotExist:
+        pass
+
+    # 3. Not found
     return JsonResponse({"valid": False})
+
+
 
 

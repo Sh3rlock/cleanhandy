@@ -2,7 +2,8 @@ from django import forms
 from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber, Booking
 from datetime import time, datetime, timedelta
 from django.core.exceptions import ValidationError
-from giftcards.models import GiftCard
+from giftcards.models import GiftCard, DiscountCode
+from django.utils import timezone
 
 class CleaningQuoteForm(forms.ModelForm):
     zip_code = forms.CharField(
@@ -96,6 +97,12 @@ class CleaningQuoteForm(forms.ModelForm):
             t += timedelta(minutes=30)
 
         self.fields["hour"].choices = time_slots
+
+    def clean_hour(self):
+        hour = self.cleaned_data.get("hour")
+        if not hour or hour in ["", "No available time"]:
+            raise forms.ValidationError("Please select a valid available start time.")
+        return hour
 
 
 class HandymanQuoteForm(forms.ModelForm):
@@ -232,9 +239,12 @@ class CleaningBookingForm(forms.ModelForm):
     )
 
     gift_card_code = forms.CharField(
-        label="Gift Card Code (optional)",
         required=False,
-        widget=forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Enter Gift Card Code"})
+        label="Gift Card / Discount Code",
+        widget=forms.TextInput(attrs={
+            "class": "cmn-input",
+            "placeholder": "Enter Gift Card or Discount Code"
+        })
     )
 
     class Meta:
@@ -286,17 +296,26 @@ class CleaningBookingForm(forms.ModelForm):
         self.fields["hour"].choices = time_slots
 
     def clean_gift_card_code(self):
-        """ Validate the gift card code if provided """
-        code = self.cleaned_data.get("gift_card_code")
-        if code:
-            try:
-                giftcard = GiftCard.objects.get(code=code.strip(), is_active=True)
-                if giftcard.balance <= 0:
-                    raise forms.ValidationError("This gift card has no remaining balance.")
-                return giftcard
-            except GiftCard.DoesNotExist:
-                raise forms.ValidationError("Invalid or expired gift card code.")
-        return None
+        code = self.cleaned_data.get("gift_card_code", "").strip()
+        if not code:
+            return None
+
+        # 1. Try GiftCard
+        try:
+            giftcard = GiftCard.objects.get(code__iexact=code, is_active=True, balance__gt=0)
+            return ("giftcard", giftcard)
+        except GiftCard.DoesNotExist:
+            pass
+
+        # 2. Try DiscountCode
+        try:
+            discount = DiscountCode.objects.get(code__iexact=code, is_active=True)
+            if discount.usage_limit > discount.times_used and (not discount.expires_at or timezone.now() < discount.expires_at):
+                return ("discount", discount)
+        except DiscountCode.DoesNotExist:
+            pass
+
+        raise forms.ValidationError("Invalid or expired code.")
 
 
 class HandymanBookingForm(forms.ModelForm):
