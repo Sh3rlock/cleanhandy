@@ -100,20 +100,40 @@
     border-color: #F15A29 !important;
   }
 
+  .btn {
+    padding: 0.5rem 1rem;
+  }
+
   .cmn-input {
-    appearance: none;         /* Remove default OS styling */
-    -webkit-appearance: none; /* Specifically for Safari */
-    -moz-appearance: none;    /* For Firefox */
+    border-radius: 8px;
+    border: 1px solid #F15A29;
+    background: var(--white-color);
+    padding: 0.5rem 1rem;
+    width: 100%;
+    margin-bottom: 5px !important;
+  }
+
+  select.cmn-input {
+    appearance: none;         /* Remove native styling */
+    -webkit-appearance: none; /* Safari */
+    -moz-appearance: none;    /* Firefox */
     background-color: #fff;
     color: #333;
     padding: 0.5rem 1rem;
     border: 1px solid #F15A29;
-    border-radius: 4px;
+    border-radius: 8px;
     font-size: 1rem;
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+  
+    /* Custom dropdown arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 1rem;
+  }
+  
+  /* Optional: add right padding so text doesn't overlap arrow */
+  select.cmn-input {
+    padding-right: 2.5rem;
   }
 
   .delete-address-btn {
