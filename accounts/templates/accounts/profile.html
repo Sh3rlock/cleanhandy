@@ -131,11 +131,20 @@
 <section class="service-details mb-4" style="margin-top:-50px">
   <div class="container">
 
-    <!-- Horizontal Navigation Bar -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="d-flex justify-content-center bg-white shadow-sm p-3 rounded">
-          <ul class="nav nav-pills gap-3 flex-nowrap justify-content-center align-items-center">
+   <!-- Responsive Horizontal Navigation Bar -->
+<div class="row mb-4">
+  <div class="col-12">
+    <nav class="navbar navbar-expand-md bg-white shadow-sm p-3 rounded">
+      <div class="container-fluid justify-content-center">
+        <!-- Toggler for mobile view -->
+        <button class="navbar-toggler d-flex align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#userNavBar" aria-controls="userNavBar" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="fw-semibold">Menu:</span>
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Collapsible content -->
+        <div class="collapse navbar-collapse justify-content-center" id="userNavBar">
+          <ul class="navbar-nav gap-3 flex-nowrap align-items-center text-center">
             {% if request.user.is_superuser %}
               <li class="nav-item">
                 <a href="/admin/" class="nav-link">Admin</a>
@@ -166,15 +175,18 @@
               <a href="#" class="nav-link">Billing Info</a>
             </li>
             <li class="nav-item">
-              <form action="{% url 'logout' %}" method="post">
+              <form action="{% url 'logout' %}" method="post" class="d-inline">
                 {% csrf_token %}
-                <button type="submit" class="text-danger bg-transparent border-0 p-0">Logout</button>
+                <button type="submit" class="nav-link text-danger bg-transparent border-0 p-0" style="color: red !important;">Logout</button>
               </form>
             </li>
           </ul>
         </div>
       </div>
-    </div>
+    </nav>
+  </div>
+</div>
+
     
 <div class="row">
   

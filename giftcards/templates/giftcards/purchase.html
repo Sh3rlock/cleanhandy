@@ -2,17 +2,17 @@
 {% load static %}
 {% block account_content %}
   
-<div class="col-7">
+<div class="col-12 col-lg-7">
   <h2>Buy a Gift Card</h2>
   <form method="post">
     {% csrf_token %}
     
     <div class="row mb-3">
-      <div class="col">
+      <div class="col-12 col-lg-6">
         <label for="{{ form.purchaser_name.id_for_label }}" class="form-label">From</label>
         {{ form.purchaser_name }}
       </div>
-      <div class="col">
+      <div class="col-12 col-lg-6">
         <label for="{{ form.recipient_name.id_for_label }}" class="form-label">To</label>
         {{ form.recipient_name }}
       </div>
@@ -38,7 +38,7 @@
   
 </div>
 
-<div class="col-5">
+<div class="col-12 col-lg-5 mt-5 mt-lg-0">
   <h2>Gift Card Details</h2>
   <div class="giftcard-preview p-4 rounded shadow-sm" style="
       background: linear-gradient(135deg, #f15a29, #f7941d);
@@ -54,7 +54,7 @@
       <i class="fa-solid fa-gift fa-xl"></i>
     </div>
 
-    <div class="giftcard-content">
+    <div class="giftcard-content" style="margin-bottom: 70px;">
       <p class="mb-1">To: <strong id="gc-to">Recipient Name</strong></p>
       <p class="mb-1">From: <strong id="gc-from">Your Name</strong></p>
       <p class="mb-3">Message: <em id="gc-message">Enjoy your sparkling clean home!</em></p>

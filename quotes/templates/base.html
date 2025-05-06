@@ -178,8 +178,8 @@
                         <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">My Profile</a>
                     {% else %}
                     <!-- Example buttons to trigger the modals -->
-                    <a href="{% url 'login' %}" class="btn-1" >Sign In</a>
-                    <a href="{% url 'register' %}" class="btn-1" >Sign Up</a>
+                    <a href="{% url 'login' %}" class="btn btn-sm btn-outline-primary" >Sign In</a>
+                    <a href="{% url 'register' %}" class="btn btn-sm btn-outline-primary" >Sign Up</a>
                     {% endif %}
                   </div>
                 </div>
@@ -203,6 +203,20 @@
             <div class="menu-outer">
               <!-- Here Menu Will Come Automatically Via Javascript / Same Menu as in Header -->
             </div>
+
+            <div class="mobile-menu-buttons mt-4 text-center">
+              {% if user.is_authenticated %}
+                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
+                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+                <a class="btn btn-sm btn-outline-primary d-block" style="margin-left: 25px; margin-right: 25px;" href="{% url 'profile' %}">My Profile</a>
+              {% else %}
+                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
+                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'handyman_booking' %}">Book Handyman</a>
+                <a class="btn btn-1 d-block" href="{% url 'login' %}">Sign In</a>
+                <a class="btn btn-1 d-block" href="{% url 'register' %}">Sign Up</a>
+              {% endif %}
+            </div>
+            
             <!-- Social Links -->
             <div class="social-links">
               <ul class="clearfix">
