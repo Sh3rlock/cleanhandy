@@ -1,9 +1,10 @@
 from django.urls import path
 from .views import (
-    admin_dashboard, update_quote_status, update_quote_detail_status, quote_list, quote_detail, booking_list, booking_detail, customer_list, customer_detail, 
+    admin_dashboard, update_quote_status, update_quote_detail_status, quote_list, quote_detail, booking_list, booking_detail_admin, customer_list, customer_detail, 
     service_list, add_service_category, edit_service_category, delete_service_category,
     add_service, edit_service, delete_service, booking_calendar, get_upcoming_quotes, quote_approval_view, quote_decline_view, block_time_slot,
-    get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv, delete_quote, send_quote_email_view
+    get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv, delete_quote, send_quote_email_view, get_booking_detail,
+    giftcard_discount
 )
 
 urlpatterns = [
@@ -22,7 +23,8 @@ urlpatterns = [
 
     # Booking Management
     path("bookings/", booking_list, name="booking_list"),
-    path("bookings/<int:booking_id>/", booking_detail, name="booking_detail"),
+    path('bookings/<int:booking_id>/json/', get_booking_detail, name='booking_detail_json'),
+    path("bookings/<int:booking_id>/", booking_detail_admin, name="booking_detail_admin"),
 
     # Customer Management
     path("customers/", customer_list, name="customer_list"),
@@ -52,6 +54,10 @@ urlpatterns = [
     path("quote/<int:quote_id>/decline/<str:token>/", quote_decline_view, name="quote_decline_link"),
 
     path("admin/block-time-slot/", block_time_slot, name="block_time_slot"),
+
+    path("giftcard-discount/", giftcard_discount, name="giftcard_discount"),
+
+
 
 
 

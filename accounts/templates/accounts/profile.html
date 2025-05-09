@@ -215,11 +215,14 @@
             {{ profile_form.as_p }}
           </fieldset>
 
-          <fieldset>
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <legend class="mb-0">Addresses</legend>
-              <button type="button" class="btn-1" onclick="addAddress()">+&nbsp;New&nbsp;Address</button>
-            </div>
+          <div class="card mb-4 shadow-sm" style="border: 1px solid #F15A29;">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Select Address</h5>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddAddressModal()">
+                  + Add New Address
+                </button>
+              </div>
 
             <div id="address-container">
               {% for address in profile.addresses.all %}
@@ -247,9 +250,10 @@
               </div>
               {% endfor %}
             </div>
-          </fieldset>
+          </div>
+          </div>
 
-          <button type="submit" class="btn-1 w-100 mt-4">Save Profile</button>
+          <button type="submit" class="btn-1 w-100">Save Profile</button>
         </form>
       
     </div>
@@ -299,6 +303,38 @@
   </div>
 </div>
 {% endblock %}
+
+<!-- Custom Add Address Modal -->
+<div id="customAddAddressModal" class="custom-modal" style="margin-top:50px;">
+  <div class="custom-modal-content">
+    <div class="custom-modal-header">
+      <h5>Add New Address</h5>
+      <span class="custom-modal-close" onclick="closeAddAddressModal()">&times;</span>
+    </div>
+    <form method="post" action="{% url 'add_customer_address' %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div class="form-group mb-2">
+          <label>Street Address</label>
+          <input type="text" name="street_address" class="cmn-input" required>
+        </div>
+        <div class="form-group mb-2">
+          <label>Apt / Suite</label>
+          <input type="text" name="apt_suite" class="cmn-input">
+        </div>
+        <div class="form-group mb-2">
+          <label>ZIP Code</label>
+          <input type="text" name="zip_code" class="cmn-input" required>
+        </div>
+       
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddAddressModal()">Cancel</button>
+        <button type="submit" class="btn-1">Save Address</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script>
   let addressToRemove = null;
@@ -362,6 +398,23 @@
 `;
     container.appendChild(div);
   }
+</script>
+
+<script>
+  function openAddAddressModal() {
+    document.getElementById("customAddAddressModal").style.display = "block";
+  }
+
+  function closeAddAddressModal() {
+    document.getElementById("customAddAddressModal").style.display = "none";
+  }
+
+  window.addEventListener("click", function (event) {
+    const modal = document.getElementById("customAddAddressModal");
+    if (event.target === modal) {
+      closeAddAddressModal();
+    }
+  });
 </script>
 
   

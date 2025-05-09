@@ -54,7 +54,7 @@ def blog_detail(request):
 
 def request_cleaning_quote(request, service_id):
     service = get_object_or_404(Service, id=service_id)
-    extras = CleaningExtra.objects.all()
+    all_services = Service.objects.all()
 
     # Get related services in the Cleaning category (for suggestion sidebar)
     cleaning_category = ServiceCategory.objects.filter(name__iexact='cleaning').first()
@@ -67,35 +67,9 @@ def request_cleaning_quote(request, service_id):
     service.view_count += 1
     service.save(update_fields=["view_count"])
 
-    if request.method == "POST":
-        form = CleaningQuoteForm(request.POST)
-        if form.is_valid():
-            quote = form.save(commit=False)
-            quote.service = service
-
-            # Set extras (many-to-many)
-            selected_extra_ids = request.POST.getlist("extras")
-            quote.save()  # save first before setting m2m
-            if selected_extra_ids:
-                selected_extras = CleaningExtra.objects.filter(id__in=selected_extra_ids)
-                quote.extras.set(selected_extras)
-
-            # Server-side price calculation
-            quote.price = quote.calculate_total_price()
-            quote.save()
-
-            return redirect("quote_submitted", quote_id=quote.id)
-        else:
-            print("❌ Form errors:", form.errors)
-            return HttpResponseBadRequest("Invalid form submission")
-
-    else:
-        form = CleaningQuoteForm(initial={'service': service.id})
-
     return render(request, "quotes/request_cleaning_quote.html", {
-        "form": form,
-        "cleaning_extras": extras,
         "service": service,
+        "all_services": all_services,
         "related_services": related_services,
     })
 

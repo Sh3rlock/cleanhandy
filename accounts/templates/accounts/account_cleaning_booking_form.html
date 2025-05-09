@@ -3,6 +3,11 @@
 {% block account_content %}
 
 <style>
+  section {
+    position: relative;
+    z-index: unset !important;
+  }
+  
   .modal-backdrop.show {
     opacity: 0.5;
   }
@@ -18,11 +23,12 @@
   #stickySummary.fixed {
     position: fixed;
     top: 80px; /* adjust for your navbar */
-    z-index: 1000;
+    z-index: 9999;
   }
   
   #stickySummaryWrapper {
     position: relative;
+    z-index: 9999;
   }
   
   @media (max-width: 991px) {
@@ -35,18 +41,38 @@
 </style>
 
 <h3 class="mb-4">Cleaning Booking</h3>
+
 <form method="post" id="quoteForm">
   {% csrf_token %}
   <div class="row">
+    
+    <!-- Left Column: Form Steps -->
     <div class="col-lg-8">
-  <input type="hidden" name="hours_requested" id="hidden_hours_requested">
-  <input type="hidden" name="num_cleaners" id="hidden_num_cleaners">
-  <input type="hidden" name="cleaning_type" id="hidden_cleaning_type">
-  <input type="hidden" name="service_cat" value="{{ service_cat.id }}">
 
-  <!-- Step 1: Choose Service Type -->
-  <div class="step mb-4" id="step1">
-      <div class="col-12">
+      <!-- Error Messages -->
+      {% if form.errors %}
+        <div class="alert alert-danger rounded shadow-sm">
+          <ul class="mb-0">
+            {% for field in form.visible_fields %}
+              {% for error in field.errors %}
+                <li>{{ field.label }}: {{ error }}</li>
+              {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <!-- Hidden Fields -->
+      <input type="hidden" name="hours_requested" id="hidden_hours_requested">
+      <input type="hidden" name="num_cleaners" id="hidden_num_cleaners">
+      <input type="hidden" name="cleaning_type" id="hidden_cleaning_type">
+      <input type="hidden" name="service_cat" value="{{ service_cat.id }}">
+
+      <!-- Step 1: Choose Service Type -->
+      <div class="step mb-4" id="step1">
         <div class="form-group">
           <label for="id_square_feet_options">Square Feet</label>
           <select name="square_feet_options" id="id_square_feet_options" class="cmn-input">
@@ -56,282 +82,271 @@
           </select>
         </div>
 
-      <div class="form-group">
-        <label for="id_home_types">Home Type</label>
-        <select name="home_types" id="id_home_types" class="cmn-input">
-          {% for option in form.fields.home_types.queryset %}
-            <option value="{{ option.id }}"
-                    data-price="{{ option.price }}"
-                    data-time="{{ option.extra_minutes }}">
-              {{ option.name }} (${{ option.price }})
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div id="cleaningExtrasContainer" class="mb-4">
-        <h4 class="mt-4">Select Optional Extras</h4>
-        <div class="row">
-          {% for extra in cleaning_extras %}
-            <div class="col-12 col-md-6 mb-2">
-              <div class="form-check p-3 border rounded shadow-sm h-100">
-                <input 
-                  class="form-check-input extra-checkbox" 
-                  type="checkbox" 
-                  id="extra{{ extra.id }}" 
-                  name="extras" 
-                  value="{{ extra.id }}" 
-                  data-price="{{ extra.price }}" 
-                  data-time="{{ extra.extra_minutes }}"
-                />
-                <label class="form-check-label ms-2" for="extra{{ extra.id }}">
-                  {{ extra.name }} <small class="text-muted">(+${{ extra.price }})</small>
-                </label>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Large Home Options -->
-  <div id="largeHomeOptions" class="mb-4" style="display: none;">
-    <h4>Large Home Cleaning Details</h4>
-    <div class="row">
-      <div class="col-12">
-        <select name="cleaning_type" class="cmn-input">
-          <option value="">Select Cleaning Type</option>
-          <option value="1000-1500 (Regular)" selected>1000–1500 sq.ft (Regular Cleaning)</option>
-          <option value="1000-1500 (Deep)">1000–1500 sq.ft (Deep Cleaning)</option>
-          <option value="1000-1500 (Move)">1000–1500 sq.ft (Move In/Out Cleaning)</option>
-          <option value="1000-1500 (Post)">1000–1500 sq.ft (Post Renovation)</option>
-        </select>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-6">
-        <select name="num_cleaners" class="cmn-input">
-          <option value="1">1 Cleaner</option>
-          <option value="2" selected>2 Cleaners</option>
-          <option value="3">3 Cleaners</option>
-        </select>
-      </div>
-      <div class="col-6">
-        <select name="est_hours" class="cmn-input">
-          <option value=""># of Hours</option>
-          <option value="2">2 Hours</option>
-          <option value="3" selected>3 Hours</option>
-          <option value="4">4 Hours</option>
-          <option value="5">5 Hours</option>
-          <option value="6">6 Hours</option>
-          <option value="7">7 Hours</option>
-          <option value="8">8 Hours</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- Step 3: Contact Info -->
-  <div class="step hidden-step" id="step3">
-    <h4>Contact Info</h4>
-
-    <div class="row">
-      <div class="col-md-4 mb-3">
-        {{ form.name.label_tag }}
-        {{ form.name }}
-        {% if form.name.errors %}
-          <div class="text-danger small">{{ form.name.errors.0 }}</div>
-        {% endif %}
-      </div>
-    
-      <div class="col-md-4 mb-3">
-        {{ form.email.label_tag }}
-        {{ form.email }}
-        {% if form.email.errors %}
-          <div class="text-danger small">{{ form.email.errors.0 }}</div>
-        {% endif %}
-      </div>
-      <div class="col-md-4 mb-3">
-        {{ form.phone.label_tag }}
-        {{ form.phone }}
-        {% if form.email.errors %}
-          <div class="text-danger small">{{ form.phone.errors.0 }}</div>
-        {% endif %}
-      </div>
-    </div>
-    {{ form.city }}
-    {{ form.state }}
-    
-    {% if saved_addresses %}
-    <div class="card mb-4 shadow-sm" style="border: 1px solid #F15A29;">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="card-title mb-0">Select Address</h5>
-          <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddAddressModal()">
-            + Add New Address
-          </button>
-        </div>
-    
-        <div class="form-group mb-3">
-          <label for="addressSelect" class="form-label">Your Saved Addresses</label>
-          <select id="addressSelect" class="form-select">
-            <option value="">Select Address</option>
-            {% for addr in saved_addresses %}
-              <option 
-                data-street="{{ addr.street_address }}"
-                data-apt="{{ addr.apt_suite }}"
-                data-zip="{{ addr.zip_code }}"
-                data-city="{{ addr.city }}"
-                data-state="{{ addr.state }}"
-              >
-                {{ addr.street_address }}, Apt {{ addr.apt_suite }}, {{ addr.zip_code }}
+        <div class="form-group">
+          <label for="id_home_types">Home Type</label>
+          <select name="home_types" id="id_home_types" class="cmn-input">
+            {% for option in form.fields.home_types.queryset %}
+              <option value="{{ option.id }}" data-price="{{ option.price }}" data-time="{{ option.extra_minutes }}">
+                {{ option.name }} (${{ option.price }})
               </option>
             {% endfor %}
           </select>
         </div>
-    
-        <!-- Address details row (if dynamically shown) -->
-        <div id="selectedAddressDetails" class="row g-2 d-none">
+
+        <!-- Optional Extras -->
+        <div id="cleaningExtrasContainer" class="mb-4">
+          <h4 class="mt-4">Select Optional Extras</h4>
+          <div class="row">
+            {% for extra in cleaning_extras %}
+              <div class="col-12 col-md-6 mb-2">
+                <div class="form-check p-3 border rounded shadow-sm h-100">
+                  <input class="form-check-input extra-checkbox"
+                         type="checkbox"
+                         id="extra{{ extra.id }}"
+                         name="extras"
+                         value="{{ extra.id }}"
+                         data-price="{{ extra.price }}"
+                         data-time="{{ extra.extra_minutes }}" />
+                  <label class="form-check-label ms-2" for="extra{{ extra.id }}">
+                    {{ extra.name }} <small class="text-muted">(+${{ extra.price }})</small>
+                  </label>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Large Home Options -->
+      <div id="largeHomeOptions" class="mb-4" style="display: none;">
+        <h4>Large Home Cleaning Details</h4>
+        <div class="row">
+          <div class="col-12">
+            <select name="cleaning_type" class="cmn-input">
+              <option value="">Select Cleaning Type</option>
+              <option value="1000-1500 (Regular)">1000–1500 sq.ft (Regular Cleaning)</option>
+              <option value="1000-1500 (Deep)">1000–1500 sq.ft (Deep Cleaning)</option>
+              <option value="1000-1500 (Move)">1000–1500 sq.ft (Move In/Out Cleaning)</option>
+              <option value="1000-1500 (Post)">1000–1500 sq.ft (Post Renovation)</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6">
+            <select name="num_cleaners" class="cmn-input">
+              <option value="1">1 Cleaner</option>
+              <option value="2" selected>2 Cleaners</option>
+              <option value="3">3 Cleaners</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <select name="est_hours" class="cmn-input">
+              <option value=""># of Hours</option>
+              <option value="2">2 Hours</option>
+              <option value="3">3 Hours</option>
+              <option value="4">4 Hours</option>
+              <option value="5">5 Hours</option>
+              <option value="6">6 Hours</option>
+              <option value="7">7 Hours</option>
+              <option value="8">8 Hours</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Schedule Info -->
+      <div class="step hidden-step" id="step2">
+        <h4 class="mt-4">Schedule</h4>
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label for="{{ form.date.id_for_label }}" class="form-label">Date</label>
+            <div style="position: relative;">
+              {{ form.date }}
+              <i class="icon-calendar" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); pointer-events:none;"></i>
+            </div>
+          </div>
+          <div class="col-md-4">
+            {{ form.hour.label_tag }}
+            {{ form.hour }}
+            <div id="hourErrorMsg" class="text-danger small mt-1 d-none">
+              Please choose another date.
+            </div>
+          </div>
+          <div class="col-md-4">
+            {{ form.recurrence_pattern.label_tag }}
+            {{ form.recurrence_pattern }}
+          </div>
+        </div>
+        {{ form.job_description.label_tag }}
+        {{ form.job_description }}
+      </div>
+
+      <!-- Step 3: Contact Info -->
+      <div class="step hidden-step" id="step3">
+        <h4>Contact Info</h4>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            {{ form.name.label_tag }}
+            {{ form.name }}
+            {% if form.name.errors %}
+              <div class="text-danger small">{{ form.name.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-4 mb-3">
+            {{ form.email.label_tag }}
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div class="text-danger small">{{ form.email.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-4 mb-3">
+            {{ form.phone.label_tag }}
+            {{ form.phone }}
+            {% if form.phone.errors %}
+              <div class="text-danger small">{{ form.phone.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Saved Address Select -->
+        {% if saved_addresses %}
+          <div class="card mb-4 shadow-sm" style="border: 1px solid #F15A29;">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Select Address</h5>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddAddressModal()">
+                  + Add New Address
+                </button>
+              </div>
+              <div class="form-group mb-3">
+                <label for="addressSelect" class="form-label">Your Saved Addresses</label>
+                <select id="addressSelect" class="form-select">
+                  <option value="">Select Address</option>
+                  {% for addr in saved_addresses %}
+                    <option 
+                      data-street="{{ addr.street_address }}"
+                      data-apt="{{ addr.apt_suite }}"
+                      data-zip="{{ addr.zip_code }}"
+                      data-city="{{ addr.city }}"
+                      data-state="{{ addr.state }}"
+                    >
+                      {{ addr.street_address }}, Apt {{ addr.apt_suite }}, {{ addr.zip_code }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Preview of selected address -->
+              <div id="selectedAddressDetails" class="row g-2 d-none">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Street</label>
+                  <p class="form-control-plaintext" id="addressStreet">–</p>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label fw-semibold">Apt/Suite</label>
+                  <p class="form-control-plaintext" id="addressApt">–</p>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label fw-semibold">ZIP Code</label>
+                  <p class="form-control-plaintext" id="addressZip">–</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Manual address fields -->
+        <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label fw-semibold">Street</label>
-            <p class="form-control-plaintext" id="addressStreet">–</p>
+            <label for="{{ form.address.id_for_label }}" class="form-label">Street Address</label>
+            {{ form.address }}
+            {% if form.address.errors %}
+              <div class="text-danger small">{{ form.address.errors.0 }}</div>
+            {% endif %}
           </div>
           <div class="col-md-3">
-            <label class="form-label fw-semibold">Apt/Suite</label>
-            <p class="form-control-plaintext" id="addressApt">–</p>
+            <label for="{{ form.apartment.id_for_label }}" class="form-label">Apt/Suite</label>
+            {{ form.apartment }}
+            {% if form.apartment.errors %}
+              <div class="text-danger small">{{ form.apartment.errors.0 }}</div>
+            {% endif %}
           </div>
           <div class="col-md-3">
-            <label class="form-label fw-semibold">ZIP Code</label>
-            <p class="form-control-plaintext" id="addressZip">–</p>
+            <label for="{{ form.zip_code.id_for_label }}" class="form-label">ZIP Code</label>
+            {{ form.zip_code }}
+            {% if form.zip_code.errors %}
+              <div class="text-danger small">{{ form.zip_code.errors.0 }}</div>
+            {% endif %}
           </div>
         </div>
-    
-    
-{% endif %}
+      </div> <!-- End Step 3 -->
 
+    </div> <!-- End Left Column -->
 
+    <!-- Right Column: Sticky Summary -->
+    <div class="col-lg-4">
+      <div id="stickySummaryWrapper">
+        <div id="stickySummary" class="service-summary mt-4 p-3 border rounded shadow-sm bg-white">
+          
+          <div id="summary-items" class="mb-3"></div>
 
-<div class="row g-3">
-  <!-- Street Address -->
-  <div class="col-md-6">
-    <label for="{{ form.address.id_for_label }}" class="form-label">Street Address</label>
-    {{ form.address }}
-    {% if form.address.errors %}
-      <div class="text-danger small">{{ form.address.errors.0 }}</div>
-    {% endif %}
-  </div>
+          <div class="d-flex align-items-center mb-1">
+            <i class="fa-solid fa-calendar-days me-2 text-muted"></i>
+            <span id="summary-date">–</span>
+          </div>
+          <div class="d-flex align-items-center mb-1">
+            <i class="fa-regular fa-clock me-2 text-muted"></i>
+            <span id="summary-duration">–</span>
+          </div>
+          <div class="d-flex align-items-center mb-3">
+            <i class="fa-solid fa-rotate me-2 text-muted"></i>
+            <span id="summary-recurrence">–</span>
+          </div>
 
-  <!-- Apartment / Suite -->
-  <div class="col-md-3">
-    <label for="{{ form.apartment.id_for_label }}" class="form-label">Apt/Suite</label>
-    {{ form.apartment }}
-    {% if form.apartment.errors %}
-      <div class="text-danger small">{{ form.apartment.errors.0 }}</div>
-    {% endif %}
-  </div>
+          <hr>
 
-  <!-- ZIP Code -->
-  <div class="col-md-3">
-    <label for="{{ form.zip_code.id_for_label }}" class="form-label">ZIP Code</label>
-    {{ form.zip_code }}
-    {% if form.zip_code.errors %}
-      <div class="text-danger small">{{ form.zip_code.errors.0 }}</div>
-    {% endif %}
-  </div>
-</div>
-</div>
-</div>
+          <div class="d-flex justify-content-between">
+            <strong>SUB-TOTAL</strong>
+            <strong>$<span id="subtotalPrice">0.00</span></strong>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>SALES TAX</span>
+            <span>$<span id="salesTax">0.00</span></span>
+          </div>
 
+          <h5 class="mt-4">Discount Code</h5>
+          <div class="mb-3">
+            <input type="text" id="gift_card_code" name="gift_card_code" class="cmn-input w-100" placeholder="Enter Gift Card or Discount Code">
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" id="applyGiftCard" class="btn btn-primary w-100">Apply</button>
+            <button type="button" id="removeGiftCard" class="btn btn-outline-danger w-100">Remove</button>
+          </div>
 
-    <h4 class="mt-4">Discount Code</h4>
-    <div class="row">
-      <div class="col-8">
-        <input type="text" name="discount" class="cmn-input" placeholder="Discount Code">
-      </div>
-      <div class="col-4">
-        <button type="submit" class="btn-1 w-100">Apply</button>
-      </div>
-    </div>
-  </div>
+          <div id="giftCardApplied" style="display:none;" class="d-flex justify-content-between mt-2">
+            <strong>Discount:</strong>
+            <strong id="giftCardAmount" style="color: green;">0.00</strong>
+          </div>
 
-  <!-- Step 2: Schedule Info -->
-  <div class="step hidden-step" id="step2">
-    <h4 class="mt-4">Schedule</h4>
-    <div class="row g-3 align-items-end">
-      <!-- Date -->
-      <div class="col-md-4">
-        <label for="{{ form.date.id_for_label }}" class="form-label">Date</label>
-        <div style="position: relative;">
-          {{ form.date }}
-          <i class="icon-calendar" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); pointer-events:none;"></i>
+          <div class="d-flex justify-content-between mt-2" style="font-size: 1.3rem;">
+            <strong>TOTAL</strong>
+            <strong style="color: orange;">$<span id="totalPrice">0.00</span></strong>
+          </div>
+
+          <!-- Terms Agreement -->
+          <div class="checkbox-wrap mt-3">
+            <input type="checkbox" id="terms" required>
+            <label for="terms">I agree with all the terms & conditions</label>
+          </div>
+
+          <button type="submit" class="btn-1 w-100 mt-3">Book Service</button>
         </div>
       </div>
+    </div> <!-- End Right Column -->
     
-      <!-- Start Time -->
-      <div class="col-md-4">
-        <label for="{{ form.hour.id_for_label }}" class="form-label">Start Time</label>
-        {{ form.hour }}
-      </div>
-    
-      <!-- Recurrence Pattern -->
-      <div class="col-md-4">
-        <label for="{{ form.recurrence_pattern.id_for_label }}" class="form-label">Recurrence</label>
-        {{ form.recurrence_pattern }}
-      </div>
-    </div>
-    
-
-    {{ form.job_description.label_tag }}
-    {{ form.job_description }}
-  </div>
-</div>
-<div class="col-lg-4">
-  <div id="stickySummaryWrapper">
-    <div id="stickySummary" class="service-summary mt-4 p-3 border rounded shadow-sm bg-white">
-      <div id="summary-items" class="mb-3"></div>
-
-      <div class="d-flex align-items-center mb-1">
-        <i class="fa-solid fa-calendar-days me-2 text-muted"></i>
-        <span id="summary-date">–</span>
-      </div>
-      <div class="d-flex align-items-center mb-1">
-        <i class="fa-regular fa-clock me-2 text-muted"></i>
-        <span id="summary-duration">–</span>
-      </div>
-      <div class="d-flex align-items-center mb-3">
-        <i class="fa-solid fa-rotate me-2 text-muted"></i>
-        <span id="summary-recurrence">–</span>
-      </div>
-
-      <hr>
-
-      <div class="d-flex justify-content-between">
-        <strong>SUB-TOTAL</strong>
-        <strong>$<span id="subtotalPrice">0.00</span></strong>
-      </div>
-      <div class="d-flex justify-content-between">
-        <span>SALES TAX</span>
-        <span>$<span id="salesTax">0.00</span></span>
-      </div>
-      <div class="d-flex justify-content-between mt-2" style="font-size: 1.3rem;">
-        <strong>TOTAL</strong>
-        <strong style="color: orange;">$<span id="totalPrice">0.00</span></strong>
-      </div>
-
-    <!-- Terms -->
-    <div class="checkbox-wrap mt-3">
-      <input type="checkbox" id="terms" required>
-      <label for="terms">I agree with all the terms & conditions</label>
-    </div>
-
-    <button type="submit" class="btn-1 w-100 mt-3">Book Service</button>
-    </div>
-  </div>
-</div>
-
-  </div>
+  </div> <!-- End Row -->
 </form>
+
 
 
 <!-- Custom Add Address Modal -->
@@ -371,6 +386,7 @@
 
 <!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="{% static 'assets/js/giftcard.js' %}"></script>
 <script>
 // ================================
 // FLATPICKR + FORM LOGIC + PRICING ENGINE
@@ -433,7 +449,7 @@ document.addEventListener("DOMContentLoaded", function () {
         hourSelect.disabled = false;
 
         if (!data.available_hours || data.available_hours.length === 0) {
-          hourSelect.innerHTML = "<option value=''>No available time</option>";
+          hourSelect.innerHTML = "<option disabled selected>No available time</option>";
         } else {
           data.available_hours.forEach((hour, index) => {
             const option = document.createElement("option");
@@ -545,6 +561,32 @@ document.addEventListener("DOMContentLoaded", function () {
     updatePrice();
   });
 
+  document.getElementById("applyGiftCard")?.addEventListener("click", () => {
+    const code = document.getElementById("gift_card_code")?.value.trim();
+    applyGiftCardOrDiscount(code, () => {
+      updatePrice();
+    });
+  });
+
+  document.getElementById("removeGiftCard")?.addEventListener("click", () => {
+    // Clear all discount/gift states
+    giftCardActive = false;
+    giftCardBalance = 0;
+    appliedGiftCardAmount = 0;
+    discountCode = null;
+    appliedDiscountAmount = 0;
+  
+    // Clear input field
+    document.getElementById("gift_card_code").value = "";
+  
+    // Update price and UI
+    updatePrice();
+  
+    // Optional: hide applied discount line
+    const el = document.getElementById("giftCardApplied");
+    if (el) el.style.display = "none";
+  });
+
   // Run initializers
   setDefaultSquareFeet();
   toggleHomeAndExtras();
@@ -610,14 +652,53 @@ if (largeHomeOptions?.offsetParent !== null) {
   subtotal += laborCost;
 }
 
-    const taxRate = 0.08875;
-    const tax = subtotal * taxRate;
-    const total = subtotal + tax;
+const taxRate = 0.08875;
+const tax = subtotal * taxRate;
+let total = subtotal + tax;
 
-    // Update UI values
-    document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
-    document.getElementById("salesTax").innerText = tax.toFixed(2);
-    document.getElementById("totalPrice").innerText = total.toFixed(2);
+let discount = 0;
+let discountLabel = "";
+
+// ✅ Apply gift card if active
+if (giftCardActive && giftCardBalance > 0) {
+  discount = Math.min(giftCardBalance, total);
+  appliedGiftCardAmount = discount;
+  appliedDiscountAmount = 0;
+  discountLabel = "Gift Card";
+}
+
+// ✅ Otherwise, apply discount code
+else if (discountCode) {
+  if (discountCode.type === "fixed") {
+    discount = Math.min(discountCode.value, total);
+  } else if (discountCode.type === "percent") {
+    discount = total * (discountCode.value / 100);
+  }
+  appliedDiscountAmount = discount;
+  appliedGiftCardAmount = 0;
+  discountLabel = "Discount";
+}
+
+// ✅ Apply the discount to total
+total = total - discount;
+
+// ✅ Update the summary UI
+const giftEl = document.getElementById("giftCardApplied");
+const giftAmtEl = document.getElementById("giftCardAmount");
+
+if (discount > 0 && giftEl && giftAmtEl) {
+  giftEl.style.display = "flex";
+  giftEl.querySelector("strong").innerText = `${discountLabel}: -$${discount.toFixed(2)}`;
+  giftAmtEl.innerText = discount.toFixed(2);
+} else if (giftEl) {
+  giftEl.style.display = "none";
+  giftAmtEl.innerText = "0.00";
+}
+
+// ✅ Update the total UI
+document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
+document.getElementById("salesTax").innerText = tax.toFixed(2);
+document.getElementById("totalPrice").innerText = total.toFixed(2);
 
     // Update summary items list
     const summaryContainer = document.getElementById("summary-items");
@@ -806,6 +887,24 @@ if (largeHomeOptions?.offsetParent !== null) {
   document.getElementById("quoteForm").addEventListener("submit", function () {
     syncHiddenFields(); // ✅ ensures all values are ready
   });
+
+  document.getElementById("quoteForm").addEventListener("submit", function (e) {
+    const hourSelect = document.getElementById("id_hour");
+    const errorMsg = document.getElementById("hourErrorMsg");
+    const selectedOption = hourSelect?.options[hourSelect.selectedIndex];
+    const selectedValue = selectedOption?.value || "";
+  
+    if (!selectedValue || selectedOption?.disabled) {
+      e.preventDefault();
+      hourSelect.classList.add("is-invalid");
+      errorMsg.classList.remove("d-none");
+      hourSelect.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      hourSelect.classList.remove("is-invalid");
+      errorMsg.classList.add("d-none");
+    }
+  });
+  
 });
 </script>
 

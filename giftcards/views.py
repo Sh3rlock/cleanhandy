@@ -7,6 +7,8 @@ from .models import GiftCard
 from quotes.models import ServiceCategory
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.http import HttpResponseBadRequest
+from decimal import Decimal
 
 def giftcard_success(request):
     return render(request, "giftcards/giftcard_success.html")
@@ -89,6 +91,51 @@ def validate_discount_or_giftcard(request):
 
     # 3. Not found
     return JsonResponse({"valid": False})
+
+
+@login_required
+def add_giftcard(request):
+    if request.method == "POST":
+        try:
+            amount = Decimal(request.POST.get("amount", "0"))  # Convert string to Decimal
+
+            GiftCard.objects.create(
+                amount=amount,
+                balance=amount,  # 💰 Set balance equal to amount
+                purchaser_name=request.POST.get("purchaser_name"),
+                purchaser_email=request.POST.get("purchaser_email"),
+                recipient_name=request.POST.get("recipient_name"),
+                recipient_email=request.POST.get("recipient_email"),
+                message=request.POST.get("message") or "",
+                is_active=bool(request.POST.get("is_active")),
+            )
+
+            next_url = request.POST.get("next")
+            return redirect(next_url) if next_url else redirect("giftcard_discount")
+
+        except Exception as e:
+            return HttpResponseBadRequest(f"Invalid data: {e}")
+
+    return HttpResponseBadRequest("Invalid method")
+
+@login_required
+def add_discount(request):
+    if request.method == "POST":
+        try:
+            DiscountCode.objects.create(
+                code=request.POST.get("code"),
+                discount_type=request.POST.get("discount_type"),
+                value=Decimal(request.POST.get("value") or "0"),
+                usage_limit=int(request.POST.get("usage_limit") or 1),
+                expires_at=request.POST.get("expires_at") or None,
+                is_active=bool(request.POST.get("is_active")),
+            )
+            next_url = request.POST.get("next")
+            return redirect(next_url) if next_url else redirect("giftcard_discount")
+        except Exception as e:
+            return HttpResponseBadRequest(f"❌ Invalid data: {e}")
+    return HttpResponseBadRequest("Invalid request method.")
+
 
 
 

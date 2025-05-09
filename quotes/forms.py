@@ -224,7 +224,7 @@ class CleaningBookingForm(forms.ModelForm):
 
     hour = forms.ChoiceField(
         label="Select Hour",
-        widget=forms.Select(attrs={"class": "cmn-input"})
+        widget=forms.Select(attrs={"class": "cmn-input", "id": "id_hour" })
     )
 
     cleaning_type = forms.CharField(

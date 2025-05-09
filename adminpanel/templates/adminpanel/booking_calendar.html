@@ -1,6 +1,6 @@
-{% extends "adminpanel/base_admin.html" %}
-
-{% block content %}
+{% extends "accounts/partials/account_base.html" %}
+{% load static %}
+{% block account_content %}
 
 <!-- Tippy.js -->
 <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/animations/scale.css" />
@@ -15,10 +15,10 @@
 </style>
 
 <h2>Booking Calendar</h2>
-<!-- Button to Open Quote Modal -->
+<!-- Button to Open Quote Modal 
 <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#quoteModal">
     + Create New Quote
-</button>
+</button>-->
 <button class="btn btn-danger mb-3" data-bs-toggle="modal" data-bs-target="#blockSlotModal">
     ⛔ Block Time Slot
 </button>
@@ -320,7 +320,7 @@ document.addEventListener("DOMContentLoaded", function() {
                             <b style="font-size: 16px; color: #007bff;">📅 Time Slot:</b> ${info.event.extendedProps.time_slots}<br>
                             <b style="font-size: 16px; color: #28a745;">🛠️ Service:</b> ${info.event.extendedProps.service}<br>
                             <b style="font-size: 15px; color: ${getStatusColor(info.event.extendedProps.status)};">📌 Status:</b> <strong>${info.event.extendedProps.status.toUpperCase()}</strong><br><hr>
-                            <b>🧑 Customer:</b> ${info.event.extendedProps.customer}<br>
+                            <b>🧑 Customer:</b> ${info.event.extendedProps.name}<br>
                             <b>📍 ZIP Code:</b> ${info.event.extendedProps.zip_code}<br>
                             <b>📧 Email:</b> ${info.event.extendedProps.email}<br>
                             <b>📝 Job Description:</b> ${info.event.extendedProps.job_description}<br>

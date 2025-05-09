@@ -1,0 +1,318 @@
+{% extends "accounts/partials/account_base.html" %}
+{% load static %}
+{% block account_content %}
+
+<style>
+     section {
+        z-index: unset !important;
+     }
+
+     .text-primary {
+        color: #F15A29 !important;
+      }
+
+      .custom-modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5);
+      }
+    
+      .custom-modal-content {
+        background-color: #fff;
+        margin: 10% auto;
+        padding: 1rem;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      }
+    
+      .custom-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+    
+      .custom-modal-close {
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+    
+      .custom-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+</style>
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css" />
+
+
+<div class="row">
+  <!-- Left Column: Bookings Table -->
+  <div class="col-12 col-lg-12">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="fa-solid fa-gift me-2 text-primary"></i> GiftCards</h2>
+        <button type="button" class="btn btn-primary" onclick="openAddGiftCardModal()">
+            <i class="fa-solid fa-plus"></i> Add GiftCard
+        </button>
+    </div>
+
+    {% if giftcards %}
+    <div class="table-responsive">
+      <table id="bookingsTable" class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Code</th>
+            <th>Amount</th>
+            <th>Balance</th>
+            <th>Recipient Name</th>
+            <th>Purchaser Email</th>
+            <th>Activ?</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for giftcard in giftcards %}
+          <tr>
+            <td><strong>{{ giftcard.code }}</strong></td>
+            <td>${{ giftcard.amount }}</td>
+            <td>${{ giftcard.balance }}</td>
+            <td>{{ giftcard.recipient_name }}</td>
+            <td>{{ giftcard.purchaser_name }}</td>
+            <td>
+              <span class="badge bg-secondary">{{ giftcard.is_active }}</span>
+            </td>
+            <td>
+              <a href="" class="btn btn-sm btn-outline-primary">View</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p>You have no giftcard yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+
+  <!-- Left Column: Bookings Table -->
+  <div class="col-12 col-lg-12">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="fa-solid fa-gift me-2 text-primary"></i> Discounts</h2>
+        <button type="button" class="btn btn-primary" onclick="openAddDiscountModal()">
+            <i class="fa-solid fa-plus"></i> Add Discount
+        </button>
+    </div>
+
+    {% if discount_codes %}
+    <div class="table-responsive">
+      <table id="bookingsTable" class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Code</th>
+            <th>Discount type</th>
+            <th>value (%/$)</th>
+            <th>Usage limit</th>
+            <th>Times used</th>
+            <th>Expires at</th>
+            <th>Activ?</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for discount in discount_codes %}
+          <tr>
+            <td><strong>{{ discount.code }}</strong></td>
+            <td>{{ discount.discount_type }}</td>
+            <td>{{ discount.value }}</td>
+            <td>{{ discount.usage_limit }}</td>
+            <td>{{ discount.times_used }}</td>
+            <td>{{ discount.expires_at|date:'M d, Y' }}</td>
+            <td>
+              <span class="badge bg-secondary">{{ discount.is_active }}</span>
+            </td>
+            <td>
+              <a href="" class="btn btn-sm btn-outline-primary">View</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p>You have no discount.</p>
+    {% endif %}
+  </div>
+</div>
+
+
+<!-- Custom Add GiftCard Modal -->
+<div id="customAddGiftCardModal" class="custom-modal">
+    <div class="custom-modal-content">
+      <div class="custom-modal-header">
+        <h5>Add New GiftCard</h5>
+        <span class="custom-modal-close" onclick="closeAddGiftCardModal()">&times;</span>
+      </div>
+      <form method="post" action="{% url 'add_giftcard' %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="form-group mb-2">
+            <label for="amount">Amount ($)</label>
+            <input type="number" step="0.01" name="amount" id="amount" class="cmn-input" required>
+          </div>
+          <div class="form-group mb-2">
+            <label for="purchaser_name">Purchaser Name</label>
+            <input type="text" name="purchaser_name" id="purchaser_name" class="cmn-input" required>
+          </div>
+      
+          <div class="form-group mb-2">
+            <label for="purchaser_email">Purchaser Email</label>
+            <input type="email" name="purchaser_email" id="purchaser_email" class="cmn-input" required>
+          </div>
+      
+          <div class="form-group mb-2">
+            <label for="recipient_name">Recipient Name</label>
+            <input type="text" name="recipient_name" id="recipient_name" class="cmn-input" required>
+          </div>
+      
+          <div class="form-group mb-2">
+            <label for="recipient_email">Recipient Email</label>
+            <input type="email" name="recipient_email" id="recipient_email" class="cmn-input" required>
+          </div>
+      
+          <div class="form-group mb-2">
+            <label for="message">Personal Message (Optional)</label>
+            <textarea name="message" id="message" rows="3" class="cmn-input"></textarea>
+          </div>
+      
+          <div class="form-group form-check mb-3">
+            <input type="checkbox" class="form-check-input" name="is_active" id="is_active" checked>
+            <label class="form-check-label" for="is_active">Gift Card is active</label>
+          </div>
+        </div>
+      
+        <div class="custom-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeAddGiftCardModal()">Cancel</button>
+          <button type="submit" class="btn-1"><i class="fa-solid fa-floppy-disk" style="font-size: 16px;"></i> Save GiftCard</button>
+        </div>
+      </form>
+      
+    </div>
+  </div>
+
+
+  <!-- Custom Add Discount Code Modal -->
+<div id="customAddDiscountModal" class="custom-modal">
+    <div class="custom-modal-content">
+      <div class="custom-modal-header">
+        <h5>Add New Discount Code</h5>
+        <span class="custom-modal-close" onclick="closeAddDiscountModal()">&times;</span>
+      </div>
+  
+      <form method="post" action="{% url 'add_discount' %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="form-group mb-2">
+            <label for="code">Code</label>
+            <input type="text" name="code" id="code" class="cmn-input" maxlength="20" required>
+          </div>
+  
+          <div class="form-group mb-2">
+            <label for="discount_type">Discount Type</label>
+            <select name="discount_type" id="discount_type" class="cmn-input" required>
+              <option value="fixed">Fixed ($)</option>
+              <option value="percent">Percent (%)</option>
+            </select>
+          </div>
+  
+          <div class="form-group mb-2">
+            <label for="value">Value</label>
+            <input type="number" name="value" id="value" step="0.01" class="cmn-input" required>
+          </div>
+  
+          <div class="form-group mb-2">
+            <label for="usage_limit">Usage Limit</label>
+            <input type="number" name="usage_limit" id="usage_limit" class="cmn-input" value="1" required>
+          </div>
+  
+          <div class="form-group mb-2">
+            <label for="expires_at">Expiration Date</label>
+            <input type="date" name="expires_at" id="expires_at" class="cmn-input">
+          </div>
+  
+          <div class="form-group form-check mb-3">
+            <input type="checkbox" class="form-check-input" name="is_active" id="is_active" checked>
+            <label class="form-check-label" for="is_active">Discount is active</label>
+          </div>
+        </div>
+  
+        <div class="custom-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeAddDiscountModal()">Cancel</button>
+          <button type="submit" class="btn-1">
+            <i class="fa-solid fa-floppy-disk" style="font-size: 16px;"></i> Save Discount
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+
+
+  <script>
+    function openAddGiftCardModal() {
+      document.getElementById("customAddGiftCardModal").style.display = "block";
+    }
+  
+    function closeAddGiftCardModal() {
+      document.getElementById("customAddGiftCardModal").style.display = "none";
+    }
+  
+    window.addEventListener("click", function (event) {
+      const modal = document.getElementById("customAddGiftCardModal");
+      if (event.target === modal) {
+        closeAddGiftCardModal();
+      }
+    });
+  </script>
+
+  <script>
+    function openAddDiscountModal() {
+      document.getElementById("customAddDiscountModal").style.display = "block";
+    }
+  
+    function closeAddDiscountModal() {
+      document.getElementById("customAddDiscountModal").style.display = "none";
+    }
+  
+    window.addEventListener("click", function (event) {
+      const modal = document.getElementById("customAddDiscountModal");
+      if (event.target === modal) {
+        closeAddDiscountModal();
+      }
+    });
+  </script>
+  
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/2.3.0/js/dataTables.js"></script>
+
+<script>
+      $('#bookingsTable').DataTable();
+</script>
+  
+{% endblock %}

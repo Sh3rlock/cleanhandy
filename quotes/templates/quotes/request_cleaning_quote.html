@@ -270,165 +270,296 @@ select::-ms-expand {
   cursor: pointer;
 }
 
+.service-form-card {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.05);
+}
+
+.service-list-style {
+  padding: 1rem;
+  border: 1px solid #F15A29;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
 
 </style>
 
-
-<!-- common banner -->
-<section class="common-banner" style="position: relative;">
-  <div class="bg-layer" style="background: url({% static '/assets/images/background/common-banner-bg.jpg' %});"></div>
-  <div class="common-banner-content">
+  <!-- common banner -->
+  <section class="common-banner" style="position: relative;">
+    <div class="bg-layer" style="background: url({% static '/assets/images/background/common-banner-bg.jpg' %});"></div>
+    <div class="common-banner-content">
       <h3>Service Details</h3>
       <div class="breadcrumb">
-          <ul>
-            <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
-            <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Service Details</li>
-          </ul>
+        <ul>
+          <li class="breadcrumb-item active">
+            <a href="{% url 'home' %}">Home</a>
+          </li>
+          <li class="breadcrumb-item">
+            <i class="fa-solid fa-angles-right"></i> Service Details
+          </li>
+        </ul>
       </div>
       {% if user.is_authenticated %}
-          <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
-        {% else %}
-          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
-        {% endif %}
-        {% if user.is_authenticated %}
-          <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
-        {% else %}
-          <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
-        {% endif %}
-  </div>
-</section>
-<!-- common banner -->
+        <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
+      {% else %}
+        <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
+      {% endif %}
+      {% if user.is_authenticated %}
+        <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+      {% else %}
+        <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
+      {% endif %}
+    </div>
+  </section>
+  <!-- common banner -->
 
-
-<!-- service details -->
-<section class="service-details">
-  <div class="container">
+  <!-- service details -->
+  <section class="service-details">
+    <div class="container">
       <div class="common-title">
-          <h3>{{ service.name }}</h3>
-          <div class="service-details-top-btn">
-              <div class="btn-left">
-                  <a href="#0">Cleaning</a>
-                  <a href="#0"><i class="fa-light fa-location-dot"></i> New York, USA</a>
-              </div>
-              <div class="btn-right d-flex gap-2">
-              </div>
+        <h3>{{ service.name }}</h3>
+        <div class="service-details-top-btn">
+          <div class="btn-left">
+            <a href="#0">Cleaning</a>
+            <a href="#0"><i class="fa-light fa-location-dot"></i> New York, USA</a>
           </div>
+          <div class="btn-right d-flex gap-2"></div>
+        </div>
       </div>
       <div class="row">
-          <div class="col-lg-8">
-              <div class="service-details-image">
-                   <img src="{{ service.service_detail_image.url }}" alt="image"> 
-              </div>
-              <h3>Recommended number of cleaners and time according to square footage and type of service.</h3>
-              <div class="table-responsive mt-4">
-                <table class="table table-clean text-center align-middle">
-                  <thead class="table-light">
-                    <tr>
-                      <th class="text-start" style="min-width: 200px;">Type of Service</th>
-                      <th>1000–1500<br><small>SQ FT</small></th>
-                      <th>1500–2000<br><small>SQ FT</small></th>
-                      <th>2000–2500<br><small>SQ FT</small></th>
-                      <th>2500–3000<br><small>SQ FT</small></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <th class="text-start">Post Renovation Cleaning</th>
-                      <td>3C × 6 hrs</td>
-                      <td>3C × 8 hrs</td>
-                      <td>4C × 8 hrs</td>
-                      <td>5C × 8 hrs</td>
-                    </tr>
-                    <tr>
-                      <th class="text-start">Deep Cleaning</th>
-                      <td>2C × 5 hrs</td>
-                      <td>3C × 5 hrs</td>
-                      <td>3C × 7 hrs</td>
-                      <td>3C × 8 hrs</td>
-                    </tr>
-                    <tr>
-                      <th class="text-start">Move In / Move Out</th>
-                      <td>2C × 5 hrs</td>
-                      <td>3C × 5 hrs</td>
-                      <td>3C × 7 hrs</td>
-                      <td>3C × 8 hrs</td>
-                    </tr>
-                    <tr>
-                      <th class="text-start">Regular Cleaning</th>
-                      <td>2C × 3 hrs</td>
-                      <td>2C × 5 hrs</td>
-                      <td>2C × 7 hrs</td>
-                      <td>2C × 8 hrs</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              
-              <div class="service-details-content mt-4">
-                  {{ service.description|safe }}
-              </div>
+        <div class="col-lg-8">
+          <div class="service-details-image">
+            <img src="{{ service.service_detail_image.url }}" alt="image" />
+          </div>
+          <h3>Recommended number of cleaners and time according to square footage and type of service.</h3>
+          <div class="table-responsive mt-4">
+            <table class="table table-clean text-center align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="text-start" style="min-width: 200px;">Type of Service</th>
+                  <th>
+                    1000–1500<br /><small>SQ FT</small>
+                  </th>
+                  <th>
+                    1500–2000<br /><small>SQ FT</small>
+                  </th>
+                  <th>
+                    2000–2500<br /><small>SQ FT</small>
+                  </th>
+                  <th>
+                    2500–3000<br /><small>SQ FT</small>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th class="text-start">Post Renovation Cleaning</th>
+                  <td>3C × 6 hrs</td>
+                  <td>3C × 8 hrs</td>
+                  <td>4C × 8 hrs</td>
+                  <td>5C × 8 hrs</td>
+                </tr>
+                <tr>
+                  <th class="text-start">Deep Cleaning</th>
+                  <td>2C × 5 hrs</td>
+                  <td>3C × 5 hrs</td>
+                  <td>3C × 7 hrs</td>
+                  <td>3C × 8 hrs</td>
+                </tr>
+                <tr>
+                  <th class="text-start">Move In / Move Out</th>
+                  <td>2C × 5 hrs</td>
+                  <td>3C × 5 hrs</td>
+                  <td>3C × 7 hrs</td>
+                  <td>3C × 8 hrs</td>
+                </tr>
+                <tr>
+                  <th class="text-start">Regular Cleaning</th>
+                  <td>2C × 3 hrs</td>
+                  <td>2C × 5 hrs</td>
+                  <td>2C × 7 hrs</td>
+                  <td>2C × 8 hrs</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <div class="col-lg-4">
-              <div class="service-form-card">
-                  <h2 class="form-title">Cleaning Service Sidebar Content</h2>
-              </div>
+          <div class="service-details-content mt-4">{{ service.description|safe }}</div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="service-form-card">
+            <h4 class="form-title mb-3">Our Services</h4>
+
+            <div class="list-group">
+              {% for service in all_services %}
+                <a href="{% url 'request_cleaning_quote' service.id %}" class="service-list-style ist-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{ service.name }}</strong><br />
+                  </div>
+                  <i class="fa-solid fa-arrow-right text-muted"></i>
+                </a>
+              {% empty %}
+                <div class="text-muted p-3">No services available.</div>
+              {% endfor %}
+            </div>
           </div>
+
+          <div class="blog-sidebar">
+            <div class="sidebar-content" style="margin-top: 3rem; box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.05);">
+              <div class="recent-post">
+                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">Popular</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Recent</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab" aria-controls="pills-contact" aria-selected="false">Trendy</button>
+                  </li>
+                </ul>
+
+                <div class="tab-content" id="pills-tabContent">
+                  <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
+                    <div class="recent-post-list">
+                      <div class="recent-post-image">
+                        <img src="{% static 'assets/images/blog/recent-post-1.png' %}" alt="image" />
+                      </div>
+                      <div class="recent-post-info">
+                        <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
+                        <a href="#0">Clean and well-maintained spaces provide...</a>
+                      </div>
+                    </div>
+                    <div class="recent-post-list">
+                      <div class="recent-post-image">
+                        <img src="{% static 'assets/images/blog/recent-post-2.png' %}" alt="image" />
+                      </div>
+                      <div class="recent-post-info">
+                        <span><i class="fa-light fa-clock"></i> Oct 22, 2024</span>
+                        <a href="#0">Creative plan to build better world for upcoming..</a>
+                      </div>
+                    </div>
+                    <div class="recent-post-list">
+                      <div class="recent-post-image">
+                        <img src="{% static 'assets/images/blog/recent-post-3.png' %}" alt="image" />
+                      </div>
+                      <div class="recent-post-info">
+                        <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
+                        <a href="#0">Explain to the public what you do want to create...</a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
+                    <div class="recent-post-list">
+                      <div class="recent-post-image">
+                        <img src="{% static 'assets/images/blog/recent-post-2.png' %}" alt="image" />
+                      </div>
+                      <div class="recent-post-info">
+                        <span><i class="fa-light fa-clock"></i> Oct 22, 2024</span>
+                        <a href="#0">Creative plan to build better world for upcoming..</a>
+                      </div>
+                    </div>
+                    <div class="recent-post-list">
+                      <div class="recent-post-image">
+                        <img src="{% static 'assets/images/blog/recent-post-1.png' %}" alt="image" />
+                      </div>
+                      <div class="recent-post-info">
+                        <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
+                        <a href="#0">Clean and well-maintained spaces provide...</a>
+                      </div>
+                    </div>
+                    <div class="recent-post-list">
+                      <div class="recent-post-image">
+                        <img src="{% static 'assets/images/blog/recent-post-3.png' %}" alt="image" />
+                      </div>
+                      <div class="recent-post-info">
+                        <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
+                        <a href="#0">Explain to the public what you do want to create...</a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="tab-pane fade" id="pills-contact" role="tabpanel" aria-labelledby="pills-contact-tab">
+                    <div class="recent-post-list">
+                      <div class="recent-post-image">
+                        <img src="{% static 'assets/images/blog/recent-post-3.png' %}" alt="image" />
+                      </div>
+                      <div class="recent-post-info">
+                        <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
+                        <a href="#0">Explain to the public what you do want to create...</a>
+                      </div>
+                    </div>
+                    <div class="recent-post-list">
+                      <div class="recent-post-image">
+                        <img src="{% static 'assets/images/blog/recent-post-1.png' %}" alt="image" />
+                      </div>
+                      <div class="recent-post-info">
+                        <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
+                        <a href="#0">Clean and well-maintained spaces provide...</a>
+                      </div>
+                    </div>
+                    <div class="recent-post-list">
+                      <div class="recent-post-image">
+                        <img src="{% static 'assets/images/blog/recent-post-2.png' %}" alt="image" />
+                      </div>
+                      <div class="recent-post-info">
+                        <span><i class="fa-light fa-clock"></i> Oct 22, 2024</span>
+                        <a href="#0">Creative plan to build better world for upcoming..</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div> <!-- ✅ this closes .row -->
-  </div> <!-- ✅ this closes .container -->
-</section>
-<!-- service details -->
+    </div> <!-- ✅ this closes .container -->
+  </section>
+  <!-- service details -->
 
-<!-- Modal Structure -->
-<div id="cleaningModal" class="custom-modal">
-  <div class="custom-modal-content">
-    <span class="close-btn" id="closeModalBtn">&times;</span>
-    <h2 class="form-title">Cleaning Service</h2>
-    <div class="form-style">
-      {% include "partials/cleaning_quote_form.html" %}
-    </div>
-  </div>
-</div>
-
-
-
-<!-- service 2 -->
-<section class="service-two pt-0" style="background-color: transparent;">
-  <div class="container">
+  <!-- service 2 -->
+  <section class="service-two pt-0" style="background-color: transparent;">
+    <div class="container">
       <div class="common-title">
-          <h6><i class="fa-solid fa-angles-right"></i> Another Service </h6>
-          <h3>Most Related Services</h3>
+        <h6><i class="fa-solid fa-angles-right"></i> Another Service</h6>
+        <h3>Most Related Services</h3>
       </div>
 
       <div class="row">
         {% for service in related_services %}
-        <div class="col-lg-4 col-md-6">
-          <div class="service-tow-single">
+          <div class="col-lg-4 col-md-6">
+            <div class="service-tow-single">
               <div class="service-tow-single-img">
-                  <img src="{{ service.service_detail_image.url }}" alt="image">
+                <img src="{{ service.service_detail_image.url }}" alt="image" />
               </div>
               <div class="service-tow-single-content">
-                  <a href="{% url 'request_cleaning_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
-                  <div class="service-tow-single-rating">
-                      <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
+                <a href="{% url 'request_cleaning_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
+                <div class="service-tow-single-rating">
+                  <p>
+                    <i class="fa-light fa-location-dot"></i> New York, USA
+                  </p>
+                </div>
+                <div class="featured-single-info">
+                  <a href="{% url 'request_cleaning_quote' service.id %}">Book Now</a>
+                  <div class="featured-single-info-left">
+                    <p>Starting from:</p><h5>${{ service.base_price }}</h5>
                   </div>
-                  <div class="featured-single-info">
-                      <a href="{% url 'request_cleaning_quote' service.id %}">Book Now</a>
-                      <div class="featured-single-info-left">
-                          <p>Starting from:</p><h5>${{ service.base_price }}</h5>
-                      </div>
-                  </div>
+                </div>
               </div>
+            </div>
           </div>
-        </div>
         {% endfor %}
-          
       </div>
-  </div>
-</section>
-<!-- service 2 -->
+    </div>
+  </section>
+  <!-- service 2 -->
 
-<script>
+  <script>
   const modal = document.getElementById("cleaningModal");
   const openBtn = document.getElementById("openModalBtn");
   const closeBtn = document.getElementById("closeModalBtn");
@@ -447,7 +578,4 @@ select::-ms-expand {
     }
   }
 </script>
-
- 
-    
 {% endblock %}

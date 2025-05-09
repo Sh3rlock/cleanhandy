@@ -1,8 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
-from quotes.models import Quote, Service, ServiceCategory
+from quotes.models import Quote, Service, ServiceCategory, Booking, NewsletterSubscriber
+from giftcards.models import GiftCard, DiscountCode
 from quotes.forms import CleaningQuoteForm, HandymanQuoteForm
-from bookings.models import Booking
 from customers.models import Customer
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, get_object_or_404, redirect
@@ -39,6 +39,9 @@ import secrets
 from django.http import HttpResponseForbidden
 
 from .models import BlockedTimeSlot
+from django.contrib.auth.models import User
+
+from django.http import JsonResponse, Http404
 
 
 
@@ -50,21 +53,30 @@ def admin_check(user):
 # 📌 ADMIN DASHBOARD VIEW
 def admin_dashboard(request):
     # Fetch latest 10 records
-    latest_quotes = Quote.objects.all().order_by("-created_at")[:10]
-    latest_bookings = Quote.objects.all().order_by("-created_at")[:10]
-    latest_customers = Customer.objects.all().order_by("-id")[:10]
+    latest_quotes = Booking.objects.all().order_by("-created_at")[:10]
+    latest_bookings = Booking.objects.all().order_by("-created_at")[:25]
+    latest_customers = User.objects.all().order_by("-date_joined")[:10]
+    latest_subscribers = NewsletterSubscriber.objects.all().order_by("-subscribed_at")[:10]
 
-    total_quotes = Quote.objects.count()
-    total_bookings = Quote.objects.filter(status="booked").count()
-    total_customers = Customer.objects.count()
+    discounts = DiscountCode.objects.all()
+    giftcards = GiftCard.objects.all()
+
+    total_quotes = Booking.objects.count()
+    total_bookings = Booking.objects.count()
+    total_customers = User.objects.count()
+    total_subscribers = NewsletterSubscriber.objects.count()
 
     return render(request, "adminpanel/dashboard.html", {
         "latest_quotes": latest_quotes,
         "latest_bookings": latest_bookings,
         "latest_customers": latest_customers,
+        "latest_subscribers": latest_subscribers,
+        "discounts": discounts,
+        "giftcards": giftcards,
         "total_quotes": total_quotes,
         "total_bookings": total_bookings,
         "total_customers": total_customers,
+        "total_subscribers": total_subscribers,
     })
 
 
@@ -74,7 +86,7 @@ from django.utils import timezone
 from quotes.models import Quote, Service
 
 def quote_list(request):
-    quotes = Quote.objects.all()
+    quotes = Booking.objects.all()
 
     # Filter: Service
     if service := request.GET.get("service"):
@@ -118,7 +130,7 @@ def quote_list(request):
     context = {
         "quotes": quotes,
         "services": Service.objects.all(),
-        "status_choices": Quote._meta.get_field("status").choices,
+        "status_choices": Booking._meta.get_field("status").choices,
     }
 
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
@@ -175,61 +187,31 @@ def update_quote_detail_status(request, quote_id):
 from django.contrib import messages  # Optional: show error messages in template
 
 def booking_list(request):
-    quotes = Quote.objects.filter(status="booked")
-
-    # Filter: Service
-    if service := request.GET.get("service"):
-        quotes = quotes.filter(service_id=service)
-
-    # Filter: Status
-    if status := request.GET.get("status"):
-        quotes = quotes.filter(status=status)
-
-    # Filter: Date range
-    from_date = request.GET.get("from_date")
-    to_date = request.GET.get("to_date")
-
-    if from_date and to_date:
-        try:
-            from_dt = datetime.strptime(from_date, "%Y-%m-%d").date()
-            to_dt = datetime.strptime(to_date, "%Y-%m-%d").date()
-
-            if from_dt > to_dt:
-                if request.headers.get("x-requested-with") == "XMLHttpRequest":
-                    return HttpResponse("Invalid date range", status=400)
-                messages.warning(request, "From Date cannot be later than To Date.")
-            else:
-                quotes = quotes.filter(date__range=(from_dt, to_dt))
-
-        except ValueError:
-            if request.headers.get("x-requested-with") == "XMLHttpRequest":
-                return HttpResponse("Invalid date format", status=400)
-            messages.warning(request, "Invalid date format.")
-    else:
-        if from_date:
-            quotes = quotes.filter(date__gte=from_date)
-        if to_date:
-            quotes = quotes.filter(date__lte=to_date)
-
-    quotes = quotes.order_by("date", "hour")
-
-    for q in quotes:
-        q.time_slot = format_time_slot(q)
+    bookings = Booking.objects.all().order_by('-created_at')
 
     context = {
-        "quotes": quotes,
-        "services": Service.objects.all(),
-        "status_choices": Quote._meta.get_field("status").choices,
+        "bookings": bookings,
     }
-
-    if request.headers.get("x-requested-with") == "XMLHttpRequest":
-        return render(request, "adminpanel/partials/quote_table.html", context)
-
     return render(request, "adminpanel/booking_list.html", context)
 
+def get_booking_detail(request, booking_id):
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        data = {
+            "service": booking.service_cat.name,
+            "date": booking.date.strftime('%Y-%m-%d'),
+            "duration": booking.hours_requested,
+            "price": str(booking.price),
+            "status": booking.status,
+            "description": booking.job_description,
+        }
+        return JsonResponse(data)
+    except Booking.DoesNotExist:
+        raise Http404("Booking not found")
 
-def booking_detail(request, booking_id):
-    booking = get_object_or_404(Quote, id=booking_id)
+
+def booking_detail_admin(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
     return render(request, "adminpanel/booking_detail.html", {"booking": booking})
 
 # 📌 CUSTOMERS MANAGEMENT
@@ -322,18 +304,18 @@ def generate_time_choices(start="09:00", end="17:00", step_minutes=30):
         t += timedelta(minutes=step_minutes)
     return times
 
-STATUS_CHOICES = Quote._meta.get_field("status").choices
+STATUS_CHOICES = Booking._meta.get_field("status").choices
 # 📌 Booking Calendar View
 def booking_calendar(request):
     services = Service.objects.all()  
 
     time_choices = generate_time_choices()
 
-    upcoming_quotes = Quote.objects.filter(
+    upcoming_quotes = Booking.objects.filter(
         status__in=["pending", "approved", "accepted"]
     ).filter(date__gte=timezone.now().date()).order_by("date", "hour")[:5]
 
-    booked_quotes = Quote.objects.filter(
+    booked_quotes = Booking.objects.filter(
         status="booked",
         date__gte=timezone.now().date()
     ).order_by("date", "hour")[:5]
@@ -359,7 +341,7 @@ def get_bookings(request):
     bookings = Booking.objects.all()
 
     # Fetch all quotes (including unconfirmed ones)
-    quotes = Quote.objects.all()
+    quotes = Booking.objects.all()
 
     events = []
 
@@ -367,7 +349,7 @@ def get_bookings(request):
     for booking in bookings:
         events.append({
             "id": f"booking-{booking.id}",
-            "title": f"Booking - {booking.quote.customer.name}",
+            "title": f"Booking - {booking.name}",
             "start": booking.quote.date.strftime("%Y-%m-%dT%H:%M:%S"),
             "color": "blue"  # Set color for bookings
         })
@@ -376,7 +358,7 @@ def get_bookings(request):
     for quote in quotes:
         events.append({
             "id": f"quote-{quote.id}",
-            "title": f"Quote - {quote.customer.name}",
+            "title": f"Quote - {quote.name}",
             "start": quote.date.strftime("%Y-%m-%dT%H:%M:%S"),
             "color": "gray"  # Set color for quotes
         })
@@ -437,8 +419,8 @@ def add_quote(request):
                 }
             )
 
-            quote = Quote.objects.create(
-                customer=customer,
+            quote = Booking.objects.create(
+                customer=data["customer_name"],
                 zip_code=data["zip_code"],
                 job_description=data["job_description"],
                 hours_requested=int(data["hours_requested"]),
@@ -458,22 +440,22 @@ def get_quotes_for_calendar(request):
     events = []
 
     # 🟢 1. Add all Quotes
-    for quote in Quote.objects.all():
+    for quote in Booking.objects.all():
         duration = max(quote.hours_requested or 2, 2)  # Minimum 2 hours
         start_time = datetime.combine(quote.date, quote.hour)
         end_time = start_time + timedelta(hours=duration)
 
         events.append({
             "id": f"quote-{quote.id}",
-            "title": f"{quote.customer.name} - {quote.service.name}",
+            "title": f"{quote.name} - {quote.service_cat.name}",
             "start": start_time.isoformat(),
             "end": end_time.isoformat(),
             "color": "#28a745" if quote.status == "booked" else "#ffc107",
             "extendedProps": {
-                "customer": quote.customer.name if quote.customer else "N/A",
+                "customer": quote.name if quote.name else "N/A",
                 "zip_code": quote.zip_code or "N/A",
-                "email": quote.customer.email if quote.customer else "N/A",
-                "service": quote.service.name,
+                "email": quote.email if quote.name else "N/A",
+                "service": quote.service_cat.name,
                 "job_description": quote.job_description or "N/A",
                 "time_slots": f"{quote.hour.strftime('%H:%M')} - {end_time.strftime('%H:%M')}",
                 "price": str(quote.price) if quote.price else "N/A",
@@ -525,8 +507,8 @@ def get_quotes_for_calendar(request):
 def get_event_details(request):
     quote_id = request.GET.get("event_id")
     try:
-        quote = Quote.objects.select_related("customer", "service").get(pk=quote_id)
-    except Quote.DoesNotExist:
+        quote = Booking.objects.select_related("customer", "service").get(pk=quote_id)
+    except Booking.DoesNotExist:
         return JsonResponse({"error": "Quote not found"}, status=404)
 
     # Format time slot
@@ -535,9 +517,9 @@ def get_event_details(request):
     time_slot = f"{quote.hour.strftime('%H:%M')} - {end.strftime('%H:%M')}"
 
     return JsonResponse({
-        "customer": quote.customer.name,
-        "email": quote.customer.email,
-        "service": quote.service.name,
+        "customer": quote.name,
+        "email": quote.email,
+        "service": quote.service_cat,
         "date": quote.date.strftime("%b %d"),
         "status": quote.status,
         "price": float(quote.price) if quote.price else None,
@@ -587,7 +569,7 @@ def format_time_slot(quote):
     return f"{quote.hour.strftime('%H:%M')} - {end.strftime('%H:%M')}"
 
 def get_upcoming_quotes(request):
-    upcoming_quotes = Quote.objects.filter(
+    upcoming_quotes = Booking.objects.filter(
         status__in=["pending", "approved", "accepted"],
         date__gte=timezone.now().date()
     ).order_by("date", "hour")[:5]
@@ -648,7 +630,7 @@ def ajax_filtered_quotes(request):
 
 # 📌 Export Booked Quotes to CSV
 def export_quotes_csv(request):
-    quotes = Quote.objects.filter(status="booked")
+    quotes = Booking.objects.filter(status="booked")
 
     # Apply filters (same as booking_list)
     service = request.GET.get("service")
@@ -788,6 +770,16 @@ def block_time_slot(request):
     )
     messages.success(request, "⛔ Time slot blocked.")
     return redirect("booking_calendar")
+
+
+def giftcard_discount(request):
+    discount_codes = DiscountCode.objects.all()
+    giftcards = GiftCard.objects.all()
+
+    return render(request, "adminpanel/giftcard_discount.html", {
+        "discount_codes": discount_codes,
+        "giftcards": giftcards,
+    })
 
 
 
