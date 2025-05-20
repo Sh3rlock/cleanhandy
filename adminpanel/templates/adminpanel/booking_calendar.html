@@ -12,7 +12,14 @@
             margin-bottom: 15px;
         }
     }
+
+    .text-primary {
+        color: #F15A29 !important;
+      }
 </style>
+
+<a href="{% url 'admin_dashboard' %}" class="text-primary mb-2"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+    Back to dashboard</a>
 
 <h2>Booking Calendar</h2>
 <!-- Button to Open Quote Modal 
@@ -203,6 +210,9 @@
         <div id="calendar"></div>
     </div>
 </div>
+
+<a href="{% url 'admin_dashboard' %}" class="text-primary mt-4"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+    Back to dashboard</a>
 
 <!-- Bootstrap Modal for Quote & Booking Details -->
 <div class="modal fade" id="eventDetailModal" tabindex="-1" aria-labelledby="eventDetailModalLabel" aria-hidden="true">

@@ -11,28 +11,105 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css" />
 
 <div class="row">
-  <div class="col-12 col-lg-2">
-    <h2 class="mb-0">
-      <i class="fa-solid fa-filter me-2 text-primary"></i> Filters
-    </h2>
-    Filterk - statusz, service category, last month, last week, today
-  </div>  
+  <a href="{% url 'admin_dashboard' %}" class="text-primary mb-4"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+    Back to dashboard</a>
   <!-- Left Column: Bookings Table -->
-  <div class="col-12 col-lg-10">
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="mb-0">
-        <i class="fa-solid fa-calendar-days me-2 text-primary"></i> Booking list
-      </h2>
-    
-      <div class="d-flex gap-2">
-        <a class="btn btn-primary" href="{% url 'request_cleaning_booking' %}"><i class="fa-solid fa-plus"></i> Cleaning</a></li>
-        <a class="btn btn-primary" href="{% url 'request_handyman_booking' %}"><i class="fa-solid fa-plus"></i> Handyman</a></li>
+  <div class="col-12 col-lg-2">
+    <h4 class="mb-3"><i class="fa-solid fa-filter me-2 text-primary"></i> Filters</h4>
+    <form method="get" class="d-grid gap-4">
+  
+      <!-- STATUS FILTER -->
+      <div>
+        <label class="form-label fw-semibold">Status</label>
+        {% for s in status_list %}
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="status" value="{{ s }}" id="status-{{ s }}"
+              {% if s in selected_statuses %}checked{% endif %}>
+            <label class="form-check-label" for="status-{{ s }}">{{ s|capfirst }}</label>
+          </div>
+        {% endfor %}
       </div>
-    </div>
+  
+      <!-- SERVICE CATEGORY FILTER -->
+      <div>
+        <label class="form-label fw-semibold">Service</label>
+        {% for cat in service_categories %}
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="category" value="{{ cat.id }}" id="cat-{{ cat.id }}"
+            {% if cat.id|stringformat:"s" in selected_categories %}checked{% endif %}>
+            <label class="form-check-label" for="cat-{{ cat.id }}">{{ cat.name }}</label>
+          </div>
+        {% endfor %}
+        </div>
+
+      <!-- DATE FILTER -->
+      <div>
+        <label class="form-label fw-semibold">Date</label>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="date_filter" value="today"
+            {% if selected_date_filter == "today" %}checked{% endif %}>
+          <label class="form-check-label">Today</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="date_filter" value="last_7"
+            {% if selected_date_filter == "last_7" %}checked{% endif %}>
+          <label class="form-check-label">Last 7 Days</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="date_filter" value="last_30"
+            {% if selected_date_filter == "last_30" %}checked{% endif %}>
+          <label class="form-check-label">Last 30 Days</label>
+        </div>
+      </div>
+  
+      <button type="submit" class="btn btn-outline-primary w-100">Apply Filters</button>
+      <a href="{% url 'booking_list' %}" class="btn btn-link p-0">❌ Clear All Filters</a>
+
+    </form>
+  </div>
+  
+  <!-- Right Column: Bookings Table -->
+  <div class="col-12 col-lg-10">
 
     {% if bookings %}
     <div class="table-responsive">
+      {% if selected_statuses or selected_categories %}
+  <div class="alert alert-light d-inline-block mb-3">
+    <strong>Active Filters:</strong>
+
+    {% if selected_statuses %}
+      <span class="me-2">Status:</span>
+      {% for s in selected_statuses %}
+        <span class="badge bg-primary me-1">{{ s|capfirst }}</span>
+      {% endfor %}
+    {% endif %}
+
+    {% if selected_categories %}
+      <span class="ms-3 me-2">Service:</span>
+      {% for cat in service_categories %}
+        {% if cat.id|stringformat:"s" in selected_categories %}
+          <span class="badge bg-info me-1">{{ cat.name }}</span>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    {% if selected_date_filter %}
+  <span class="ms-3 me-2">Date:</span>
+  <span class="badge bg-warning text-dark">
+    {% if selected_date_filter == "today" %}Today
+    {% elif selected_date_filter == "last_7" %}Last 7 Days
+    {% elif selected_date_filter == "last_30" %}Last 30 Days
+    {% endif %}
+  </span>
+{% endif %}
+
+    <a href="{% url 'booking_list' %}" class="ms-3">❌ Clear</a>
+  </div>
+{% endif %}
+
+<h4 class="mb-0">
+  <i class="fa-solid fa-calendar-plus me-2 text-primary"></i>Bookings
+</h4>
       <table id="bookingsTable" class="table table-hover align-middle">
         <thead class="table-light">
           <tr>
@@ -55,7 +132,11 @@
               <span class="badge bg-secondary">{{ booking.status }}</span>
             </td>
             <td>
-              <a href="{% url 'booking_detail_admin' booking.id %}" class="btn btn-sm btn-outline-primary">View</a>
+              {% if booking.service_cat.name == 'Handyman' %}
+                <a href="{% url 'quote_detail' booking.id %}" class="btn btn-sm btn-outline-primary">View</a>
+              {% else %}
+                <a href="{% url 'booking_detail_admin' booking.id %}" class="btn btn-sm btn-outline-primary">View</a>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}
@@ -65,7 +146,10 @@
     {% else %}
       <p>You have no booking yet.</p>
     {% endif %}
+    
   </div>
+  <a href="{% url 'admin_dashboard' %}" class="text-primary"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+    Back to dashboard</a>
 </div>
 
 

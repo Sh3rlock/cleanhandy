@@ -4,7 +4,7 @@ from .views import (
     service_list, add_service_category, edit_service_category, delete_service_category,
     add_service, edit_service, delete_service, booking_calendar, get_upcoming_quotes, quote_approval_view, quote_decline_view, block_time_slot,
     get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv, delete_quote, send_quote_email_view, get_booking_detail,
-    giftcard_discount
+    giftcard_discount, subscriber_list, add_subscriber, export_subscribers_csv
 )
 
 urlpatterns = [
@@ -28,7 +28,9 @@ urlpatterns = [
 
     # Customer Management
     path("customers/", customer_list, name="customer_list"),
-    path("customers/<int:customer_id>/", customer_detail, name="customer_detail"),
+    path("customers/<str:username>/", customer_detail, name="customer_detail"),
+
+    path("subscribers/", subscriber_list, name="subscriber_list"),
 
     path("services/", service_list, name="service_list"),
     path("services/category/add/", add_service_category, name="add_service_category"),
@@ -57,10 +59,8 @@ urlpatterns = [
 
     path("giftcard-discount/", giftcard_discount, name="giftcard_discount"),
 
-
-
-
-
+    path("subscribers/add/", add_subscriber, name="add_subscriber"),
+    path('export-subscribers-csv/', export_subscribers_csv, name='export_subscribers_csv'),
 
 
 ]   

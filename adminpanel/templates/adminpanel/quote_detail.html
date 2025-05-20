@@ -1,8 +1,161 @@
-{% extends "adminpanel/base_admin.html" %}
-{% block content %}
-<div class="container">
-  <h2>📝 Edit Quote</h2>
-  <a lass="mb-4" href="{% url 'quote_list' %}" class="btn btn-link">🔙 Back to Quote List</a>  
+{% extends "accounts/partials/account_base.html" %}
+{% load static %}
+{% block account_content %}
+
+<style>
+       /* Basic reset and style to match input fields */
+select {
+    -webkit-appearance: none; /* Removes default Safari styling */
+    -moz-appearance: none;
+    appearance: none;
+  
+    background-color: white;
+    border: 2px solid #e74c3c; /* Match your input border color */
+    border-radius: 8px;         /* Rounded corners like your input */
+    padding: 10px;
+    font-size: 16px;
+    width: 100%;
+  }
+  
+  /* Optional: Add a custom dropdown arrow */
+  .form-style select {
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='5'%3E%3Cpath fill='%23333' d='M0 0l5 5 5-5z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 10px 5px !important;
+  }
+  
+  /* Optional: Hide native arrow in IE */
+  select::-ms-expand {
+    display: none;
+  }  
+  
+  .flatpickr-current-month {
+    font-size: 130% !important;
+  }
+</style>
+
+<div class="container py-4">
+  <h2>🛠️ Edit quote</h2>
+  <p class="text-muted mb-4">Modify the allowed fields for <strong>{{ quote.name }}</strong>'s quote. Uneditable information is displayed below for reference.</p>
+
+  <form method="post" class="row g-4">
+    {% csrf_token %}
+
+    <!-- Editable Section -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="mb-3">✏️ Editable Fields</h5>
+      
+            <!-- Status (full width) -->
+            <div class="mb-3">
+              <label for="status" class="form-label">Status</label>
+              <select name="status" class="cmn-input" required>
+                <option value="pending" {% if quote.status == "pending" %}selected{% endif %}>Pending</option>
+                <option value="confirmed" {% if quote.status == "confirmed" %}selected{% endif %}>Confirmed</option>
+                <option value="completed" {% if quote.status == "completed" %}selected{% endif %}>Completed</option>
+                <option value="cancelled" {% if quote.status == "cancelled" %}selected{% endif %}>Cancelled</option>
+              </select>
+            </div>
+      
+            <!-- Date + Time -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" name="date" class="cmn-input" value="{{ quote.date|date:'Y-m-d' }}" required>
+              </div>
+              <div class="col-md-6">
+                <label for="hour" class="form-label">Start Time</label>
+                <input type="time" name="hour" class="cmn-input" value="{{ quote.hour|time:'H:i' }}" required>
+              </div>
+            </div>
+      
+            <!-- Cleaners + Hours + Price -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="hours_requested" class="form-label">Hours</label>
+                <input type="number" step="0.5" name="hours_requested" class="cmn-input" value="{{ quote.hours_requested }}">
+              </div>
+              <div class="col-md-6">
+                <label for="price" class="form-label">Price ($)</label>
+                <input type="number" step="0.01" name="price" class="cmn-input" value="{{ quote.price|floatformat:2 }}">
+              </div>
+          </div>
+      
+            <!-- Address + Apt -->
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <label for="address" class="form-label">Street Address</label>
+                <input type="text" name="address" class="cmn-input" value="{{ quote.address }}">
+              </div>
+              <div class="col-md-4">
+                <label for="apartment" class="form-label">Apt/Suite</label>
+                <input type="text" name="apartment" class="cmn-input" value="{{ quote.apartment }}">
+              </div>
+            </div>
+      
+            <!-- ZIP Code (full width or alone) -->
+            <div class="mb-3">
+              <label for="zip_code" class="form-label">ZIP Code</label>
+              <input type="text" name="zip_code" class="cmn-input" value="{{ quote.zip_code }}">
+            </div>
+      
+            <!-- Submit -->
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'quote_list' %}" class="btn btn-secondary">← Back to quotes</a>
+              <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+
+    <!-- Read-only Summary Section -->
+    <div class="col-md-6">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <p><strong>Service:</strong> {{ quote.service_cat.name }}</p>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="mb-3">👤 Customer Info</h5>
+          <p><strong>Name:</strong> {{ quote.name }}</p>
+          <p><strong>Email:</strong> {{ quote.email }}</p>
+          <p><strong>Phone:</strong> {{ quote.phone }}</p>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mt-4">
+        <div class="card-body">
+          <h5 class="mb-3">👤 Email to Customer</h5>
+          <form method="post" action="{% url 'send_quote_email' quote.id %}" class="d-flex flex-column gap-2 mt-3">
+            {% csrf_token %}
+            
+            <label for="admin_note" class="form-label">Add a custom message to the email:</label>
+            <textarea name="admin_note" id="admin_note" class="form-control" rows="3" placeholder=""></textarea>
+        
+            <button type="submit" class="btn btn-outline-primary mt-3">
+                {% if quote.quote_email_sent_at %}
+                  📤 Resend Email
+                {% else %}
+                  📧 Send Email
+                {% endif %}
+            </button>
+        </form>
+        
+          {% if quote.quote_email_sent_at %}
+            <small class="text-muted">
+              Last sent: {{ quote.quote_email_sent_at|date:"M d, Y H:i" }}
+            </small>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </form>
+
 
   <form method="post" class="card shadow-sm p-4">
     {% csrf_token %}
@@ -96,5 +249,8 @@
       </form>
     </div>
   </div>
+</div>
+
+
 </div>
 {% endblock %}

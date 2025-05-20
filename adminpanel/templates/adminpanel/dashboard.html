@@ -36,7 +36,7 @@
         <div class="card-body">
           <h5 class="card-title text-primary"><i class="fa-solid fa-users me-2 text-primary"></i> Registered Customers</h5>
           <h3 class="card-text">{{ total_customers }}</h3>
-          <a href="{% url 'booking_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Customers</a>
+          <a href="{% url 'customer_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Customers</a>
         </div>
       </div>
     </div>
@@ -56,7 +56,7 @@
         <div class="card-body">
           <h5 class="card-title text-primary"><i class="fa-solid fa-newspaper me-2 text-primary"></i> Total Subscribers</h5>
           <h3 class="card-text">{{ total_subscribers }}</h3>
-          <a href="{% url 'booking_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Subscribers</a>
+          <a href="{% url 'subscriber_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Subscribers</a>
         </div>
       </div>
     </div>
@@ -66,7 +66,14 @@
     <!-- Latest Bookings - wider column -->
     <div class="col-12 col-lg-7">
       
-      <h4 class="mt-5 mb-3"><i class="fa-solid fa-calendar-plus me-2 text-primary"></i> Latest Bookings</h4>
+      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
+        <h4 class="mb-0">
+          <i class="fa-solid fa-calendar-plus me-2 text-primary"></i> Latest Bookings
+        </h4>
+        <a href="{% url 'booking_list' %}" class="btn btn-sm btn-outline-primary">
+          Manage
+        </a>
+      </div>
       <div class="table-responsive">
         <table class="table table-striped align-middle">
           <thead>
@@ -92,7 +99,11 @@
                 </td>
                 <td>{{ booking.created_at|date:'M d, Y H:i' }}</td>
                 <td>
-                  <a href="{% url 'booking_detail_admin' booking.id %}" class="btn btn-outline-info btn-sm">View</a>
+                  {% if booking.service_cat.name == 'Handyman' %}
+                    <a href="{% url 'quote_detail' booking.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                  {% else %}
+                    <a href="{% url 'booking_detail_admin' booking.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                  {% endif %}
                 </td>
               </tr>
             {% empty %}
@@ -107,7 +118,14 @@
 
     <div class="col-12 col-lg-5">
 
-      <h4 class="mt-5 mb-3"><i class="fa-solid fa-tag me-2 text-primary"></i> Active Discounts</h4>
+      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
+        <h4 class="mb-0">
+          <i class="fa-solid fa-tag me-2 text-primary"></i> Active Discounts
+        </h4>
+        <a href="{% url 'giftcard_discount' %}" class="btn btn-sm btn-outline-primary">
+          Manage
+        </a>
+      </div>
       <div class="table-responsive">
         <table class="table table-striped align-middle">
           <thead>
@@ -135,7 +153,14 @@
         </table>
       </div>
 
-      <h4 class="mt-5 mb-3"><i class="fa-solid fa-user me-2 text-primary"></i> Latest Customers</h4>
+      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
+        <h4 class="mb-0">
+          <i class="fa-solid fa-user me-2 text-primary"></i> Latest Customers
+        </h4>
+        <a href="{% url 'customer_list' %}" class="btn btn-sm btn-outline-primary">
+          View All
+        </a>
+      </div>
       <div class="table-responsive">
         <table class="table table-striped align-middle">
           <thead>
@@ -161,7 +186,14 @@
         </table>
       </div>
 
-      <h4 class="mt-5 mb-3"><i class="fa-solid fa-newspaper me-2 text-primary"></i> Latest Subscribers</h4>
+      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
+        <h4 class="mb-0">
+          <i class="fa-solid fa-newspaper me-2 text-primary"></i> Latest Subscribers
+        </h4>
+        <a href="{% url 'subscriber_list' %}" class="btn btn-sm btn-outline-primary">
+          View All
+        </a>
+      </div>
       <div class="table-responsive">
         <table class="table table-striped align-middle">
           <thead>
@@ -183,7 +215,14 @@
         </table>
       </div>
 
-      <h4 class="mt-5 mb-3"><i class="fa-solid fa-credit-card me-2 text-primary"></i> Latest Active GiftCards</h4>
+      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
+        <h4 class="mb-0">
+          <i class="fa-solid fa-credit-card me-2 text-primary"></i> Latest Active GiftCards
+        </h4>
+        <a href="{% url 'giftcard_discount' %}" class="btn btn-sm btn-outline-primary">
+          Manage
+        </a>
+      </div>
       <div class="table-responsive">
         <table class="table table-striped align-middle">
           <thead>

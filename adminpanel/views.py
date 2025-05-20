@@ -42,6 +42,8 @@ from .models import BlockedTimeSlot
 from django.contrib.auth.models import User
 
 from django.http import JsonResponse, Http404
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import HttpResponseBadRequest
 
 
 
@@ -84,6 +86,7 @@ def admin_dashboard(request):
 from django.shortcuts import render
 from django.utils import timezone
 from quotes.models import Quote, Service
+
 
 def quote_list(request):
     quotes = Booking.objects.all()
@@ -150,14 +153,14 @@ def update_quote_status(request, quote_id):
 
 
 def quote_detail(request, quote_id):
-    quote = get_object_or_404(Quote, pk=quote_id)
+    quote = get_object_or_404(Booking, pk=quote_id)
 
     if request.method == "POST":
         form = AdminQuoteForm(request.POST, instance=quote)
         if form.is_valid():
             form.save()
             messages.success(request, "Quote updated successfully!")
-            return redirect("quote_list")
+            return redirect("booking_list")
     else:
         form = AdminQuoteForm(instance=quote)
 
@@ -189,10 +192,46 @@ from django.contrib import messages  # Optional: show error messages in template
 def booking_list(request):
     bookings = Booking.objects.all().order_by('-created_at')
 
-    context = {
-        "bookings": bookings,
-    }
-    return render(request, "adminpanel/booking_list.html", context)
+    # Filter: Status
+    selected_statuses = request.GET.getlist('status')
+    if selected_statuses:
+        bookings = bookings.filter(status__in=selected_statuses)
+
+    selected_categories = request.GET.getlist('category')
+    if selected_categories:
+        bookings = bookings.filter(service_cat_id__in=selected_categories)
+
+    service_categories = ServiceCategory.objects.all()
+    status_list = ['pending', 'confirmed', 'completed', 'cancelled']
+
+      # ⏳ Date filter
+    date_filter = request.GET.get('date_filter')
+    today = timezone.localdate()
+
+    if date_filter == "today":
+        bookings = bookings.filter(date=today)
+    elif date_filter == "last_7":
+        bookings = bookings.filter(date__gte=today - timedelta(days=7))
+    elif date_filter == "last_30":
+        bookings = bookings.filter(date__gte=today - timedelta(days=30))
+
+    # Status and category filters
+    selected_statuses = request.GET.getlist('status')
+    selected_categories = request.GET.getlist('category')
+
+    if selected_statuses:
+        bookings = bookings.filter(status__in=selected_statuses)
+    if selected_categories:
+        bookings = bookings.filter(service_cat_id__in=selected_categories)
+
+    return render(request, 'adminpanel/booking_list.html', {
+        'bookings': bookings,
+        'status_list': ['pending', 'confirmed', 'completed', 'cancelled'],
+        'service_categories': ServiceCategory.objects.all(),
+        'selected_statuses': selected_statuses,
+        'selected_categories': selected_categories,
+        'selected_date_filter': date_filter,
+    })
 
 def get_booking_detail(request, booking_id):
     try:
@@ -210,19 +249,51 @@ def get_booking_detail(request, booking_id):
         raise Http404("Booking not found")
 
 
+@staff_member_required
 def booking_detail_admin(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
+
+    if request.method == 'POST':
+        booking.status = request.POST.get('status')
+        booking.date = request.POST.get('date')
+        booking.hour = request.POST.get('hour')
+        booking.num_cleaners = request.POST.get('num_cleaners')
+        booking.hours_requested = request.POST.get('hours_requested')
+        booking.price = request.POST.get('price')
+        booking.address = request.POST.get('address')
+        booking.apartment = request.POST.get('apartment')
+        booking.zip_code = request.POST.get('zip_code')
+        booking.save()
+        return redirect('booking_detail_admin', booking_id=booking.id)
+    
     return render(request, "adminpanel/booking_detail.html", {"booking": booking})
+
 
 # 📌 CUSTOMERS MANAGEMENT
 def customer_list(request):
-    customers = Customer.objects.all().order_by("name")
+    customers = User.objects.all().order_by("username")
     return render(request, "adminpanel/customer_list.html", {"customers": customers})
 
-def customer_detail(request, customer_id):
-    customer = get_object_or_404(Customer, id=customer_id)
-    quotes = Quote.objects.filter(customer=customer)  # Fetch quotes linked to this customer
-    return render(request, "adminpanel/customer_detail.html", {"customer": customer, "quotes": quotes})
+from django.contrib.auth.models import User
+
+def customer_detail(request, username):
+    user = get_object_or_404(User, username=username)
+    profile = user.profile
+    quotes = Booking.objects.filter(email=user.email)  
+    addresses = profile.addresses.all()
+    
+    return render(request, "adminpanel/customer_detail.html", {
+        "user": user,
+        "profile": profile,
+        "quotes": quotes,
+        "addresses": addresses
+    })
+
+
+
+def subscriber_list(request):
+    subscribers = NewsletterSubscriber.objects.all().order_by("-subscribed_at")
+    return render(request, "adminpanel/subscriber_list.html", {"subscribers": subscribers})
 
 
 # 📌 List All Service Categories & Services
@@ -780,6 +851,35 @@ def giftcard_discount(request):
         "discount_codes": discount_codes,
         "giftcards": giftcards,
     })
+
+@login_required
+def add_subscriber(request):
+    if request.method == "POST":
+        try:
+            NewsletterSubscriber.objects.create(
+                email=request.POST.get("subscriber_email"),
+            )
+
+            next_url = request.POST.get("next")
+            return redirect(next_url) if next_url else redirect("subscriber_list")
+
+        except Exception as e:
+            return HttpResponseBadRequest(f"Invalid data: {e}")
+
+    return HttpResponseBadRequest("Invalid method")
+
+def export_subscribers_csv(request):
+    # Create the HttpResponse with CSV headers
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename=subscribers.csv'
+
+    writer = csv.writer(response)
+    writer.writerow(['Email', 'Subscribed At'])  # Header row
+
+    for subscriber in NewsletterSubscriber.objects.order_by('-subscribed_at')[:100]:
+        writer.writerow([subscriber.email, subscriber.subscribed_at.strftime('%Y-%m-%d %H:%M')])
+
+    return response
 
 
 

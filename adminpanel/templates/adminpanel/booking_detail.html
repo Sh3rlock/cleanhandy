@@ -1,16 +1,183 @@
 {% extends "accounts/partials/account_base.html" %}
 {% load static %}
 {% block account_content %}
-<h2>📜 Booking Details</h2>
 
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title">Customer: {{ booking.customer.name }}</h5>
-        <p><strong>Service:</strong> {{ booking.service.name }}</p>
-        <p><strong>Date:</strong> {{ booking.date }}</p>
-        <p><strong>Status:</strong> {{ booking.status }}</p>
-        <p><strong>Price:</strong> ${{ booking.price|default:"Not set" }}</p>
-        <a href="{% url 'booking_list' %}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back to Bookings</a>
+<style>
+  .text-primary {
+      color: #F15A29 !important;
+    }
+    
+  .bg-primary {
+      background-color: #F15A29 !important;
+    }
+       /* Basic reset and style to match input fields */
+select {
+    -webkit-appearance: none; /* Removes default Safari styling */
+    -moz-appearance: none;
+    appearance: none;
+  
+    background-color: white;
+    border: 2px solid #e74c3c; /* Match your input border color */
+    border-radius: 8px;         /* Rounded corners like your input */
+    padding: 10px;
+    font-size: 16px;
+    width: 100%;
+  }
+  
+  /* Optional: Add a custom dropdown arrow */
+  .form-style select {
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='5'%3E%3Cpath fill='%23333' d='M0 0l5 5 5-5z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 10px 5px !important;
+  }
+  
+  /* Optional: Hide native arrow in IE */
+  select::-ms-expand {
+    display: none;
+  }  
+  
+  .flatpickr-current-month {
+    font-size: 130% !important;
+  }
+</style>
+
+<div class="container py-4">
+  <a href="{% url 'booking_list' %}" class="text-primary mb-4"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+    Back to bookings</a>
+  <h2><i class="fa-solid fa-calendar-plus me-2 text-primary"></i> Edit Booking</h2>
+  <p class="text-muted mb-4">Modify the allowed fields for <strong>{{ booking.name }}</strong>'s booking. Uneditable information is displayed below for reference.</p>
+
+  <form method="post" class="row g-4">
+    {% csrf_token %}
+
+    <!-- Editable Section -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="mb-3"><i class="fa-solid fa-pen-to-square me-2 text-primary"></i> Editable Fields</h5>
+      
+            <!-- Status (full width) -->
+            <div class="mb-3">
+              <label for="status" class="form-label">Status</label>
+              <select name="status" class="cmn-input" required>
+                <option value="pending" {% if booking.status == "pending" %}selected{% endif %}>Pending</option>
+                <option value="confirmed" {% if booking.status == "confirmed" %}selected{% endif %}>Confirmed</option>
+                <option value="completed" {% if booking.status == "completed" %}selected{% endif %}>Completed</option>
+                <option value="cancelled" {% if booking.status == "cancelled" %}selected{% endif %}>Cancelled</option>
+              </select>
+            </div>
+      
+            <!-- Date + Time -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" name="date" class="cmn-input" value="{{ booking.date|date:'Y-m-d' }}" required>
+              </div>
+              <div class="col-md-6">
+                <label for="hour" class="form-label">Time</label>
+                <input type="time" name="hour" class="cmn-input" value="{{ booking.hour|time:'H:i' }}" required>
+              </div>
+            </div>
+      
+            <!-- Cleaners + Hours + Price -->
+            <div class="row mb-3">
+              {% if booking.is_large_home %}
+              <div class="col-md-4">
+                <label for="num_cleaners" class="form-label">Cleaners</label>
+                <input type="number" name="num_cleaners" class="cmn-input" min="1" value="{{ booking.num_cleaners }}">
+              </div>
+              
+              <div class="col-md-4">
+                <label for="hours_requested" class="form-label">Hours</label>
+                <input type="number" step="0.5" name="hours_requested" class="cmn-input" value="{{ booking.hours_requested }}">
+              </div>
+              <div class="col-md-4">
+                <label for="price" class="form-label">Price ($)</label>
+                <input type="number" step="0.01" name="price" class="cmn-input" value="{{ booking.price|floatformat:2 }}">
+              </div>
+              {% else %}
+              <div class="col-md-6">
+                <label for="hours_requested" class="form-label">Hours</label>
+                <input type="number" step="0.5" name="hours_requested" class="cmn-input" value="{{ booking.hours_requested }}">
+              </div>
+              <div class="col-md-6">
+                <label for="price" class="form-label">Price ($)</label>
+                <input type="number" step="0.01" name="price" class="cmn-input" value="{{ booking.price|floatformat:2 }}">
+              </div>
+            {% endif %}
+          </div>
+      
+            <!-- Address + Apt -->
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <label for="address" class="form-label">Street Address</label>
+                <input type="text" name="address" class="cmn-input" value="{{ booking.address }}">
+              </div>
+              <div class="col-md-4">
+                <label for="apartment" class="form-label">Apt/Suite</label>
+                <input type="text" name="apartment" class="cmn-input" value="{{ booking.apartment }}">
+              </div>
+            </div>
+      
+            <!-- ZIP Code (full width or alone) -->
+            <div class="mb-3">
+              <label for="zip_code" class="form-label">ZIP Code</label>
+              <input type="text" name="zip_code" class="cmn-input" value="{{ booking.zip_code }}">
+            </div>
+      
+            <!-- Submit -->
+            <div class="d-flex justify-content-between">
+              <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+
+    <!-- Read-only Summary Section -->
+    <div class="col-md-6">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="mb-3"><i class="fa-solid fa-list me-2 text-primary"></i> Booking Summary</h5>
+          <p><strong>Service:</strong> {{ booking.service_cat.name }}</p>
+          <p><strong>Square Footage:</strong> {{ booking.square_feet_options.name }}</p>
+          {% if not booking.is_large_home and booking.home_types %}
+            <p><strong>Home Type:</strong> {{ booking.home_types.name }} (${{ booking.home_types.price }})</p>
+          {% endif %}
+          {% for extra in booking.extras.all %}
+            <p>+ {{ extra.name }} — ${{ extra.price }}</p>
+          {% endfor %}
+          <p><strong>Is Large Home:</strong> {{ booking.is_large_home|yesno:"Yes,No" }}</p>
+          <p><strong>Recurring:</strong> 
+            {% if booking.recurrence_pattern != "one_time" %}
+              {{ booking.get_recurrence_pattern_display }}
+            {% else %}
+              One-time
+            {% endif %}
+          </p>
+          <!-- {% if booking.extras.exists %}
+            <p><strong>Extras:</strong></p>
+            <ul class="mb-0">
+              {% for extra in booking.extras.all %}
+                <li>{{ extra.name }} – ${{ extra.price }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %} -->
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="mb-3"><i class="fa-solid fa-user me-2 text-primary"></i> Customer Info</h5>
+          <p><strong>Name:</strong> {{ booking.name }}</p>
+          <p><strong>Email:</strong> {{ booking.email }}</p>
+          <p><strong>Phone:</strong> {{ booking.phone }}</p>
+        </div>
+      </div>
     </div>
+  </form>
+  <a href="{% url 'booking_list' %}" class="text-primary mt-4"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+    Back to bookings</a>
 </div>
 {% endblock %}
