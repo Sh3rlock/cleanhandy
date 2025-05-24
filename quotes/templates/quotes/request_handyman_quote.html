@@ -227,8 +227,12 @@ select::-ms-expand {
     
                 <div class="list-group">
                   {% for service in all_services %}
+                  {% if "Cleaning" in service.name %}
                     <a href="{% url 'request_cleaning_quote' service.id %}" class="service-list-style ist-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                      <div>
+                  {% else %}
+                    <a href="{% url 'request_handyman_quote' service.id %}" class="service-list-style ist-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                  {% endif %}
+                  <div>
                         <strong>{{ service.name }}</strong><br />
                       </div>
                       <i class="fa-solid fa-arrow-right text-muted"></i>
