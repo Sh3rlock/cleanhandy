@@ -155,13 +155,13 @@
         {% for quote in booked_quotes %}
             <div class="card mb-2 border-success">
                 <div class="card-body p-2">
-                    <h6 class="card-title mb-1">{{ quote.customer.name }}</h6>
+                    <h6 class="card-title mb-1">{{ quote.name }}</h6>
                     <p class="mb-1 text-muted small">
-                        <strong>Service:</strong> {{ quote.service.name }}<br>
+                        <strong>Service:</strong> {{ quote.service_cat.name }}<br>
                         <strong>Time Slot:</strong> {{ quote.time_slot }}<br>
                         <strong>Date:</strong> {{ quote.date|date:"M d" }}<br>
                         <strong>ZIP:</strong> {{ quote.zip_code }}<br>
-                        <strong>Email:</strong> {{ quote.customer.email }}<br>
+                        <strong>Email:</strong> {{ quote.email }}<br>
                         <strong>Price:</strong> {% if quote.price %}${{ quote.price }}{% else %}<em>Not set</em>{% endif %}<br>
                         <strong>Description:</strong>
                         <span class="d-block text-truncate" style="max-width: 100%;">{{ quote.job_description }}</span>
@@ -178,13 +178,13 @@
         {% for quote in upcoming_quotes %}
             <div class="card mb-2 shadow-sm">
                 <div class="card-body p-2">
-                    <h6 class="card-title mb-1">{{ quote.customer.name }}</h6>
+                    <h6 class="card-title mb-1">{{ quote.name }}</h6>
                     <p class="mb-1 text-muted small">
-                        <strong>Service:</strong> {{ quote.service.name }}<br>
+                        <strong>Service:</strong> {{ quote.service_cat.name }}<br>
                         <strong>Time Slot:</strong> {{ quote.time_slot }}<br>
                         <strong>Date:</strong> {{ quote.date|date:"M d" }}<br>
                         <strong>ZIP:</strong> {{ quote.zip_code }}<br>
-                        <strong>Email:</strong> {{ quote.customer.email }}<br>
+                        <strong>Email:</strong> {{ quote.email }}<br>
                         <strong>Price:</strong> {% if quote.price %}${{ quote.price }}{% else %}<em>Not set</em>{% endif %}<br>
                         <strong>Description:</strong>
                         <span class="d-block text-truncate" style="max-width: 100%;">{{ quote.job_description }}</span>
@@ -330,7 +330,7 @@ document.addEventListener("DOMContentLoaded", function() {
                             <b style="font-size: 16px; color: #007bff;">📅 Time Slot:</b> ${info.event.extendedProps.time_slots}<br>
                             <b style="font-size: 16px; color: #28a745;">🛠️ Service:</b> ${info.event.extendedProps.service}<br>
                             <b style="font-size: 15px; color: ${getStatusColor(info.event.extendedProps.status)};">📌 Status:</b> <strong>${info.event.extendedProps.status.toUpperCase()}</strong><br><hr>
-                            <b>🧑 Customer:</b> ${info.event.extendedProps.name}<br>
+                            <b>🧑 Customer:</b> ${info.event.extendedProps.customer}<br>
                             <b>📍 ZIP Code:</b> ${info.event.extendedProps.zip_code}<br>
                             <b>📧 Email:</b> ${info.event.extendedProps.email}<br>
                             <b>📝 Job Description:</b> ${info.event.extendedProps.job_description}<br>

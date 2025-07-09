@@ -91,10 +91,10 @@
                 <td>{{ booking.name }}</td>
                 <td>{{ booking.service_cat }}</td>
                 <td>
-                  {% if booking.confirmed %}
-                    <span class="badge bg-success">Yes</span>
+                  {% if booking.status == "confirmed" %}
+                    <span class="badge bg-success text-dark">{{ booking.status }}</span>
                   {% else %}
-                    <span class="badge bg-warning text-dark">Pending</span>
+                    <span class="badge bg-warning text-dark">{{ booking.status }}</span>
                   {% endif %}
                 </td>
                 <td>{{ booking.created_at|date:'M d, Y H:i' }}</td>

@@ -156,16 +156,21 @@ def quote_detail(request, quote_id):
     quote = get_object_or_404(Booking, pk=quote_id)
 
     if request.method == "POST":
-        form = AdminQuoteForm(request.POST, instance=quote)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Quote updated successfully!")
-            return redirect("booking_list")
-    else:
-        form = AdminQuoteForm(instance=quote)
+        # Get data from POST and update the quote instance
+        quote.status = request.POST.get("status", quote.status)
+        quote.date = request.POST.get("date", quote.date)
+        quote.hour = request.POST.get("hour", quote.hour)
+        quote.hours_requested = request.POST.get("hours_requested", quote.hours_requested)
+        quote.price = request.POST.get("price", quote.price)
+        quote.address = request.POST.get("address", quote.address)
+        quote.apartment = request.POST.get("apartment", quote.apartment)
+        quote.zip_code = request.POST.get("zip_code", quote.zip_code)
+
+        quote.save()
+        messages.success(request, "Quote updated successfully!")
+        return redirect("booking_list")
 
     return render(request, "adminpanel/quote_detail.html", {
-        "form": form,
         "quote": quote
     })
 
@@ -466,8 +471,8 @@ def get_quote_details(request):
 
     quote_data = {
         "quote_id": quote.id,  # Pass quote ID for approval
-        "customer": quote.customer.name,
-        "service": quote.service.name,
+        "customer": quote.name,
+        "service": quote.service_cat.name,
         "date": quote.date.strftime("%Y-%m-%d %H:%M"),
         "status": quote.status,
         "price": quote.price if quote.price else None,
@@ -649,11 +654,11 @@ def get_upcoming_quotes(request):
     for quote in upcoming_quotes:
         data.append({
             "id": quote.id,
-            "customer": quote.customer.name,
-            "service": quote.service.name,
+            "customer": quote.name,
+            "service": quote.service_cat.name,
             "status": quote.status,
             "zip_code": quote.zip_code,
-            "email": quote.customer.email,
+            "email": quote.email,
             "description": quote.job_description,
             "price": float(quote.price) if quote.price else None,
             "time_slot": format_time_slot(quote),
@@ -729,9 +734,9 @@ def export_quotes_csv(request):
 
     for q in quotes.select_related("customer", "service"):
         writer.writerow([
-            q.customer.name,
-            q.customer.email,
-            q.service.name,
+            q.name,
+            q.email,
+            q.service_cat.name,
             q.date,
             format_time_slot(q),
             q.zip_code,
@@ -743,48 +748,49 @@ def export_quotes_csv(request):
 
 
 def send_quote_email_view(request, quote_id):
-    quote = get_object_or_404(Quote, pk=quote_id)
-    customer = quote.customer
-    time_slot = format_time_slot(quote)
-    # 📝 Get the custom admin message from form
-    admin_note = request.POST.get("admin_note", "").strip()
+    quote = get_object_or_404(Booking, pk=quote_id)
 
-     # ✅ Save timestamp and admin note to the quote
-    if not quote.approval_token:
-        quote.approval_token = secrets.token_urlsafe(32)
+    if request.method == "POST" and request.POST.get("email_action") == "send_quote_email":
+        customer = quote.name
+        time_slot = quote.get_time_slots()  # or format_time_slot(quote)
 
-    subject = "Your Quote from Clean & Handy Services"
-    from_email = "matyass91@gmail.com"
-    to_email = [customer.email]
-    bcc = ["matyass91@gmail.com"]  # 👈 Add admin here
+        admin_note = request.POST.get("admin_note", "").strip()
 
-    context = {
-        "customer": customer,
-        "quote": quote,
-        "time_slot": time_slot,
-        "admin_note": admin_note,
-        "request_scheme": request.scheme,
-        "domain": get_current_site(request).domain,
-    }
+        if not quote.approval_token:
+            quote.approval_token = secrets.token_urlsafe(32)
 
-    # Render HTML email from template
-    html_content = render_to_string("emails/quote_email.html", context)
-    text_content = strip_tags(html_content)
+        subject = "Your Quote from Clean & Handy Services"
+        from_email = "matyass91@gmail.com"
+        to_email = ["matyass91@gmail.com"]
+        bcc = ["matyass91@gmail.com"]
 
-    try:
-        email = EmailMultiAlternatives(subject, text_content, from_email, to_email, bcc=bcc)
-        email.attach_alternative(html_content, "text/html")
-        email.send()
+        context = {
+            "customer": customer,
+            "quote": quote,
+            "time_slot": time_slot,
+            "admin_note": admin_note,
+            "request_scheme": request.scheme,
+            "domain": get_current_site(request).domain,
+        }
 
-        quote.last_admin_note = admin_note
-        quote.quote_email_sent_at = timezone.now()
-        quote.save(update_fields=["last_admin_note", "quote_email_sent_at", "approval_token"])
+        html_content = render_to_string("emails/quote_email.html", context)
+        text_content = strip_tags(html_content)
 
-        messages.success(request, f"📧 Email sent to {customer.email}")
-    except Exception as e:
-        messages.error(request, f"❌ Failed to send email: {str(e)}")
+        try:
+            email = EmailMultiAlternatives(subject, text_content, from_email, to_email, bcc=bcc)
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+
+            quote.last_admin_note = admin_note
+            quote.quote_email_sent_at = timezone.now()
+            quote.save(update_fields=["last_admin_note", "quote_email_sent_at", "approval_token"])
+
+            messages.success(request, f"📧 Email sent to {quote.email}")
+        except Exception as e:
+            messages.error(request, f"❌ Failed to send email: {str(e)}")
 
     return redirect("quote_detail", quote_id=quote.id)
+
 
 # 📌 Quote Approval View
 def quote_approval_view(request, quote_id, token):
@@ -799,7 +805,7 @@ def quote_approval_view(request, quote_id, token):
     
     send_mail(
         subject="Quote Approved by Customer",
-        message=f"The quote #{quote.id} for {quote.customer.name} was approved.\nService: {quote.service.name}\nDate: {quote.date}\nPrice: {quote.price}",
+        message=f"The quote #{quote.id} for {quote.name} was approved.\nService: {quote.service_cat.name}\nDate: {quote.date}\nPrice: {quote.price}",
         from_email="noreply@cleanhandy.com",
         recipient_list=["admin@email.com"]
     )

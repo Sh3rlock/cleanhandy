@@ -157,6 +157,40 @@
     </div>
   </div>
 
+  <!-- Review Form -->
+<div class="col-md-12">
+  <div class="card h-100 shadow-sm mt-3">
+    <div class="card-body">
+      <h5 class="mb-3">📝 Leave a Review</h5>
+      <form method="post" action="">
+        {% csrf_token %}
+        <!-- Rating -->
+        <div class="mb-3">
+          <label for="rating" class="form-label"><strong>Rating (1-5)</strong></label>
+          <select id="rating" name="rating" class="form-select" required>
+            <option value="" selected disabled>Select rating</option>
+            <option value="1">1 - Very Poor</option>
+            <option value="2">2 - Poor</option>
+            <option value="3">3 - Average</option>
+            <option value="4">4 - Good</option>
+            <option value="5">5 - Excellent</option>
+          </select>
+        </div>
+        <!-- Review Text -->
+        <div class="mb-3">
+          <label for="review" class="form-label"><strong>Your Review</strong></label>
+          <textarea id="review" name="review" class="form-control" rows="4" required></textarea>
+        </div>
+        <!-- Submit Button -->
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary">Submit Review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
 </div>
 
 

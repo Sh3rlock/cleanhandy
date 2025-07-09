@@ -92,7 +92,7 @@ class CleaningQuoteForm(forms.ModelForm):
         # 30-minute time slots from 09:00 to 17:00
         time_slots = []
         t = datetime.strptime("09:00", "%H:%M")
-        while t.time() <= time(17, 0):
+        while t.time() <= time(20, 0):
             time_slots.append((t.strftime("%H:%M"), t.strftime("%H:%M")))
             t += timedelta(minutes=30)
 
@@ -161,7 +161,7 @@ class HandymanQuoteForm(forms.ModelForm):
         # Default hour choices (9:00 to 17:00, every 30 min)
         time_slots = []
         t = datetime.strptime("09:00", "%H:%M")
-        while t.time() <= time(17, 0):
+        while t.time() <= time(20, 0):
             time_slots.append((t.strftime("%H:%M"), t.strftime("%H:%M")))
             t += timedelta(minutes=30)
 
@@ -289,7 +289,7 @@ class CleaningBookingForm(forms.ModelForm):
         # 30-minute time slots from 09:00 to 17:00
         time_slots = []
         t = datetime.strptime("09:00", "%H:%M")
-        while t.time() <= time(17, 0):
+        while t.time() <= time(20, 0):
             time_slots.append((t.strftime("%H:%M"), t.strftime("%H:%M")))
             t += timedelta(minutes=30)
 
@@ -379,7 +379,7 @@ class HandymanBookingForm(forms.ModelForm):
         # Default hour choices (9:00 to 17:00, every 30 min)
         time_slots = []
         t = datetime.strptime("09:00", "%H:%M")
-        while t.time() <= time(17, 0):
+        while t.time() <= time(20, 0):
             time_slots.append((t.strftime("%H:%M"), t.strftime("%H:%M")))
             t += timedelta(minutes=30)
 
