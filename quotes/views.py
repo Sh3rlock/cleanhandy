@@ -369,5 +369,12 @@ def handyman_booking(request):
     return render(request, "booking/handyman_booking.html", {"form": form, "service_cat": service_cat, "related_services": related_services})
 
 
+def terms(request):
+    return render(request, "terms.html")
+
+def privacy(request):
+    return render(request, "privacy.html")
+
+
 
 
