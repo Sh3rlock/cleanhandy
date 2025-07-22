@@ -1,6 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
   <meta charset="utf-8">
   <title>Terms and Conditions | CleanHandy LLC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,8 +18,10 @@
     code{background:#f4f4f4;padding:2px 4px;border-radius:3px;}
     footer{margin-top:2em;font-size:0.9em;color:#555;}
   </style>
-</head>
-<body>
+  <section>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12">
 <article>
   <h1>Terms and Conditions</h1>
   <p><strong>Last updated: July&nbsp;17,&nbsp;2025</strong></p>
@@ -198,9 +201,9 @@
     Telephone: +1&nbsp;(646)&nbsp;000‑0000
   </address>
 
-  <footer>
-    © 2025 CleanHandy LLC. All rights reserved.
-  </footer>
-</article>
-</body>
-</html>
+    </div>
+    </div>
+    </div>
+  </section>
+
+  {% endblock %}

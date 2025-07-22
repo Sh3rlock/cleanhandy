@@ -794,7 +794,7 @@ def send_quote_email_view(request, quote_id):
 
 # 📌 Quote Approval View
 def quote_approval_view(request, quote_id, token):
-    quote = get_object_or_404(Quote, id=quote_id)
+    quote = get_object_or_404(Booking, id=quote_id)
 
     if quote.approval_token != token:
         return HttpResponseForbidden("Invalid token")
@@ -814,7 +814,7 @@ def quote_approval_view(request, quote_id, token):
 
 # 📌 Quote Decline View
 def quote_decline_view(request, quote_id, token):
-    quote = get_object_or_404(Quote, id=quote_id)
+    quote = get_object_or_404(Booking, id=quote_id)
 
     if quote.approval_token != token:
         return HttpResponseForbidden("Invalid token")

@@ -91,25 +91,30 @@
                         <li class="dropdown">
                           <a href="javascript:void(0);">All Services</a>
                           <ul>
+                            <li style="margin-top: 0.5em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Cleaning</li>
                             {% for service in all_services %}
-                              <li>
-                                {% if service.category.name|lower == 'cleaning' %}
+                              {% if service.category.name|lower == 'cleaning' %}
+                                <li>
                                   <a href="{% url 'request_cleaning_quote' service.id %}">{{ service.name }}</a>
-                                {% elif service.category.name|lower == 'handyman' %}
+                                </li>
+                              {% endif %}
+                            {% endfor %}
+                            <li style="margin-top: 1em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Handyman</li>
+                            {% for service in all_services %}
+                              {% if service.category.name|lower == 'handyman' %}
+                                <li>
                                   <a href="{% url 'request_handyman_quote' service.id %}">{{ service.name }}</a>
-                                {% else %}
-                                  <a href="#">{{ service.name }} (Unknown Category)</a>
-                                {% endif %}
-                              </li>
+                                </li>
+                              {% endif %}
                             {% endfor %}
                           </ul>
                         </li>
                         <li>
                             <a href="{% url 'about' %}">About Us</a>
                           </li>
-                        <li>
+                        <!-- <li>
                           <a href="{% url 'blog' %}">Blog</a>
-                        </li>
+                        </li> -->
                         <li>
                           <a href="{% url 'contact' %}">Contact</a>
                         </li>
@@ -282,23 +287,26 @@
               <div class="col-xl-3 col-lg-4 col-md-4">
                 <div class="footer-widget company-widget">
                   <div class="company-widget-inner">
-                    <h6 class="footer-widget-title">Company</h6>
+                    <h6 class="footer-widget-title">Pages</h6>
                     <ul class="footer-widget-list">
                       <li>
-                        <a href="contact.html">Contact Us</a>
+                        <a href="{% url 'home' %}">Home</a>
                       </li>
                       <li>
+                        <a href="{% url 'about' %}">About Us</a>
+                      </li>
+                      <!-- <li>
                         <a href="blog.html">Servat Blog</a>
                       </li>
                       <li>
                         <a href="blog.html">Engineering Blog</a>
-                      </li>
+                      </li> -->
                       <li>
-                        <a href="workers.html">Marketplace</a>
+                        <a href="{% url 'contact' %}">Contact</a>
                       </li>
-                      <li>
-                        <a href="workers.html">Social Good</a>
-                      </li>
+                      <li><a href="{% url 'terms' %}">Terms & Conditions</a></li>
+                      <li><a href="{% url 'privacy' %}">Privacy Policy</a></li>
+                      <li><a href="{% url 'faq' %}">FAQ</a></li>
                     </ul>
                   </div>
                 </div>
@@ -306,23 +314,21 @@
               <div class="col-xl-2 col-lg-4 col-md-2">
                 <div class="footer-widget support-widget">
                   <div class="support-widget-inner">
-                    <h6 class="footer-widget-title">Support</h6>
+                    <h6 class="footer-widget-title">Services</h6>
                     <ul class="footer-widget-list">
-                      <li>
-                        <a href="contact.html">Help Topics</a>
-                      </li>
-                      <li>
-                        <a href="blog-details.html">Post A Job</a>
-                      </li>
-                      <li>
-                        <a href="contact.html">Servat Pro</a>
-                      </li>
-                      <li>
-                        <a href="#0">FAQs</a>
-                      </li>
-                      <li>
-                        <a href="contact.html">Verify</a>
-                      </li>
+                      {# Cleaning Services #}
+                      <li style="margin-top: 0.5em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Cleaning</li>
+                      {% for service in all_services %}
+                        {% if service.category.name|lower == 'cleaning' %}
+                          <li><a href="{% url 'request_cleaning_quote' service.id %}">{{ service.name }}</a></li>
+                        {% endif %}
+                      {% endfor %}
+                      <li style="margin-top: 1em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Handyman</li>
+                      {% for service in all_services %}
+                        {% if service.category.name|lower == 'handyman' %}
+                          <li><a href="{% url 'request_handyman_quote' service.id %}">{{ service.name }}</a></li>
+                        {% endif %}
+                      {% endfor %}
                     </ul>
                   </div>
                 </div>

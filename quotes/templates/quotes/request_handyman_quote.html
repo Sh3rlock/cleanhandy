@@ -30,93 +30,7 @@
 
       .leave-comments-form textarea {
         width: 100%;
-        height: 150px !important;s
-      }
-
-      .service-form-card {
-        background: #fff;
-        padding: 2rem;
-        border-radius: 16px;
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-        font-family: 'Inter', sans-serif;
-        max-width: 100%;
-      }
-      
-      .form-title {
-        font-size: 1.8rem;
-        font-weight: 700;
-        margin-bottom: 1.5rem;
-      }
-      
-      .input,
-      .textarea {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        margin-bottom: 1rem;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-size: 1rem;
-        transition: border-color 0.2s;
-        box-sizing: border-box;
-      }
-      
-      .input:focus,
-      .textarea:focus {
-        border-color: #ff6b35;
-        outline: none;
-      }
-      
-      .textarea {
-        min-height: 120px;
-        resize: vertical;
-      }
-      
-      .form-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        margin-bottom: 1rem;
-      }
-      
-      .form-group {
-        flex: 1;
-        min-width: 120px;
-      }
-      
-      .checkbox-wrap {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin: 1rem 0;
-        font-size: 0.95rem;
-      }
-      
-      .btn-submit {
-        width: 100%;
-        background: #e1552f;
-        color: #fff;
-        font-weight: 600;
-        padding: 0.9rem 1rem;
-        border: none;
-        border-radius: 10px;
-        font-size: 1.05rem;
-        cursor: pointer;
-        transition: background 0.3s ease;
-      }
-      
-      .btn-submit:hover {
-        background: #c84827;
-      }
-
-      .featured-single-info {
-        margin-top: -5px !important;
-      }
-
-      .service-form-card {
-        background: #fff;
-        padding: 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.05);
+        height: 150px !important;
       }
       
       .service-list-style {
@@ -166,6 +80,10 @@ select::-ms-expand {
 
 .flatpickr-current-month {
   font-size: 130% !important;
+}
+
+.list-group-item + .list-group-item {
+  border-top-width: 1px !important;
 }
 </style>
 
@@ -226,20 +144,33 @@ select::-ms-expand {
                 <h4 class="form-title mb-3">Our Services</h4>
     
                 <div class="list-group">
+                  <!-- Cleaning Services -->
+                  <div style="margin-top: 0.5em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Cleaning Services</div>
                   {% for service in all_services %}
-                  {% if "Cleaning" in service.name %}
-                    <a href="{% url 'request_cleaning_quote' service.id %}" class="service-list-style ist-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                  {% else %}
-                    <a href="{% url 'request_handyman_quote' service.id %}" class="service-list-style ist-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                  {% endif %}
-                  <div>
-                        <strong>{{ service.name }}</strong><br />
-                      </div>
-                      <i class="fa-solid fa-arrow-right text-muted"></i>
-                    </a>
-                  {% empty %}
-                    <div class="text-muted p-3">No services available.</div>
+                    {% if service.category.name|lower == 'cleaning' %}
+                      <a href="{% url 'request_cleaning_quote' service.id %}" class="service-list-style list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>{{ service.name }}</strong><br />
+                        </div>
+                        <i class="fa-solid fa-arrow-right text-muted"></i>
+                      </a>
+                    {% endif %}
                   {% endfor %}
+                  <!-- Handyman Services -->
+                  <div style="margin-top: 1em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Handyman Services</div>
+                  {% for service in all_services %}
+                    {% if service.category.name|lower == 'handyman' %}
+                      <a href="{% url 'request_handyman_quote' service.id %}" class="service-list-style list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>{{ service.name }}</strong><br />
+                        </div>
+                        <i class="fa-solid fa-arrow-right text-muted"></i>
+                      </a>
+                    {% endif %}
+                  {% endfor %}
+                  {% if all_services|length == 0 %}
+                    <div class="text-muted p-3">No services available.</div>
+                  {% endif %}
                 </div>
               </div>
     

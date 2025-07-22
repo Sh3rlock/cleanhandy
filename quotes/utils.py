@@ -15,7 +15,7 @@ from django.conf import settings
 
 def get_available_hours_for_date(date, hours_requested=2):
     start_hour = 9
-    end_hour = 17
+    end_hour = 20
     interval = 30  # minutes
     duration_minutes = max(hours_requested * 60, 120)  # Minimum 2 hours
 
