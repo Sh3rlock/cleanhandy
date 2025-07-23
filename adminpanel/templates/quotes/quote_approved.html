@@ -3,8 +3,8 @@
 {% block content %}
 <div class="container py-5 text-center">
     <h2 class="mb-3">✅ Quote Approved!</h2>
-    <p>Thank you, {{ quote.customer.name }}.</p>
-    <p>Your quote for <strong>{{ quote.service.name }}</strong> on <strong>{{ quote.date }}</strong> has been marked as <strong>accepted</strong>.</p>
+    <p>Thank you, {{ quote.name }}.</p>
+    <p>Your quote for <strong>{{ quote.service.name }}</strong> on <strong>{{ quote.date }} - {{ quote.hour }}</strong> has been marked as <strong>accepted</strong>.</p>
     <p>We'll be in touch shortly!</p>
 </div>
 {% endblock %}

@@ -751,6 +751,15 @@ def send_quote_email_view(request, quote_id):
     quote = get_object_or_404(Booking, pk=quote_id)
 
     if request.method == "POST" and request.POST.get("email_action") == "send_quote_email":
+        # Save price if provided
+        price = request.POST.get("price")
+        if price is not None and price != "":
+            try:
+                quote.price = float(price)
+                quote.save(update_fields=["price"])
+            except ValueError:
+                pass  # Optionally, handle invalid price input
+
         customer = quote.name
         time_slot = quote.get_time_slots()  # or format_time_slot(quote)
 
