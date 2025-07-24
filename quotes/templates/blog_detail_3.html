@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- common banner -->
+<section class="common-banner" style="position: relative;">
+    <div class="bg-layer" style="background-image: url({% static 'assets/images/background/common-banner-bg.jpg' %});"></div>
+    <div class="common-banner-content">
+        <h3>Blog Detail</h3>
+        <div class="breadcrumb">
+            <ul>
+              <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+              <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Blog Detail</li>
+            </ul>
+        </div>
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
+        {% endif %}
+    </div>
+  </section>
+  <!-- common banner -->
+
+<!-- blog-details -->
+<section class="blog-details">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="blog-details-wrapper">
+                    <div class="meta-pill">
+                        <span>Booking Systems • 2025 Trends</span>
+                    </div>
+                    <div class="blog-details-top-title">
+                        <h3>Booking Systems in 2025: Trends, Simplicity, and Smarter Scheduling</h3>
+                    </div>
+                    <div class="blog-meta-list">
+                        <ul>
+                            <li><i class="fa-light fa-clock"></i> May 20, 2025</li>
+                            <li><div class="border"></div></li>
+                            <li><i class="fa-light fa-user"></i> By CleanHandy Team</li>
+                            <li><div class="border"></div></li>
+                            <li><i class="fa-light fa-eye"></i> 5 Min Read</li>
+                        </ul>
+                    </div>
+                    <div class="blog-thumbnail">
+                        <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025">
+                    </div>
+                    
+                    <div class="blog-post-wrapper">
+                        <div class="blog-post-title">
+                            <p>Booking systems are evolving fast in 2025, making it easier than ever for customers to schedule services, appointments, and experiences. Here’s what’s new, what’s trending, and how to get the most out of modern booking platforms.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="blog-post-wrapper">
+                        <div class="blog-post-title">
+                            <h3>1. AI-Powered Scheduling</h3>
+                            <p>Artificial intelligence is now at the heart of many booking systems. AI can suggest optimal times, predict busy periods, and even automate rescheduling, reducing no-shows and maximizing convenience for both businesses and customers.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>2. Seamless Multi-Channel Booking</h3>
+                            <p>In 2025, customers expect to book via website, mobile app, social media, or even voice assistants. The best systems sync bookings across all channels, so you never miss an opportunity or double-book a slot.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>3. Personalization & Smart Reminders</h3>
+                            <p>Modern booking platforms remember your preferences, offer personalized suggestions, and send smart reminders via SMS, email, or push notification. This keeps customers engaged and reduces last-minute cancellations.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>4. Instant Payments & Secure Checkout</h3>
+                            <p>Integrated payment gateways allow customers to pay instantly and securely at the time of booking. In 2025, expect more systems to support digital wallets, subscriptions, and one-click rebooking for loyal clients.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>5. User-Friendly Interfaces</h3>
+                            <p>Booking should be simple! The latest systems focus on clean design, clear steps, and mobile-first experiences. Look for platforms that let you book in under a minute, with minimal data entry and instant confirmation.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>6. Integration with Other Tools</h3>
+                            <p>Top booking systems now integrate with calendars, CRMs, marketing tools, and even smart home devices. This means less manual work and a smoother experience for both businesses and customers.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>7. Accessibility & Inclusivity</h3>
+                            <p>2025’s best booking platforms are designed for everyone, with accessibility features like screen reader support, language options, and easy navigation for all users.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>How to Use Booking Systems Easily</h3>
+                            <p>1. Choose a platform that fits your needs and is easy to use on your favorite device.<br>
+                            2. Save your preferences and payment info for faster future bookings.<br>
+                            3. Take advantage of reminders and notifications to stay on top of your schedule.<br>
+                            4. Don’t hesitate to contact support if you need help—modern systems offer live chat and quick assistance.<br>
+                            5. For businesses: keep your availability up to date and use analytics to optimize your schedule.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>Conclusion</h3>
+                            <p>Booking systems in 2025 are smarter, faster, and more user-friendly than ever. Whether you’re a customer or a business owner, embracing these trends will help you save time, reduce hassle, and enjoy a seamless scheduling experience.</p>
+                        </div>
+                    </div>
+                <!--  <div class="blog-tags">
+                        <div class="blog-tags-wrapper">
+                            <div class="blog-tags-title">
+                                <h6>Tags:</h6>
+                            </div>
+                            <div class="tags">
+                                <a href="#0" class="btn-1">Cleaner</a>
+                                <a href="#0" class="btn-1">Service</a>
+                                <a href="#0" class="btn-1">Paint</a>
+                            </div>
+                        </div>
+                        <div class="blog-share-wrapper">
+                            <h6>Share:</h6>
+                            <div class="social-media">
+                                <ul>
+                                    <li><a href="#0"><i class="fa-brands fa-facebook-f"></i></a></li>
+                                    <li><a href="#0"><i class="icon-twiter"></i></a></li>
+                                    <li><a href="#0"><i class="fa-brands fa-linkedin-in"></i></a></li>
+                                    <li><a href="#0"><i class="fa-brands fa-instagram"></i></a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="comments">
+                        <div class="comments-title">
+                            <h4>2 Comments</h4>
+                        </div>
+                        <div class="row">
+                            <div class="col-xl-9">
+                                <ul>
+                                    <li>
+                                        <div class="comment-wrapper">
+                                            <div class="comments-image">
+                                                <img src="assets/images/team/comments-1.png" alt="image">
+                                            </div>
+                                            <div class="comments-content">
+                                                <div class="comments-content-info">
+                                                    <div class="comments-content-info-inner">
+                                                        <h6>Silvana dapla</h6>
+                                                        <span class="comments-time">20 August, 2024</span>
+                                                    </div>
+                                                    <div class="reply">
+                                                        <a href="#0"class="btn-1">Reply</a>
+                                                    </div>
+                                                </div>
+                                                <p>Globally syndicate economically sound core competencies and cross-platform
+                                                    Interactively synthesize intuitive niches without global technology.</p>
+                                            </div>
+                                        </div>
+                                        <ul>
+                                            <li>
+                                                <div class="comment-wrapper">
+                                                    <div class="comments-image">
+                                                        <img src="assets/images/team/comments-2.png" alt="image">
+                                                    </div>
+                                                    <div class="comments-content">
+                                                        <div class="comments-content-info">
+                                                            <div class="comments-content-info-inner">
+                                                                <h6>Michael jordan</h6>
+                                                                <span class="comments-time">20 August, 2024</span>
+                                                            </div>
+                                                            <div class="reply">
+                                                                <a href="#0" class="btn-1">Reply</a>
+                                                            </div>
+                                                        </div>
+                                                        <p>Globally syndicate economically sound core competencies luctus Interactively synthesize intuitive niches technology.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="leave-comments">
+                        <h5>Write a Comment</h5>
+                        <div class="leave-comments-form">
+                            <div class="form">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="leave-comments-input">
+                                            <input type="text" name="name" class="cmn-input" placeholder="Enter Name">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="leave-comments-input">
+                                            <input type="email" name="email" class="cmn-input" placeholder="Enter Email">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-12">
+                                        <div class="leave-comments-input">
+                                            <input type="text" name="subject" class="cmn-input" placeholder="Subject">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-12">
+                                        <div class="textarea-box">
+                                            <textarea name="message" class="cmn-input" >Write Message</textarea>
+                                            <i class="fa-thin fa-pen-nib"></i>
+                                        </div>
+                                        <div class="checkbox-input">
+                                            <input type="checkbox" class="form-check-input">
+                                            <label>I agree with all the terms & conditions</label>
+                                        </div> 
+                                        <button type="submit" class="btn-1"> Post Commnet <i class="icon-arrow-1"></i></button>
+                                    </div> 
+                                </div>
+                            </div>
+                        </div>
+                    </div>-->  
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="blog-sidebar">
+                    
+    
+                    <div class="sidebar-content">
+                        <div class="recent-post">
+                            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                  <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">Popular</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                  <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Recent</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                  <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab" aria-controls="pills-contact" aria-selected="false">Trendy</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="pills-tabContent">
+                                <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" alt="Cleaning Trends 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_1' %}">Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_handyman_1.png' %}" alt="Handyman Trends 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_3' %}">Booking Systems in 2025: Trends, Simplicity, and Smarter Scheduling</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_handyman_1.png' %}" alt="Handyman Trends 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" alt="Cleaning Trends 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_1' %}">Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_3' %}">Booking Systems in 2025: Trends, Simplicity, and Smarter Scheduling</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="pills-contact" role="tabpanel" aria-labelledby="pills-contact-tab">
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_3' %}">Booking Systems in 2025: Trends, Simplicity, and Smarter Scheduling</a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" alt="Cleaning Trends 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_1' %}">Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_handyman_1.png' %}" alt="Handyman Trends 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- blog-details -->
+
+{% endblock %}

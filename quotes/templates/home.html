@@ -353,72 +353,70 @@
   <!-- featured -->
 
   <!-- blog -->
-  <!-- 
   <section class="blog">
     <div class="container">
       <div class="common-title-container">
         <div class="common-title mb-0">
           <img src="{% static '/assets/images/shape/title-shape-1.png' %}" alt="shape" />
           <h6>BLOGS</h6>
-          <h3>Popular Update</h3>
         </div>
-        <a href="blog.html" class="underline-link">Explore More <i class="fa-solid fa-arrow-up-right"></i></a>
+        <a href="{% url 'blog' %}" class="underline-link">Explore More <i class="fa-solid fa-arrow-up-right"></i></a>
       </div>
       <div class="row">
         <div class="col-lg-4 col-md-6">
           <div class="blog-single">
             <div class="blog-single-title">
-              <a href="{% url 'blog_detail' %}">Insight from the On-Demand Marketplace</a>
+              <a href="{% url 'blog_detail_1' %}">Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</a>
             </div>
             <div class="blog-single-info">
-              <p>Trips $ Tricks</p>
-              <span>Dec 24, 2024</span>
+              <p>Cleaning</p>
+              <span>March 10, 2025</span>
             </div>
             <div class="blog-single-image">
-              <img src="{% static '/assets/images/blog/blog-01.jpg' %}" alt="blog" />
+              <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" alt="Cleaning Trends 2025" />
             </div>
             <div class="blog-single-content">
-              <p>In today's fast-paced world, on-demand services have , offering convenience, efficiency, and flexibility. In this blog post ...</p>
+              <p>Discover how green cleaning, smart devices, and personalized services are transforming NYC homes in 2025. Stay ahead with the latest eco-friendly and tech-driven cleaning trends.</p>
             </div>
           </div>
         </div>
         <div class="col-lg-4 col-md-6">
           <div class="blog-single">
             <div class="blog-single-title">
-              <a href="{% url 'blog_detail' %}">Clean Beyond Expectations, Only with Servat.</a>
+              <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
             </div>
             <div class="blog-single-info">
-              <p>Business</p>
-              <span>Dec 24, 2024</span>
+              <p>Handyman</p>
+              <span>April 5, 2025</span>
             </div>
             <div class="blog-single-image">
-              <img src="{% static '/assets/images/blog/blog-02.jpg' %}" alt="blog" />
+              <img src="{% static 'assets/images/blog/blog_handyman_1.png' %}" alt="Handyman Trends 2025" />
             </div>
             <div class="blog-single-content">
-              <p>In today's fast-paced world, on-demand services have , offering convenience, efficiency, and flexibility. In this blog post ...</p>
+              <p>Explore the latest handyman trends in NYC, from smart home installations to eco-friendly repairs and on-demand emergency services. See what’s new for 2025!</p>
             </div>
           </div>
         </div>
         <div class="col-lg-4 col-md-6">
           <div class="blog-single">
             <div class="blog-single-title">
-              <a href="{% url 'blog_detail' %}">Get Face Glowing Service At Low Price.</a>
+              <a href="{% url 'blog_detail_3' %}">Booking Systems in 2025: Trends, Simplicity, and Smarter Scheduling</a>
             </div>
             <div class="blog-single-info">
-              <p>Free & Fresh</p>
-              <span>Dec 24, 2024</span>
+              <p>Booking</p>
+              <span>May 20, 2025</span>
             </div>
             <div class="blog-single-image">
-              <img src="{% static '/assets/images/blog/blog-03.jpg' %}" alt="blog" />
+              <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025" />
             </div>
             <div class="blog-single-content">
-              <p>In today's fast-paced world, on-demand services have , offering convenience, efficiency, and flexibility. In this blog post ...</p>
+              <p>Explore how AI, multi-channel booking, and user-friendly design are making booking systems easier and smarter in 2025. Learn how to get the most out of modern scheduling platforms.</p>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </section --
+  </section>
 
   <!-- blog -->
 

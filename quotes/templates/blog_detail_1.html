@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- common banner -->
+<section class="common-banner" style="position: relative;">
+    <div class="bg-layer" style="background-image: url({% static 'assets/images/background/common-banner-bg.jpg' %});"></div>
+    <div class="common-banner-content">
+        <h3>Blog Detail</h3>
+        <div class="breadcrumb">
+            <ul>
+              <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+              <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Blog Detail</li>
+            </ul>
+        </div>
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
+        {% endif %}
+    </div>
+  </section>
+  <!-- common banner -->
+
+<!-- blog-details -->
+<section class="blog-details">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="blog-details-wrapper">
+                    <div class="meta-pill">
+                        <span>Cleaning • NYC Trends 2025</span>
+                    </div>
+                    <div class="blog-details-top-title">
+                        <h3>Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</h3>
+                    </div>
+                    <div class="blog-meta-list">
+                        <ul>
+                            <li><i class="fa-light fa-clock"></i> March, 10 2025</li>
+                            <li><div class="border"></div></li>
+                            <li><i class="fa-light fa-user"></i> By CleanHandy Team</li>
+                            <li><div class="border"></div></li>
+                            <li><i class="fa-light fa-eye"></i> 7 Min Read</li>
+                        </ul>
+                    </div>
+                    <div class="blog-thumbnail">
+                        <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" style="width: 100%; height: auto;" alt="image">
+                    </div>
+                    <div class="blog-post-wrapper"">
+                        <div class="blog-post-title">
+                            <p>New York City is always ahead of the curve, and 2025 is no exception when it comes to home cleaning. From eco-friendly solutions to smart technology, here are the top cleaning trends every NYC resident should watch for this year.</p>
+                        </div>
+                    </div>
+                    <div class="blog-post-wrapper">
+                        <div class="blog-post-title">
+                            <h3>1. Green Cleaning Goes Mainstream</h3>
+                            <p>Eco-conscious cleaning is no longer a niche. In 2025, more NYC homeowners are demanding non-toxic, biodegradable products and services that minimize environmental impact. Local cleaning companies are responding with plant-based solutions and reusable supplies, making green cleaning the new standard.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>2. Smart Cleaning Devices</h3>
+                            <p>Robotic vacuums and AI-powered mops are now a staple in many Manhattan apartments. The latest models can map your home, avoid obstacles, and even self-empty. Expect to see more integration with smart home systems, allowing you to schedule and monitor cleaning from your phone.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>3. Subscription-Based Cleaning Services</h3>
+                            <p>Busy New Yorkers are embracing subscription cleaning plans for regular, hassle-free service. These plans offer flexibility, discounts, and the peace of mind that your home will always be guest-ready. In 2025, expect more companies to offer tiered packages and on-demand add-ons.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>4. Deep Cleaning for Health</h3>
+                            <p>With continued focus on health and wellness, deep cleaning and disinfection remain a top priority. Services now include advanced air purification, allergen removal, and UV sanitization—especially important for families and pet owners in NYC’s dense environment.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>5. Personalized Cleaning Experiences</h3>
+                            <p>NYC cleaning companies are leveraging data and customer feedback to tailor services. Whether it’s focusing on high-traffic areas, using your preferred scents, or accommodating special requests, personalization is key to customer satisfaction in 2025.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>6. Sustainable Laundry and Textile Care</h3>
+                            <p>More New Yorkers are seeking eco-friendly laundry services that use less water, energy, and harsh chemicals. Expect to see a rise in pick-up/drop-off laundry services that prioritize sustainability and garment longevity.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>7. Community-Driven Cleaning Initiatives</h3>
+                            <p>Neighborhood clean-up events and community-driven cleaning projects are gaining traction. These initiatives not only beautify shared spaces but also foster a sense of pride and connection among NYC residents.</p>
+                        </div>
+                        <div class="blog-post-title">
+                            <h3>Conclusion</h3>
+                            <p>2025 is shaping up to be a transformative year for cleaning in New York City. Whether you’re a homeowner, renter, or business, embracing these trends will help you maintain a cleaner, healthier, and more sustainable space. Stay ahead by choosing services and products that align with the latest innovations and your personal values.</p>
+                        </div>
+                    </div>
+                <!--  <div class="blog-tags">
+                        <div class="blog-tags-wrapper">
+                            <div class="blog-tags-title">
+                                <h6>Tags:</h6>
+                            </div>
+                            <div class="tags">
+                                <a href="#0" class="btn-1">Cleaner</a>
+                                <a href="#0" class="btn-1">Service</a>
+                                <a href="#0" class="btn-1">Paint</a>
+                            </div>
+                        </div>
+                        <div class="blog-share-wrapper">
+                            <h6>Share:</h6>
+                            <div class="social-media">
+                                <ul>
+                                    <li><a href="#0"><i class="fa-brands fa-facebook-f"></i></a></li>
+                                    <li><a href="#0"><i class="icon-twiter"></i></a></li>
+                                    <li><a href="#0"><i class="fa-brands fa-linkedin-in"></i></a></li>
+                                    <li><a href="#0"><i class="fa-brands fa-instagram"></i></a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="comments">
+                        <div class="comments-title">
+                            <h4>2 Comments</h4>
+                        </div>
+                        <div class="row">
+                            <div class="col-xl-9">
+                                <ul>
+                                    <li>
+                                        <div class="comment-wrapper">
+                                            <div class="comments-image">
+                                                <img src="assets/images/team/comments-1.png" alt="image">
+                                            </div>
+                                            <div class="comments-content">
+                                                <div class="comments-content-info">
+                                                    <div class="comments-content-info-inner">
+                                                        <h6>Silvana dapla</h6>
+                                                        <span class="comments-time">20 August, 2024</span>
+                                                    </div>
+                                                    <div class="reply">
+                                                        <a href="#0"class="btn-1">Reply</a>
+                                                    </div>
+                                                </div>
+                                                <p>Globally syndicate economically sound core competencies and cross-platform
+                                                    Interactively synthesize intuitive niches without global technology.</p>
+                                            </div>
+                                        </div>
+                                        <ul>
+                                            <li>
+                                                <div class="comment-wrapper">
+                                                    <div class="comments-image">
+                                                        <img src="assets/images/team/comments-2.png" alt="image">
+                                                    </div>
+                                                    <div class="comments-content">
+                                                        <div class="comments-content-info">
+                                                            <div class="comments-content-info-inner">
+                                                                <h6>Michael jordan</h6>
+                                                                <span class="comments-time">20 August, 2024</span>
+                                                            </div>
+                                                            <div class="reply">
+                                                                <a href="#0" class="btn-1">Reply</a>
+                                                            </div>
+                                                        </div>
+                                                        <p>Globally syndicate economically sound core competencies luctus Interactively synthesize intuitive niches technology.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="leave-comments">
+                        <h5>Write a Comment</h5>
+                        <div class="leave-comments-form">
+                            <div class="form">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="leave-comments-input">
+                                            <input type="text" name="name" class="cmn-input" placeholder="Enter Name">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="leave-comments-input">
+                                            <input type="email" name="email" class="cmn-input" placeholder="Enter Email">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-12">
+                                        <div class="leave-comments-input">
+                                            <input type="text" name="subject" class="cmn-input" placeholder="Subject">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-12">
+                                        <div class="textarea-box">
+                                            <textarea name="message" class="cmn-input" >Write Message</textarea>
+                                            <i class="fa-thin fa-pen-nib"></i>
+                                        </div>
+                                        <div class="checkbox-input">
+                                            <input type="checkbox" class="form-check-input">
+                                            <label>I agree with all the terms & conditions</label>
+                                        </div> 
+                                        <button type="submit" class="btn-1"> Post Commnet <i class="icon-arrow-1"></i></button>
+                                    </div> 
+                                </div>
+                            </div>
+                        </div>
+                    </div>-->  
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="blog-sidebar">
+                    
+    
+                    <div class="sidebar-content">
+                        <div class="recent-post">
+                            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                  <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">Popular</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                  <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Recent</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                  <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab" aria-controls="pills-contact" aria-selected="false">Trendy</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="pills-tabContent">
+                                <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" alt="Cleaning Trends 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_1' %}">Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_handyman_1.png' %}" alt="Handyman Trends 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_3' %}">Booking Systems in 2025: Trends, Simplicity, and Smarter Scheduling</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_handyman_1.png' %}" alt="Handyman Trends 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" alt="Cleaning Trends 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_1' %}">Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_3' %}">Booking Systems in 2025: Trends, Simplicity, and Smarter Scheduling</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="pills-contact" role="tabpanel" aria-labelledby="pills-contact-tab">
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_3' %}">Booking Systems in 2025: Trends, Simplicity, and Smarter Scheduling</a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" alt="Cleaning Trends 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_1' %}">Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/blog_handyman_1.png' %}" alt="Handyman Trends 2025">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- blog-details -->
+
+{% endblock %}
