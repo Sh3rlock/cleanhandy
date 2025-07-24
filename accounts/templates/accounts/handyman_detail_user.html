@@ -162,30 +162,39 @@
   <div class="card h-100 shadow-sm mt-3">
     <div class="card-body">
       <h5 class="mb-3">📝 Leave a Review</h5>
+      {% if review_submitted %}
+        <div class="alert alert-success">Thank you for your review!</div>
+      {% endif %}
       <form method="post" action="">
         {% csrf_token %}
-        <!-- Rating -->
+        {{ review_form.non_field_errors }}
         <div class="mb-3">
-          <label for="rating" class="form-label"><strong>Rating (1-5)</strong></label>
-          <select id="rating" name="rating" class="form-select" required>
-            <option value="" selected disabled>Select rating</option>
-            <option value="1">1 - Very Poor</option>
-            <option value="2">2 - Poor</option>
-            <option value="3">3 - Average</option>
-            <option value="4">4 - Good</option>
-            <option value="5">5 - Excellent</option>
-          </select>
+          <label for="id_rating" class="form-label"><strong>Rating (1-5)</strong></label>
+          {{ review_form.rating }}
+          {% for error in review_form.rating.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
         </div>
-        <!-- Review Text -->
         <div class="mb-3">
-          <label for="review" class="form-label"><strong>Your Review</strong></label>
-          <textarea id="review" name="review" class="form-control" rows="4" required></textarea>
+          <label for="id_review" class="form-label"><strong>Your Review</strong></label>
+          {{ review_form.review }}
+          {% for error in review_form.review.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
         </div>
-        <!-- Submit Button -->
         <div class="d-grid">
           <button type="submit" class="btn btn-primary">Submit Review</button>
         </div>
       </form>
+      {% if reviews %}
+        <hr />
+        <h6 class="mt-4">Previous Reviews</h6>
+        <ul class="list-group mt-2">
+          {% for r in reviews %}
+            <li class="list-group-item">
+              <strong>Rating:</strong> {{ r.rating }}<br />
+              <strong>Review:</strong> {{ r.review|linebreaksbr }}<br />
+              <small class="text-muted">{{ r.created_at|date:"M d, Y H:i" }}</small>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
     </div>
   </div>
 </div>

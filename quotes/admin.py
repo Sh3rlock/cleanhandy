@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Quote, Service, CleaningExtra, HomeType, SquareFeetOption,NewsletterSubscriber, Booking
+from .models import Quote, Service, CleaningExtra, HomeType, SquareFeetOption,NewsletterSubscriber, Booking, Contact
 
 admin.site.register(Service)
 admin.site.register(CleaningExtra)
@@ -62,4 +62,6 @@ class BookingAdmin(admin.ModelAdmin):
             return format_html('<iframe src="{}" width="100%" height="500px"></iframe>', obj.pdf_file.url)
         return "No PDF available"
     pdf_preview.short_description = "PDF Preview"
+
+    admin.site.register(Contact)
 

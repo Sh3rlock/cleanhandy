@@ -1,5 +1,5 @@
 from django import forms
-from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber, Booking
+from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber, Booking, Contact, Review
 from datetime import time, datetime, timedelta
 from django.core.exceptions import ValidationError
 from giftcards.models import GiftCard, DiscountCode
@@ -384,6 +384,28 @@ class HandymanBookingForm(forms.ModelForm):
             t += timedelta(minutes=30)
 
         self.fields["hour"].choices = time_slots
+
+
+class ContactForm(forms.ModelForm):
+    class Meta:
+        model = Contact
+        fields = ["name", "email", "subject", "message"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Enter Name"}),
+            "email": forms.EmailInput(attrs={"class": "cmn-input", "placeholder": "Your Email"}),
+            "subject": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Subject"}),
+            "message": forms.Textarea(attrs={"class": "cmn-input", "placeholder": "Write your message", "rows": 4}),
+        }
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ["rating", "review"]
+        widgets = {
+            "rating": forms.Select(attrs={"class": "cmn-input", "required": True}),
+            "review": forms.Textarea(attrs={"class": "cmn-input", "rows": 4, "required": True}),
+        }
 
 
 

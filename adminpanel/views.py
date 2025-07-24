@@ -811,12 +811,33 @@ def quote_approval_view(request, quote_id, token):
     if quote.status != "accepted":
         quote.status = "accepted"
         quote.save(update_fields=["status"])
-    
+
+    # Prepare email content
+    subject = f"Quote Approved: #{quote.id} for {quote.name}"
+    message = (
+        f"The quote #{quote.id} for {quote.name} was approved.\n"
+        f"Service: {quote.service_cat.name}\n"
+        f"Date: {quote.date}\n"
+        f"Time: {quote.hour}\n"
+        f"Duration: {quote.hours_requested} hour(s)\n"
+        f"Price: {quote.price}\n"
+        f"Address: {quote.address}"
+        f"{', Apt ' + quote.apartment if quote.apartment else ''}\n"
+        f"ZIP: {quote.zip_code}\n"
+        f"Status: {quote.status}\n"
+        f"Email: {quote.email}\n"
+        f"Phone: {quote.phone}\n"
+        f"Job Description: {quote.job_description}"
+    )
+    from_email = "noreply@cleanhandy.com"
+    recipients = [quote.email, "matyass91@gmail.com"]
+
     send_mail(
-        subject="Quote Approved by Customer",
-        message=f"The quote #{quote.id} for {quote.name} was approved.\nService: {quote.service_cat.name}\nDate: {quote.date}\nPrice: {quote.price}",
-        from_email="noreply@cleanhandy.com",
-        recipient_list=["admin@email.com"]
+        subject=subject,
+        message=message,
+        from_email=from_email,
+        recipient_list=recipients,
+        fail_silently=False,
     )
 
     return render(request, "quotes/quote_approved.html", {"quote": quote})

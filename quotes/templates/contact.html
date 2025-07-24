@@ -2,6 +2,13 @@
 {% load static %}
 {% block content %}
 
+<style>
+    .text-danger {
+        margin-top:-20px;
+        margin-bottom: 20px;
+    }
+</style>
+
 <!-- common banner -->
 <section class="common-banner" style="position: relative;">
     <div class="bg-layer" style="background: url({% static '/assets/images/background/common-banner-bg.jpg' %});"></div>
@@ -87,8 +94,8 @@
         <div class="row">
             <div class="col-lg-6">
                 <div class="contact-left-container">
-                    <div class="contact-image">
-                        <img src="{% static 'assets/images/resource/contact-image.jpg' %}" alt="image">
+                    <div class="contact-image" style="width: 100%; height: auto !important;">
+                        <img src="{% static 'assets/images/resource/contactus.png' %}" alt="image">
                     </div>
                     <div class="contact-shape">
                         <img src="{% static 'assets/images/shape/shape-3.png' %}" alt="image">
@@ -100,26 +107,34 @@
             <div class="col-lg-6">
                 <div class="contact-form">
                     <h3>Sent A Message</h3>
-                    <form>
+                    {% if success %}
+                      <div class="alert alert-success">Thank you for your message! We will get back to you soon.</div>
+                    {% endif %}
+                    <form method="post" novalidate>
+                        {% csrf_token %}
                         <div class="row">
                             <div class="col-lg-6">
-                                <input type="text" class="cmn-input" name="name" placeholder="Enter Name">
+                                {{ form.name }}
+                                {% for error in form.name.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
                             </div>
                             <div class="col-lg-6">
-                                <input type="email" class="cmn-input" name="email" placeholder="Your Email">
+                                {{ form.email }}
+                                {% for error in form.email.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-lg-12">
-                                <input type="text" class="cmn-input" name="subject" placeholder="subject">
+                                {{ form.subject }}
+                                {% for error in form.subject.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-lg-12">
-                                <textarea class="cmn-input" name="massage">Write your message</textarea>
+                                {{ form.message }}
+                                {% for error in form.message.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
                                 <div class="checkbox-input">
-                                    <input type="checkbox" class="form-check-input">
-                                    <label>I agree with all the terms & conditions</label>
+                                    <input type="checkbox" class="form-check-input" id="agree_terms" name="agree_terms" required>
+                                    <label for="agree_terms">I agree with all the <a href="{% url 'terms' %}" target="_blank" class="text-blue-500 underline">terms & conditions</a></label>
                                 </div>
                                 <button type="submit" class="btn-1">Submit Now <i class="icon-arrow-1"></i></button>
                             </div>
@@ -140,5 +155,15 @@
     </div>
 </section>
 <!-- contact map -->
+
+<script>
+    document.querySelector("form").addEventListener("submit", function(e) {
+      if (!document.getElementById("agree_terms").checked) {
+        alert("You must agree to the terms and conditions before submitting.");
+        e.preventDefault();
+      }
+    });
+  </script>
+  
 
 {% endblock %}

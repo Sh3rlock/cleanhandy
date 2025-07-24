@@ -11,13 +11,14 @@
 </head>
 <body>
   <div class="container">
-    <h2>Hello {{ customer.name }},</h2>
+    <h2>Hello {{ quote.name }},</h2>
     <p>Thank you for your quote request. Here are your details:</p>
 
     <div class="quote-box">
       <p><span class="label">Service:</span> {{ quote.service.name }}</p>
       <p><span class="label">Date:</span> {{ quote.date|date:"F d, Y" }}</p>
-      <p><span class="label">Time Slot:</span> {{ time_slot }}</p>
+      <p><span class="label">Start Time:</span> {{ quote.hour|time:"H:i" }}</p>
+      <p><span class="label">Duration:</span> {{ quote.hours_requested }} hour(s)</p>
       <p><span class="label">ZIP Code:</span> {{ quote.zip_code }}</p>
       <p><span class="label">Description:</span><br>{{ quote.job_description|linebreaks }}</p>
       <p><span class="label">Price:</span> 

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber, Booking
 from customers.models import Customer  # Import Customer from the correct app
-from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm, CleaningBookingForm, HandymanBookingForm
+from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm, CleaningBookingForm, HandymanBookingForm, ContactForm
 from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 from .utils import get_available_hours_for_date, send_quote_email_cleaning
@@ -43,8 +43,30 @@ def about(request):
         "services": services,
     })
 
-def contact(request): 
-    return render(request, "contact.html")
+def contact(request):
+    from .forms import ContactForm
+    from .models import Contact
+    from django.core.mail import send_mail
+    success = False
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            contact = form.save()
+            # Send email notification
+            subject = f"New Contact Message: {contact.subject}"
+            message = f"Name: {contact.name}\nEmail: {contact.email}\nSubject: {contact.subject}\n\nMessage:\n{contact.message}"
+            send_mail(
+                subject,
+                message,
+                "noreply@cleanhandy.com",
+                ["matyass91@gmail.com"],
+                fail_silently=False,
+            )
+            success = True
+            form = ContactForm()  # Reset form after success
+    else:
+        form = ContactForm()
+    return render(request, "contact.html", {"form": form, "success": success})
 
 def blog(request):
     return render(request, "blog.html")

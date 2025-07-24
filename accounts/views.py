@@ -4,9 +4,9 @@ from django.contrib.auth import login
 from .forms import CustomUserRegistrationForm
 from django.contrib.auth.decorators import login_required
 from .forms import UserForm, CustomerProfileForm
-from quotes.forms import CleaningBookingForm, HandymanBookingForm
+from quotes.forms import CleaningBookingForm, HandymanBookingForm, ReviewForm
 from .models import CustomerProfile, CustomerAddress
-from quotes.models import ServiceCategory, CleaningExtra, Service, Booking
+from quotes.models import ServiceCategory, CleaningExtra, Service, Booking, Review
 from django.contrib import messages
 import json
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
@@ -212,6 +212,18 @@ def booking_detail(request, booking_id):
     if booking.email != request.user.email:
         return HttpResponseForbidden("You are not allowed to view this booking.")
 
+    # Handle review form submission
+    review_form = ReviewForm()
+    review_submitted = False
+    if request.method == "POST":
+        review_form = ReviewForm(request.POST)
+        if review_form.is_valid():
+            review = review_form.save(commit=False)
+            review.booking = booking
+            review.save()
+            review_submitted = True
+            review_form = ReviewForm()  # Reset form after submission
+
     # Determine template based on service category
     service_cat_name = booking.service_cat.name.lower() if booking.service_cat else ''
 
@@ -220,9 +232,14 @@ def booking_detail(request, booking_id):
     else:
         template_name = 'accounts/handyman_detail_user.html'
 
+    reviews = booking.reviews.all().order_by('-created_at')
+
     return render(request, template_name, {
         'booking': booking,
         'service_cat': booking.service_cat,
+        'review_form': review_form,
+        'review_submitted': review_submitted,
+        'reviews': reviews,
     })
 
 
