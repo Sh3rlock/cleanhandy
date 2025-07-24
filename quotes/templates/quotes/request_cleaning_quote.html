@@ -430,113 +430,105 @@ select::-ms-expand {
 
           <div class="blog-sidebar">
             <div class="sidebar-content" style="margin-top: 3rem; box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.05);">
+              
               <div class="recent-post">
                 <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">Popular</button>
-                  </li>
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Recent</button>
-                  </li>
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab" aria-controls="pills-contact" aria-selected="false">Trendy</button>
-                  </li>
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">Popular</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Recent</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                      <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab" aria-controls="pills-contact" aria-selected="false">Trendy</button>
+                    </li>
                 </ul>
-
                 <div class="tab-content" id="pills-tabContent">
-                  <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
-                    <div class="recent-post-list">
-                      <div class="recent-post-image">
-                        <img src="{% static 'assets/images/blog/recent-post-1.png' %}" alt="image" />
-                      </div>
-                      <div class="recent-post-info">
-                        <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
-                        <a href="#0">Clean and well-maintained spaces provide...</a>
-                      </div>
+                    <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
+                        <div class="recent-post-list">
+                            <div class="recent-post-image">
+                                <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" alt="Cleaning Trends 2025">
+                            </div>
+                            <div class="recent-post-info">
+                                <a href="{% url 'blog_detail_1' %}">Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</a>
+                            </div>
+                        </div>
+                        <div class="recent-post-list">
+                            <div class="recent-post-image">
+                                <img src="{% static 'assets/images/blog/blog_handyman_1.png' %}" alt="Handyman Trends 2025">
+                            </div>
+                            <div class="recent-post-info">
+                                <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
+                            </div>
+                        </div>
+                        <div class="recent-post-list">
+                            <div class="recent-post-image">
+                                <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025">
+                            </div>
+                            <div class="recent-post-info">
+                                <a href="{% url 'blog_detail_3' %}">Booking Systems in 2025: Trends, Simplicity, and Smarter Scheduling</a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="recent-post-list">
-                      <div class="recent-post-image">
-                        <img src="{% static 'assets/images/blog/recent-post-2.png' %}" alt="image" />
-                      </div>
-                      <div class="recent-post-info">
-                        <span><i class="fa-light fa-clock"></i> Oct 22, 2024</span>
-                        <a href="#0">Creative plan to build better world for upcoming..</a>
-                      </div>
+                    <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
+                        <div class="recent-post-list">
+                            <div class="recent-post-image">
+                                <img src="{% static 'assets/images/blog/blog_handyman_1.png' %}" alt="Handyman Trends 2025">
+                            </div>
+                            <div class="recent-post-info">
+                                <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
+                            </div>
+                        </div>
+                        <div class="recent-post-list">
+                            <div class="recent-post-image">
+                                <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" alt="Cleaning Trends 2025">
+                            </div>
+                            <div class="recent-post-info">
+                                <a href="{% url 'blog_detail_1' %}">Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</a>
+                            </div>
+                        </div>
+                        <div class="recent-post-list">
+                            <div class="recent-post-image">
+                                <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025">
+                            </div>
+                            <div class="recent-post-info">
+                                <a href="{% url 'blog_detail_3' %}">Booking Systems in 2025: Trends, Simplicity, and Smarter Scheduling</a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="recent-post-list">
-                      <div class="recent-post-image">
-                        <img src="{% static 'assets/images/blog/recent-post-3.png' %}" alt="image" />
-                      </div>
-                      <div class="recent-post-info">
-                        <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
-                        <a href="#0">Explain to the public what you do want to create...</a>
-                      </div>
+                    <div class="tab-pane fade" id="pills-contact" role="tabpanel" aria-labelledby="pills-contact-tab">
+                        <div class="recent-post-list">
+                            <div class="recent-post-image">
+                                <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025">
+                            </div>
+                            <div class="recent-post-info">
+                                <a href="{% url 'blog_detail_3' %}">Booking Systems in 2025: Trends, Simplicity, and Smarter Scheduling</a>
+                            </div>
+                        </div>
+                        <div class="recent-post-list">
+                            <div class="recent-post-image">
+                                <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" alt="Cleaning Trends 2025">
+                            </div>
+                            <div class="recent-post-info">
+                                <a href="{% url 'blog_detail_1' %}">Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</a>
+                            </div>
+                        </div>
+                        <div class="recent-post-list">
+                            <div class="recent-post-image">
+                                <img src="{% static 'assets/images/blog/blog_handyman_1.png' %}" alt="Handyman Trends 2025">
+                            </div>
+                            <div class="recent-post-info">
+                                <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
+                            </div>
+                        </div>
                     </div>
-                  </div>
-
-                  <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
-                    <div class="recent-post-list">
-                      <div class="recent-post-image">
-                        <img src="{% static 'assets/images/blog/recent-post-2.png' %}" alt="image" />
-                      </div>
-                      <div class="recent-post-info">
-                        <span><i class="fa-light fa-clock"></i> Oct 22, 2024</span>
-                        <a href="#0">Creative plan to build better world for upcoming..</a>
-                      </div>
-                    </div>
-                    <div class="recent-post-list">
-                      <div class="recent-post-image">
-                        <img src="{% static 'assets/images/blog/recent-post-1.png' %}" alt="image" />
-                      </div>
-                      <div class="recent-post-info">
-                        <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
-                        <a href="#0">Clean and well-maintained spaces provide...</a>
-                      </div>
-                    </div>
-                    <div class="recent-post-list">
-                      <div class="recent-post-image">
-                        <img src="{% static 'assets/images/blog/recent-post-3.png' %}" alt="image" />
-                      </div>
-                      <div class="recent-post-info">
-                        <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
-                        <a href="#0">Explain to the public what you do want to create...</a>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="tab-pane fade" id="pills-contact" role="tabpanel" aria-labelledby="pills-contact-tab">
-                    <div class="recent-post-list">
-                      <div class="recent-post-image">
-                        <img src="{% static 'assets/images/blog/recent-post-3.png' %}" alt="image" />
-                      </div>
-                      <div class="recent-post-info">
-                        <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
-                        <a href="#0">Explain to the public what you do want to create...</a>
-                      </div>
-                    </div>
-                    <div class="recent-post-list">
-                      <div class="recent-post-image">
-                        <img src="{% static 'assets/images/blog/recent-post-1.png' %}" alt="image" />
-                      </div>
-                      <div class="recent-post-info">
-                        <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
-                        <a href="#0">Clean and well-maintained spaces provide...</a>
-                      </div>
-                    </div>
-                    <div class="recent-post-list">
-                      <div class="recent-post-image">
-                        <img src="{% static 'assets/images/blog/recent-post-2.png' %}" alt="image" />
-                      </div>
-                      <div class="recent-post-info">
-                        <span><i class="fa-light fa-clock"></i> Oct 22, 2024</span>
-                        <a href="#0">Creative plan to build better world for upcoming..</a>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              </div>
+            </div>
+
             </div>
           </div>
+
+
         </div>
       </div> <!-- ✅ this closes .row -->
     </div> <!-- ✅ this closes .container -->
