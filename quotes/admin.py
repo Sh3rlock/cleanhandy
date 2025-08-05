@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Quote, Service, CleaningExtra, HomeType, SquareFeetOption,NewsletterSubscriber, Booking, Contact
+from .models import Quote, Service, CleaningExtra, HomeType, SquareFeetOption,NewsletterSubscriber, Booking, Contact, ContactInfo, AboutContent
 
 admin.site.register(Service)
 admin.site.register(CleaningExtra)
@@ -63,5 +63,41 @@ class BookingAdmin(admin.ModelAdmin):
         return "No PDF available"
     pdf_preview.short_description = "PDF Preview"
 
-    admin.site.register(Contact)
+@admin.register(ContactInfo)
+class ContactInfoAdmin(admin.ModelAdmin):
+    list_display = ['email', 'phone', 'is_active', 'created_at', 'updated_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['email', 'phone', 'address']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    def has_add_permission(self, request):
+        # Only allow one active contact info record
+        if ContactInfo.objects.filter(is_active=True).exists():
+            return False
+        return super().has_add_permission(request)
+    
+    def save_model(self, request, obj, form, change):
+        if obj.is_active:
+            # Deactivate all other records when making this one active
+            ContactInfo.objects.exclude(pk=obj.pk).update(is_active=False)
+        super().save_model(request, obj, form, change)
+
+@admin.register(AboutContent)
+class AboutContentAdmin(admin.ModelAdmin):
+    list_display = ['title', 'subtitle', 'is_active', 'created_at', 'updated_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['title', 'subtitle', 'content']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    def has_add_permission(self, request):
+        # Only allow one active about content record
+        if AboutContent.objects.filter(is_active=True).exists():
+            return False
+        return super().has_add_permission(request)
+    
+    def save_model(self, request, obj, form, change):
+        if obj.is_active:
+            # Deactivate all other records when making this one active
+            AboutContent.objects.exclude(pk=obj.pk).update(is_active=False)
+        super().save_model(request, obj, form, change)
 

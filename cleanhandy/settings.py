@@ -87,7 +87,7 @@ ROOT_URLCONF = 'cleanhandy.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'quotes' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -96,8 +96,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'quotes.context_processors.all_services',
-                'quotes.context_processors.newsletter_form',
-                'quotes.context_processors.cleaning_service_category',
+                'quotes.context_processors.contact_info',
+                'quotes.context_processors.about_content',
             ],
         },
     },

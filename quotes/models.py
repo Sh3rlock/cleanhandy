@@ -341,3 +341,51 @@ class Review(models.Model):
 
 
 
+
+class ContactInfo(models.Model):
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    address = models.TextField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Contact Information"
+        verbose_name_plural = "Contact Information"
+
+    def __str__(self):
+        return f"Contact Info - {self.email}"
+
+    @classmethod
+    def get_active(cls):
+        """Get the active contact information"""
+        return cls.objects.filter(is_active=True).first()
+
+
+
+
+
+class AboutContent(models.Model):
+    title = models.CharField(max_length=200)
+    subtitle = models.CharField(max_length=200)
+    content = models.TextField(help_text="HTML content for the about page")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "About Content"
+        verbose_name_plural = "About Content"
+
+    def __str__(self):
+        return f"About Content - {self.title}"
+
+    @classmethod
+    def get_active(cls):
+        """Get the active about content"""
+        return cls.objects.filter(is_active=True).first()
+
+
+
+

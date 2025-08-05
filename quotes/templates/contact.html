@@ -45,7 +45,11 @@
                     </div>
                     <div class="contact-details-info">
                         <h6>Send Email</h6>
-                        <a href="mailto:info@thecleanhandy.com">info@thecleanhandy.com</a>
+                        {% if contact_info %}
+                            <a href="mailto:{{ contact_info.email }}">{{ contact_info.email }}</a>
+                        {% else %}
+                            <a href="mailto:info@thecleanhandy.com">info@thecleanhandy.com</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -56,7 +60,11 @@
                     </div>
                     <div class="contact-details-info">
                         <h6>Call Us Now</h6>
-                        <a href="tel:+880123(4567)890">+1 516 619 3065</a>
+                        {% if contact_info %}
+                            <a href="tel:{{ contact_info.phone }}">{{ contact_info.phone }}</a>
+                        {% else %}
+                            <a href="tel:+880123(4567)890">+1 516 619 3065</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -67,7 +75,11 @@
                     </div>
                     <div class="contact-details-info">
                         <h6>Location</h6>
-                        <a href="#0">31-85 Crescent StAstoria, NY 11106</a>
+                        {% if contact_info %}
+                            <a href="#0">{{ contact_info.address }}</a>
+                        {% else %}
+                            <a href="#0">31-85 Crescent StAstoria, NY 11106</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>

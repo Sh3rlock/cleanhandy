@@ -67,27 +67,31 @@
                 <div class="rewards-left-container">
                     <div class="rewards-left-container-inner">
                         <div class="common-title mb_30">
-                            <h6><i class="fa-solid fa-angles-right"></i> ABOUT COMPANY</h6>
+                            {% if about_content %}
+                                <h6><i class="fa-solid fa-angles-right"></i> {{ about_content.subtitle }}</h6>
+                                <h3><strong>{{ about_content.title }}</strong></h3>
+                                {{ about_content.content|safe }}
+                            {% else %}
+                                <h6><i class="fa-solid fa-angles-right"></i> ABOUT COMPANY</h6>
+                                <h3><strong>About Us</strong></h3>
+                                <p><strong>The CleanHandy</strong> was founded in 2025 with a clear mission: to make everyday life easier through dependable, professional, and high-quality cleaning and handyman services. Although the brand is young, our team brings over a decade of hands-on industry experience to every job we take on.</p>
 
-                            <h3><strong>About Us</strong></h3>
+                                <p>We pride ourselves on combining modern tools and eco-friendly products with a passion for precision and reliability. Whether you need help transforming your space, maintaining it, or preparing it for something new — CleanHandy is the name you can trust.</p>
 
-                            <p><strong>The CleanHandy</strong> was founded in 2025 with a clear mission: to make everyday life easier through dependable, professional, and high-quality cleaning and handyman services. Although the brand is young, our team brings over a decade of hands-on industry experience to every job we take on.</p>
+                                <p><strong>Why choose CleanHandy?</strong></p>
+                                <div class="rewards-left-list">
+                                <ul>
+                                    <li><i class="fa-sharp fa-light fa-circle-check"></i> Founded in 2025 with a professional team behind it</li>
+                                    <li><i class="fa-sharp fa-light fa-circle-check"></i> Over 12 years of combined industry experience</li>
+                                    <li><i class="fa-sharp fa-light fa-circle-check"></i> Fully insured, trained, and background-checked professionals</li>
+                                    <li><i class="fa-sharp fa-light fa-circle-check"></i> Safe, sustainable, and effective cleaning solutions</li>
+                                    <li><i class="fa-sharp fa-light fa-circle-check"></i> Honest pricing and customizable service plans</li>
+                                    <li><i class="fa-sharp fa-light fa-circle-check"></i> Responsive support and 100% satisfaction guarantee</li>
+                                </ul>
+                                </div>
 
-                            <p>We pride ourselves on combining modern tools and eco-friendly products with a passion for precision and reliability. Whether you need help transforming your space, maintaining it, or preparing it for something new — CleanHandy is the name you can trust.</p>
-
-                            <p><strong>Why choose CleanHandy?</strong></p>
-                            <div class="rewards-left-list">
-                            <ul>
-                                <li><i class="fa-sharp fa-light fa-circle-check"></i> Founded in 2025 with a professional team behind it</li>
-                                <li><i class="fa-sharp fa-light fa-circle-check"></i> Over 12 years of combined industry experience</li>
-                                <li><i class="fa-sharp fa-light fa-circle-check"></i> Fully insured, trained, and background-checked professionals</li>
-                                <li><i class="fa-sharp fa-light fa-circle-check"></i> Safe, sustainable, and effective cleaning solutions</li>
-                                <li><i class="fa-sharp fa-light fa-circle-check"></i> Honest pricing and customizable service plans</li>
-                                <li><i class="fa-sharp fa-light fa-circle-check"></i> Responsive support and 100% satisfaction guarantee</li>
-                            </ul>
-                            </div>
-
-                            <p>Whether you're managing a home, a rental property, or a business, our skilled technicians are ready to help. At CleanHandy, we take care of the chores and fixes — so you can enjoy peace of mind and more free time.</p>
+                                <p>Whether you're managing a home, a rental property, or a business, our skilled technicians are ready to help. At CleanHandy, we take care of the chores and fixes — so you can enjoy peace of mind and more free time.</p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -96,11 +100,6 @@
     </div>
 </section>
 <!-- about page -->
-
-
-
-
-
 
 <!-- featured -->
 <section class="featured">
