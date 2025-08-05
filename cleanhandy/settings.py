@@ -98,6 +98,7 @@ TEMPLATES = [
                 'quotes.context_processors.all_services',
                 'quotes.context_processors.contact_info',
                 'quotes.context_processors.about_content',
+                'quotes.context_processors.newsletter_form',
             ],
         },
     },
