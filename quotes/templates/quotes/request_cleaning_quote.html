@@ -103,9 +103,6 @@
       background: #c84827;
     }
 
-    .featured-single-info {
-      margin-top: -5px !important;
-    }
     
     /* Responsive tweaks */
     @media (max-width: 768px) {
@@ -143,10 +140,6 @@
     .package-name h5 {
       margin: 0;
       font-weight: 600;
-    }
-
-    .featured-single-info {
-      margin-top: -5px !important;
     }
     
     /* Responsive design */
@@ -286,6 +279,10 @@ select::-ms-expand {
 
 .list-group-item + .list-group-item {
   border-top-width: 1px !important;
+}
+
+.featured-single-info a {
+  padding: 8px 35px !important;
 }
 
 </style>
@@ -558,9 +555,13 @@ select::-ms-expand {
                   </p>
                 </div>
                 <div class="featured-single-info">
-                  <a href="{% url 'request_cleaning_quote' service.id %}">Book Now</a>
+                  {% if user.is_authenticated %}
+                    <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Now</a>
+                  {% else %}
+                    <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Now</a>
+                  {% endif %}
                   <div class="featured-single-info-left">
-                    <p>Starting from:</p><h5>${{ service.base_price }}</h5>
+                    <p></p><h5></h5>
                   </div>
                 </div>
               </div>

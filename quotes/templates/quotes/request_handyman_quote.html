@@ -85,6 +85,10 @@ select::-ms-expand {
 .list-group-item + .list-group-item {
   border-top-width: 1px !important;
 }
+
+.featured-single-info a {
+  padding: 8px 35px !important;
+}
 </style>
 
 <!-- common banner -->
@@ -301,9 +305,12 @@ select::-ms-expand {
                       <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
                   </div>
                   <div class="featured-single-info">
-                      <a href="{% url 'request_handyman_quote' service.id %}">Book Now</a>
+                    {% if user.is_authenticated %}
+                      <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Now</a>
+                    {% else %}
+                      <a class="btn-1" href="{% url 'handyman_booking' %}">Book Now</a>
+                    {% endif %}
                       <div class="featured-single-info-left">
-                          <p>Starting from:</p><h5>{{ service.base_price }}</h5>
                       </div>
                   </div>
               </div>

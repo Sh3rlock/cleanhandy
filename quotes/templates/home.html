@@ -14,6 +14,41 @@
         padding: 0px !important;
       }
 
+    .banner-content-box {
+      position: relative;
+      z-index: 10;
+      padding: 80px 0;
+      text-align: center;
+    }
+
+    .banner-content-box-inner {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+    }
+
+    .banner-content-box-inner h2 {
+      color: #fff;
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    .banner-content-box-inner p {
+      color: #fff;
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .banner-location a {
+      color: #fff;
+      font-size: 16px;
+      text-decoration: none;
+      margin-bottom: 30px;
+      display: inline-block;
+    }
+
       .banner-form {
         display: flex;
         align-items: stretch; /* Makes children equal height */
@@ -57,7 +92,18 @@
       .featured{
         padding: 120px 0 0px !important;
     }
+
+    .banner-section .banner-content-box {
+      margin-right: 0px !important;
+    }
+
+    .banner-section .banner-content-box h2 {
+        opacity: 1 !important;
+    }
       
+    .banner-section .banner-content-box p {
+        opacity: 1 !important;
+    }
   </style>
 
   <!-- preloader -->
@@ -111,69 +157,45 @@
     <div class="bg-layer" style=" height: 100% !important; background-image: url({% static '/assets/images/banner/banner-1-bg.jpg' %});"></div>
    
     <div class="container">
-      <div class="swiper-container banner-slider-1">
-        <div class="swiper-wrapper">
-          <div class="swiper-slide">
-            <div class="row">
-              <div class="col-lg-6">
-                <div class="banner-content-box">
-                  <div class="banner-content-box-inner">
-                    <h2>Choose Experts to Complete Your <span>Job <img src="{% static '/assets/images/shape/banner-title-shape.png' %}" alt="shape" /></span> Done</h2>
-                    <p>Check availability, and book services with confidence.</p>
-                    <div class="banner-location">
-                      <a href=""><i class="fa-sharp fa-solid fa-location-dot"></i> New York</a>
-                    </div>
-                    
-                    <div class="banner-form">
-                      <div class="banner-search">
-                        {% if user.is_authenticated %}
-                          <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
-                        {% else %}
-                          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
-                        {% endif %}
-                      </div>
-                      <div class="banner-search">
-                        {% if user.is_authenticated %}
-                          <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
-                        {% else %}
-                          <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
-                        {% endif %}
-                      </div>
-                    </div>
-                    <div class="customer-box">
-                      <div class="customer-list">
-                        <!--  <ul>
-                                                    <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-1.png' %}" alt="image"></a></li>
-                                                    <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-2.png' %}" alt="image"></a></li>
-                                                    <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-3.png' %}" alt="image"></a></li>
-                                                    <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-4.png' %}" alt="image"></a></li>
-                                                </ul>  -->
-                      </div>
-                      <!--  <div class="customer-content">
-                                                <h6><span>2k+</span> Customers </h6>
-                                                <p>Satisfied with Servat services</p>
-                                            </div>  -->
-                    </div>
-                  </div>
+      <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+          <div class="banner-content-box text-center">
+            <div class="banner-content-box-inner">
+              <h2 style="margin-left: 100px;">Choose Experts to Complete Your <span>Job <img src="{% static '/assets/images/shape/banner-title-shape.png' %}" alt="shape" /></span> Done</h2>
+              <p style="margin-left: 100px;">Check availability, and book services with confidence.</p>
+              <div class="banner-location">
+                <h4><i class="fa-sharp fa-solid fa-location-dot"></i> New York </h4>
+              </div>
+              
+              <div class="banner-form justify-content-center">
+                <div class="banner-search">
+                  {% if user.is_authenticated %}
+                    <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
+                  {% else %}
+                    <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
+                  {% endif %}
+                </div>
+                <div class="banner-search">
+                  {% if user.is_authenticated %}
+                    <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+                  {% else %}
+                    <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
+                  {% endif %}
                 </div>
               </div>
-              <div class="col-lg-6">
-                <div class="banner-right-conteiner">
-                  <div class="cleaner-image">
-                     <img src="{% static '/assets/images/resource/cleaner.png' %}" alt="img" />
-                  </div>
-                  <div class="banner-right-image">
-                    <img src="{% static '/assets/images/banner/banner_img.webp' %}" alt="girl" />
-                  </div>
-                  <!-- <div class="cleaning-review">
-                                        <h5>Cleaning Reviews</h5>
-                                        <div class="cleaning-review-inner">
-                                            <h6><i class="fa-sharp fa-solid fa-star"></i> <span>5.0 Great</span> 400+ More</h6>
-                                            <p>1day Ago</p>
-                                        </div>
-                                        <img src="{% static '/assets/images/shape/cleaning-shape.png' %}" alt="shape">
-                                    </div>  -->
+              <div class="customer-box">
+                <div class="customer-list">
+                  <!--  <ul>
+                                              <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-1.png' %}" alt="image"></a></li>
+                                              <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-2.png' %}" alt="image"></a></li>
+                                              <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-3.png' %}" alt="image"></a></li>
+                                              <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-4.png' %}" alt="image"></a></li>
+                                          </ul>  -->
                 </div>
+                <!--  <div class="customer-content">
+                                              <h6><span>2k+</span> Customers </h6>
+                                              <p>Satisfied with Servat services</p>
+                                          </div>  -->
               </div>
             </div>
           </div>
