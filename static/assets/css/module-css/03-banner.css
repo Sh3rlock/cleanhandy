@@ -6,9 +6,9 @@ banner one
 	overflow: hidden;
     padding: 77px 0 77px;
 }
-.banner-section .bg-layer{
+/*.banner-section .bg-layer{
     background-position: center !important;
-}
+} */
 .banner-line-shape {
     position: absolute;
     top: 285px;
