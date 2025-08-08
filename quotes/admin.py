@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Quote, Service, CleaningExtra, HomeType, SquareFeetOption,NewsletterSubscriber, Booking, Contact, ContactInfo, AboutContent
+from .models import Quote, Service, CleaningExtra, HomeType, SquareFeetOption,NewsletterSubscriber, Booking, Contact, Review, ContactInfo, AboutContent
 
 admin.site.register(Service)
 admin.site.register(CleaningExtra)
 admin.site.register(HomeType)
 admin.site.register(SquareFeetOption)
+admin.site.register(Review)
 @admin.register(NewsletterSubscriber)
 class NewsletterSubscriberAdmin(admin.ModelAdmin):
     list_display = ('email', 'subscribed_at')

@@ -11,6 +11,7 @@
     .banner-section {
         position: relative;
         overflow:hidden;
+        padding: 0px !important;
       }
 
     .banner-content-box {
@@ -103,6 +104,22 @@
     .banner-section .banner-content-box p {
         opacity: 1 !important;
     }
+    .rating .fa-solid.fa-star { color: #f6c200; }  /* filled */
+    .rating .fa-regular.fa-star { color: #c9ccd1; } /* empty */
+
+    .testimonial-slider-single {
+  background: #f4faff; /* light blue */
+  padding: 50px;
+  border-radius: 12px;
+  height: 100%; /* so it stretches if needed */
+  display: flex;
+  justify-content: space-between;
+}
+
+.testimonial-carousel .single-item-carousel {
+  padding: 0px !important;
+}
+
   </style>
 
   <!-- preloader -->
@@ -458,47 +475,48 @@
           <div class="swiper-container">
             <div class="swiper single-item-carousel">
               <div class="swiper-wrapper">
+                {% for review in reviews %}
                 <div class="swiper-slide testimonial-slider-item">
                   <div class="testimonial-slider-single">
-                    <div class="testimonial-slider-image">
-                      <img src="{% static '/assets/images/team/testimonial-1.png' %}" alt="image" />
-                    </div>
+                    <!-- image removed on purpose -->
+        
                     <div class="testimonial-slider-content">
                       <div class="rating">
                         <ul>
-                          <li>
-                            <i class="fa-sharp fa-solid fa-star"></i>
-                          </li>
-                          <li>
-                            <i class="fa-sharp fa-solid fa-star"></i>
-                          </li>
-                          <li>
-                            <i class="fa-sharp fa-solid fa-star"></i>
-                          </li>
-                          <li>
-                            <i class="fa-sharp fa-solid fa-star"></i>
-                          </li>
-                          <li>
-                            <i class="fa-sharp fa-solid fa-star"></i>
-                          </li>
-                          <li>4.8</li>
+                          <li><i class="{% if review.rating >= 1 %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i></li>
+                          <li><i class="{% if review.rating >= 2 %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i></li>
+                          <li><i class="{% if review.rating >= 3 %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i></li>
+                          <li><i class="{% if review.rating >= 4 %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i></li>
+                          <li><i class="{% if review.rating >= 5 %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i></li>
+                          <li>{{ review.rating }}</li>
                         </ul>
                       </div>
+                      
+        
                       <div class="testimonial-comments">
-                        <p>“Clean & shine did an amazing job with our deep clean. The team was punctual, professional, and thorough. Every corner of the house sparkles now! Will definitely hire them again.”</p>
+                        <p>{{ review.review }}</p>
                       </div>
+        
                       <div class="testimonial-info-box">
                         <div class="testimonial-info">
-                          <h5>_Sarah M. Talker,</h5>
-                          <h6>Project Designer</h6>
+                          <h5>{{ review.booking.name }}</h5>
+                          {% if review.author_title %}
+                            <h6>{{ review.author_title }}</h6>
+                          {% endif %}
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
+                {% empty %}
+                  <div class="swiper-slide">
+                    <p>No reviews yet.</p>
+                  </div>
+                {% endfor %}
               </div>
             </div>
           </div>
+        
           <div class="swiper-button-next">
             <i class="fa-regular fa-angle-right"></i>
           </div>
@@ -506,6 +524,7 @@
             <i class="fa-sharp fa-regular fa-angle-left"></i>
           </div>
         </div>
+        
       </div>
     </div>
   </section>

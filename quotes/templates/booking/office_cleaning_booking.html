@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- common banner -->
+<section class="common-banner" style="position: relative;">
+    <div class="bg-layer" style="background: url({% static '/assets/images/background/common-banner-bg.jpg' %});"></div>
+    <div class="common-banner-content">
+        <h3>Office Cleaning Booking</h3>
+        <div class="breadcrumb">
+            <ul>
+              <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+              <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Office Cleaning</li>
+            </ul>
+        </div>
+    </div>
+</section>
+<!-- common banner -->
+
+<!-- booking form -->
+<section class="booking-form-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="booking-form-container">
+                    <h2>Book Office Cleaning Service</h2>
+                    <p>Get professional office cleaning services tailored to your business needs.</p>
+                    
+                    {% include "partials/office_cleaning_booking_form.html" %}
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="booking-sidebar">
+                    <h4>Related Services</h4>
+                    <div class="related-services">
+                        {% for service in related_services %}
+                            <div class="service-item">
+                                <h5>{{ service.name }}</h5>
+                                <p>{{ service.description|truncatewords:20 }}</p>
+                                <a href="{% url 'request_cleaning_quote' service.id %}" class="btn-1">Learn More</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- booking form -->
+
+<style>
+.booking-form-section {
+    padding: 80px 0;
+    background: #f8f9fa;
+}
+
+.booking-form-container {
+    background: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.booking-form-container h2 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.booking-form-container p {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.booking-sidebar {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    height: fit-content;
+}
+
+.booking-sidebar h4 {
+    color: #333;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #F15A29;
+    padding-bottom: 10px;
+}
+
+.service-item {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+}
+
+.service-item h5 {
+    color: #F15A29;
+    margin-bottom: 10px;
+}
+
+.service-item p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.service-item .btn-1 {
+    font-size: 12px;
+    padding: 8px 15px;
+}
+</style>
+
+{% endblock %} 

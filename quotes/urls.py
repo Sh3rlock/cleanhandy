@@ -1,6 +1,6 @@
 from django.urls import path
 from django.views.generic import TemplateView
-from .views import about, contact, blog, blog_detail, quote_submitted, request_cleaning_quote, request_handyman_quote, available_hours_api, quote_submitted_handyman, subscribe_newsletter, request_cleaning_booking, request_handyman_booking, cleaning_booking, handyman_booking, terms, privacy, faq
+from .views import about, contact, blog, blog_detail, quote_submitted, request_cleaning_quote, request_handyman_quote, available_hours_api, quote_submitted_handyman, subscribe_newsletter, request_cleaning_booking, request_handyman_booking, cleaning_booking, handyman_booking, office_cleaning_booking, terms, privacy, faq
 
 
 urlpatterns = [
@@ -14,6 +14,7 @@ urlpatterns = [
 
     path("cleaning/booking/", cleaning_booking, name="cleaning_booking"),
     path("handyman/booking/", handyman_booking, name="handyman_booking"),
+    path("office/cleaning/booking/", office_cleaning_booking, name="office_cleaning_booking"),
 
     path("cleaning/request/<int:service_id>/", request_cleaning_quote, name="request_cleaning_quote"),
     path('handyman/request/<int:service_id>/', request_handyman_quote, name='request_handyman_quote'),
