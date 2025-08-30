@@ -137,7 +137,7 @@ def login_view(request):
 def profile_view(request):
     user = request.user
     profile, created = CustomerProfile.objects.get_or_create(user=user)
-    service_cat = ServiceCategory.objects.filter(name__iexact='cleaning').first()
+    service_cat = ServiceCategory.objects.filter(name__iexact='home').first()
 
     if request.method == 'POST':
         user_form = UserForm(request.POST, instance=user)
@@ -193,7 +193,7 @@ def profile_view(request):
 @login_required
 def my_bookings(request):
     user_email = request.user.email
-    service_cat = ServiceCategory.objects.filter(name__iexact='cleaning').first()
+    service_cat = ServiceCategory.objects.filter(name__iexact='home').first()
 
     # Match bookings by email (since Booking has no FK to User/Profile)
     bookings = Booking.objects.filter(email=user_email).order_by("-created_at")
@@ -224,9 +224,11 @@ def booking_detail(request, booking_id):
             review_submitted = True
             review_form = ReviewForm()  # Reset form after submission
 
-    # Determine template based on service category
+    # Determine if this is a commercial/office cleaning or residential/home cleaning
     service_cat_name = booking.service_cat.name.lower() if booking.service_cat else ''
-
+    is_commercial = any(keyword in service_cat_name for keyword in ['commercial', 'office', 'business'])
+    
+    # Determine template based on service category
     if service_cat_name == 'cleaning':
         template_name = 'accounts/booking_detail_user.html'
     else:
@@ -240,6 +242,8 @@ def booking_detail(request, booking_id):
         'review_form': review_form,
         'review_submitted': review_submitted,
         'reviews': reviews,
+        'is_commercial': is_commercial,  # Add this for easier template logic
+        'service_cat_name': service_cat_name,  # Add this for template conditionals
     })
 
 
@@ -258,14 +262,14 @@ def booking_submitted_handyman(request, booking_id):
     })
 
 def request_cleaning_booking(request):
-    service_cat = ServiceCategory.objects.filter(name__iexact='cleaning').first()
+    service_cat = ServiceCategory.objects.filter(name__iexact='home').first()
     extras = CleaningExtra.objects.all()
 
     # Related services for sidebar
-    cleaning_category = ServiceCategory.objects.filter(name__iexact='cleaning').first()
+    home_category = ServiceCategory.objects.filter(name__iexact='home').first()
     related_services = (
-        Service.objects.filter(category=cleaning_category)
-        if cleaning_category else Service.objects.none()
+        Service.objects.filter(category=home_category)
+        if home_category else Service.objects.none()
     )
 
     if request.method == "GET":
@@ -485,7 +489,7 @@ def cancel_booking(request, booking_id):
     return redirect("booking_detail", booking_id=booking.id)
 
 def help(request):
-    service_cat = ServiceCategory.objects.filter(name__iexact='cleaning').first()
+    service_cat = ServiceCategory.objects.filter(name__iexact='home').first()
     return render(request, "accounts/help.html", {
         "service_cat": service_cat,
     })

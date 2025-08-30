@@ -20,15 +20,20 @@
               <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Contact</li>
             </ul>
         </div>
-        {% if user.is_authenticated %}
-          <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
-        {% else %}
-          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
-        {% endif %}
-        {% if user.is_authenticated %}
+              {% if user.is_authenticated %}
+        <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Home Cleaning</a>
+      {% else %}
+        <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+      {% endif %}
+        <!-- {% if user.is_authenticated %}
           <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
         {% else %}
           <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
+        {% endif %} -->
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
         {% endif %}
     </div>
   </section>

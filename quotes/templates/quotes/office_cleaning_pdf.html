@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Office Cleaning Quote - {{ booking.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #F15A29;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .company-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #F15A29;
+            margin-bottom: 5px;
+        }
+        .company-tagline {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .quote-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #F15A29;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        .info-row {
+            margin-bottom: 8px;
+        }
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 150px;
+        }
+        .value {
+            display: inline-block;
+        }
+        .price-breakdown {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .price-item {
+            margin-bottom: 8px;
+            padding: 5px 0;
+        }
+        .total-price {
+            font-size: 20px;
+            font-weight: bold;
+            color: #F15A29;
+            border-top: 2px solid #ddd;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        .contact-info {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .next-steps {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .next-steps ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .next-steps li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">CleanHandy</div>
+        <div class="company-tagline">Professional Cleaning & Handyman Services</div>
+        <div class="quote-title">Office Cleaning Quote</div>
+        <div>Quote Date: {{ booking.created_at|date:"F j, Y" }}</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Customer Information</div>
+        <div class="info-row">
+            <span class="label">Name:</span>
+            <span class="value">{{ booking.name }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Email:</span>
+            <span class="value">{{ booking.email }}</span>
+        </div>
+        {% if booking.phone %}
+        <div class="info-row">
+            <span class="label">Phone:</span>
+            <span class="value">{{ booking.phone }}</span>
+        </div>
+        {% endif %}
+        <div class="info-row">
+            <span class="label">Business Type:</span>
+            <span class="value">{{ booking.get_business_type_display }}</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Service Details</div>
+        <div class="info-row">
+            <span class="label">Service Package:</span>
+            <span class="value">{{ booking.crew_size_hours|title }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Number of Cleaners:</span>
+            <span class="value">{{ booking.num_cleaners }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Hours Requested:</span>
+            <span class="value">{{ booking.hours_requested }} hour(s)</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Cleaning Frequency:</span>
+            <span class="value">{{ booking.get_cleaning_frequency_display }}</span>
+        </div>
+        {% if booking.job_description %}
+        <div class="info-row">
+            <span class="label">Job Description:</span>
+            <span class="value">{{ booking.job_description }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <div class="section-title">Schedule Information</div>
+        <div class="info-row">
+            <span class="label">Service Date:</span>
+            <span class="value">{{ booking.date|date:"F j, Y" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Service Time:</span>
+            <span class="value">{{ booking.hour }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Recurrence:</span>
+            <span class="value">
+                {% if booking.recurrence_pattern != "one_time" %}
+                    {{ booking.get_recurrence_pattern_display }}
+                {% else %}
+                    One-time
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Location</div>
+        <div class="info-row">
+            <span class="label">Address:</span>
+            <span class="value">{{ booking.address }}{% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">City:</span>
+            <span class="value">{{ booking.city }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">State:</span>
+            <span class="value">{{ booking.state }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">ZIP Code:</span>
+            <span class="value">{{ booking.zip_code }}</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Pricing Breakdown</div>
+        <div class="price-breakdown">
+            <div class="price-item">
+                <span class="label">Labor Cost:</span>
+                <span class="value">{{ booking.num_cleaners }} cleaner(s) × {{ booking.hours_requested }} hour(s) × $75/hour</span>
+            </div>
+
+            {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+            <div class="price-item">
+                <span class="label">Frequency Discount:</span>
+                <span class="value">
+                    {% if booking.cleaning_frequency == "daily" %}
+                        20% off (Daily Service)
+                    {% elif booking.cleaning_frequency == "weekly" %}
+                        15% off (Weekly Service)
+                    {% elif booking.cleaning_frequency == "bi_weekly" %}
+                        10% off (Bi-Weekly Service)
+                    {% elif booking.cleaning_frequency == "monthly" %}
+                        5% off (Monthly Service)
+                    {% endif %}
+                </span>
+            </div>
+            {% endif %}
+
+            {% if booking.extras.all %}
+            <div class="price-item">
+                <span class="label">Additional Services:</span>
+                <span class="value">
+                    {% for extra in booking.extras.all %}
+                        {{ extra.name }} — ${{ extra.price }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </span>
+            </div>
+            {% endif %}
+
+            <div class="price-item">
+                <span class="label">Subtotal:</span>
+                <span class="value">${{ booking.price|floatformat:2 }}</span>
+            </div>
+
+            <div class="price-item">
+                <span class="label">Sales Tax (8.875%):</span>
+                <span class="value">Calculated on final price</span>
+            </div>
+
+            {% if booking.gift_card_discount %}
+            <div class="price-item">
+                <span class="label">Gift Card Discount:</span>
+                <span class="value">-${{ booking.gift_card_discount|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+
+            <div class="total-price">
+                <span class="label">Total Price:</span>
+                <span class="value">${{ booking.price|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Next Steps</div>
+        <div class="next-steps">
+            <ul>
+                <li>We'll review your request and confirm the appointment within 24 hours</li>
+                <li>You'll receive a confirmation email with all the details</li>
+                <li>Our team will arrive at the scheduled time with all necessary equipment</li>
+                <li>Payment will be collected after the service is completed</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Contact Information</div>
+        <div class="contact-info">
+            <div class="info-row">
+                <span class="label">Company:</span>
+                <span class="value">CleanHandy</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Phone:</span>
+                <span class="value">(555) 123-4567</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Email:</span>
+                <span class="value">info@cleanhandy.com</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Website:</span>
+                <span class="value">www.cleanhandy.com</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Thank you for choosing CleanHandy for your office cleaning needs!</p>
+        <p>This quote is valid for 30 days from the date of issue.</p>
+        <p>CleanHandy - Professional Cleaning & Handyman Services</p>
+    </div>
+</body>
+</html>

@@ -15,7 +15,7 @@ def giftcard_success(request):
 
 @login_required
 def purchase_gift_card(request):
-    service_cat = ServiceCategory.objects.filter(name__iexact='cleaning').first()
+    service_cat = ServiceCategory.objects.filter(name__iexact='home').first()
 
     if request.method == "POST":
         form = GiftCardPurchaseForm(request.POST)

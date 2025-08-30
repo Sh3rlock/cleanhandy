@@ -170,14 +170,19 @@
           </ul>
       </div>
       {% if user.is_authenticated %}
-          <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
+          <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Home Cleaning</a>
         {% else %}
-          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
+          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
         {% endif %}
-        {% if user.is_authenticated %}
+        <!-- {% if user.is_authenticated %}
           <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
         {% else %}
           <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
+        {% endif %} -->
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
         {% endif %}
   </div>
 </section>
@@ -222,7 +227,8 @@
               </a>
               <ul class="dropdown-menu" aria-labelledby="bookNowDropdown">
                 <li><a class="dropdown-item" href="{% url 'request_cleaning_booking' %}">Cleaning</a></li>
-                <li><a class="dropdown-item" href="{% url 'request_handyman_booking' %}">Handyman</a></li>
+                <!-- <li><a class="dropdown-item" href="{% url 'request_handyman_booking' %}">Handyman</a></li> -->
+                <li><a class="dropdown-item" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a></li>
               </ul>
             </li>
             <li class="nav-item">

@@ -12,6 +12,9 @@ from io import BytesIO
 from django.core.mail import EmailMessage
 from django.http import HttpRequest
 from django.conf import settings
+from django.core.cache import cache
+from .models import HourlyRate
+from decimal import Decimal
 
 def get_available_hours_for_date(date, hours_requested=2):
     start_hour = 9
@@ -128,6 +131,70 @@ def send_quote_email_cleaning(booking):
     admin_email.send()
 
 
+def send_office_cleaning_quote_email(booking):
+    """
+    Send office cleaning quote email with PDF attachment to both customer and admin
+    """
+    try:
+        # Generate PDF using office cleaning specific template
+        pdf_html = render_to_string("quotes/office_cleaning_pdf.html", {"booking": booking})
+        pdf_buffer = BytesIO()
+        HTML(string=pdf_html).write_pdf(target=pdf_buffer)
+        pdf_buffer.seek(0)
+
+        # Create filename for the PDF
+        filename = f"office_cleaning_quote_{booking.id}_{booking.name.replace(' ', '_')}.pdf"
+
+        # Email to customer
+        html_message = render_to_string("quotes/email_quote_summary.html", {"booking": booking})
+        customer_email = EmailMessage(
+            subject="Your Office Cleaning Quote - CleanHandy",
+            body=html_message,
+            from_email="matyass91@gmail.com",
+            to=[booking.email],
+        )
+        customer_email.content_subtype = "html"
+        customer_email.attach(filename, pdf_buffer.read(), "application/pdf")
+        customer_email.send()
+
+        # Reset PDF buffer for admin email
+        pdf_buffer.seek(0)
+
+        # Email to admin/staff
+        admin_message = render_to_string("quotes/email_quote_admin.html", {"booking": booking})
+        admin_email = EmailMessage(
+            subject=f"New Office Cleaning Booking from {booking.name}",
+            body=admin_message,
+            from_email="matyass91@gmail.com",
+            to=[settings.DEFAULT_FROM_EMAIL],  # or use a hardcoded staff email here
+        )
+        admin_email.content_subtype = "html"
+        admin_email.attach(filename, pdf_buffer.read(), "application/pdf")
+        admin_email.send()
+        
+        print(f"✅ Office cleaning PDF emails sent successfully for booking {booking.id}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Failed to send office cleaning PDF emails for booking {booking.id}: {e}")
+        # Fallback to sending email without PDF
+        try:
+            html_message = render_to_string("quotes/email_quote_summary.html", {"booking": booking})
+            customer_email = EmailMessage(
+                subject="Your Office Cleaning Quote - CleanHandy",
+                body=html_message,
+                from_email="matyass91@gmail.com",
+                to=[booking.email],
+            )
+            customer_email.content_subtype = "html"
+            customer_email.send()
+            print(f"✅ Fallback email sent without PDF for office cleaning booking {booking.id}")
+            return True
+        except Exception as fallback_error:
+            print(f"❌ Fallback email also failed for office cleaning booking {booking.id}: {fallback_error}")
+            return False
+
+
 
 def process_handyman_quote(form, request, service=None):
     name = request.POST.get("name")
@@ -202,6 +269,92 @@ def process_cleaning_quote(form, request: HttpRequest, service=None):
     send_quote_email_cleaning(quote)
 
     return quote
+
+def get_hourly_rate(service_type, use_cache=True):
+    """
+    Get the hourly rate for a specific service type.
+    
+    Args:
+        service_type (str): The service type (e.g., 'office_cleaning', 'home_cleaning')
+        use_cache (bool): Whether to use cache for performance (default: True)
+    
+    Returns:
+        Decimal: The hourly rate for the service type
+    """
+    if use_cache:
+        cache_key = f'hourly_rate_{service_type}'
+        cached_rate = cache.get(cache_key)
+        if cached_rate is not None:
+            return cached_rate
+    
+    try:
+        rate = HourlyRate.objects.get(service_type=service_type, is_active=True)
+        if use_cache:
+            # Cache for 1 hour
+            cache.set(cache_key, rate.hourly_rate, 3600)
+        return rate.hourly_rate
+    except HourlyRate.DoesNotExist:
+        # Return default rates if not configured
+        default_rates = {
+            'office_cleaning': Decimal('75.00'),
+            'home_cleaning': Decimal('55.00'),
+            'post_renovation': Decimal('60.00'),
+            'construction': Decimal('60.00'),
+            'move_in_out': Decimal('65.00'),
+            'deep_cleaning': Decimal('70.00'),
+            'regular_cleaning': Decimal('55.00'),
+        }
+        default_rate = default_rates.get(service_type, Decimal('55.00'))
+        
+        if use_cache:
+            cache.set(cache_key, default_rate, 3600)
+        
+        return default_rate
+
+def get_all_hourly_rates():
+    """
+    Get all active hourly rates.
+    
+    Returns:
+        dict: Dictionary mapping service types to hourly rates
+    """
+    rates = {}
+    for rate in HourlyRate.objects.filter(is_active=True):
+        rates[rate.service_type] = rate.hourly_rate
+    return rates
+
+def clear_hourly_rate_cache():
+    """
+    Clear all cached hourly rates.
+    Useful when rates are updated in admin.
+    """
+    cache_keys = [
+        'hourly_rate_office_cleaning',
+        'hourly_rate_home_cleaning',
+        'hourly_rate_post_renovation',
+        'hourly_rate_construction',
+        'hourly_rate_move_in_out',
+        'hourly_rate_deep_cleaning',
+        'hourly_rate_regular_cleaning',
+    ]
+    
+    for key in cache_keys:
+        cache.delete(key)
+
+def calculate_labor_cost(service_type, num_cleaners, hours):
+    """
+    Calculate labor cost based on service type, number of cleaners, and hours.
+    
+    Args:
+        service_type (str): The service type
+        num_cleaners (int): Number of cleaners
+        hours (int/float): Number of hours
+    
+    Returns:
+        Decimal: Total labor cost
+    """
+    hourly_rate = get_hourly_rate(service_type)
+    return hourly_rate * num_cleaners * Decimal(str(hours))
 
 
 

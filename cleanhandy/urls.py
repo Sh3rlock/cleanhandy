@@ -21,6 +21,7 @@ urlpatterns = [
     path("blog/", include("blog.urls")),
     path('accounts/', include('accounts.urls')),
     path("giftcards/", include("giftcards.urls")),
+    path("bookings/", include("bookings.urls")),
 
     path("activate/<uidb64>/<token>/", account_views.activate, name="activate"),
     path("login/", account_views.login_view, name="login"),

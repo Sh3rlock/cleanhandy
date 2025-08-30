@@ -80,33 +80,75 @@ select {
               </div>
             </div>
       
-            <!-- Cleaners + Hours + Price -->
-            <div class="row mb-3">
-              {% if booking.is_large_home %}
-              <div class="col-md-4">
-                <label for="num_cleaners" class="form-label">Cleaners</label>
-                <input type="number" name="num_cleaners" class="cmn-input" min="1" value="{{ booking.num_cleaners }}">
+            <!-- Service Type Specific Fields -->
+            {% if booking.service_cat.name == "Commercial" or "office" in booking.service_cat.name|lower or "commercial" in booking.service_cat.name|lower %}
+              <!-- Commercial/Office Cleaning Fields -->
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="num_cleaners" class="form-label">Cleaners</label>
+                  <input type="number" name="num_cleaners" class="cmn-input" min="1" value="{{ booking.num_cleaners|default:1 }}">
+                </div>
+                
+                <div class="col-md-4">
+                  <label for="hours_requested" class="form-label">Hours</label>
+                  <input type="number" step="0.5" name="hours_requested" class="cmn-input" value="{{ booking.hours_requested|default:2 }}">
+                </div>
+                
+                <div class="col-md-4">
+                  <label for="price" class="form-label">Price ($)</label>
+                  <input type="number" step="0.01" name="price" class="cmn-input" value="{{ booking.price|floatformat:2 }}">
+                </div>
               </div>
               
-              <div class="col-md-4">
-                <label for="hours_requested" class="form-label">Hours</label>
-                <input type="number" step="0.5" name="hours_requested" class="cmn-input" value="{{ booking.hours_requested }}">
+              <!-- Commercial Specific Fields -->
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="business_type" class="form-label">Business Type</label>
+                  <input type="text" name="business_type" class="cmn-input" value="{{ booking.business_type|default:'' }}" placeholder="e.g., Office, Retail, Restaurant">
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="cleaning_frequency" class="form-label">Cleaning Frequency</label>
+                  <select name="cleaning_frequency" class="cmn-input">
+                    <option value="one_time" {% if booking.cleaning_frequency == "one_time" %}selected{% endif %}>One Time</option>
+                    <option value="weekly" {% if booking.cleaning_frequency == "weekly" %}selected{% endif %}>Weekly</option>
+                    <option value="biweekly" {% if booking.cleaning_frequency == "biweekly" %}selected{% endif %}>Bi-weekly</option>
+                    <option value="monthly" {% if booking.cleaning_frequency == "monthly" %}selected{% endif %}>Monthly</option>
+                  </select>
+                </div>
               </div>
-              <div class="col-md-4">
-                <label for="price" class="form-label">Price ($)</label>
-                <input type="number" step="0.01" name="price" class="cmn-input" value="{{ booking.price|floatformat:2 }}">
+              
+            {% else %}
+              <!-- Residential/Home Cleaning Fields -->
+              {% if booking.is_large_home %}
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="num_cleaners" class="form-label">Cleaners</label>
+                  <input type="number" name="num_cleaners" class="cmn-input" min="1" value="{{ booking.num_cleaners }}">
+                </div>
+                
+                <div class="col-md-4">
+                  <label for="hours_requested" class="form-label">Hours</label>
+                  <input type="number" step="0.5" name="hours_requested" class="cmn-input" value="{{ booking.hours_requested }}">
+                </div>
+                <div class="col-md-4">
+                  <label for="price" class="form-label">Price ($)</label>
+                  <input type="number" step="0.01" name="price" class="cmn-input" value="{{ booking.price|floatformat:2 }}">
+                </div>
               </div>
               {% else %}
-              <div class="col-md-6">
-                <label for="hours_requested" class="form-label">Hours</label>
-                <input type="number" step="0.5" name="hours_requested" class="cmn-input" value="{{ booking.hours_requested }}">
-              </div>
-              <div class="col-md-6">
-                <label for="price" class="form-label">Price ($)</label>
-                <input type="number" step="0.01" name="price" class="cmn-input" value="{{ booking.price|floatformat:2 }}">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="hours_requested" class="form-label">Hours</label>
+                  <input type="number" step="0.5" name="hours_requested" class="cmn-input" value="{{ booking.hours_requested }}">
+                </div>
+                <div class="col-md-6">
+                  <label for="price" class="form-label">Price ($)</label>
+                  <input type="number" step="0.01" name="price" class="cmn-input" value="{{ booking.price|floatformat:2 }}">
+                </div>
               </div>
             {% endif %}
-          </div>
+          {% endif %}
       
             <!-- Address + Apt -->
             <div class="row mb-3">
@@ -140,30 +182,54 @@ select {
       <div class="card shadow-sm mb-4">
         <div class="card-body">
           <h5 class="mb-3"><i class="fa-solid fa-list me-2 text-primary"></i> Booking Summary</h5>
-          <p><strong>Service:</strong> {{ booking.service_cat.name }}</p>
-          <p><strong>Square Footage:</strong> {{ booking.square_feet_options.name }}</p>
-          {% if not booking.is_large_home and booking.home_types %}
-            <p><strong>Home Type:</strong> {{ booking.home_types.name }} (${{ booking.home_types.price }})</p>
-          {% endif %}
-          {% for extra in booking.extras.all %}
-            <p>+ {{ extra.name }} — ${{ extra.price }}</p>
-          {% endfor %}
-          <p><strong>Is Large Home:</strong> {{ booking.is_large_home|yesno:"Yes,No" }}</p>
-          <p><strong>Recurring:</strong> 
-            {% if booking.recurrence_pattern != "one_time" %}
-              {{ booking.get_recurrence_pattern_display }}
+          
+          <!-- Service Type Header -->
+          <div class="alert {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}alert-info{% else %}alert-success{% endif %} mb-3">
+            <strong>Service Type:</strong> {{ booking.service_cat.name }}
+            {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
+              <i class="fa fa-building ms-2"></i>
             {% else %}
-              One-time
+              <i class="fa fa-home ms-2"></i>
             {% endif %}
-          </p>
-          <!-- {% if booking.extras.exists %}
-            <p><strong>Extras:</strong></p>
+          </div>
+          
+          <!-- Commercial/Office Specific Details -->
+          {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
+            <p><strong>Business Type:</strong> {{ booking.business_type|default:"Not specified" }}</p>
+            <p><strong>Cleaning Frequency:</strong> 
+              {% if booking.cleaning_frequency != "one_time" %}
+                {{ booking.get_recurrence_pattern_display|default:booking.cleaning_frequency|title }}
+              {% else %}
+                One-time
+              {% endif %}
+            </p>
+            <p><strong>Number of Cleaners:</strong> {{ booking.num_cleaners|default:"Not specified" }}</p>
+            <p><strong>Hours Requested:</strong> {{ booking.hours_requested|default:"Not specified" }}</p>
+          {% else %}
+            <!-- Residential/Home Specific Details -->
+            <p><strong>Square Footage:</strong> {{ booking.square_feet_options.name|default:"Not specified" }}</p>
+            {% if not booking.is_large_home and booking.home_types %}
+              <p><strong>Home Type:</strong> {{ booking.home_types.name }} (${{ booking.home_types.price }})</p>
+            {% endif %}
+            <p><strong>Is Large Home:</strong> {{ booking.is_large_home|yesno:"Yes,No" }}</p>
+            <p><strong>Recurring:</strong> 
+              {% if booking.recurrence_pattern != "one_time" %}
+                {{ booking.get_recurrence_pattern_display }}
+              {% else %}
+                One-time
+              {% endif %}
+            </p>
+          {% endif %}
+          
+          <!-- Extras (common to both) -->
+          {% if booking.extras.exists %}
+            <p><strong>Additional Services:</strong></p>
             <ul class="mb-0">
               {% for extra in booking.extras.all %}
                 <li>{{ extra.name }} – ${{ extra.price }}</li>
               {% endfor %}
             </ul>
-          {% endif %} -->
+          {% endif %}
         </div>
       </div>
 
@@ -173,6 +239,12 @@ select {
           <p><strong>Name:</strong> {{ booking.name }}</p>
           <p><strong>Email:</strong> {{ booking.email }}</p>
           <p><strong>Phone:</strong> {{ booking.phone }}</p>
+          
+          <!-- Additional Commercial Info -->
+          {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
+            <p><strong>Company:</strong> {{ booking.company_name|default:"Not specified" }}</p>
+            <p><strong>Contact Person:</strong> {{ booking.contact_person|default:booking.name }}</p>
+          {% endif %}
         </div>
       </div>
     </div>

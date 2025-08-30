@@ -27,13 +27,22 @@
     <div class="col-md-12">
       <div class="card h-100 shadow-sm border-0 text-center p-4">
         <div class="card-body">
-          <h4 class="mb-3">🧼 Book Cleaning</h4>
+          <h4 class="mb-3">🧼 Book Home Cleaning</h4>
           <p class="mb-4">Schedule a professional cleaning with flexible extras and recurring options.</p>
-          <a href="{% url 'request_cleaning_booking' %}" class="btn-1 w-100">Book Cleaning</a>
+                      <a href="{% url 'request_cleaning_booking' %}" class="btn-1 w-100">Book Home Cleaning</a>
         </div>
       </div>
     </div>
     <div class="col-md-12 mt-4">
+      <div class="card h-100 shadow-sm border-0 text-center p-4">
+        <div class="card-body">
+          <h4 class="mb-3">🏢 Book Office Cleaning</h4>
+          <p class="mb-4">Professional cleaning services for offices, retail spaces, and commercial properties.</p>
+                      <a href="{% url 'office_cleaning_booking' %}" class="btn-1 w-100">Book Office Cleaning</a>
+        </div>
+      </div>
+    </div>
+    <!-- <div class="col-md-12 mt-4">
       <div class="card h-100 shadow-sm border-0 text-center p-4">
         <div class="card-body">
           <h4 class="mb-3">🛠️ Book Handyman</h4>
@@ -41,7 +50,7 @@
           <a href="{% url 'request_handyman_booking' %}" class="btn-1 w-100">Book Handyman</a>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </div>
 {% endblock %}

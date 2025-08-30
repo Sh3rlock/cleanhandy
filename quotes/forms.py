@@ -1,5 +1,5 @@
 from django import forms
-from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber, Booking, Contact, Review
+from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber, Booking, Contact, Review, OfficeQuote
 from datetime import time, datetime, timedelta
 from django.core.exceptions import ValidationError
 from giftcards.models import GiftCard, DiscountCode
@@ -86,8 +86,8 @@ class CleaningQuoteForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Only show Cleaning services
-        self.fields["service"].queryset = Service.objects.filter(category__name="Cleaning")
+        # Only show Home cleaning services
+        self.fields["service"].queryset = Service.objects.filter(category__name="Home")
 
         # 30-minute time slots from 09:00 to 17:00
         time_slots = []
@@ -166,6 +166,77 @@ class HandymanQuoteForm(forms.ModelForm):
             t += timedelta(minutes=30)
 
         self.fields["hour"].choices = time_slots
+
+class OfficeQuoteForm(forms.ModelForm):
+    name = forms.CharField(
+        label="Full Name",
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            "class": "cmn-input",
+            "placeholder": "Enter your full name"
+        })
+    )
+    
+    email = forms.EmailField(
+        label="Email Address",
+        required=True,
+        widget=forms.EmailInput(attrs={
+            "class": "cmn-input",
+            "placeholder": "Enter your email address"
+        })
+    )
+    
+    phone_number = forms.CharField(
+        label="Phone Number",
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(attrs={
+            "class": "cmn-input",
+            "placeholder": "Enter your phone number"
+        })
+    )
+    
+    business_address = forms.CharField(
+        label="Business Address",
+        required=True,
+        widget=forms.Textarea(attrs={
+            "class": "cmn-input",
+            "placeholder": "Enter your complete business address",
+            "rows": 3
+        })
+    )
+    
+    square_footage = forms.CharField(
+        label="Square Footage (Estimation)",
+        max_length=50,
+        required=True,
+        widget=forms.TextInput(attrs={
+            "class": "cmn-input",
+            "placeholder": "e.g., 2,500 sq ft, 5,000 sq ft"
+        })
+    )
+    
+    job_description = forms.CharField(
+        label="Description about the job",
+        required=True,
+        widget=forms.Textarea(attrs={
+            "class": "cmn-input",
+            "placeholder": "Please describe the cleaning job in detail...",
+            "rows": 4
+        })
+    )
+    
+    class Meta:
+        model = OfficeQuote
+        fields = [
+            "name",
+            "email", 
+            "phone_number",
+            "business_address",
+            "square_footage",
+            "job_description"
+        ]
 
 class NewsletterForm(forms.ModelForm):
     class Meta:
@@ -255,6 +326,10 @@ class CleaningBookingForm(forms.ModelForm):
             "home_types",
             "cleaning_type",
             "num_cleaners",
+            "business_type",
+            "crew_size_hours",
+            "hear_about_us",
+            "cleaning_frequency",
             "job_description",
             "name",
             "email",
@@ -272,6 +347,10 @@ class CleaningBookingForm(forms.ModelForm):
             "service_cat": forms.Select(attrs={"class": "cmn-input"}),
             "square_feet_options": forms.Select(attrs={"class": "cmn-input"}),
             "home_types": forms.Select(attrs={"class": "cmn-input"}),
+            "business_type": forms.Select(attrs={"class": "cmn-input"}),
+            "crew_size_hours": forms.Select(attrs={"class": "cmn-input"}),
+            "hear_about_us": forms.Select(attrs={"class": "cmn-input"}),
+            "cleaning_frequency": forms.Select(attrs={"class": "cmn-input"}),
             "name": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Full Name"}),
             "email": forms.EmailInput(attrs={"class": "cmn-input", "placeholder": "Email"}),
             "phone": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Phone Number (Optional)"}),
@@ -406,6 +485,104 @@ class ReviewForm(forms.ModelForm):
             "rating": forms.Select(attrs={"class": "cmn-input", "required": True}),
             "review": forms.Textarea(attrs={"class": "cmn-input", "rows": 4, "required": True}),
         }
+
+
+class OfficeCleaningBookingForm(CleaningBookingForm):
+    business_type = forms.ChoiceField(
+        label="Type Of Business",
+        choices=[
+            ("office", "Office"),
+            ("retail", "Retail"),
+            ("medical", "Medical"),
+            ("school", "School"),
+            ("other", "Other")
+        ],
+        initial="office",
+        required=False,  # Make optional since it's handled by custom HTML
+        widget=forms.Select(attrs={"class": "cmn-input"})
+    )
+    
+    crew_size_hours = forms.ChoiceField(
+        label="Crew/Size/Hours",
+        choices=[
+            ("1_cleaner_2_hours_500", "1 Cleaner Total 2 Hours (<500 Sq Ft)"),
+            ("1_cleaner_3_hours_1000", "1 Cleaner Total 3 Hours (<1000 Sq Ft)"),
+            ("1_cleaner_4_hours_1500", "1 Cleaner Total 4 Hours (<1500 Sq Ft)"),
+            ("2_cleaners_2.5_hours_2000", "2 Cleaners Total 2.5 Hours (<2000 Sq Ft)"),
+            ("2_cleaners_3_hours_2500", "2 Cleaners Total 3 Hours (<2500 Sq Ft)"),
+            ("2_cleaners_4_hours_3000", "2 Cleaners Total 4 Hours (<3000 Sq Ft)"),
+            ("2_cleaners_5_hours_3500", "2 Cleaners Total 5 Hours (<3500 Sq Ft)"),
+            ("2_cleaners_6_hours_4000", "2 Cleaners Total 6 Hours (<4000 Sq Ft)"),
+            ("2_cleaners_7_hours_5000", "2 Cleaners Total 7 Hours (<5000 Sq Ft)"),
+            ("custom_cleaning", "Customized Cleaning (>5000 Sq Ft) Please Email")
+        ],
+        required=False,  # Make optional since it's handled by custom HTML
+        widget=forms.Select(attrs={"class": "cmn-input"})
+    )
+    
+    hear_about_us = forms.ChoiceField(
+        label="How did you hear about us?",
+        choices=[
+            ("", "Select an option"),
+            ("google", "Google Search"),
+            ("social_media", "Social Media"),
+            ("referral", "Referral"),
+            ("advertisement", "Advertisement"),
+            ("yelp", "Yelp"),
+            ("other", "Other")
+        ],
+        required=False,
+        widget=forms.Select(attrs={"class": "cmn-input"})
+    )
+    
+    cleaning_frequency = forms.ChoiceField(
+        label="Cleaning Frequency",
+        choices=[
+            ("one_time", "One time"),
+            ("daily", "Daily - 20% Off"),
+            ("weekly", "Weekly 15% Off"),
+            ("bi_weekly", "Bi Weekly 10% Off"),
+            ("monthly", "Monthly 5% Off")
+        ],
+        initial="one_time",
+        required=False,  # Make optional since it's handled by custom HTML
+        widget=forms.Select(attrs={"class": "cmn-input"})
+    )
+
+    class Meta(CleaningBookingForm.Meta):
+        fields = CleaningBookingForm.Meta.fields + [
+            "business_type",
+            "crew_size_hours", 
+            "hear_about_us",
+            "cleaning_frequency"
+        ]
+        widgets = CleaningBookingForm.Meta.widgets.copy()
+        widgets.update({
+            "business_type": forms.Select(attrs={"class": "cmn-input"}),
+            "crew_size_hours": forms.Select(attrs={"class": "cmn-input"}),
+            "hear_about_us": forms.Select(attrs={"class": "cmn-input"}),
+            "cleaning_frequency": forms.Select(attrs={"class": "cmn-input"}),
+        })
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set initial values for office cleaning
+        self.fields['cleaning_type'].initial = 'office_cleaning'
+        self.fields['recurrence_pattern'].initial = 'one_time'
+        
+        # Make these fields not required since they're handled by custom HTML
+        self.fields['business_type'].required = False
+        self.fields['crew_size_hours'].required = False
+        self.fields['cleaning_frequency'].required = False
+        
+        # Make other required fields optional since they're handled by custom HTML
+        self.fields['service_cat'].required = False
+        self.fields['date'].required = False
+        self.fields['hour'].required = False
+        self.fields['hours_requested'].required = False
+        self.fields['num_cleaners'].required = False
+        self.fields['square_feet_options'].required = False
+        self.fields['home_types'].required = False
 
 
 

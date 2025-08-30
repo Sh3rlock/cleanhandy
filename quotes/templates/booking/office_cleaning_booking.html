@@ -13,45 +13,614 @@
               <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Office Cleaning</li>
             </ul>
         </div>
+        {% if user.is_authenticated %}
+        <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Home Cleaning</a>
+      {% else %}
+        <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+      {% endif %}
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+        {% endif %}
     </div>
 </section>
 <!-- common banner -->
 
 <!-- booking form -->
-<section class="booking-form-section">
+<section>
     <div class="container">
         <div class="row">
-            <div class="col-lg-8">
-                <div class="booking-form-container">
-                    <h2>Book Office Cleaning Service</h2>
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-4">
+                <p class="mb-2 mb-md-0 me-md-4" style="font-size:17px;">Manage existing bookings or re-book a clean.</p>
+                <div class="d-flex flex-row gap-2">
+                  <a href="{% url 'login' %}" class="btn btn-outline-primary">Sign In</a>
+                  <a href="{% url 'register' %}" class="btn btn-primary">Sign Up</a>
+                </div>
+              </div>
+            <h3 class="mb-0">Book Office Cleaning or <a style="color: #F15A29;" href="#" onclick="openQuoteModal(); return false;"><i class="fas fa-file-invoice-dollar me-2"></i>Request a Quote</a></h3>
+          
+    
+            <div class="col-lg-12">
+                <div>
                     <p>Get professional office cleaning services tailored to your business needs.</p>
                     
                     {% include "partials/office_cleaning_booking_form.html" %}
                 </div>
             </div>
-            <div class="col-lg-4">
+            <!-- <div class="col-lg-4">
                 <div class="booking-sidebar">
+<div class="mt-4 mb-5">
+    <button type="button" class="btn-1 w-100" onclick="openQuoteModal()">
+        <i class="fas fa-file-invoice-dollar me-2"></i>Request a Quote
+    </button>
+</div>
                     <h4>Related Services</h4>
                     <div class="related-services">
                         {% for service in related_services %}
                             <div class="service-item">
-                                <h5>{{ service.name }}</h5>
-                                <p>{{ service.description|truncatewords:20 }}</p>
+                                <h3>{{ service.name|striptags }}</h3>
+                                <p>{{ service.description|striptags|truncatewords:20 }}</p>
                                 <a href="{% url 'request_cleaning_quote' service.id %}" class="btn-1">Learn More</a>
+                            </div>
+                        {% empty %}
+                            <div class="service-item">
+                                <h3>Deep Cleaning Service</h3>
+                                <p>Our comprehensive deep cleaning service offers thorough cleaning of all surfaces, fixtures, and hard-to-reach areas for a spotless office environment.</p>
+                                <a href="#" class="btn-1">Learn More</a>
+                            </div>
+                            <div class="service-item">
+                                <h3>Move In/Out Cleaning</h3>
+                                <p>Professional cleaning services for offices during move-in or move-out periods, ensuring a clean slate for new tenants or proper handover.</p>
+                                <a href="#" class="btn-1">Learn More</a>
+                            </div>
+                            <div class="service-item">
+                                <h3>Post Renovation Cleaning</h3>
+                                <p>Specialized cleaning after construction or renovation work, removing dust, debris, and construction residue for a pristine workspace.</p>
+                                <a href="#" class="btn-1">Learn More</a>
                             </div>
                         {% endfor %}
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>
-</section>
+</section> 
 <!-- booking form -->
 
+
+
+<!-- Custom Quote Modal -->
+<div id="quoteModal" class="simple-modal">
+    <div class="simple-modal-content">
+        <div class="simple-modal-header">
+            <h3>Request Office Cleaning Quote</h3>
+            <span class="simple-modal-close" onclick="closeQuoteModal()">&times;</span>
+        </div>
+        <div class="simple-modal-body">
+            <form id="officeQuoteForm">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_name">Full Name *</label>
+                        <input type="text" id="id_name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_email">Email Address *</label>
+                        <input type="email" id="id_email" name="email" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_phone_number">Phone Number *</label>
+                        <input type="tel" id="id_phone_number" name="phone_number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_square_footage">Square Footage (Estimation) *</label>
+                        <input type="text" id="id_square_footage" name="square_footage" placeholder="e.g., 2,500 sq ft" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_business_address">Business Address *</label>
+                    <textarea id="id_business_address" name="business_address" rows="3" placeholder="Enter your complete business address" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="id_job_description">Description about the job *</label>
+                    <textarea id="id_job_description" name="job_description" rows="4" placeholder="Please describe the cleaning job in detail..." required></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="simple-modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeQuoteModal()">Cancel</button>
+            <button type="button" class="btn-1" onclick="submitQuote()">Submit Quote Request</button>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Message -->
+<div id="quoteAlert" class="simple-alert" style="display: none;"></div>
+
 <style>
+    .btn-1 {
+        padding: 0.5rem 1rem !important; 
+    }
+
+  
+   .cmn-input {
+      border-radius: 8px;
+      border: 1px solid #F15A29 !important;
+      background: var(--white-color);
+      padding: 15px 10px !important;
+      width: 100%;
+      margin-bottom: 15px !important;
+  }
+
+  select {
+    border-radius: 8px;
+      border: 1px solid #F15A29;
+      background: var(--white-color);
+      padding: 15px 10px !important;
+      width: 100%;
+      margin-bottom: 15px !important;
+  }
+/* Simple Modal Styles */
+.simple-modal {
+    display: none;
+    position: fixed;
+    z-index: 99999999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+}
+
+.simple-modal.show {
+    display: block;
+}
+
+.simple-modal-content {
+    background-color: #fff;
+    margin: 3% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 700px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    animation: modalSlideIn 0.3s ease-out;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.simple-modal-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1.5rem;
+    border-bottom: 3px solid #F15A29;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.simple-modal-header h3 {
+    color: #F15A29;
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin: 0;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.simple-modal-close {
+    background: #F15A29;
+    color: white;
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    font-weight: bold;
+}
+
+.simple-modal-close:hover {
+    background: #d14a1f;
+    transform: scale(1.1);
+}
+
+.simple-modal-body {
+    padding: 2rem;
+}
+
+.simple-modal-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Form Styles */
+.form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    flex: 1;
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #F15A29;
+    box-shadow: 0 0 0 3px rgba(241, 90, 41, 0.1);
+    transform: translateY(-1px);
+}
+
+.form-group input.error,
+.form-group textarea.error {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.form-group input.error:focus,
+.form-group textarea.error:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Error message styling */
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Form validation visual feedback */
+.form-group input:valid:not(:placeholder-shown),
+.form-group textarea:valid:not(:placeholder-shown) {
+    border-color: #198754;
+}
+
+.form-group input:valid:not(:placeholder-shown):focus,
+.form-group textarea:valid:not(:placeholder-shown):focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.1);
+}
+
+/* Required field indicator */
+.form-group label.required::after {
+    content: " *";
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Enhanced error styling */
+.form-group input.error,
+.form-group textarea.error {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+}
+
+.form-group input.error:focus,
+.form-group textarea.error:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2) !important;
+}
+
+/* Error message styling */
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Button Styles */
+.simple-modal-footer .btn-1 {
+    background: #F15A29;
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.simple-modal-footer .btn-1:hover {
+    background: #d14a1f;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(241, 90, 41, 0.3);
+}
+
+.simple-modal-footer .btn-secondary {
+    background: #6c757d;
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.simple-modal-footer .btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+}
+
+/* Alert Styles */
+.simple-alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999999;
+    min-width: 350px;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    font-weight: 600;
+    animation: alertSlideIn 0.4s ease-out;
+    border-left: 5px solid;
+}
+
+@keyframes alertSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+.simple-alert.alert-success {
+    background: linear-gradient(135deg, #d1e7dd 0%, #c3e6cb 100%);
+    color: #0f5132;
+    border-left-color: #198754;
+}
+
+.simple-alert.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+    border-left-color: #dc3545;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .simple-modal-content {
+        width: 95%;
+        margin: 2% auto;
+        max-height: 95vh;
+    }
+    
+    .simple-modal-header,
+    .simple-modal-body,
+    .simple-modal-footer {
+        padding: 1rem;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .simple-modal-footer {
+        flex-direction: column;
+    }
+    
+    .simple-modal-footer .btn-1,
+    .simple-modal-footer .btn-secondary {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .simple-alert {
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+    }
+}
+
+/* Modal Z-Index Fixes - Override project CSS conflicts */
+#officeQuoteModal {
+    z-index: 99999999 !important; /* Higher than project CSS */
+}
+
+#officeQuoteModal .modal-dialog {
+    z-index: 99999999 !important;
+}
+
+#officeQuoteModal .modal-content {
+    z-index: 99999999 !important;
+}
+
+/* Ensure modal backdrop is above other elements */
+.modal-backdrop {
+    z-index: 99999998 !important; /* Just below modal */
+}
+
+/* Fix any potential overflow issues */
+.modal-open {
+    overflow: hidden;
+}
+
+/* Ensure form elements are properly styled */
+#officeQuoteForm .form-control {
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+#officeQuoteForm .form-control:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+#officeQuoteForm .form-label {
+    font-weight: 500;
+    color: #212529;
+    margin-bottom: 0.5rem;
+}
+
+/* Modal button styling */
+#officeQuoteModal .btn-1 {
+    background: #F15A29;
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: background-color 0.15s ease-in-out;
+}
+
+#officeQuoteModal .btn-1:hover {
+    background: #d14a1f;
+}
+
+#officeQuoteModal .btn-secondary {
+    background: #6c757d;
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: background-color 0.15s ease-in-out;
+}
+
+#officeQuoteModal .btn-secondary:hover {
+    background: #5a6268;
+}
+
+/* Modal header styling */
+#officeQuoteModal .modal-header {
+    border-bottom: 2px solid #F15A29;
+    background: #f8f9fa;
+}
+
+#officeQuoteModal .modal-title {
+    color: #F15A29;
+    font-weight: 600;
+}
+
+/* Modal body spacing */
+#officeQuoteModal .modal-body {
+    padding: 1.5rem;
+}
+
+/* Form row spacing */
+#officeQuoteForm .row {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+}
+
+#officeQuoteForm .col-md-6 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* Alert styling for quote submissions */
+#quoteAlert {
+    z-index: 99999999 !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: none;
+    border-radius: 0.5rem;
+}
+
+#quoteAlert.alert-success {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border-left: 4px solid #198754;
+}
+
+#quoteAlert.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
 .booking-form-section {
     padding: 80px 0;
-    background: #f8f9fa;
+    background: #fff;
 }
 
 .booking-form-container {
@@ -93,14 +662,14 @@
     border-radius: 5px;
 }
 
-.service-item h5 {
+.service-item h3 {
     color: #F15A29;
     margin-bottom: 10px;
 }
 
 .service-item p {
     color: #666;
-    font-size: 14px;
+    font-size: 16px;
     margin-bottom: 15px;
 }
 
@@ -109,5 +678,255 @@
     padding: 8px 15px;
 }
 </style>
+
+<script>
+  function openQuoteModal() {
+    document.getElementById("quoteModal").style.display = "block";
+  }
+
+  function closeQuoteModal() {
+    document.getElementById("quoteModal").style.display = "none";
+    // Reset form and clear validation errors
+    document.getElementById("officeQuoteForm").reset();
+    clearValidationErrors();
+  }
+
+  function clearValidationErrors() {
+    // Remove all error classes and messages
+    const form = document.getElementById('officeQuoteForm');
+    const inputs = form.querySelectorAll('input, textarea');
+    
+    inputs.forEach(input => {
+      input.classList.remove('error');
+      const errorDiv = input.parentNode.querySelector('.error-message');
+      if (errorDiv) {
+        errorDiv.remove();
+      }
+    });
+  }
+
+  function showFieldError(field, message) {
+    // Remove existing error message
+    const existingError = field.parentNode.querySelector('.error-message');
+    if (existingError) {
+      existingError.remove();
+    }
+    
+    // Add error class to field
+    field.classList.add('error');
+    
+    // Create and insert error message
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    errorDiv.style.color = '#dc3545';
+    errorDiv.style.fontSize = '0.875rem';
+    errorDiv.style.marginTop = '0.25rem';
+    
+    field.parentNode.appendChild(errorDiv);
+  }
+
+  function removeFieldError(field) {
+    field.classList.remove('error');
+    const errorDiv = field.parentNode.querySelector('.error-message');
+    if (errorDiv) {
+      errorDiv.remove();
+    }
+  }
+
+  function validateField(field) {
+    const value = field.value.trim();
+    const fieldName = field.name;
+    
+    // Remove any existing error
+    removeFieldError(field);
+    
+    // Required field validation
+    if (!value) {
+      showFieldError(field, `${getFieldLabel(fieldName)} is required`);
+      return false;
+    }
+    
+    // Specific field validations
+    switch (fieldName) {
+      case 'name':
+        if (value.length < 2) {
+          showFieldError(field, 'Name must be at least 2 characters long');
+          return false;
+        }
+        if (!/^[a-zA-Z\s]+$/.test(value)) {
+          showFieldError(field, 'Name can only contain letters and spaces');
+          return false;
+        }
+        break;
+        
+      case 'email':
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          showFieldError(field, 'Please enter a valid email address');
+          return false;
+        }
+        break;
+        
+      case 'phone_number':
+        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+        if (!phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))) {
+          showFieldError(field, 'Please enter a valid phone number');
+          return false;
+        }
+        break;
+        
+      case 'square_footage':
+        if (!/^\d+(\s*sq\s*ft|\s*sqft|\s*ft²|\s*ft2)?$/i.test(value)) {
+          showFieldError(field, 'Please enter a valid square footage (e.g., 2500 or 2500 sq ft)');
+          return false;
+        }
+        break;
+        
+      case 'business_address':
+        if (value.length < 10) {
+          showFieldError(field, 'Address must be at least 10 characters long');
+          return false;
+        }
+        break;
+        
+      case 'job_description':
+        if (value.length < 20) {
+          showFieldError(field, 'Job description must be at least 20 characters long');
+          return false;
+        }
+        break;
+    }
+    
+    return true;
+  }
+
+  function getFieldLabel(fieldName) {
+    const labels = {
+      'name': 'Full Name',
+      'email': 'Email Address',
+      'phone_number': 'Phone Number',
+      'square_footage': 'Square Footage',
+      'business_address': 'Business Address',
+      'job_description': 'Job Description'
+    };
+    return labels[fieldName] || fieldName;
+  }
+
+  function validateForm() {
+    const form = document.getElementById('officeQuoteForm');
+    const inputs = form.querySelectorAll('input, textarea');
+    let isValid = true;
+    
+    // Validate each field
+    inputs.forEach(input => {
+      if (!validateField(input)) {
+        isValid = false;
+      }
+    });
+    
+    return isValid;
+  }
+
+  function submitQuote() {
+    // Clear any existing validation errors
+    clearValidationErrors();
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      showAlert('danger', 'Please fix the errors in the form before submitting.');
+      return;
+    }
+    
+    // Disable submit button to prevent double submission
+    const submitBtn = document.querySelector('#quoteModal .btn-1');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...';
+    
+    // Get form data
+    const formData = new FormData(document.getElementById('officeQuoteForm'));
+    
+    // Submit form via AJAX
+    fetch('{% url "office_quote_submit" %}', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Show success message
+        showAlert('success', data.message);
+        
+        // Reset form and close modal
+        document.getElementById("officeQuoteForm").reset();
+        closeQuoteModal();
+        
+        // Reset submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Submit Quote Request';
+      } else {
+        // Show error message
+        showAlert('danger', data.message || 'An error occurred. Please try again.');
+        
+        // Reset submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Submit Quote Request';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showAlert('danger', 'An error occurred. Please try again.');
+      
+      // Reset submit button
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Submit Quote Request';
+    });
+  }
+
+  function showAlert(type, message) {
+    const alertDiv = document.getElementById('quoteAlert');
+    alertDiv.className = `simple-alert alert-${type}`;
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">&times;</button>
+    `;
+    alertDiv.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      alertDiv.style.display = 'none';
+    }, 5000);
+  }
+
+  // Add real-time validation on input blur
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('officeQuoteForm');
+    const inputs = form.querySelectorAll('input, textarea');
+    
+    inputs.forEach(input => {
+      input.addEventListener('blur', function() {
+        validateField(this);
+      });
+      
+      input.addEventListener('input', function() {
+        // Remove error when user starts typing
+        if (this.classList.contains('error')) {
+          removeFieldError(this);
+        }
+      });
+    });
+  });
+
+  // Close modal when clicking outside it
+  window.onclick = function(event) {
+    const modal = document.getElementById("quoteModal");
+    if (event.target === modal) {
+      closeQuoteModal();
+    }
+  }
+</script>
 
 {% endblock %} 

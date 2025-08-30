@@ -4,7 +4,7 @@ from .views import (
     service_list, add_service_category, edit_service_category, delete_service_category,
     add_service, edit_service, delete_service, booking_calendar, get_upcoming_quotes, quote_approval_view, quote_decline_view, block_time_slot,
     get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv, delete_quote, send_quote_email_view, get_booking_detail,
-    giftcard_discount, subscriber_list, add_subscriber, export_subscribers_csv
+    giftcard_discount, subscriber_list, add_subscriber, export_subscribers_csv, office_quote_list, office_quote_detail, export_office_quotes_csv, send_office_quote_email, generate_office_quote_pdf
 )
 
 urlpatterns = [
@@ -61,6 +61,26 @@ urlpatterns = [
 
     path("subscribers/add/", add_subscriber, name="add_subscriber"),
     path('export-subscribers-csv/', export_subscribers_csv, name='export_subscribers_csv'),
+
+    # Office Quotes Management
+    path("office-quotes/", office_quote_list, name="office_quote_list"),
+    path("office-quotes/<int:quote_id>/", office_quote_detail, name="office_quote_detail"),
+    path("office-quotes/<int:quote_id>/delete/", delete_quote, name="delete_office_quote"),
+    path("admin/office-quotes/update-status/<int:quote_id>/", update_quote_status, name="update_office_quote_status"),
+    path("office-quotes/<int:quote_id>/update-status/", update_quote_detail_status, name="update_office_quote_detail_status"),
+
+    path("office-bookings/api/get_quote_details/", get_quote_details, name="get_office_quote_details"),
+    path("office-quotes/api/add/", add_quote, name="add_office_quote"),
+    path("office-bookings/filter/", ajax_filtered_quotes, name="ajax_filtered_office_quotes"),
+
+    path("office-bookings/export-csv/", export_quotes_csv, name="export_office_quotes_csv"),
+
+    path("office-quotes/<int:quote_id>/send-email/", send_office_quote_email, name="send_office_quote_email"),
+    path("office-quotes/<int:quote_id>/generate-pdf/", generate_office_quote_pdf, name="generate_office_quote_pdf"),
+    path("office-quote/<int:quote_id>/approve/<str:token>/", quote_approval_view, name="office_quote_approve_link"),
+    path("office-quote/<int:quote_id>/decline/<str:token>/", quote_decline_view, name="office_quote_decline_link"),
+
+    path("admin/office-block-time-slot/", block_time_slot, name="block_office_time_slot"),
 
 
 ]   

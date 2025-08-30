@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmation - CleanHandy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .confirmation-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        .confirmation-header {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .booking-id {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-top: 1rem;
+            display: inline-block;
+        }
+        .confirmation-content {
+            padding: 2rem;
+        }
+        .detail-section {
+            margin-bottom: 2rem;
+        }
+        .detail-section h6 {
+            color: #495057;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 0;
+        }
+        .label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+        .value {
+            color: #495057;
+        }
+        .success-icon {
+            animation: bounceIn 0.6s ease-out;
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .next-steps {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+        }
+        .steps-timeline {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        .step-item {
+            text-align: center;
+            flex: 1;
+        }
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-weight: 600;
+        }
+        .step-content h6 {
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        .step-content p {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .contact-info {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 2rem;
+        }
+        .contact-info a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-5">
+<div class="text-center mb-4">
+    <div class="success-icon mb-3">
+        <i class="fas fa-check-circle fa-5x text-success"></i>
+    </div>
+    <h2 class="text-success">Booking Confirmed!</h2>
+    <p class="text-muted">Thank you for choosing CleanHandy. Your cleaning service has been scheduled successfully.</p>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="confirmation-card">
+            <div class="confirmation-header">
+                <h4><i class="fas fa-receipt text-primary me-2"></i>Booking Details</h4>
+                <div class="booking-id">Booking #{{ booking.id }}</div>
+            </div>
+            
+            <div class="confirmation-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <h6><i class="fas fa-broom text-primary me-2"></i>Service Details</h6>
+                            <div class="detail-item">
+                                <span class="label">Service Type:</span>
+                                <span class="value">{{ booking.service_type.name }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">Cleaning Type:</span>
+                                <span class="value">{{ booking.get_cleaning_type_display }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">Bedrooms:</span>
+                                <span class="value">{{ booking.get_bedrooms_display }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">Bathrooms:</span>
+                                <span class="value">{{ booking.get_bathrooms_display }}</span>
+                            </div>
+                            {% if booking.has_pets %}
+                            <div class="detail-item">
+                                <span class="label">Pets:</span>
+                                <span class="value">{{ booking.get_has_pets_display }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h6><i class="fas fa-calendar-alt text-info me-2"></i>Schedule</h6>
+                            <div class="detail-item">
+                                <span class="label">Date:</span>
+                                <span class="value">{{ booking.date_of_service|date:"F j, Y" }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">Time:</span>
+                                <span class="value">{{ booking.time_slot|time:"g:i A" }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">Frequency:</span>
+                                <span class="value">{{ booking.get_frequency_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <h6><i class="fas fa-user text-primary me-2"></i>Contact Information</h6>
+                            <div class="detail-item">
+                                <span class="label">Name:</span>
+                                <span class="value">{{ booking.first_name }} {{ booking.last_name }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">Email:</span>
+                                <span class="value">{{ booking.email }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">Phone:</span>
+                                <span class="value">{{ booking.phone_country_code }} {{ booking.phone_number }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">Access Method:</span>
+                                <span class="value">{{ booking.get_access_method_display }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h6><i class="fas fa-map-marker-alt text-danger me-2"></i>Location</h6>
+                            <div class="detail-item">
+                                <span class="label">Address:</span>
+                                <span class="value">
+                                    {{ booking.street_address }}
+                                    {% if booking.unit_apt_suite %}, {{ booking.unit_apt_suite }}{% endif %}
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">City, State, ZIP:</span>
+                                <span class="value">{{ booking.city }}, {{ booking.state }} {{ booking.zip_code }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if booking.extra_services.all %}
+                <div class="detail-section">
+                    <h6><i class="fas fa-plus-circle text-success me-2"></i>Extra Services</h6>
+                    <div class="extra-services">
+                        {% for service in booking.extra_services.all %}
+                            <span class="badge bg-success me-2 mb-2">{{ service.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if booking.additional_details %}
+                <div class="detail-section">
+                    <h6><i class="fas fa-comment text-info me-2"></i>Additional Details</h6>
+                    <p class="additional-details">{{ booking.additional_details }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="detail-section">
+                    <h6><i class="fas fa-dollar-sign text-success me-2"></i>Pricing</h6>
+                    <div class="pricing-details">
+                        <div class="price-row">
+                            <span class="label">Base Price:</span>
+                            <span class="value">${{ booking.base_price }}</span>
+                        </div>
+                        {% if booking.extra_services_total > 0 %}
+                        <div class="price-row">
+                            <span class="label">Extra Services:</span>
+                            <span class="value">${{ booking.extra_services_total }}</span>
+                        </div>
+                        {% endif %}
+                        {% if booking.discount_amount > 0 %}
+                        <div class="price-row discount">
+                            <span class="label">Discount ({{ booking.get_frequency_display }}):</span>
+                            <span class="value">-${{ booking.discount_amount }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="price-row total">
+                            <span class="label">Total:</span>
+                            <span class="value">${{ booking.total_price }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="next-steps">
+            <h5><i class="fas fa-list-check text-primary me-2"></i>What Happens Next?</h5>
+            <div class="steps-timeline">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h6>Confirmation Email</h6>
+                        <p>You'll receive a detailed confirmation email within the next few minutes.</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h6>Team Assignment</h6>
+                        <p>Our team will be assigned and you'll receive their contact information 24 hours before service.</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h6>Service Day</h6>
+                        <p>Our cleaning team will arrive at your scheduled time and complete the service.</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h6>Quality Check</h6>
+                        <p>We'll conduct a final inspection and ensure your complete satisfaction.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="contact-support">
+            <h5><i class="fas fa-headset text-primary me-2"></i>Need Help?</h5>
+            <p class="mb-3">Our customer support team is here to help with any questions or changes to your booking.</p>
+            <div class="contact-methods">
+                <div class="contact-method">
+                    <i class="fas fa-phone text-primary me-2"></i>
+                    <span>Call us: <a href="tel:+1234567890">+1 (234) 567-890</a></span>
+                </div>
+                <div class="contact-method">
+                    <i class="fas fa-envelope text-primary me-2"></i>
+                    <span>Email us: <a href="mailto:support@cleanhandy.com">support@cleanhandy.com</a></span>
+                </div>
+                <div class="contact-method">
+                    <i class="fas fa-clock text-primary me-2"></i>
+                    <span>Support hours: Mon-Fri 8AM-6PM, Sat 9AM-3PM</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{% url 'bookings:booking_home' %}" class="btn btn-primary me-3">
+            <i class="fas fa-plus me-2"></i>Book Another Service
+        </a>
+        <a href="#" class="btn btn-outline-primary">
+            <i class="fas fa-download me-2"></i>Download Receipt
+        </a>
+    </div>
+</div>
+
+<style>
+.success-icon {
+    animation: bounceIn 0.6s ease-out;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.confirmation-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.confirmation-header {
+    background: linear-gradient(135deg, var(--primary-color), #0056b3);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.booking-id {
+    background: rgba(255,255,255,0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.confirmation-content {
+    padding: 2rem;
+}
+
+.detail-section {
+    margin-bottom: 2rem;
+}
+
+.detail-section h6 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.detail-item .label {
+    font-weight: 600;
+    color: var(--dark-color);
+    min-width: 120px;
+}
+
+.detail-item .value {
+    color: var(--secondary-color);
+    text-align: right;
+    flex: 1;
+}
+
+.extra-services {
+    margin: 1rem 0;
+}
+
+.additional-details {
+    background: var(--light-color);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+    margin: 0;
+}
+
+.pricing-details {
+    background: var(--light-color);
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.price-row.total {
+    border-top: 2px solid #dee2e6;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--success-color);
+}
+
+.price-row.discount {
+    color: var(--success-color);
+}
+
+.next-steps {
+    background: var(--light-color);
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.steps-timeline {
+    margin-top: 1.5rem;
+}
+
+.step-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.step-content h6 {
+    margin-bottom: 0.5rem;
+    color: var(--dark-color);
+}
+
+.step-content p {
+    margin: 0;
+    color: var(--secondary-color);
+}
+
+.contact-support {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.contact-methods {
+    margin-top: 1rem;
+}
+
+.contact-method {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.contact-method i {
+    width: 20px;
+    margin-right: 0.75rem;
+}
+
+.contact-method a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.contact-method a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .confirmation-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .detail-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .detail-item .value {
+        text-align: left;
+        margin-top: 0.25rem;
+    }
+    
+    .step-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .step-number {
+        margin: 0 auto 1rem auto;
+    }
+}
+</style>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

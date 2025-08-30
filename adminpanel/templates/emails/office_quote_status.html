@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Cleaning Quote Status Update - Clean & Handy Services</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #F15A29 0%, #d14a1f 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .status-update {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #F15A29;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #F15A29;
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #F15A29;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔄 Quote Status Update</h1>
+        <p>Clean & Handy Services</p>
+    </div>
+    
+    <div class="content">
+        <h2>Dear {{ office_quote.name }},</h2>
+        
+        <p>We wanted to inform you about an important update regarding your office cleaning quote request.</p>
+        
+        <div class="status-update">
+            <h3>📊 Current Status</h3>
+            <p><strong>Quote ID:</strong> #{{ office_quote.id }}</p>
+            <p><strong>New Status:</strong> <span class="status-badge">{{ office_quote.get_status_display }}</span></p>
+            <p><strong>Updated:</strong> {{ office_quote.created_at|date:"F d, Y" }}</p>
+        </div>
+        
+        {% if custom_message %}
+        <div class="status-update">
+            <h3>💬 Additional Information</h3>
+            <p>{{ custom_message }}</p>
+        </div>
+        {% endif %}
+        
+        <h3>📋 Quote Details</h3>
+        <ul>
+            <li><strong>Business Address:</strong> {{ office_quote.business_address }}</li>
+            <li><strong>Square Footage:</strong> {{ office_quote.square_footage }}</li>
+            <li><strong>Job Description:</strong> {{ office_quote.job_description }}</li>
+        </ul>
+        
+        <p>Our team is actively working on your request and will provide you with detailed information and next steps based on the current status.</p>
+        
+        <p>If you have any questions about this status update or need additional information, please don't hesitate to contact us:</p>
+        
+        <ul>
+            <li><strong>Phone:</strong> +1 (555) 123-4567</li>
+            <li><strong>Email:</strong> info@cleanhandy.com</li>
+            <li><strong>Website:</strong> www.cleanhandy.com</li>
+        </ul>
+        
+        <p>Thank you for choosing Clean & Handy Services for your office cleaning needs!</p>
+        
+        <p>Best regards,<br>
+        <strong>The Clean & Handy Services Team</strong></p>
+    </div>
+    
+    <div class="footer">
+        <p>This email was sent to {{ office_quote.email }} regarding quote request #{{ office_quote.id }}</p>
+        <p>© 2024 Clean & Handy Services. All rights reserved.</p>
+    </div>
+</body>
+</html>

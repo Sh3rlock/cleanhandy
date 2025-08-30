@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Your Service - CleanHandy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .service-card {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .service-card:hover {
+            border-color: #007bff;
+            box-shadow: 0 10px 25px rgba(0,123,255,0.15);
+            transform: translateY(-5px);
+        }
+        .service-icon {
+            margin-bottom: 1.5rem;
+        }
+        .service-features {
+            text-align: left;
+            margin: 1.5rem 0;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .feature-item i {
+            margin-right: 0.5rem;
+            width: 20px;
+        }
+        .info-section {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+        }
+        .info-item {
+            text-align: center;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-5">
+<div class="text-center">
+    <h2 class="mb-4">Choose Your Cleaning Service</h2>
+    <p class="text-muted mb-5">Select the type of cleaning service you need and we'll guide you through the booking process.</p>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <a href="{% url 'bookings:home_cleaning_booking' %}" class="service-card-link">
+                <div class="service-card">
+                    <div class="service-icon mb-3">
+                        <i class="fas fa-home fa-3x text-primary"></i>
+                    </div>
+                    <h3>Home Cleaning</h3>
+                    <p class="text-muted">Professional residential cleaning services for apartments, houses, and condos.</p>
+                    <div class="service-features">
+                        <div class="feature-item">
+                            <i class="fas fa-check text-success"></i>
+                            <span>Bedroom & Bathroom Cleaning</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check text-success"></i>
+                            <span>Kitchen & Living Areas</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check text-success"></i>
+                            <span>Standard & Deep Cleaning</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check text-success"></i>
+                            <span>Pet-Friendly Options</span>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="badge bg-primary">Starting at $50</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <a href="{% url 'bookings:office_cleaning_booking' %}" class="service-card-link">
+                <div class="service-card">
+                    <div class="service-icon mb-3">
+                        <i class="fas fa-building fa-3x text-primary"></i>
+                    </div>
+                    <h3>Office Cleaning</h3>
+                    <p class="text-muted">Commercial cleaning services for offices, retail spaces, and business facilities.</p>
+                    <div class="service-features">
+                        <div class="feature-item">
+                            <i class="fas fa-check text-success"></i>
+                            <span>Workstation Cleaning</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check text-success"></i>
+                            <span>Common Areas & Restrooms</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check text-success"></i>
+                            <span>Regular Maintenance</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check text-success"></i>
+                            <span>Flexible Scheduling</span>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="badge bg-primary">Starting at $75</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="info-section">
+                <h4>Why Choose CleanHandy?</h4>
+                <div class="row">
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="info-item">
+                            <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                            <h6>Trusted & Insured</h6>
+                            <small class="text-muted">Fully licensed and insured cleaning professionals</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="info-item">
+                            <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                            <h6>Flexible Scheduling</h6>
+                            <small class="text-muted">Book at your convenience with flexible time slots</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="info-item">
+                            <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                            <h6>Quality Guaranteed</h6>
+                            <small class="text-muted">100% satisfaction guarantee on all services</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="info-item">
+                            <i class="fas fa-leaf fa-2x text-success mb-2"></i>
+                            <h6>Eco-Friendly</h6>
+                            <small class="text-muted">Green cleaning products available</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="contact-info">
+                <p class="mb-2">
+                    <i class="fas fa-phone text-primary me-2"></i>
+                    <strong>Need immediate assistance?</strong> Call us at <a href="tel:+1234567890">+1 (234) 567-890</a>
+                </p>
+                <p class="mb-0">
+                    <i class="fas fa-envelope text-primary me-2"></i>
+                    <strong>Email us:</strong> <a href="mailto:support@cleanhandy.com">support@cleanhandy.com</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.service-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.service-card-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.service-card {
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    height: 100%;
+}
+
+.service-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.service-icon {
+    color: var(--primary-color);
+}
+
+.service-features {
+    text-align: left;
+    margin: 1.5rem 0;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.feature-item i {
+    margin-right: 0.75rem;
+    width: 20px;
+}
+
+.info-section {
+    background: var(--light-color);
+    padding: 2rem;
+    border-radius: 15px;
+    margin-top: 2rem;
+}
+
+.info-item {
+    text-align: center;
+    padding: 1rem;
+}
+
+.info-item h6 {
+    margin: 1rem 0 0.5rem 0;
+    font-weight: 600;
+}
+
+.contact-info {
+    background: var(--light-color);
+    padding: 1.5rem;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.contact-info a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.contact-info a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .service-card {
+        padding: 1.5rem;
+    }
+    
+    .info-section {
+        padding: 1.5rem;
+    }
+    
+    .info-item {
+        padding: 0.5rem;
+    }
+}
+</style>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

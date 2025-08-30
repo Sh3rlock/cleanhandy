@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
-from quotes.models import Quote, Service, ServiceCategory, Booking, NewsletterSubscriber
+from quotes.models import Quote, Service, ServiceCategory, Booking, NewsletterSubscriber, OfficeQuote
 from giftcards.models import GiftCard, DiscountCode
 from quotes.forms import CleaningQuoteForm, HandymanQuoteForm
 from customers.models import Customer
@@ -45,6 +45,12 @@ from django.http import JsonResponse, Http404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseBadRequest
 
+# For PDF generation
+from django.template.loader import get_template
+from django.http import HttpResponse
+from weasyprint import HTML
+from django.conf import settings
+import os
 
 
 def admin_check(user):
@@ -206,7 +212,6 @@ def booking_list(request):
     if selected_categories:
         bookings = bookings.filter(service_cat_id__in=selected_categories)
 
-    service_categories = ServiceCategory.objects.all()
     status_list = ['pending', 'confirmed', 'completed', 'cancelled']
 
       # ⏳ Date filter
@@ -232,7 +237,7 @@ def booking_list(request):
     return render(request, 'adminpanel/booking_list.html', {
         'bookings': bookings,
         'status_list': ['pending', 'confirmed', 'completed', 'cancelled'],
-        'service_categories': ServiceCategory.objects.all(),
+        'service_categories': ServiceCategory.objects.filter(name__in=['Home', 'Commercial']),
         'selected_statuses': selected_statuses,
         'selected_categories': selected_categories,
         'selected_date_filter': date_filter,
@@ -278,6 +283,25 @@ def booking_detail_admin(request, booking_id):
 def customer_list(request):
     customers = User.objects.all().order_by("username")
     return render(request, "adminpanel/customer_list.html", {"customers": customers})
+
+def office_quote_list(request):
+    office_quotes = OfficeQuote.objects.all().order_by("-created_at")
+    return render(request, "adminpanel/office_quote_list.html", {"office_quotes": office_quotes})
+
+def office_quote_detail(request, quote_id):
+    office_quote = get_object_or_404(OfficeQuote, pk=quote_id)
+    
+    if request.method == "POST":
+        # Update the quote status and admin notes
+        office_quote.status = request.POST.get("status", office_quote.status)
+        office_quote.admin_notes = request.POST.get("admin_notes", office_quote.admin_notes)
+        office_quote.save()
+        messages.success(request, "Office quote updated successfully!")
+        return redirect("office_quote_list")
+    
+    return render(request, "adminpanel/office_quote_detail.html", {
+        "office_quote": office_quote
+    })
 
 from django.contrib.auth.models import User
 
@@ -916,6 +940,106 @@ def export_subscribers_csv(request):
         writer.writerow([subscriber.email, subscriber.subscribed_at.strftime('%Y-%m-%d %H:%M')])
 
     return response
+
+def export_office_quotes_csv(request):
+    # Create the HttpResponse with CSV headers
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename=office_quotes.csv'
+
+    writer = csv.writer(response)
+    writer.writerow(['ID', 'Name', 'Email', 'Phone', 'Business Address', 'Square Footage', 'Job Description', 'Status', 'Created At', 'Admin Notes'])
+
+    for quote in OfficeQuote.objects.all().order_by('-created_at'):
+        writer.writerow([
+            quote.id,
+            quote.name,
+            quote.email,
+            quote.phone_number,
+            quote.business_address,
+            quote.square_footage,
+            quote.job_description,
+            quote.get_status_display(),
+            quote.created_at.strftime('%Y-%m-%d %H:%M'),
+            quote.admin_notes or ''
+        ])
+
+    return response
+
+def send_office_quote_email(request, quote_id):
+    office_quote = get_object_or_404(OfficeQuote, pk=quote_id)
+    
+    if request.method == "POST":
+        email_type = request.POST.get("email_type")
+        custom_message = request.POST.get("custom_message", "")
+        
+        if email_type == "quote_update":
+            subject = f"Office Cleaning Quote Update - #{office_quote.id}"
+            template_name = "emails/office_quote_update.html"
+        elif email_type == "status_update":
+            subject = f"Office Cleaning Quote Status Update - #{office_quote.id}"
+            template_name = "emails/office_quote_status.html"
+        else:
+            subject = f"Office Cleaning Quote - #{office_quote.id}"
+            template_name = "emails/office_quote_general.html"
+        
+        context = {
+            "office_quote": office_quote,
+            "custom_message": custom_message,
+            "request_scheme": request.scheme,
+            "domain": get_current_site(request).domain,
+        }
+        
+        html_content = render_to_string(template_name, context)
+        text_content = strip_tags(html_content)
+        
+        try:
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email="noreply@cleanhandy.com",
+                to=[office_quote.email],
+                bcc=["matyass91@gmail.com"]  # Admin copy
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+            
+            messages.success(request, f"📧 Email sent successfully to {office_quote.email}")
+        except Exception as e:
+            messages.error(request, f"❌ Failed to send email: {str(e)}")
+    
+    return redirect("office_quote_detail", quote_id=office_quote.id)
+
+def generate_office_quote_pdf(request, quote_id):
+    office_quote = get_object_or_404(OfficeQuote, pk=quote_id)
+    
+    # Generate PDF using WeasyPrint
+    try:
+        template = get_template("adminpanel/office_quote_pdf.html")
+        context = {
+            "office_quote": office_quote,
+            "company_info": {
+                "name": "Clean & Handy Services",
+                "address": "123 Business Street, City, State 12345",
+                "phone": "+1 (555) 123-4567",
+                "email": "info@cleanhandy.com",
+                "website": "www.cleanhandy.com"
+            }
+        }
+        
+        html_string = template.render(context)
+        
+        # Create PDF response
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = f"attachment; filename=office_quote_{office_quote.id}.pdf"
+        
+        # Generate PDF
+        HTML(string=html_string).write_pdf(response)
+        
+        return response
+        
+    except Exception as e:
+        messages.error(request, f"❌ Failed to generate PDF: {str(e)}")
+        return redirect("office_quote_detail", quote_id=office_quote.id)
 
 
 

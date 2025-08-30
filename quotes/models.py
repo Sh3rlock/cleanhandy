@@ -3,6 +3,8 @@ from customers.models import Customer  # Import the correct Customer model
 from giftcards.models import GiftCard
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 
 class ServiceCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -21,6 +23,74 @@ class Service(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+class HourlyRate(models.Model):
+    """Model to manage hourly rates for different service types"""
+    SERVICE_TYPE_CHOICES = [
+        ('office_cleaning', 'Office Cleaning'),
+        ('home_cleaning', 'Home Cleaning'),
+        ('post_renovation', 'Post Renovation Cleaning'),
+        ('construction', 'Construction Cleaning'),
+        ('move_in_out', 'Move In/Out Cleaning'),
+        ('deep_cleaning', 'Deep Cleaning'),
+        ('regular_cleaning', 'Regular Cleaning'),
+    ]
+    
+    service_type = models.CharField(max_length=50, choices=SERVICE_TYPE_CHOICES, unique=True)
+    hourly_rate = models.DecimalField(max_digits=6, decimal_places=2, help_text="Hourly rate per cleaner")
+    is_active = models.BooleanField(default=True, help_text="Whether this rate is currently active")
+    description = models.TextField(blank=True, help_text="Additional description or notes about this rate")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['service_type']
+        verbose_name = "Hourly Rate"
+        verbose_name_plural = "Hourly Rates"
+    
+    def get_service_type_display(self):
+        """Get the display name for the service type with error handling"""
+        try:
+            return dict(self.SERVICE_TYPE_CHOICES).get(self.service_type, self.service_type)
+        except:
+            return str(self.service_type)
+    
+    def __str__(self):
+        try:
+            service_display = self.get_service_type_display()
+            return f"{service_display}: ${self.hourly_rate}/hour"
+        except:
+            return f"Hourly Rate {self.id}"
+    
+    @classmethod
+    def get_rate_for_service(cls, service_type):
+        """Get the active hourly rate for a specific service type"""
+        try:
+            rate = cls.objects.get(service_type=service_type, is_active=True)
+            return rate.hourly_rate
+        except cls.DoesNotExist:
+            # Return default rates if not configured
+            default_rates = {
+                'office_cleaning': Decimal('75.00'),
+                'home_cleaning': Decimal('55.00'),
+                'post_renovation': Decimal('60.00'),
+                'construction': Decimal('60.00'),
+                'move_in_out': Decimal('65.00'),
+                'deep_cleaning': Decimal('70.00'),
+                'regular_cleaning': Decimal('55.00'),
+            }
+            return default_rates.get(service_type, Decimal('55.00'))
+
+# Signal to clear hourly rate cache when rates are updated
+@receiver([post_save, post_delete], sender=HourlyRate)
+def clear_hourly_rate_cache_signal(sender, instance, **kwargs):
+    """Clear hourly rate cache when rates are updated or deleted"""
+    try:
+        from .utils import clear_hourly_rate_cache
+        clear_hourly_rate_cache()
+    except ImportError:
+        # If utils module is not available, just pass
+        pass
 
 
 class CleaningExtra(models.Model):
@@ -126,6 +196,8 @@ class Quote(models.Model):
         return slots
     
     def is_large_home(self):
+        if not self.square_feet_options:
+            return False  # Default to small home if no square feet option is set
         return not self.square_feet_options.name.lower().startswith("under 1000")
     
     def calculate_subtotal(self):
@@ -163,6 +235,30 @@ class Quote(models.Model):
 
     
 
+class OfficeQuote(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone_number = models.CharField(max_length=20)
+    business_address = models.TextField()
+    square_footage = models.CharField(max_length=50, help_text="Estimated square footage")
+    job_description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("reviewed", "Reviewed"),
+            ("quoted", "Quoted"),
+            ("accepted", "Accepted"),
+            ("declined", "Declined"),
+        ],
+        default="pending",
+    )
+    admin_notes = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"Office Quote {self.id} - {self.name} ({self.status})"
+
 class NewsletterSubscriber(models.Model):
     email = models.EmailField(unique=True)
     subscribed_at = models.DateTimeField(auto_now_add=True)
@@ -181,6 +277,53 @@ class Booking(models.Model):
      # Cleaning-specific fields
     cleaning_type = models.CharField(max_length=100, null=True, blank=True)
     num_cleaners = models.PositiveIntegerField(null=True, blank=True)
+
+    # Office Cleaning specific fields
+    business_type = models.CharField(
+        max_length=50, 
+        choices=[
+            ("office", "Office"),
+            ("retail", "Retail"),
+            ("medical", "Medical"),
+            ("school", "School"),
+            ("other", "Other")
+        ],
+        default="office",
+        null=True,
+        blank=True
+    )
+    crew_size_hours = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        help_text="Format: num_cleaners_hours_sqft (e.g., 1_cleaner_2_hours_500)"
+    )
+    hear_about_us = models.CharField(
+        max_length=50,
+        choices=[
+            ("google", "Google Search"),
+            ("social_media", "Social Media"),
+            ("referral", "Referral"),
+            ("advertisement", "Advertisement"),
+            ("yelp", "Yelp"),
+            ("other", "Other")
+        ],
+        null=True,
+        blank=True
+    )
+    cleaning_frequency = models.CharField(
+        max_length=20,
+        choices=[
+            ("one_time", "One Time"),
+            ("daily", "Daily"),
+            ("weekly", "Weekly"),
+            ("bi_weekly", "Bi Weekly"),
+            ("monthly", "Monthly")
+        ],
+        default="one_time",
+        null=True,
+        blank=True
+    )
 
     # System Fields
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -269,6 +412,8 @@ class Booking(models.Model):
         return slots
     
     def is_large_home(self):
+        if not self.square_feet_options:
+            return False  # Default to small home if no square feet option is set
         return not self.square_feet_options.name.lower().startswith("under 1000")
     
     def calculate_subtotal(self):

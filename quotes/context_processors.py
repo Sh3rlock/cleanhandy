@@ -15,7 +15,8 @@ def newsletter_form(request):
 
 def cleaning_service_category(request):
     return {
-        'cleaning_service_cat': ServiceCategory.objects.filter(name__iexact='cleaning').first()
+        'home_service_cat': ServiceCategory.objects.filter(name__iexact='home').first(),
+        'commercial_service_cat': ServiceCategory.objects.filter(name__iexact='commercial').first()
     }
 
 def handyman_service_category(request):

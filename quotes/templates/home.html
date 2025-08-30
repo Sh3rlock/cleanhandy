@@ -185,18 +185,10 @@
               
               <div class="banner-form justify-content-center">
                 <div class="banner-search">
-                  {% if user.is_authenticated %}
-                    <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Cleaning</a>
-                  {% else %}
-                    <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Cleaning</a>
-                  {% endif %}
+                  <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
                 </div>
                 <div class="banner-search">
-                  {% if user.is_authenticated %}
-                    <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
-                  {% else %}
-                    <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
-                  {% endif %}
+                  <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
                 </div>
               </div>
               <div class="customer-box">
@@ -233,11 +225,11 @@
         <!-- <a href="service.html" class="btn-1">Explore More <i class="icon-arrow-1"></i></a> -->
       </div>
       <div class="row">
-        <!-- Column 1: Cleaning Services -->
-        <div class="col-lg-6">
-          <h4>Cleaning Services</h4>
+        <!-- Column 1: Home Cleaning Services -->
+        <div class="col-lg-12">
+          <h4>Home Cleaning Services</h4>
           <div class="row">
-            {% for c_service in cleaning_services %}
+            {% for c_service in services %}
               <div class="col-lg-6 col-md-6">
                 <a href="{% url 'request_cleaning_quote' c_service.id %}" class="categories-link">
                   <div class="categories-single">
@@ -258,31 +250,30 @@
           </div>
         </div>
         
-
-        <!-- Column 2: Example - Handyman Services -->
+        <!-- Column 2: Commercial Cleaning Services 
         <div class="col-lg-6">
-          <h4>Handyman Services</h4>
+          <h4>Commercial Cleaning Services</h4>
           <div class="row">
-            {% for h_service in handyman_services %}
+            {% for c_service in commercial_services %}
               <div class="col-lg-6 col-md-6">
-                <a href="{% url 'request_handyman_quote' h_service.id %}" class="categories-link">
+                <a href="{% url 'office_cleaning_booking' %}" class="categories-link">
                   <div class="categories-single">
                     <div class="categories-single-image">
-                      {% if h_service.service_image %}
-                        <img src="{{ h_service.service_image.url }}" alt="{{ h_service.name }}" />
+                      {% if c_service.service_image %}
+                        <img src="{{ c_service.service_image.url }}" alt="{{ c_service.name }}" />
                       {% else %}
                         <img src="{% static 'assets/images/default_white.png' %}" alt="default image" />
                       {% endif %}
                     </div>
                     <div class="categories-single-title">
-                      <span>{{ h_service.name }}</span>
+                      <span>{{ c_service.name }}</span>
                     </div>
                   </div>
                 </a>
               </div>
             {% endfor %}
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
   </section>
@@ -367,15 +358,15 @@
               </div>
               <div class="service-tow-single-content">
                     {% if service.category.name|lower == "cleaning" %}
-                        <a href="{% url 'request_cleaning_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
+                        <a href="{% url 'bookings:home_cleaning_booking' %}" class="service-tow-single-title">{{ service.name }}</a>
                     {% elif service.category.name|lower == "handyman" %}
-                        <a href="{% url 'request_handyman_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
+                        <!-- <a href="{% url 'request_handyman_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a> -->
                     {% endif %}
                   <div class="service-tow-single-rating">
                       <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
                   </div>
                   <div class="featured-single-info">
-                      <a href="{% url 'request_handyman_quote' service.id %}">Book Now</a>
+                      <!-- <a href="{% url 'request_handyman_quote' service.id %}">Book Now</a> -->
                       <div class="featured-single-info-left">
                           <p>Starting from:</p><h5>${{ service.base_price }}</h5>
                       </div>
@@ -423,7 +414,7 @@
             <div class="blog-single-title">
               <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
             </div>
-            <div class="blog-single-info">
+             <div class="blog-single-info">
               <p>Handyman</p>
               <span>April 5, 2025</span>
             </div>

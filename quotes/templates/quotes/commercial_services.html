@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Commercial Cleaning Services</h2>
+<p>Select the commercial cleaning service you need and request a quote.</p>
+
+<ul>
+    {% for service in services %}
+        <li>{{ service.name }} - {{ service.description }}</li>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'office_cleaning_booking' %}" class="btn btn-primary">Book Commercial Cleaning</a>
+{% endblock %}
