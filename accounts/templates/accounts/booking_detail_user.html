@@ -11,18 +11,6 @@
     <h2>📋 Booking Details</h2>
     <p>Thank you, {{ booking.name }}! Here's your full booking breakdown:</p>
 
-    <!-- Service Type Header -->
-    <div class="alert {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}alert-info{% else %}alert-success{% endif %} mb-4">
-      <h5 class="mb-2">
-        <strong>Service Type:</strong> {{ booking.service_cat.name }}
-        {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
-          <i class="fa fa-building ms-2"></i> Commercial/Office Cleaning
-        {% else %}
-          <i class="fa fa-home ms-2"></i> Home Cleaning
-        {% endif %}
-      </h5>
-    </div>
-
     <!-- Booking Progress Timeline -->
     <div class="card mt-4">
       <div class="card-body">
@@ -64,28 +52,11 @@
           <div class="col-md-8">
             <p class="mb-2"><strong>Service:</strong> {{ booking.service_cat.name }}</p>
             <p class="mb-2"><strong>Date:</strong> {{ booking.date }} at {{ booking.hour }}</p>
-            
-            <!-- Service Type Specific Details -->
-            {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
-              <!-- Commercial/Office Details -->
-              <p class="mb-2"><strong>Business Type:</strong> {{ booking.business_type|default:"Not specified" }}</p>
-              <p class="mb-2"><strong>Cleaners:</strong> {{ booking.num_cleaners|default:"Not specified" }}, <strong>Hours:</strong> {{ booking.hours_requested|default:"Not specified" }}</p>
-              <p class="mb-2"><strong>Cleaning Frequency:</strong> 
-                {% if booking.cleaning_frequency != "one_time" %}
-                  {{ booking.cleaning_frequency|title }}
-                {% else %}
-                  One-time
-                {% endif %}
-              </p>
+            {% if booking.is_large_home %}
+              <p class="mb-2"><strong>Cleaners:</strong> {{ booking.num_cleaners }}, <strong>Hours:</strong> {{ booking.hours_requested }}</p>
             {% else %}
-              <!-- Residential/Home Details -->
-              {% if booking.is_large_home %}
-                <p class="mb-2"><strong>Cleaners:</strong> {{ booking.num_cleaners }}, <strong>Hours:</strong> {{ booking.hours_requested }}</p>
-              {% else %}
-                <p class="mb-2"><strong>Hours:</strong> {{ booking.hours_requested }}</p>
-              {% endif%}
-            {% endif %}
-            
+              <p class="mb-2"><strong>Hours:</strong> {{ booking.hours_requested }}</p>
+            {% endif%}
             <p class="mb-2">
               <strong>Total Price:</strong>
               <span class="badge rounded-pill" style="background-color: #F15A29; color: #fff; font-size: 1rem;">
@@ -139,40 +110,19 @@
       <div class="card-body">
         <h5 class="mb-3">💰 Price Breakdown</h5>
         <ul class="list-group list-group-flush small">
-          {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
-            <!-- Commercial/Office Price Breakdown -->
-            <li class="list-group-item">Service Type: {{ booking.service_cat.name }}</li>
-            {% if booking.business_type %}
-              <li class="list-group-item">Business Type: {{ booking.business_type }}</li>
-            {% endif %}
-            <li class="list-group-item">Number of Cleaners: {{ booking.num_cleaners|default:"Not specified" }}</li>
-            <li class="list-group-item">Hours Requested: {{ booking.hours_requested|default:"Not specified" }}</li>
-            <li class="list-group-item">Cleaning Frequency: 
-              {% if booking.cleaning_frequency != "one_time" %}
-                {{ booking.cleaning_frequency|title }}
-              {% else %}
-                One-time
-              {% endif %}
-            </li>
-          {% else %}
-            <!-- Residential/Home Price Breakdown -->
-            {% if booking.square_feet_options %}
-              <li class="list-group-item">Square Footage: {{ booking.square_feet_options.name }}</li>
-            {% endif %}
-            {% if not booking.is_large_home and booking.home_types %}
-              <li class="list-group-item">Home Type: {{ booking.home_types.name }} (${{ booking.home_types.price }})</li>
-            {% endif %}
-            {% if booking.is_large_home %}
-              <li class="list-group-item">Cleaners: {{ booking.num_cleaners }}</li>
-              <li class="list-group-item">Labor Cost: {{ booking.calculate_subtotal|floatformat:2 }}</li>
-            {% endif %}
+          {% if booking.square_feet_options %}
+            <li class="list-group-item">Square Footage: {{ booking.square_feet_options.name }}</li>
           {% endif %}
-          
-          <!-- Common Extras -->
+          {% if not booking.is_large_home and booking.home_types %}
+            <li class="list-group-item">Home Type: {{ booking.home_types.name }} (${{ booking.home_types.price }})</li>
+          {% endif %}
           {% for extra in booking.extras.all %}
             <li class="list-group-item ps-4">+ {{ extra.name }} — ${{ extra.price }}</li>
           {% endfor %}
-          
+          {% if booking.is_large_home %}
+            <li class="list-group-item">Cleaners: {{ booking.num_cleaners }}</li>
+            <li class="list-group-item">Labor Cost: {{ booking.calculate_subtotal|floatformat:2 }}</li>
+          {% endif %}
           <li class="list-group-item">Subtotal: ${{ booking.calculate_subtotal }}</li>
           <li class="list-group-item">Tax: ${{ booking.calculate_tax }}</li>
           {% if booking.gift_card_discount > 0 %}
@@ -192,65 +142,28 @@
         <p class="mb-2"><strong>Date:</strong> {{ booking.date }}</p>
         <p class="mb-2"><strong>Time:</strong> {{ booking.hour|time:"H:i" }}</p>
         <p class="mb-2"><strong>Duration:</strong> {{ booking.hours_requested }} hour(s)</p>
-        {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
-          <p class="mb-0"><strong>Frequency:</strong> 
-            {% if booking.cleaning_frequency != "one_time" %}
-              {{ booking.cleaning_frequency|title }}
-            {% else %}
-              One-time
-            {% endif %}
-          </p>
-        {% else %}
-          <p class="mb-0"><strong>Recurring:</strong> 
-            {% if booking.recurrence_pattern != "one_time" %}
-              {{ booking.get_recurrence_pattern_display }}
-            {% else %}
-              One-time
-            {% endif %}
-          </p>
-        {% endif %}
+        <p class="mb-0"><strong>Recurring:</strong> 
+          {% if booking.recurrence_pattern != "one_time" %}
+            {{ booking.get_recurrence_pattern_display }}
+          {% else %}
+            One-time
+          {% endif %}
+        </p>
       </div>
     </div>
   </div>
 
-  <!-- Service Specific Info -->
-  {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
-    <!-- Commercial/Office Info -->
-    <div class="col-md-6">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h5 class="mb-3">🏢 Business Info</h5>
-          <p class="mb-2"><strong>Business Type:</strong> {{ booking.business_type|default:"Not specified" }}</p>
-          <p class="mb-2"><strong>Service Category:</strong> {{ booking.service_cat.name }}</p>
-          <p class="mb-2"><strong>Number of Cleaners:</strong> {{ booking.num_cleaners|default:"Not specified" }}</p>
-          <p class="mb-0"><strong>Hours Requested:</strong> {{ booking.hours_requested|default:"Not specified" }}</p>
-        </div>
-      </div>
-    </div>
-  {% else %}
-    <!-- Home Info -->
-    <div class="col-md-6">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h5 class="mb-3">🏠 Home Info</h5>
-          {% if booking.home_types %}
-            <p class="mb-2"><strong>Home Type:</strong> {{ booking.home_types.name }}</p>
-          {% endif %}
-          {% if booking.square_feet_options %}
-            <p class="mb-2"><strong>Square Feet:</strong> {{ booking.square_feet_options.name }}</p>
-          {% endif %}
-          <p class="mb-2"><strong>Is Large Home:</strong> {{ booking.is_large_home|yesno:"Yes,No" }}</p>
-          <p class="mb-0"><strong>Address:</strong> {{ booking.address }}{% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}</p>
-        </div>
-      </div>
-    </div>
-  {% endif %}
-
-  <!-- Location Info (Common to both) -->
+  <!-- Home Info -->
   <div class="col-md-6">
     <div class="card h-100 shadow-sm">
       <div class="card-body">
-        <h5 class="mb-3">📍 Location</h5>
+        <h5 class="mb-3">🏠 Home Info</h5>
+        {% if booking.home_types %}
+          <p class="mb-2"><strong>Home Type:</strong> {{ booking.home_types.name }}</p>
+        {% endif %}
+        {% if booking.square_feet_options %}
+          <p class="mb-2"><strong>Square Feet:</strong> {{ booking.square_feet_options.name }}</p>
+        {% endif %}
         <p class="mb-2"><strong>Address:</strong> {{ booking.address }}{% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}</p>
         <p class="mb-0"><strong>ZIP:</strong> {{ booking.zip_code }}</p>
       </div>
@@ -265,16 +178,6 @@
         <p class="mb-2"><strong>Name:</strong> {{ booking.name }}</p>
         <p class="mb-2"><strong>Email:</strong> {{ booking.email }}</p>
         <p class="mb-0"><strong>Phone:</strong> {{ booking.phone }}</p>
-        
-        <!-- Additional Commercial Info -->
-        {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
-          {% if booking.company_name %}
-            <p class="mb-2"><strong>Company:</strong> {{ booking.company_name }}</p>
-          {% endif %}
-          {% if booking.contact_person and booking.contact_person != booking.name %}
-            <p class="mb-0"><strong>Contact Person:</strong> {{ booking.contact_person }}</p>
-          {% endif %}
-        {% endif %}
       </div>
     </div>
   </div>

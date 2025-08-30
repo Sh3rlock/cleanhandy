@@ -224,11 +224,9 @@ def booking_detail(request, booking_id):
             review_submitted = True
             review_form = ReviewForm()  # Reset form after submission
 
-    # Determine if this is a commercial/office cleaning or residential/home cleaning
-    service_cat_name = booking.service_cat.name.lower() if booking.service_cat else ''
-    is_commercial = any(keyword in service_cat_name for keyword in ['commercial', 'office', 'business'])
-    
     # Determine template based on service category
+    service_cat_name = booking.service_cat.name.lower() if booking.service_cat else ''
+
     if service_cat_name == 'cleaning':
         template_name = 'accounts/booking_detail_user.html'
     else:
@@ -242,8 +240,6 @@ def booking_detail(request, booking_id):
         'review_form': review_form,
         'review_submitted': review_submitted,
         'reviews': reviews,
-        'is_commercial': is_commercial,  # Add this for easier template logic
-        'service_cat_name': service_cat_name,  # Add this for template conditionals
     })
 
 

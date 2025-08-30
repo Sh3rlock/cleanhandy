@@ -7,6 +7,7 @@ from .models import Customer
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.core.files.base import ContentFile
+from weasyprint import HTML
 from io import BytesIO
 from django.core.mail import EmailMessage
 from django.http import HttpRequest
@@ -94,12 +95,12 @@ def send_quote_email_cleaning(booking):
     # Render PDF HTML and generate PDF
     pdf_html = render_to_string("quotes/quote_pdf.html", {"booking": booking})
     pdf_buffer = BytesIO()
-    # HTML(string=pdf_html).write_pdf(target=pdf_buffer) # Removed WeasyPrint
-    # pdf_buffer.seek(0)
+    HTML(string=pdf_html).write_pdf(target=pdf_buffer)
+    pdf_buffer.seek(0)
 
     # Save PDF to model
     filename = f"quote-{booking.id}.pdf"
-    # booking.pdf_file.save(filename, ContentFile(pdf_buffer.read()), save=True) # Removed PDF saving
+    booking.pdf_file.save(filename, ContentFile(pdf_buffer.read()), save=True)
     pdf_buffer.seek(0)
 
     # Email to customer
@@ -111,7 +112,7 @@ def send_quote_email_cleaning(booking):
         to=[booking.email],
     )
     customer_email.content_subtype = "html"
-    # customer_email.attach(filename, pdf_buffer.read(), "application/pdf") # Removed PDF attachment
+    customer_email.attach(filename, pdf_buffer.read(), "application/pdf")
     customer_email.send()
 
     # Reset PDF buffer for second email
@@ -126,7 +127,7 @@ def send_quote_email_cleaning(booking):
         to=[settings.DEFAULT_FROM_EMAIL],  # or use a hardcoded staff email here
     )
     admin_email.content_subtype = "html"
-    # admin_email.attach(filename, pdf_buffer.read(), "application/pdf") # Removed PDF attachment
+    admin_email.attach(filename, pdf_buffer.read(), "application/pdf")
     admin_email.send()
 
 
@@ -138,7 +139,7 @@ def send_office_cleaning_quote_email(booking):
         # Generate PDF using office cleaning specific template
         pdf_html = render_to_string("quotes/office_cleaning_pdf.html", {"booking": booking})
         pdf_buffer = BytesIO()
-        # HTML(string=pdf_html).write_pdf(target=pdf_buffer) # Removed WeasyPrint
+        HTML(string=pdf_html).write_pdf(target=pdf_buffer)
         pdf_buffer.seek(0)
 
         # Create filename for the PDF
@@ -153,7 +154,7 @@ def send_office_cleaning_quote_email(booking):
             to=[booking.email],
         )
         customer_email.content_subtype = "html"
-        # customer_email.attach(filename, pdf_buffer.read(), "application/pdf") # Removed PDF attachment
+        customer_email.attach(filename, pdf_buffer.read(), "application/pdf")
         customer_email.send()
 
         # Reset PDF buffer for admin email
@@ -168,7 +169,7 @@ def send_office_cleaning_quote_email(booking):
             to=[settings.DEFAULT_FROM_EMAIL],  # or use a hardcoded staff email here
         )
         admin_email.content_subtype = "html"
-        # admin_email.attach(filename, pdf_buffer.read(), "application/pdf") # Removed PDF attachment
+        admin_email.attach(filename, pdf_buffer.read(), "application/pdf")
         admin_email.send()
         
         print(f"✅ Office cleaning PDF emails sent successfully for booking {booking.id}")

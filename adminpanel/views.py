@@ -48,6 +48,7 @@ from django.http import HttpResponseBadRequest
 # For PDF generation
 from django.template.loader import get_template
 from django.http import HttpResponse
+from weasyprint import HTML
 from django.conf import settings
 import os
 
@@ -1032,7 +1033,7 @@ def generate_office_quote_pdf(request, quote_id):
         response["Content-Disposition"] = f"attachment; filename=office_quote_{office_quote.id}.pdf"
         
         # Generate PDF
-        # HTML(string=html_string).write_pdf(response) # This line is removed
+        HTML(string=html_string).write_pdf(response)
         
         return response
         
