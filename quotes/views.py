@@ -678,37 +678,11 @@ def download_office_cleaning_pdf(request, booking_id):
         # Get the booking
         booking = get_object_or_404(Booking, id=booking_id)
         
-        # Render the PDF template
-        html_content = render_to_string('quotes/office_cleaning_pdf.html', {
-            'booking': booking
-        })
-        
-        # Generate PDF using weasyprint
-        try:
-            from weasyprint import HTML, CSS
-            from django.conf import settings
-            
-            # Create PDF from HTML
-            pdf = HTML(string=html_content).write_pdf()
-            
-            # Create HTTP response with PDF
-            response = HttpResponse(pdf, content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="office_cleaning_quote_{booking.id}_{booking.name.replace(" ", "_")}.pdf"'
-            
-            return response
-            
-        except ImportError:
-            # Fallback if weasyprint is not available
-            return HttpResponse(
-                "PDF generation requires weasyprint. Please install it with: pip install weasyprint",
-                content_type='text/plain'
-            )
-        except Exception as e:
-            print(f"❌ PDF generation failed: {e}")
-            return HttpResponse(
-                f"PDF generation failed: {str(e)}",
-                content_type='text/plain'
-            )
+        # Since WeasyPrint is not available, provide a fallback
+        return HttpResponse(
+            "PDF generation is currently unavailable. Please contact support for assistance.",
+            content_type='text/plain'
+        )
             
     except Exception as e:
         print(f"❌ Error in download_office_cleaning_pdf: {e}")
