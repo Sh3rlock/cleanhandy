@@ -1,0 +1,73 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Python files
+*.py text diff=python
+
+# Django templates
+*.html text diff=html
+*.txt text
+
+# CSS and JavaScript
+*.css text
+*.js text
+*.scss text
+
+# Images (binary)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+
+# Fonts (binary)
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+
+# Archives (binary)
+*.zip binary
+*.tar.gz binary
+*.rar binary
+
+# Documents (binary)
+*.pdf binary
+*.doc binary
+*.docx binary
+
+# Database files (binary)
+*.sqlite3 binary
+*.db binary
+
+# Log files
+*.log text
+
+# Configuration files
+*.ini text
+*.cfg text
+*.conf text
+
+# Shell scripts
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# Windows batch files
+*.cmd text eol=crlf
+
+# Markdown files
+*.md text diff=markdown
+
+# YAML files
+*.yml text
+*.yaml text
+
+# JSON files
+*.json text
+
+# XML files
+*.xml text
+
+# CSV files
+*.csv text

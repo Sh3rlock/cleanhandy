@@ -1,8 +1,21 @@
-asgiref==3.8.1
+# Core Django and web framework
 Django==5.1.7
+asgiref==3.8.1
 gunicorn==23.0.0
-packaging==24.2
+
+# Database and utilities
 pytz==2025.1
 sqlparse==0.5.3
+
+# Static file handling
 whitenoise==6.9.0
-weasyprint==65.0
+
+# PDF generation (optional - comment out if causing issues)
+# weasyprint==65.0
+
+# Additional utilities
+packaging==24.2
+
+# Development dependencies (uncomment for development)
+# django-debug-toolbar==4.2.0
+# django-extensions==3.2.3
