@@ -1,5 +1,5 @@
 from django import forms
-from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber, Booking, Contact, Review, OfficeQuote
+from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber, Booking, Contact, Review, OfficeQuote, HandymanQuote
 from datetime import time, datetime, timedelta
 from django.core.exceptions import ValidationError
 from giftcards.models import GiftCard, DiscountCode
@@ -583,6 +583,64 @@ class OfficeCleaningBookingForm(CleaningBookingForm):
         self.fields['num_cleaners'].required = False
         self.fields['square_feet_options'].required = False
         self.fields['home_types'].required = False
+
+
+class HandymanQuoteForm(forms.ModelForm):
+    """Form for handyman quote requests"""
+    
+    class Meta:
+        model = HandymanQuote
+        fields = ['name', 'email', 'phone_number', 'address', 'job_description']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter your full name',
+                'required': True
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter your email address',
+                'required': True
+            }),
+            'phone_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter your phone number',
+                'required': True
+            }),
+            'address': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter the address where handyman work is needed',
+                'rows': 3,
+                'required': True
+            }),
+            'job_description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Please describe the handyman job in detail...',
+                'rows': 4,
+                'required': True
+            }),
+        }
+    
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if name and len(name.strip()) < 2:
+            raise forms.ValidationError("Name must be at least 2 characters long.")
+        return name.strip()
+    
+    def clean_phone_number(self):
+        phone = self.cleaned_data.get('phone_number')
+        if phone:
+            # Remove common formatting characters
+            cleaned_phone = phone.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+            if not cleaned_phone.isdigit() or len(cleaned_phone) < 10:
+                raise forms.ValidationError("Please enter a valid phone number.")
+        return phone
+    
+    def clean_job_description(self):
+        description = self.cleaned_data.get('job_description')
+        if description and len(description.strip()) < 20:
+            raise forms.ValidationError("Job description must be at least 20 characters long.")
+        return description.strip()
 
 
 

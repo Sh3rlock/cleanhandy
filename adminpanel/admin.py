@@ -1,6 +1,7 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import BlockedTimeSlot
-from quotes.models import OfficeQuote
+from quotes.models import OfficeQuote, HandymanQuote
 
 @admin.register(BlockedTimeSlot)
 class BlockedTimeSlotAdmin(admin.ModelAdmin):
@@ -30,3 +31,6 @@ class OfficeQuoteAdmin(admin.ModelAdmin):
             "classes": ("collapse",)
         }),
     )
+
+# HandymanQuote is already registered in quotes/admin.py
+# This prevents duplicate registration errors

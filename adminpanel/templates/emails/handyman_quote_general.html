@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handyman Quote - Clean & Handy Services</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #F15A29 0%, #d14a1f 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .quote-details {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #F15A29;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #F15A29;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .highlight {
+            color: #F15A29;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔨 Handyman Quote</h1>
+        <p>Clean & Handy Services</p>
+    </div>
+    
+    <div class="content">
+        <h2>Dear {{ handyman_quote.name }},</h2>
+        
+        <p>Thank you for your interest in our handyman services. We have received your quote request and are excited to help you with your project.</p>
+        
+        <div class="quote-details">
+            <h3>📋 Quote Request Details</h3>
+            <p><strong>Quote ID:</strong> #{{ handyman_quote.id }}</p>
+            <p><strong>Address:</strong> {{ handyman_quote.address }}</p>
+            <p><strong>Job Description:</strong> {{ handyman_quote.job_description }}</p>
+            <p><strong>Submitted:</strong> {{ handyman_quote.created_at|date:"F d, Y" }}</p>
+        </div>
+        
+        {% if custom_message %}
+        <div class="quote-details">
+            <h3>💬 Additional Message</h3>
+            <p>{{ custom_message }}</p>
+        </div>
+        {% endif %}
+        
+        <p>Our experienced handyman team will review your requirements and get back to you within 24-48 hours with a detailed quote and project plan tailored to your needs.</p>
+        
+        <p>In the meantime, if you have any questions or need to provide additional information, please don't hesitate to contact us:</p>
+        
+        <ul>
+            <li><strong>Phone:</strong> +1 (555) 123-4567</li>
+            <li><strong>Email:</strong> info@cleanhandy.com</li>
+            <li><strong>Website:</strong> www.cleanhandy.com</li>
+        </ul>
+        
+        <p>We look forward to helping you with your handyman project!</p>
+        
+        <p>Best regards,<br>
+        <strong>The Clean & Handy Services Team</strong></p>
+    </div>
+    
+    <div class="footer">
+        <p>This email was sent to {{ handyman_quote.email }} regarding quote request #{{ handyman_quote.id }}</p>
+        <p>© 2025 Clean & Handy Services. All rights reserved.</p>
+    </div>
+</body>
+</html>

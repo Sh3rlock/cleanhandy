@@ -392,7 +392,20 @@ select::-ms-expand {
             </table>
           </div>
 
-          <div class="service-details-content mt-4">{{ service.description|safe }}</div>
+          <div class="service-details-content mt-4 mb-4">{{ service.description|safe }}</div>
+          {% if "office" in service.name|lower %}
+            {% if user.is_authenticated %}
+              <a class="btn-1" style="margin-bottom: 20px;" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+            {% else %}
+              <a class="btn-1" style="margin-bottom: 20px;" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+            {% endif %}
+          {% else %}
+            {% if user.is_authenticated %}
+              <a class="btn-1" style="margin-bottom: 20px;" href="{% url 'request_cleaning_booking' %}">Book Home Cleaning</a>
+            {% else %}
+              <a class="btn-1" style="margin-bottom: 20px;" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+            {% endif %}
+          {% endif %}
         </div>
 
         <div class="col-lg-4">
@@ -560,10 +573,18 @@ select::-ms-expand {
                   </p>
                 </div>
                 <div class="featured-single-info">
-                  {% if user.is_authenticated %}
-                    <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Now</a>
+                  {% if "office" in service.name|lower %}
+                    {% if user.is_authenticated %}
+                      <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+                    {% else %}
+                      <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+                    {% endif %}
                   {% else %}
-                    <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Now</a>
+                    {% if user.is_authenticated %}
+                      <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Now</a>
+                    {% else %}
+                      <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Now</a>
+                    {% endif %}
                   {% endif %}
                   <div class="featured-single-info-left">
                     <p></p><h5></h5>

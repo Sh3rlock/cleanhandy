@@ -43,17 +43,18 @@
               </a>
             </div>
             <div class="col-md-3 mb-2">
-              <a href="{% url 'subscriber_list' %}" class="btn btn-outline-orange btn-sm w-100">
-                <i class="fa-solid fa-newspaper me-2"></i>Subscribers
+              <a href="{% url 'handyman_quote_list' %}" class="btn btn-outline-orange btn-sm w-100">
+                <i class="fa-solid fa-hammer me-2"></i>Handyman Quotes
               </a>
             </div>
           </div>
           <div class="row mt-2">
             <div class="col-md-3 mb-2">
-              <a href="{% url 'service_list' %}" class="btn btn-outline-orange btn-sm w-100">
-                <i class="fa-solid fa-tools me-2"></i>Services
+              <a href="{% url 'subscriber_list' %}" class="btn btn-outline-orange btn-sm w-100">
+                <i class="fa-solid fa-newspaper me-2"></i>Subscribers
               </a>
             </div>
+            
             <div class="col-md-3 mb-2">
               <a href="{% url 'booking_calendar' %}" class="btn btn-outline-orange btn-sm w-100">
                 <i class="fa-solid fa-calendar me-2"></i>Calendar
@@ -113,6 +114,49 @@
           <h5 class="card-title text-primary"><i class="fa-solid fa-newspaper me-2 text-primary"></i> Total Subscribers</h5>
           <h3 class="card-text">{{ total_subscribers }}</h3>
           <a href="{% url 'subscriber_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Subscribers</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quote Summary Cards -->
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
+        <div class="card-body">
+          <h5 class="card-title text-primary"><i class="fa-solid fa-building me-2 text-primary"></i> Office Quotes</h5>
+          <h3 class="card-text">{{ total_office_quotes }}</h3>
+          <div class="row mt-2">
+            <div class="col-6">
+              <small class="text-muted">Pending: {{ office_quote_status_counts.pending }}</small><br>
+              <small class="text-muted">Contacted: {{ office_quote_status_counts.contacted }}</small>
+            </div>
+            <div class="col-6">
+              <small class="text-muted">Quoted: {{ office_quote_status_counts.quoted }}</small><br>
+              <small class="text-muted">Completed: {{ office_quote_status_counts.completed }}</small>
+            </div>
+          </div>
+          <a href="{% url 'office_quote_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Office Quotes</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
+        <div class="card-body">
+          <h5 class="card-title text-primary"><i class="fa-solid fa-hammer me-2 text-primary"></i> Handyman Quotes</h5>
+          <h3 class="card-text">{{ total_handyman_quotes }}</h3>
+          <div class="row mt-2">
+            <div class="col-6">
+              <small class="text-muted">Pending: {{ handyman_quote_status_counts.pending }}</small><br>
+              <small class="text-muted">Contacted: {{ handyman_quote_status_counts.contacted }}</small>
+            </div>
+            <div class="col-6">
+              <small class="text-muted">Quoted: {{ handyman_quote_status_counts.quoted }}</small><br>
+              <small class="text-muted">Completed: {{ handyman_quote_status_counts.completed }}</small>
+            </div>
+          </div>
+          <a href="{% url 'handyman_quote_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Handyman Quotes</a>
         </div>
       </div>
     </div>
@@ -265,6 +309,62 @@
             {% empty %}
               <tr>
                 <td colspan="3" class="text-muted text-center">No subscribers.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
+        <h4 class="mb-0">
+          <i class="fa-solid fa-hammer me-2 text-primary"></i> Latest Handyman Quotes
+        </h4>
+        <a href="{% url 'handyman_quote_list' %}" class="btn btn-sm btn-outline-primary">
+          View All
+        </a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for quote in latest_handyman_quotes %}
+              <tr>
+                <td>
+                  <div>
+                    <strong>{{ quote.name }}</strong><br>
+                    <small class="text-muted">{{ quote.email }}</small>
+                  </div>
+                </td>
+                <td>
+                  {% if quote.status == 'pending' %}
+                    <span class="badge bg-warning">⏳ Pending</span>
+                  {% elif quote.status == 'contacted' %}
+                    <span class="badge bg-info">📞 Contacted</span>
+                  {% elif quote.status == 'quoted' %}
+                    <span class="badge bg-success">💰 Quoted</span>
+                  {% elif quote.status == 'completed' %}
+                    <span class="badge bg-primary">✅ Completed</span>
+                  {% elif quote.status == 'cancelled' %}
+                    <span class="badge bg-danger">❌ Cancelled</span>
+                  {% endif %}
+                </td>
+                <td>{{ quote.created_at|date:"M d, Y" }}</td>
+                <td>
+                  <a href="{% url 'handyman_quote_detail' quote.id %}" class="btn btn-sm btn-outline-primary">
+                    View
+                  </a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-muted text-center">No handyman quotes yet.</td>
               </tr>
             {% endfor %}
           </tbody>

@@ -54,12 +54,12 @@ python manage.py setup_hourly_rates
 
 This will create the following default rates:
 - **Office Cleaning**: $75.00/hour
-- **Home Cleaning**: $55.00/hour
-- **Post Renovation**: $60.00/hour
-- **Construction**: $60.00/hour
+- **Home Cleaning**: $58.00/hour
+- **Post Renovation**: $63.00/hour
+- **Construction**: $63.00/hour
 - **Move In/Out**: $65.00/hour
 - **Deep Cleaning**: $70.00/hour
-- **Regular Cleaning**: $55.00/hour
+- **Regular Cleaning**: $58.00/hour
 
 ### Step 3: Access Admin Interface
 1. Go to `/admin/` in your browser
@@ -94,7 +94,7 @@ total_cost = calculate_labor_cost('office_cleaning', 2, 3)
 from quotes.utils import get_all_hourly_rates
 
 all_rates = get_all_hourly_rates()
-# Returns: {'office_cleaning': Decimal('75.00'), 'home_cleaning': Decimal('55.00'), ...}
+# Returns: {'office_cleaning': Decimal('75.00'), 'home_cleaning': Decimal('58.00'), ...}
 ```
 
 ### For Administrators

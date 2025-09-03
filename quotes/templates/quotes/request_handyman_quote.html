@@ -144,7 +144,17 @@ select::-ms-expand {
                </div>
                
                <div class="service-details-content">
+                <div class="mt-4 mb-4">
+                  <button type="button" class="btn-1" onclick="openHandymanQuoteModal()">
+                      <i class="fas fa-file-invoice-dollar me-2"></i>Request a Handyman Quote
+                  </button>
+                </div> 
                    {{ service.description|safe }}
+                   <div class="mt-4">
+                       <button type="button" class="btn-1" onclick="openHandymanQuoteModal()">
+                           <i class="fas fa-file-invoice-dollar me-2"></i>Request a Handyman Quote
+                       </button>
+                   </div>
                </div>
             </div>
   
@@ -328,5 +338,580 @@ select::-ms-expand {
   </section>
   <!-- service 2 -->
 
+<!-- Custom Handyman Quote Modal -->
+<div id="handymanQuoteModal" class="simple-modal">
+    <div class="simple-modal-content">
+        <div class="simple-modal-header">
+            <h3>Request Handyman Quote</h3>
+            <span class="simple-modal-close" onclick="closeHandymanQuoteModal()">&times;</span>
+        </div>
+        <div class="simple-modal-body">
+            <form id="handymanQuoteForm">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_name">Full Name *</label>
+                        <input type="text" id="id_name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_email">Email Address *</label>
+                        <input type="email" id="id_email" name="email" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_phone_number">Phone Number *</label>
+                        <input type="tel" id="id_phone_number" name="phone_number" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_address">Address *</label>
+                    <textarea id="id_address" name="address" rows="3" placeholder="Enter the address where handyman work is needed" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="id_job_description">Description about the job *</label>
+                    <textarea id="id_job_description" name="job_description" rows="4" placeholder="Please describe the handyman job in detail..." required></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="simple-modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeHandymanQuoteModal()">Cancel</button>
+            <button type="button" class="btn-1" onclick="submitHandymanQuote()">Submit Quote Request</button>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Message -->
+<div id="handymanQuoteAlert" class="simple-alert" style="display: none;"></div>
+
+<style>
+    .btn-1 {
+        padding: 0.5rem 1rem !important; 
+    }
+
+    /* Simple Modal Styles */
+    .simple-modal {
+        display: none;
+        position: fixed;
+        z-index: 99999999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(3px);
+    }
+
+    .simple-modal.show {
+        display: block;
+    }
+
+    .simple-modal-content {
+        background-color: #fff;
+        margin: 3% auto;
+        padding: 0;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 700px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        animation: modalSlideIn 0.3s ease-out;
+        position: relative;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .simple-modal-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        border-bottom: 3px solid #F15A29;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .simple-modal-header h3 {
+        color: #F15A29;
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin: 0;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .simple-modal-close {
+        background: #F15A29;
+        color: white;
+        font-size: 1.8rem;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        font-weight: bold;
+    }
+
+    .simple-modal-close:hover {
+        background: #d14a1f;
+        transform: scale(1.1);
+    }
+
+    .simple-modal-body {
+        padding: 2rem;
+    }
+
+    .simple-modal-footer {
+        padding: 1.5rem 2rem;
+        border-top: 1px solid #dee2e6;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        background: #f8f9fa;
+        border-radius: 0 0 12px 12px;
+    }
+
+    /* Form Styles */
+    .form-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        flex: 1;
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        background: #fff;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #F15A29;
+        box-shadow: 0 0 0 3px rgba(241, 90, 41, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .form-group input.error,
+    .form-group textarea.error {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    }
+
+    .form-group input.error:focus,
+    .form-group textarea.error:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    /* Error message styling */
+    .error-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        font-weight: 500;
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Button Styles */
+    .simple-modal-footer .btn-1 {
+        background: #F15A29;
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .simple-modal-footer .btn-1:hover {
+        background: #d14a1f;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(241, 90, 41, 0.3);
+    }
+
+    .simple-modal-footer .btn-secondary {
+        background: #6c757d;
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .simple-modal-footer .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+    }
+
+    /* Alert Styles */
+    .simple-alert {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 99999999;
+        min-width: 350px;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        font-weight: 600;
+        animation: alertSlideIn 0.4s ease-out;
+        border-left: 5px solid;
+    }
+
+    @keyframes alertSlideIn {
+        from {
+            opacity: 0;
+            transform: translateX(100%) scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+        }
+    }
+
+    .simple-alert.alert-success {
+        background: linear-gradient(135deg, #d1e7dd 0%, #c3e6cb 100%);
+        color: #0f5132;
+        border-left-color: #198754;
+    }
+
+    .simple-alert.alert-danger {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+        border-left-color: #dc3545;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .simple-modal-content {
+            width: 95%;
+            margin: 2% auto;
+            max-height: 95vh;
+        }
+        
+        .simple-modal-header,
+        .simple-modal-body,
+        .simple-modal-footer {
+            padding: 1rem;
+        }
+        
+        .form-row {
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .simple-modal-footer {
+            flex-direction: column;
+        }
+        
+        .simple-modal-footer .btn-1,
+        .simple-modal-footer .btn-secondary {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .simple-alert {
+            right: 10px;
+            left: 10px;
+            min-width: auto;
+        }
+    }
+</style>
+
+<script>
+  function openHandymanQuoteModal() {
+    document.getElementById("handymanQuoteModal").style.display = "block";
+  }
+
+  function closeHandymanQuoteModal() {
+    document.getElementById("handymanQuoteModal").style.display = "none";
+    // Reset form and clear validation errors
+    document.getElementById("handymanQuoteForm").reset();
+    clearHandymanValidationErrors();
+  }
+
+  function clearHandymanValidationErrors() {
+    // Remove all error classes and messages
+    const form = document.getElementById('handymanQuoteForm');
+    const inputs = form.querySelectorAll('input, textarea');
+    
+    inputs.forEach(input => {
+      input.classList.remove('error');
+      const errorDiv = input.parentNode.querySelector('.error-message');
+      if (errorDiv) {
+        errorDiv.remove();
+      }
+    });
+  }
+
+  function showHandymanFieldError(field, message) {
+    // Remove existing error message
+    const existingError = field.parentNode.querySelector('.error-message');
+    if (existingError) {
+      existingError.remove();
+    }
+    
+    // Add error class to field
+    field.classList.add('error');
+    
+    // Create and insert error message
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    errorDiv.style.color = '#dc3545';
+    errorDiv.style.fontSize = '0.875rem';
+    errorDiv.style.marginTop = '0.25rem';
+    
+    field.parentNode.appendChild(errorDiv);
+  }
+
+  function removeHandymanFieldError(field) {
+    field.classList.remove('error');
+    const errorDiv = field.parentNode.querySelector('.error-message');
+    if (errorDiv) {
+      errorDiv.remove();
+    }
+  }
+
+  function validateHandymanField(field) {
+    const value = field.value.trim();
+    const fieldName = field.name;
+    
+    // Remove any existing error
+    removeHandymanFieldError(field);
+    
+    // Required field validation
+    if (!value) {
+      showHandymanFieldError(field, `${getHandymanFieldLabel(fieldName)} is required`);
+      return false;
+    }
+    
+    // Specific field validations
+    switch (fieldName) {
+      case 'name':
+        if (value.length < 2) {
+          showHandymanFieldError(field, 'Name must be at least 2 characters long');
+          return false;
+        }
+        if (!/^[a-zA-Z\s]+$/.test(value)) {
+          showHandymanFieldError(field, 'Name can only contain letters and spaces');
+          return false;
+        }
+        break;
+        
+      case 'email':
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          showHandymanFieldError(field, 'Please enter a valid email address');
+          return false;
+        }
+        break;
+        
+      case 'phone_number':
+        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+        if (!phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))) {
+          showHandymanFieldError(field, 'Please enter a valid phone number');
+          return false;
+        }
+        break;
+        
+      case 'address':
+        if (value.length < 10) {
+          showHandymanFieldError(field, 'Address must be at least 10 characters long');
+          return false;
+        }
+        break;
+        
+      case 'job_description':
+        if (value.length < 20) {
+          showHandymanFieldError(field, 'Job description must be at least 20 characters long');
+          return false;
+        }
+        break;
+    }
+    
+    return true;
+  }
+
+  function getHandymanFieldLabel(fieldName) {
+    const labels = {
+      'name': 'Full Name',
+      'email': 'Email Address',
+      'phone_number': 'Phone Number',
+      'address': 'Address',
+      'job_description': 'Job Description'
+    };
+    return labels[fieldName] || fieldName;
+  }
+
+  function validateHandymanForm() {
+    const form = document.getElementById('handymanQuoteForm');
+    const inputs = form.querySelectorAll('input, textarea');
+    let isValid = true;
+    
+    // Validate each field
+    inputs.forEach(input => {
+      if (!validateHandymanField(input)) {
+        isValid = false;
+      }
+    });
+    
+    return isValid;
+  }
+
+  function submitHandymanQuote() {
+    // Clear any existing validation errors
+    clearHandymanValidationErrors();
+    
+    // Validate form before submission
+    if (!validateHandymanForm()) {
+      showHandymanAlert('danger', 'Please fix the errors in the form before submitting.');
+      return;
+    }
+    
+    // Disable submit button to prevent double submission
+    const submitBtn = document.querySelector('#handymanQuoteModal .btn-1');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...';
+    
+    // Get form data
+    const formData = new FormData(document.getElementById('handymanQuoteForm'));
+    
+    // Submit form via AJAX
+    fetch('{% url "handyman_quote_submit" %}', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Show success message
+        showHandymanAlert('success', data.message);
+        
+        // Reset form and close modal
+        document.getElementById("handymanQuoteForm").reset();
+        closeHandymanQuoteModal();
+        
+        // Reset submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Submit Quote Request';
+      } else {
+        // Show error message
+        showHandymanAlert('danger', data.message || 'An error occurred. Please try again.');
+        
+        // Reset submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Submit Quote Request';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showHandymanAlert('danger', 'An error occurred. Please try again.');
+      
+      // Reset submit button
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Submit Quote Request';
+    });
+  }
+
+  function showHandymanAlert(type, message) {
+    const alertDiv = document.getElementById('handymanQuoteAlert');
+    alertDiv.className = `simple-alert alert-${type}`;
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">&times;</button>
+    `;
+    alertDiv.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      alertDiv.style.display = 'none';
+    }, 5000);
+  }
+
+  // Add real-time validation on input blur
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('handymanQuoteForm');
+    const inputs = form.querySelectorAll('input, textarea');
+    
+    inputs.forEach(input => {
+      input.addEventListener('blur', function() {
+        validateHandymanField(this);
+      });
+      
+      input.addEventListener('input', function() {
+        // Remove error when user starts typing
+        if (this.classList.contains('error')) {
+          removeHandymanFieldError(this);
+        }
+      });
+    });
+  });
+
+  // Close modal when clicking outside it
+  window.onclick = function(event) {
+    const modal = document.getElementById("handymanQuoteModal");
+    if (event.target === modal) {
+      closeHandymanQuoteModal();
+    }
+  }
+</script>
 
 {% endblock %}

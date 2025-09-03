@@ -9,7 +9,60 @@
 
  
 </style>
+<h3>Recommended number of cleaners and time according to square footage and type of service.</h3>
+          <div class="table-responsive mt-4">
+            <table class="table table-clean text-center align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="text-start" style="min-width: 200px;">Type of Service</th>
+                  <th>
+                    1000–1500<br /><small>SQ FT</small>
+                  </th>
+                  <th>
+                    1500–2000<br /><small>SQ FT</small>
+                  </th>
+                  <th>
+                    2000–2500<br /><small>SQ FT</small>
+                  </th>
+                  <th>
+                    2500–3000<br /><small>SQ FT</small>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th class="text-start">Post Renovation Cleaning</th>
+                  <td>3C × 6 hrs</td>
+                  <td>3C × 8 hrs</td>
+                  <td>4C × 8 hrs</td>
+                  <td>5C × 8 hrs</td>
+                </tr>
+                <tr>
+                  <th class="text-start">Deep Cleaning</th>
+                  <td>2C × 5 hrs</td>
+                  <td>3C × 5 hrs</td>
+                  <td>3C × 7 hrs</td>
+                  <td>3C × 8 hrs</td>
+                </tr>
+                <tr>
+                  <th class="text-start">Move In / Move Out</th>
+                  <td>2C × 5 hrs</td>
+                  <td>3C × 5 hrs</td>
+                  <td>3C × 7 hrs</td>
+                  <td>3C × 8 hrs</td>
+                </tr>
+                <tr>
+                  <th class="text-start">Regular Cleaning</th>
+                  <td>2C × 3 hrs</td>
+                  <td>2C × 5 hrs</td>
+                  <td>2C × 7 hrs</td>
+                  <td>2C × 8 hrs</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
+          
 <form method="post" id="quoteForm">
     {% csrf_token %}
 
@@ -361,13 +414,13 @@ document.addEventListener("DOMContentLoaded", function () {
         hoursField.value = "5";
       } else if (selectedName.includes("custom")) {
         cleaningTypeSelect.innerHTML = `
-          <option value="custom_cleaning" selected>Hourly Service 55$ per hour/per cleaner</option>
+          <option value="custom_cleaning" selected>Hourly Service 58$ per hour/per cleaner</option>
         `;
         cleanerSelect.value = "2";
         hoursField.value = "5";
       } else if (selectedName.includes("renovation")) {
         cleaningTypeSelect.innerHTML = `
-          <option value="post_renovation" selected>Hourly Service 60$ per hour/per cleaner</option>
+          <option value="post_renovation" selected>Hourly Service 63$ per hour/per cleaner</option>
         `;
         cleanerSelect.value = "2";
         hoursField.value = "5";
@@ -468,7 +521,7 @@ if (largeHomeOptions?.offsetParent !== null) {
   const numCleaners = parseInt(cleanerSelect?.value || 0);
   const estimatedHours = parseFloat(hoursField?.value || 0); // ✅ correct value
   const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
-  let hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 60 : 55;
+  let hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
 
   laborCost = numCleaners * estimatedHours * hourlyRate;
   subtotal += laborCost;
@@ -527,7 +580,7 @@ if (largeHomeOptions?.offsetParent !== null) {
       const numCleaners = parseInt(cleanerSelect?.value || "0");
       const hours = parseFloat(hoursField?.value || "0");
       const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
-      const hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 60 : 55;
+      const hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
     
       summaryContainer.innerHTML += `
         <div class="d-flex justify-content-between align-items-center mb-1">
@@ -564,7 +617,7 @@ if (largeHomeOptions?.offsetParent !== null) {
     const finalMinutes = totalMinutes % 60;
     const hourLabel = finalHours === 1 ? "Hour" : "Hours";
     const minuteLabel = finalMinutes === 1 ? "Minute" : "Minutes";
-    document.getElementById("summary-duration").textContent = `${finalHours} ${hourLabel} ${finalMinutes} ${minuteLabel}`;
+    document.getElementById("summary-duration").textContent = `${finalHours} ${hourLabel} ${finalMinutes} ${minuteLabel} (estimated time)`;
   }
 
   function resetSummary() {
@@ -633,7 +686,7 @@ if (largeHomeOptions?.offsetParent !== null) {
       </div>`;
   
     document.getElementById("summary-date").textContent = `${formattedDateText} @ 9:00 AM`;
-    document.getElementById("summary-duration").textContent = `${finalHours} ${hourLabel} ${finalMinutes} ${minuteLabel}`;
+    document.getElementById("summary-duration").textContent = `${finalHours} ${hourLabel} ${finalMinutes} ${minuteLabel} (estimated time)`;
     document.getElementById("summary-recurrence").textContent = "One Time";
   
     document.getElementById("subtotalPrice").innerText = price.toFixed(2);

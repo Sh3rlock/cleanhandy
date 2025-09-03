@@ -297,14 +297,14 @@ def get_hourly_rate(service_type, use_cache=True):
         # Return default rates if not configured
         default_rates = {
             'office_cleaning': Decimal('75.00'),
-            'home_cleaning': Decimal('55.00'),
-            'post_renovation': Decimal('60.00'),
-            'construction': Decimal('60.00'),
+            'home_cleaning': Decimal('58.00'),
+            'post_renovation': Decimal('63.00'),
+            'construction': Decimal('63.00'),
             'move_in_out': Decimal('65.00'),
             'deep_cleaning': Decimal('70.00'),
-            'regular_cleaning': Decimal('55.00'),
+            'regular_cleaning': Decimal('58.00'),
         }
-        default_rate = default_rates.get(service_type, Decimal('55.00'))
+        default_rate = default_rates.get(service_type, Decimal('58.00'))
         
         if use_cache:
             cache.set(cache_key, default_rate, 3600)

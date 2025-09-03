@@ -16,17 +16,17 @@ class Command(BaseCommand):
             },
             {
                 'service_type': 'home_cleaning',
-                'hourly_rate': Decimal('55.00'),
+                'hourly_rate': Decimal('58.00'),
                 'description': 'Standard home cleaning service rate per cleaner per hour'
             },
             {
                 'service_type': 'post_renovation',
-                'hourly_rate': Decimal('60.00'),
+                'hourly_rate': Decimal('63.00'),
                 'description': 'Post-renovation cleaning service rate per cleaner per hour'
             },
             {
                 'service_type': 'construction',
-                'hourly_rate': Decimal('60.00'),
+                'hourly_rate': Decimal('63.00'),
                 'description': 'Construction site cleaning service rate per cleaner per hour'
             },
             {
@@ -41,7 +41,7 @@ class Command(BaseCommand):
             },
             {
                 'service_type': 'regular_cleaning',
-                'hourly_rate': Decimal('55.00'),
+                'hourly_rate': Decimal('58.00'),
                 'description': 'Regular maintenance cleaning service rate per cleaner per hour'
             },
         ]

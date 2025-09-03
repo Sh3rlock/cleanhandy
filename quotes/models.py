@@ -72,14 +72,14 @@ class HourlyRate(models.Model):
             # Return default rates if not configured
             default_rates = {
                 'office_cleaning': Decimal('75.00'),
-                'home_cleaning': Decimal('55.00'),
-                'post_renovation': Decimal('60.00'),
-                'construction': Decimal('60.00'),
+                'home_cleaning': Decimal('58.00'),
+                'post_renovation': Decimal('63.00'),
+                'construction': Decimal('63.00'),
                 'move_in_out': Decimal('65.00'),
                 'deep_cleaning': Decimal('70.00'),
-                'regular_cleaning': Decimal('55.00'),
+                'regular_cleaning': Decimal('58.00'),
             }
-            return default_rates.get(service_type, Decimal('55.00'))
+            return default_rates.get(service_type, Decimal('58.00'))
 
 # Signal to clear hourly rate cache when rates are updated
 @receiver([post_save, post_delete], sender=HourlyRate)
@@ -216,7 +216,7 @@ class Quote(models.Model):
 
         # ✅ Labor cost only for large homes
         if self.is_large_home() and self.hours_requested and self.num_cleaners:
-            rate = Decimal("60") if self.cleaning_type and ("post" in self.cleaning_type.lower() or "renovation" in self.cleaning_type.lower()) else Decimal("55")
+            rate = Decimal("63") if self.cleaning_type and ("post" in self.cleaning_type.lower() or "renovation" in self.cleaning_type.lower()) else Decimal("58")
             subtotal += Decimal(self.num_cleaners) * Decimal(self.hours_requested) * rate
 
         return subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -432,7 +432,7 @@ class Booking(models.Model):
 
         # ✅ Labor cost only for large homes
         if self.is_large_home() and self.hours_requested and self.num_cleaners:
-            rate = Decimal("60") if self.cleaning_type and ("post" in self.cleaning_type.lower() or "renovation" in self.cleaning_type.lower()) else Decimal("55")
+            rate = Decimal("63") if self.cleaning_type and ("post" in self.cleaning_type.lower() or "renovation" in self.cleaning_type.lower()) else Decimal("58")
             subtotal += Decimal(self.num_cleaners) * Decimal(self.hours_requested) * rate
 
         return subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -530,6 +530,38 @@ class AboutContent(models.Model):
     def get_active(cls):
         """Get the active about content"""
         return cls.objects.filter(is_active=True).first()
+
+
+class HandymanQuote(models.Model):
+    """Model for storing handyman quote requests"""
+    name = models.CharField(max_length=100, help_text="Full name of the customer")
+    email = models.EmailField(help_text="Email address of the customer")
+    phone_number = models.CharField(max_length=20, help_text="Phone number of the customer")
+    address = models.TextField(help_text="Address where the handyman work is needed")
+    job_description = models.TextField(help_text="Detailed description of the handyman job")
+    
+    # System fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("contacted", "Contacted"),
+            ("quoted", "Quoted"),
+            ("completed", "Completed"),
+            ("cancelled", "Cancelled"),
+        ],
+        default="pending"
+    )
+    admin_notes = models.TextField(blank=True, null=True, help_text="Internal notes for admin")
+    
+    def __str__(self):
+        return f"Handyman Quote - {self.name} ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Handyman Quote"
+        verbose_name_plural = "Handyman Quotes"
 
 
 

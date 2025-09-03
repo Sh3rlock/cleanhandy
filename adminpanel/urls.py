@@ -4,7 +4,8 @@ from .views import (
     service_list, add_service_category, edit_service_category, delete_service_category,
     add_service, edit_service, delete_service, booking_calendar, get_upcoming_quotes, quote_approval_view, quote_decline_view, block_time_slot,
     get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv, delete_quote, send_quote_email_view, get_booking_detail,
-    giftcard_discount, subscriber_list, add_subscriber, export_subscribers_csv, office_quote_list, office_quote_detail, export_office_quotes_csv, send_office_quote_email, generate_office_quote_pdf
+    giftcard_discount, subscriber_list, add_subscriber, export_subscribers_csv, office_quote_list, office_quote_detail, export_office_quotes_csv, send_office_quote_email, generate_office_quote_pdf,
+    handyman_quote_list, handyman_quote_detail, update_handyman_quote_status, export_handyman_quotes_csv, send_handyman_quote_email, generate_handyman_quote_pdf, delete_handyman_quote
 )
 
 urlpatterns = [
@@ -82,5 +83,14 @@ urlpatterns = [
 
     path("admin/office-block-time-slot/", block_time_slot, name="block_office_time_slot"),
 
+    # Handyman Quotes Management
+    path("handyman-quotes/", handyman_quote_list, name="handyman_quote_list"),
+    path("handyman-quotes/<int:quote_id>/", handyman_quote_detail, name="handyman_quote_detail"),
+    path("handyman-quotes/<int:quote_id>/delete/", delete_handyman_quote, name="delete_handyman_quote"),
+    path("admin/handyman-quotes/update-status/<int:quote_id>/", update_handyman_quote_status, name="update_handyman_quote_status"),
+    path("handyman-quotes/<int:quote_id>/update-status/", update_handyman_quote_status, name="update_handyman_quote_detail_status"),
+    path("handyman-quotes/export-csv/", export_handyman_quotes_csv, name="export_handyman_quotes_csv"),
+    path("handyman-quotes/<int:quote_id>/send-email/", send_handyman_quote_email, name="send_handyman_quote_email"),
+    path("handyman-quotes/<int:quote_id>/generate-pdf/", generate_handyman_quote_pdf, name="generate_handyman_quote_pdf"),
 
 ]   

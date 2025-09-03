@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
-from quotes.models import Quote, Service, ServiceCategory, Booking, NewsletterSubscriber, OfficeQuote
+from django.db import models
+from quotes.models import Quote, Service, ServiceCategory, Booking, NewsletterSubscriber, OfficeQuote, HandymanQuote
 from giftcards.models import GiftCard, DiscountCode
 from quotes.forms import CleaningQuoteForm, HandymanQuoteForm
 from customers.models import Customer
@@ -65,6 +66,8 @@ def admin_dashboard(request):
     latest_bookings = Booking.objects.all().order_by("-created_at")[:25]
     latest_customers = User.objects.all().order_by("-date_joined")[:10]
     latest_subscribers = NewsletterSubscriber.objects.all().order_by("-subscribed_at")[:10]
+    latest_office_quotes = OfficeQuote.objects.all().order_by("-created_at")[:10]
+    latest_handyman_quotes = HandymanQuote.objects.all().order_by("-created_at")[:10]
 
     discounts = DiscountCode.objects.all()
     giftcards = GiftCard.objects.all()
@@ -73,18 +76,44 @@ def admin_dashboard(request):
     total_bookings = Booking.objects.count()
     total_customers = User.objects.count()
     total_subscribers = NewsletterSubscriber.objects.count()
+    total_office_quotes = OfficeQuote.objects.count()
+    total_handyman_quotes = HandymanQuote.objects.count()
+
+    # Status counts for handyman quotes
+    handyman_quote_status_counts = {
+        'pending': HandymanQuote.objects.filter(status='pending').count(),
+        'contacted': HandymanQuote.objects.filter(status='contacted').count(),
+        'quoted': HandymanQuote.objects.filter(status='quoted').count(),
+        'completed': HandymanQuote.objects.filter(status='completed').count(),
+        'cancelled': HandymanQuote.objects.filter(status='cancelled').count(),
+    }
+
+    # Status counts for office quotes
+    office_quote_status_counts = {
+        'pending': OfficeQuote.objects.filter(status='pending').count(),
+        'contacted': OfficeQuote.objects.filter(status='contacted').count(),
+        'quoted': OfficeQuote.objects.filter(status='quoted').count(),
+        'completed': OfficeQuote.objects.filter(status='completed').count(),
+        'cancelled': OfficeQuote.objects.filter(status='cancelled').count(),
+    }
 
     return render(request, "adminpanel/dashboard.html", {
         "latest_quotes": latest_quotes,
         "latest_bookings": latest_bookings,
         "latest_customers": latest_customers,
         "latest_subscribers": latest_subscribers,
+        "latest_office_quotes": latest_office_quotes,
+        "latest_handyman_quotes": latest_handyman_quotes,
         "discounts": discounts,
         "giftcards": giftcards,
         "total_quotes": total_quotes,
         "total_bookings": total_bookings,
         "total_customers": total_customers,
         "total_subscribers": total_subscribers,
+        "total_office_quotes": total_office_quotes,
+        "total_handyman_quotes": total_handyman_quotes,
+        "handyman_quote_status_counts": handyman_quote_status_counts,
+        "office_quote_status_counts": office_quote_status_counts,
     })
 
 
@@ -1040,6 +1069,247 @@ def generate_office_quote_pdf(request, quote_id):
     except Exception as e:
         messages.error(request, f"❌ Failed to generate PDF: {str(e)}")
         return redirect("office_quote_detail", quote_id=office_quote.id)
+
+
+# ============================================================================
+# HANDYMAN QUOTE MANAGEMENT
+# ============================================================================
+
+def handyman_quote_list(request):
+    """List all handyman quotes with filtering and search"""
+    handyman_quotes = HandymanQuote.objects.all().order_by('-created_at')
+    
+    # Filter by status
+    status_filter = request.GET.get('status')
+    if status_filter:
+        handyman_quotes = handyman_quotes.filter(status=status_filter)
+    
+    # Search functionality
+    search_query = request.GET.get('search')
+    if search_query:
+        handyman_quotes = handyman_quotes.filter(
+            models.Q(name__icontains=search_query) |
+            models.Q(email__icontains=search_query) |
+            models.Q(phone_number__icontains=search_query) |
+            models.Q(address__icontains=search_query) |
+            models.Q(job_description__icontains=search_query)
+        )
+    
+    # Date range filter
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    
+    if from_date:
+        handyman_quotes = handyman_quotes.filter(created_at__date__gte=from_date)
+    if to_date:
+        handyman_quotes = handyman_quotes.filter(created_at__date__lte=to_date)
+    
+    # Status choices for filter dropdown
+    status_choices = [
+        ('pending', 'Pending'),
+        ('contacted', 'Contacted'),
+        ('quoted', 'Quoted'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    context = {
+        'handyman_quotes': handyman_quotes,
+        'status_choices': status_choices,
+        'selected_status': status_filter,
+        'search_query': search_query,
+        'from_date': from_date,
+        'to_date': to_date,
+    }
+    
+    return render(request, 'adminpanel/handyman_quote_list.html', context)
+
+
+def handyman_quote_detail(request, quote_id):
+    """View and edit handyman quote details"""
+    handyman_quote = get_object_or_404(HandymanQuote, pk=quote_id)
+    
+    if request.method == "POST":
+        # Update the quote status and admin notes
+        handyman_quote.status = request.POST.get("status", handyman_quote.status)
+        handyman_quote.admin_notes = request.POST.get("admin_notes", handyman_quote.admin_notes)
+        handyman_quote.save()
+        messages.success(request, "Handyman quote updated successfully!")
+        return redirect("handyman_quote_list")
+    
+    # Status choices for dropdown
+    status_choices = [
+        ('pending', 'Pending'),
+        ('contacted', 'Contacted'),
+        ('quoted', 'Quoted'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    return render(request, "adminpanel/handyman_quote_detail.html", {
+        "handyman_quote": handyman_quote,
+        "status_choices": status_choices,
+    })
+
+
+@require_POST
+def update_handyman_quote_status(request, quote_id):
+    """Update handyman quote status via AJAX"""
+    handyman_quote = get_object_or_404(HandymanQuote, pk=quote_id)
+    new_status = request.POST.get("status")
+    
+    if new_status in ['pending', 'contacted', 'quoted', 'completed', 'cancelled']:
+        handyman_quote.status = new_status
+        handyman_quote.save()
+        
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({
+                "success": True,
+                "message": f"Status updated to {new_status.title()}"
+            })
+        else:
+            messages.success(request, f"Status updated to {new_status.title()}")
+    else:
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({
+                "success": False,
+                "message": "Invalid status"
+            }, status=400)
+        else:
+            messages.error(request, "Invalid status")
+    
+    return redirect(request.META.get("HTTP_REFERER", "handyman_quote_list"))
+
+
+def export_handyman_quotes_csv(request):
+    """Export handyman quotes to CSV"""
+    handyman_quotes = HandymanQuote.objects.all().order_by('-created_at')
+    
+    # Apply filters if provided
+    status_filter = request.GET.get('status')
+    if status_filter:
+        handyman_quotes = handyman_quotes.filter(status=status_filter)
+    
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    
+    if from_date:
+        handyman_quotes = handyman_quotes.filter(created_at__date__gte=from_date)
+    if to_date:
+        handyman_quotes = handyman_quotes.filter(created_at__date__lte=to_date)
+    
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename=handyman_quotes.csv'
+    
+    writer = csv.writer(response)
+    writer.writerow([
+        'ID', 'Name', 'Email', 'Phone', 'Address', 'Job Description', 
+        'Status', 'Admin Notes', 'Created At'
+    ])
+    
+    for quote in handyman_quotes:
+        writer.writerow([
+            quote.id,
+            quote.name,
+            quote.email,
+            quote.phone_number,
+            quote.address,
+            quote.job_description,
+            quote.get_status_display(),
+            quote.admin_notes or '',
+            quote.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        ])
+    
+    return response
+
+
+def send_handyman_quote_email(request, quote_id):
+    """Send email to handyman quote customer"""
+    handyman_quote = get_object_or_404(HandymanQuote, pk=quote_id)
+    
+    if request.method == "POST":
+        email_type = request.POST.get("email_type")
+        custom_message = request.POST.get("custom_message", "")
+        
+        if email_type == "quote_update":
+            subject = f"Handyman Quote Update - #{handyman_quote.id}"
+            template_name = "emails/handyman_quote_update.html"
+        elif email_type == "status_update":
+            subject = f"Handyman Quote Status Update - #{handyman_quote.id}"
+            template_name = "emails/handyman_quote_status.html"
+        else:
+            subject = f"Handyman Quote - #{handyman_quote.id}"
+            template_name = "emails/handyman_quote_general.html"
+        
+        context = {
+            "handyman_quote": handyman_quote,
+            "custom_message": custom_message,
+            "request_scheme": request.scheme,
+            "domain": get_current_site(request).domain,
+        }
+        
+        html_content = render_to_string(template_name, context)
+        text_content = strip_tags(html_content)
+        
+        try:
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email="noreply@cleanhandy.com",
+                to=[handyman_quote.email],
+                bcc=["matyass91@gmail.com"]  # Admin copy
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+            
+            messages.success(request, f"📧 Email sent successfully to {handyman_quote.email}")
+        except Exception as e:
+            messages.error(request, f"❌ Failed to send email: {str(e)}")
+    
+    return redirect("handyman_quote_detail", quote_id=handyman_quote.id)
+
+
+def generate_handyman_quote_pdf(request, quote_id):
+    """Generate PDF for handyman quote"""
+    handyman_quote = get_object_or_404(HandymanQuote, pk=quote_id)
+    
+    try:
+        template = get_template("adminpanel/handyman_quote_pdf.html")
+        context = {
+            "handyman_quote": handyman_quote,
+            "company_info": {
+                "name": "Clean & Handy Services",
+                "address": "123 Business Street, City, State 12345",
+                "phone": "+1 (555) 123-4567",
+                "email": "info@cleanhandy.com",
+                "website": "www.cleanhandy.com"
+            }
+        }
+        
+        html_string = template.render(context)
+        
+        # Create PDF response
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = f"attachment; filename=handyman_quote_{handyman_quote.id}.pdf"
+        
+        # Generate PDF
+        HTML(string=html_string).write_pdf(response)
+        
+        return response
+        
+    except Exception as e:
+        messages.error(request, f"❌ Failed to generate PDF: {str(e)}")
+        return redirect("handyman_quote_detail", quote_id=handyman_quote.id)
+
+
+@require_POST
+def delete_handyman_quote(request, quote_id):
+    """Delete handyman quote"""
+    handyman_quote = get_object_or_404(HandymanQuote, pk=quote_id)
+    handyman_quote.delete()
+    messages.success(request, "Handyman quote deleted successfully.")
+    return redirect("handyman_quote_list")
 
 
 

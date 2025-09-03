@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from .models import (
     Quote, Service, ServiceCategory, CleaningExtra, HomeType, 
     SquareFeetOption, NewsletterSubscriber, Booking, Contact, 
-    Review, ContactInfo, AboutContent, HourlyRate
+    Review, ContactInfo, AboutContent, HourlyRate, HandymanQuote
 )
 
 # ============================================================================
@@ -437,4 +437,196 @@ class AboutContentAdmin(admin.ModelAdmin):
             # Deactivate all other records when making this one active
             AboutContent.objects.exclude(pk=obj.pk).update(is_active=False)
         super().save_model(request, obj, form, change)
+
+# ============================================================================
+# HANDYMAN QUOTE ADMIN
+# ============================================================================
+
+@admin.register(HandymanQuote)
+class HandymanQuoteAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'get_name_display', 'get_email_display', 'get_phone_display', 
+        'get_address_short', 'get_status_badge', 'created_at', 'actions_column'
+    ]
+    list_filter = ['status', 'created_at']
+    search_fields = ['name', 'email', 'phone_number', 'address', 'job_description']
+    readonly_fields = ['created_at']
+    list_per_page = 25
+    ordering = ['-created_at']
+    date_hierarchy = 'created_at'
+    
+    fieldsets = (
+        ('Customer Information', {
+            'fields': ('name', 'email', 'phone_number'),
+            'description': 'Customer contact details'
+        }),
+        ('Job Details', {
+            'fields': ('address', 'job_description'),
+            'description': 'Location and job requirements'
+        }),
+        ('Status & Management', {
+            'fields': ('status', 'admin_notes'),
+            'description': 'Quote status and internal notes'
+        }),
+        ('System Information', {
+            'fields': ('created_at',),
+            'classes': ('collapse',),
+            'description': 'Automatically managed timestamps'
+        }),
+    )
+    
+    def get_name_display(self, obj):
+        """Format name display with better styling"""
+        return format_html(
+            '<span style="color: #2E86AB; font-weight: bold;">{}</span>',
+            obj.name
+        )
+    get_name_display.short_description = 'Customer Name'
+    get_name_display.admin_order_field = 'name'
+    
+    def get_email_display(self, obj):
+        """Format email display with better styling"""
+        return format_html(
+            '<span style="color: #6F42C1; font-weight: bold;">{}</span>',
+            obj.email
+        )
+    get_email_display.short_description = 'Email'
+    get_email_display.admin_order_field = 'email'
+    
+    def get_phone_display(self, obj):
+        """Format phone display with better styling"""
+        return format_html(
+            '<span style="color: #17A2B8; font-weight: bold;">{}</span>',
+            obj.phone_number
+        )
+    get_phone_display.short_description = 'Phone'
+    get_phone_display.admin_order_field = 'phone_number'
+    
+    def get_address_short(self, obj):
+        """Display shortened address"""
+        if len(obj.address) > 50:
+            return format_html(
+                '<span style="color: #FD7E14;" title="{}">{}...</span>',
+                obj.address, obj.address[:50]
+            )
+        return format_html(
+            '<span style="color: #FD7E14;">{}</span>',
+            obj.address
+        )
+    get_address_short.short_description = 'Address'
+    get_address_short.admin_order_field = 'address'
+    
+    def get_status_badge(self, obj):
+        """Display status as a colored badge"""
+        status_colors = {
+            'pending': '#FFC107',
+            'contacted': '#17A2B8',
+            'quoted': '#28A745',
+            'completed': '#6F42C1',
+            'cancelled': '#DC3545'
+        }
+        status_icons = {
+            'pending': '⏳',
+            'contacted': '📞',
+            'quoted': '💰',
+            'completed': '✅',
+            'cancelled': '❌'
+        }
+        color = status_colors.get(obj.status, '#6C757D')
+        icon = status_icons.get(obj.status, '❓')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">{} {}</span>',
+            color, icon, obj.status.replace('_', ' ').title()
+        )
+    get_status_badge.short_description = 'Status'
+    get_status_badge.admin_order_field = 'status'
+    
+    def actions_column(self, obj):
+        """Display action buttons"""
+        return format_html(
+            '<div style="display: flex; gap: 5px;">'
+            '<a href="/admin/quotes/handymanquote/{}/change/" style="color: #007BFF; text-decoration: none;" title="Edit">✏️</a>'
+            '<a href="/admin/quotes/handymanquote/{}/delete/" style="color: #DC3545; text-decoration: none;" title="Delete">🗑️</a>'
+            '</div>',
+            obj.id, obj.id
+        )
+    actions_column.short_description = 'Actions'
+    
+    actions = ['mark_as_contacted', 'mark_as_quoted', 'mark_as_completed', 'mark_as_cancelled', 'export_quotes']
+    
+    def mark_as_contacted(self, request, queryset):
+        """Mark selected quotes as contacted"""
+        try:
+            updated = queryset.update(status='contacted')
+            self.message_user(request, f'✅ Successfully marked {updated} quote(s) as contacted.')
+        except Exception as e:
+            self.message_user(request, f'❌ Error updating status: {str(e)}', level='ERROR')
+    mark_as_contacted.short_description = "📞 Mark as Contacted"
+    
+    def mark_as_quoted(self, request, queryset):
+        """Mark selected quotes as quoted"""
+        try:
+            updated = queryset.update(status='quoted')
+            self.message_user(request, f'✅ Successfully marked {updated} quote(s) as quoted.')
+        except Exception as e:
+            self.message_user(request, f'❌ Error updating status: {str(e)}', level='ERROR')
+    mark_as_quoted.short_description = "💰 Mark as Quoted"
+    
+    def mark_as_completed(self, request, queryset):
+        """Mark selected quotes as completed"""
+        try:
+            updated = queryset.update(status='completed')
+            self.message_user(request, f'✅ Successfully marked {updated} quote(s) as completed.')
+        except Exception as e:
+            self.message_user(request, f'❌ Error updating status: {str(e)}', level='ERROR')
+    mark_as_completed.short_description = "✅ Mark as Completed"
+    
+    def mark_as_cancelled(self, request, queryset):
+        """Mark selected quotes as cancelled"""
+        try:
+            updated = queryset.update(status='cancelled')
+            self.message_user(request, f'✅ Successfully marked {updated} quote(s) as cancelled.')
+        except Exception as e:
+            self.message_user(request, f'❌ Error updating status: {str(e)}', level='ERROR')
+    mark_as_cancelled.short_description = "❌ Mark as Cancelled"
+    
+    def export_quotes(self, request, queryset):
+        """Export selected quotes to CSV"""
+        import csv
+        from django.http import HttpResponse
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="handyman_quotes.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'ID', 'Name', 'Email', 'Phone', 'Address', 'Job Description', 
+            'Status', 'Admin Notes', 'Created At'
+        ])
+
+        for quote in queryset:
+            writer.writerow([
+                quote.id, quote.name, quote.email, quote.phone_number,
+                quote.address, quote.job_description, quote.status,
+                quote.admin_notes or '', quote.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            ])
+
+        return response
+    export_quotes.short_description = "📥 Export Selected to CSV"
+    
+    def get_queryset(self, request):
+        """Optimize queryset for better performance"""
+        return super().get_queryset(request).select_related()
+    
+    def has_delete_permission(self, request, obj=None):
+        """Allow deletion of handyman quotes"""
+        return True
+    
+    def has_add_permission(self, request):
+        """Allow adding new handyman quotes"""
+        return True
+    
+    def has_change_permission(self, request, obj=None):
+        """Allow editing handyman quotes"""
+        return True
 

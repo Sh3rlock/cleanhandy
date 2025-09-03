@@ -1,0 +1,274 @@
+{% extends "accounts/partials/account_base.html" %}
+{% load static %}
+{% block account_content %}
+
+<style>
+     section {
+        z-index: unset !important;
+     }
+
+     .text-primary {
+        color: #F15A29 !important;
+      }
+
+      .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .status-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+
+      .status-contacted {
+        background-color: #dbeafe;
+        color: #1e40af;
+      }
+
+      .status-quoted {
+        background-color: #d1fae5;
+        color: #065f46;
+      }
+
+      .status-completed {
+        background-color: #dcfce7;
+        color: #166534;
+      }
+
+      .status-cancelled {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+
+      .quote-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-outline-orange {
+        color: #F15A29;
+        border: 1px solid #F15A29;
+        background-color: transparent;
+        transition: all 0.2s ease;
+      }
+      
+      .btn-outline-orange:hover {
+        background-color: #F15A29;
+        color: white;
+      }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="fa-solid fa-hammer me-2 text-primary"></i> Handyman Quote Details</h2>
+    <div>
+        <a href="{% url 'handyman_quote_list' %}" class="btn btn-outline-orange btn-sm">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quote Information -->
+    <div class="col-lg-8">
+        <div class="card quote-card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-file-invoice me-2 text-primary"></i>
+                    Quote #{{ handyman_quote.id }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Customer Information</h6>
+                        <p><strong>Name:</strong> {{ handyman_quote.name }}</p>
+                        <p><strong>Email:</strong> {{ handyman_quote.email }}</p>
+                        <p><strong>Phone:</strong> {{ handyman_quote.phone_number }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Quote Details</h6>
+                        <p><strong>Status:</strong> 
+                            {% if handyman_quote.status == 'pending' %}
+                                <span class="status-badge status-pending">⏳ Pending</span>
+                            {% elif handyman_quote.status == 'contacted' %}
+                                <span class="status-badge status-contacted">📞 Contacted</span>
+                            {% elif handyman_quote.status == 'quoted' %}
+                                <span class="status-badge status-quoted">💰 Quoted</span>
+                            {% elif handyman_quote.status == 'completed' %}
+                                <span class="status-badge status-completed">✅ Completed</span>
+                            {% elif handyman_quote.status == 'cancelled' %}
+                                <span class="status-badge status-cancelled">❌ Cancelled</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Created:</strong> {{ handyman_quote.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-2">Job Location</h6>
+                        <p>{{ handyman_quote.address }}</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-2">Job Description</h6>
+                        <div class="bg-light p-3 rounded">
+                            {{ handyman_quote.job_description|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions and Status Management -->
+    <div class="col-lg-4">
+        <div class="card quote-card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-cogs me-2 text-primary"></i>
+                    Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'send_handyman_quote_email' handyman_quote.id %}" class="btn btn-success">
+                        <i class="fa-solid fa-envelope me-2"></i> Send Email
+                    </a>
+                    <a href="{% url 'generate_handyman_quote_pdf' handyman_quote.id %}" class="btn btn-info">
+                        <i class="fa-solid fa-file-pdf me-2"></i> Generate PDF
+                    </a>
+                    <a href="{% url 'delete_handyman_quote' handyman_quote.id %}" class="btn btn-danger" 
+                       onclick="return confirm('Are you sure you want to delete this quote?')">
+                        <i class="fa-solid fa-trash me-2"></i> Delete Quote
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Management -->
+        <div class="card quote-card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-edit me-2 text-primary"></i>
+                    Update Status & Notes
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-select">
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if handyman_quote.status == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="admin_notes" class="form-label">Admin Notes</label>
+                        <textarea name="admin_notes" id="admin_notes" class="form-control" rows="4" 
+                                  placeholder="Add internal notes about this quote...">{{ handyman_quote.admin_notes }}</textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fa-solid fa-save me-2"></i> Update Quote
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Email Templates Modal -->
+<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailModalLabel">Send Email to Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{% url 'send_handyman_quote_email' handyman_quote.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="email_type" class="form-label">Email Type</label>
+                        <select name="email_type" id="email_type" class="form-select">
+                            <option value="quote_update">Quote Update</option>
+                            <option value="status_update">Status Update</option>
+                            <option value="general">General Communication</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="custom_message" class="form-label">Custom Message</label>
+                        <textarea name="custom_message" id="custom_message" class="form-control" rows="4" 
+                                  placeholder="Add any additional message..."></textarea>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Send Email</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Status Update Buttons -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-primary">Quick Status Updates</h5>
+                <div class="btn-group" role="group">
+                    <form method="POST" action="{% url 'update_handyman_quote_status' handyman_quote.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="contacted">
+                        <button type="submit" class="btn btn-outline-info btn-sm">
+                            <i class="fa-solid fa-phone me-1"></i> Mark as Contacted
+                        </button>
+                    </form>
+                    <form method="POST" action="{% url 'update_handyman_quote_status' handyman_quote.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="quoted">
+                        <button type="submit" class="btn btn-outline-success btn-sm">
+                            <i class="fa-solid fa-dollar-sign me-1"></i> Mark as Quoted
+                        </button>
+                    </form>
+                    <form method="POST" action="{% url 'update_handyman_quote_status' handyman_quote.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="completed">
+                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                            <i class="fa-solid fa-check me-1"></i> Mark as Completed
+                        </button>
+                    </form>
+                    <form method="POST" action="{% url 'update_handyman_quote_status' handyman_quote.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="cancelled">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="fa-solid fa-times me-1"></i> Mark as Cancelled
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

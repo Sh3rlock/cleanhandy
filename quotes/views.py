@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber, Booking, Review, OfficeQuote
+from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber, Booking, Review, OfficeQuote, HandymanQuote
 from customers.models import Customer  # Import Customer from the correct app
-from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm, CleaningBookingForm, HandymanBookingForm, ContactForm, OfficeQuoteForm, OfficeCleaningBookingForm
+from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm, CleaningBookingForm, HandymanBookingForm, ContactForm, OfficeQuoteForm, OfficeCleaningBookingForm, HandymanQuoteForm
 from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 from .utils import get_available_hours_for_date, send_quote_email_cleaning
@@ -733,6 +733,61 @@ def office_cleaning_quote_submitted(request, booking_id):
             f"Error loading quote: {str(e)}",
             content_type='text/plain'
         )
+
+
+def handyman_quote_submit(request):
+    """Handle handyman quote form submission"""
+    if request.method == 'POST':
+        form = HandymanQuoteForm(request.POST)
+        
+        if form.is_valid():
+            try:
+                # Save the handyman quote
+                handyman_quote = form.save()
+                
+                # Send email notification (optional)
+                try:
+                    send_mail(
+                        'New Handyman Quote Request',
+                        f'A new handyman quote request has been submitted by {handyman_quote.name}.\n\n'
+                        f'Email: {handyman_quote.email}\n'
+                        f'Phone: {handyman_quote.phone_number}\n'
+                        f'Address: {handyman_quote.address}\n'
+                        f'Job Description: {handyman_quote.job_description}',
+                        settings.DEFAULT_FROM_EMAIL,
+                        [settings.DEFAULT_FROM_EMAIL],  # Send to admin
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    print(f"❌ Error sending handyman quote email: {e}")
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Thank you! Your handyman quote request has been submitted successfully. We will contact you soon with a detailed quote.'
+                })
+                
+            except Exception as e:
+                print(f"❌ Error saving handyman quote: {e}")
+                return JsonResponse({
+                    'success': False,
+                    'message': 'An error occurred while submitting your request. Please try again.'
+                })
+        else:
+            # Return form errors
+            errors = {}
+            for field, field_errors in form.errors.items():
+                errors[field] = field_errors[0] if field_errors else 'This field is required.'
+            
+            return JsonResponse({
+                'success': False,
+                'message': 'Please correct the errors in the form.',
+                'errors': errors
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method.'
+    })
 
 
 
