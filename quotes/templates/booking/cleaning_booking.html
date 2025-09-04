@@ -15,6 +15,173 @@
     margin-bottom: 5px !important;
   }
 
+  /* Make form-check divs clickable */
+  .form-check.clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .form-check.clickable:hover {
+    background-color: #f8f9fa;
+    border-color: #F15A29;
+  }
+  
+  .form-check.clickable:has(input:checked) {
+    background-color: #e3f2fd;
+    border-color: #F15A29;
+  }
+
+  /* Frequency Section Styles */
+  .frequency-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .frequency-btn {
+    padding: 12px 20px;
+    border: 1px solid #F15A29;
+    background: white;
+    color: #666;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    min-width: 100px;
+  }
+
+  .frequency-btn.active {
+    background: #F15A29;
+    color: white;
+    border-color: #F15A29;
+  }
+
+  .frequency-btn:hover {
+    border-color: #F15A29;
+    color: #F15A29;
+  }
+
+  .frequency-btn.active:hover {
+    background: #F15A29;
+    color: white;
+  }
+
+  /* Calendar Navigation Styles */
+  .calendar-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .nav-arrow {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .nav-arrow:hover {
+    background: #f8f9fa;
+    border-color: #F15A29;
+  }
+
+  .calendar-dates {
+    display: flex;
+    gap: 15px;
+    flex-wrap: 1;
+    justify-content: center;
+  }
+
+  .date-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 60px;
+  }
+
+  .date-item:hover {
+    border-color: #F15A29;
+  }
+
+  .date-item.selected {
+    border-color: #F15A29;
+    background: #f8f8ff;
+  }
+
+  .date-icon {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 5px;
+  }
+
+  .date-day {
+    font-size: 12px;
+    color: #999;
+    font-weight: 500;
+  }
+
+  .date-number {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  /* Time Slots Styles */
+  .time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .time-slot {
+    padding: 10px 15px;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .time-slot:hover {
+    border-color: #F15A29;
+    color: #F15A29;
+  }
+
+  .time-slot.selected {
+    background: #F15A29;
+    color: white;
+    border-color: #F15A29;
+  }
+
+  .time-slot.unavailable {
+    background: #f8f9fa;
+    color: #999;
+    cursor: not-allowed;
+    border-color: #eee;
+  }
+
+  .time-slot.unavailable:hover {
+    border-color: #eee;
+    color: #999;
+  }
+
   select.cmn-input {
     appearance: none;         /* Remove native styling */
     -webkit-appearance: none; /* Safari */
@@ -212,7 +379,7 @@
           <div class="row">
             {% for extra in cleaning_extras %}
               <div class="col-12 col-md-6 mb-2">
-                <div class="form-check p-3 border rounded shadow-sm h-100">
+                <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('extra{{ extra.id }}').click()">
                   <input 
                     class="form-check-input extra-checkbox" 
                     type="checkbox" 
@@ -273,62 +440,115 @@
     <!-- Step 3: Contact Info -->
     <div class="step hidden-step" id="step3">
       <h4>Contact Info</h4>
-  
-      <div class="row">
-        <div class="col-md-4 mb-3">
-          {{ form.name.label_tag }}
           {{ form.name }}
-          {% if form.name.errors %}
-            <div class="text-danger small">{{ form.name.errors.0 }}</div>
-          {% endif %}
-        </div>
-      
-        <div class="col-md-4 mb-3">
-          {{ form.email.label_tag }}
           {{ form.email }}
-          {% if form.email.errors %}
-            <div class="text-danger small">{{ form.email.errors.0 }}</div>
-          {% endif %}
-        </div>
-        <div class="col-md-4 mb-3">
-          {{ form.phone.label_tag }}
           {{ form.phone }}
-          {% if form.email.errors %}
-            <div class="text-danger small">{{ form.phone.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
       {{ form.city }}
       {{ form.state }}
-      
-  
-  
-  <div class="row g-3">
-    <!-- Street Address -->
-    <div class="col-md-6">
-      <label for="{{ form.address.id_for_label }}" class="form-label">Street Address</label>
-      {{ form.address }}
-      {% if form.address.errors %}
-        <div class="text-danger small">{{ form.address.errors.0 }}</div>
-      {% endif %}
-    </div>
-  
-    <!-- Apartment / Suite -->
-    <div class="col-md-3">
-      <label for="{{ form.apartment.id_for_label }}" class="form-label">Apt/Suite</label>
-      {{ form.apartment }}
-      {% if form.apartment.errors %}
-        <div class="text-danger small">{{ form.apartment.errors.0 }}</div>
-      {% endif %}
-    </div>
-  
-    <!-- ZIP Code -->
-    <div class="col-md-3">
-      <label for="{{ form.zip_code.id_for_label }}" class="form-label">ZIP Code</label>
+      <div class="row">
+        <div class="col-9">
+            {{ form.address }}
+        </div>
+        <div class="col-3">
+            {{ form.apartment }}
+        </div>
+      </div>
       {{ form.zip_code }}
-      {% if form.zip_code.errors %}
-        <div class="text-danger small">{{ form.zip_code.errors.0 }}</div>
-      {% endif %}
+  
+  <!-- Property Access and Conditions -->
+  <div class="row g-3 mt-3">
+ 
+    
+    <!-- How to get in -->
+    <div class="col-12">
+      <h4>How will we get into your home?</h4>
+      <div class="row">
+        <div class="col-12 col-md-6 mb-2">
+          <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('get_in_at_home').click()">
+            <input class="form-check-input get-in-checkbox" type="checkbox" id="get_in_at_home" name="get_in" value="at_home">
+            <label class="form-check-label ms-2" for="get_in_at_home">
+              <i class="fa-solid fa-house me-2"></i>I'll be at home
+            </label>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 mb-2">
+          <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('get_in_doorman').click()">
+            <input class="form-check-input get-in-checkbox" type="checkbox" id="get_in_doorman" name="get_in" value="doorman">
+            <label class="form-check-label ms-2" for="get_in_doorman">
+              <i class="fa-solid fa-door-open me-2"></i>The key is with doorman
+            </label>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 mb-2">
+          <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('get_in_lockbox').click()">
+            <input class="form-check-input get-in-checkbox" type="checkbox" id="get_in_lockbox" name="get_in" value="lockbox">
+            <label class="form-check-label ms-2" for="get_in_lockbox">
+              <i class="fa-solid fa-lock me-2"></i>Lockbox on premises
+            </label>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 mb-2">
+          <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('get_in_call').click()">
+            <input class="form-check-input get-in-checkbox" type="checkbox" id="get_in_call" name="get_in" value="call_organize">
+            <label class="form-check-label ms-2" for="get_in_call">
+              <i class="fa-solid fa-phone me-2"></i>Call to organize
+            </label>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 mb-2">
+          <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('get_in_other').click()">
+            <input class="form-check-input get-in-checkbox" type="checkbox" id="get_in_other" name="get_in" value="other">
+            <label class="form-check-label ms-2" for="get_in_other">
+              <i class="fa-solid fa-ellipsis me-2"></i>Other
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Parking instructions -->
+    <div class="col-12">
+      <label for="parking" class="form-label">Parking Instructions</label>
+      <textarea name="parking" id="parking" class="cmn-input" rows="3" placeholder="Please provide parking instructions for our cleaning team..."></textarea>
+    </div>
+  
+    <!-- Pet information -->
+    <div class="col-12">
+      <h4 class="mt-4">Do you have any pets?</h4>
+      <div class="row">
+        <div class="col-12 col-md-6 mb-2">
+          <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('pet_cat').click()">
+            <input class="form-check-input pet-checkbox" type="checkbox" id="pet_cat" name="pet" value="cat">
+            <label class="form-check-label ms-2" for="pet_cat">
+              <i class="fa-solid fa-cat me-2"></i>Cat
+            </label>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 mb-2">
+          <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('pet_dog').click()">
+            <input class="form-check-input pet-checkbox" type="checkbox" id="pet_dog" name="pet" value="dog">
+            <label class="form-check-label ms-2" for="pet_dog">
+              <i class="fa-solid fa-dog me-2"></i>Dog
+            </label>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 mb-2">
+          <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('pet_both').click()">
+            <input class="form-check-input pet-checkbox" type="checkbox" id="pet_both" name="pet" value="both">
+            <label class="form-check-label ms-2" for="pet_both">
+              <i class="fa-solid fa-paw me-2"></i>Both
+            </label>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 mb-2">
+          <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('pet_other').click()">
+            <input class="form-check-input pet-checkbox" type="checkbox" id="pet_other" name="pet" value="other">
+            <label class="form-check-label ms-2" for="pet_other">
+              <i class="fa-solid fa-ellipsis me-2"></i>Other
+            </label>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   </div>
@@ -336,33 +556,63 @@
   
     <!-- Step 2: Schedule Info -->
     <div class="step hidden-step" id="step2">
-      <h4 class="mt-4">Schedule</h4>
-      <div class="row g-3 align-items-end mb-3">
-        <!-- Date -->
-        <div class="col-md-4">
-          <label for="{{ form.date.id_for_label }}" class="form-label">Date</label>
-          <div style="position: relative;">
-            {{ form.date }}
-            <i class="icon-calendar" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); pointer-events:none;"></i>
+      <h4 class="mt-4 mb-3">Schedule</h4>
+      
+      <!-- Cleaning Frequency Section -->
+      <div class="frequency-section mb-4">
+        <h5>How often would you like us to clean?</h5>
+        <p class="text-muted mb-3">Save With Our Cleany Loyalty Program! (Discount applied on 2nd cleaning and onward)</p>
+        
+        <div class="frequency-buttons">
+          <button type="button" class="frequency-btn active" data-frequency="one_time" data-discount="0">
+            One time
+          </button>
+          <button type="button" class="frequency-btn" data-frequency="daily" data-discount="20">
+            Daily - 20% Off
+          </button>
+          <button type="button" class="frequency-btn" data-frequency="weekly" data-discount="15">
+            Weekly 15% Off
+          </button>
+          <button type="button" class="frequency-btn" data-frequency="bi_weekly" data-discount="10">
+            Bi Weekly 10% Off
+          </button>
+          <button type="button" class="frequency-btn" data-frequency="monthly" data-discount="5">
+            Monthly 5% Off
+          </button>
           </div>
+        <input type="hidden" name="cleaning_frequency" id="cleaning_frequency" value="one_time">
+        <input type="hidden" name="frequency_discount" id="frequency_discount" value="0">
         </div>
       
-        <!-- Start Time -->
-        <div class="col-md-4">
-          <label for="{{ form.hour.id_for_label }}" class="form-label">Start Time</label>
-          {{ form.hour }}
-          <div id="hourWarning" class="alert alert-danger mt-2 d-none">
-            ⚠️ No available time slots for the selected date.
+      <!-- Date of Service Section -->
+      <div class="date-section mb-4">
+        <h5>Date of service</h5>
+        <p class="text-muted mb-3">For recurring services, each one will commence on the same day and time as selected for the first service.</p>
+        
+        <!-- Calendar and Time Selection -->
+        <div class="calendar-section">
+          <div class="calendar-navigation mb-3">
+            <button type="button" class="nav-arrow" id="prev_week">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="calendar-dates" id="calendar_dates">
+              <!-- Calendar dates will be populated by JavaScript -->
           </div>
+            <button type="button" class="nav-arrow" id="next_week">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
         </div>
       
-        <!-- Recurrence Pattern -->
-        <div class="col-md-4">
-          <label for="{{ form.recurrence_pattern.id_for_label }}" class="form-label">Recurrence</label>
-          {{ form.recurrence_pattern }}
+          <div class="time-slots" id="time_slots">
+            <!-- Time slots will be populated by JavaScript -->
         </div>
       </div>
       
+        <!-- Hidden form fields for compatibility -->
+        <input type="hidden" name="selected_date" id="selected_date">
+        <input type="hidden" name="selected_time" id="selected_time">
+        <input type="hidden" name="recurrence_pattern" id="recurrence_pattern" value="one_time">
+      </div>
   
       {{ form.job_description.label_tag }}
       {{ form.job_description }}
@@ -443,16 +693,212 @@
   // FLATPICKR + FORM LOGIC + PRICING ENGINE
   // ================================
   document.addEventListener("DOMContentLoaded", function () {
-    // === Flatpickr Setup ===
-    flatpickr("#id_date", {
-      dateFormat: "Y-m-d",
-      minDate: new Date().fp_incr(2),
-      defaultDate: new Date().fp_incr(2),
-      disableMobile: true
+    // === Calendar and Time Selection Logic ===
+    let currentWeekStart = new Date();
+    currentWeekStart.setDate(currentWeekStart.getDate() + 2);
+    let selectedDate = null;
+    let selectedTime = null;
+
+    function renderCalendar() {
+      console.log('🔍 renderCalendar called');
+      const calendarDates = document.getElementById('calendar_dates');
+      if (!calendarDates) {
+        console.log('❌ calendar_dates element not found');
+        return;
+      }
+      console.log('🔍 calendar_dates found, rendering...');
+      
+      calendarDates.innerHTML = '';
+      
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(currentWeekStart);
+        date.setDate(currentWeekStart.getDate() + i);
+        
+        const dayNames = ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa'];
+        const dayName = dayNames[date.getDay()];
+        const dateNumber = date.getDate();
+        const month = date.getMonth() + 1;
+        
+        const dateItem = document.createElement('div');
+        dateItem.className = 'date-item';
+        
+        // Check if this date is the selected date
+        if (selectedDate && date.toDateString() === selectedDate.toDateString()) {
+          dateItem.classList.add('selected');
+        }
+        
+        dateItem.innerHTML = `
+          <div class="date-icon">
+            <i class="fa-solid fa-calendar"></i>
+          </div>
+          <div class="date-day">${dayName}</div>
+          <div class="date-number">${month}/${dateNumber.toString().padStart(2, '0')}</div>
+        `;
+        
+        dateItem.addEventListener('click', (event) => selectDate(date, event));
+        calendarDates.appendChild(dateItem);
+      }
+      
+      // If no date is selected, select the first date by default
+      if (!selectedDate) {
+        selectDate(new Date(currentWeekStart));
+      }
+    }
+
+    function selectDate(date, event) {
+      selectedDate = date;
+      
+      document.querySelectorAll('.date-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      if (event && event.target) {
+        event.target.closest('.date-item').classList.add('selected');
+      }
+      
+      document.getElementById('selected_date').value = date.toISOString().split('T')[0];
+      loadTimeSlots(date);
+      updatePrice();
+    }
+
+    function loadTimeSlots(date) {
+      const timeSlots = document.getElementById('time_slots');
+      if (!timeSlots) {
+        console.log('❌ Time slots container not found');
+        return;
+      }
+      
+      timeSlots.innerHTML = '';
+      
+      // Get the hours requested from the form
+      let hoursRequested = 3; // default fallback
+      
+      // Try to get hours from large home options
+      const hoursField = document.querySelector('select[name="est_hours"]');
+      if (hoursField && hoursField.value) {
+        hoursRequested = parseFloat(hoursField.value) || 3;
+      } else {
+        // For small homes, calculate from home type + extras
+        const homeSelect = document.getElementById("id_home_types");
+        let totalMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || "180");
+        
+        document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+          totalMinutes += parseInt(cb.dataset.time || "0") || 0;
+        });
+        
+        hoursRequested = Math.ceil(totalMinutes / 60);
+      }
+      
+      // Fetch available hours from API
+      const selectedDate = date.toISOString().split('T')[0];
+      
+      console.log('🔍 Loading time slots for:', { selectedDate, hoursRequested });
+      
+      timeSlots.innerHTML = '<div class="text-center text-muted">Loading available times...</div>';
+      
+      fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${hoursRequested}`)
+        .then(response => {
+          console.log('🔍 API response status:', response.status);
+          return response.json();
+        })
+        .then(data => {
+          console.log('🔍 API response data:', data);
+          timeSlots.innerHTML = '';
+          
+          if (!data.available_hours || data.available_hours.length === 0) {
+            timeSlots.innerHTML = '<div class="text-center text-muted">No available times for this date</div>';
+            return;
+          }
+          
+          // Create time slots from available hours
+          data.available_hours.forEach((timeStr, index) => {
+            const timeSlot = document.createElement('div');
+            timeSlot.className = 'time-slot';
+            
+            // Parse time string (e.g., "14:00" to "2:00 PM")
+            const [hour, minute] = timeStr.split(':').map(Number);
+            const ampm = hour < 12 ? 'am' : 'pm';
+            const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+            const displayTime = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+            
+            timeSlot.textContent = displayTime;
+            timeSlot.dataset.time = timeStr; // Store original time for form submission
+            
+            timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, hour, timeStr));
+            timeSlots.appendChild(timeSlot);
+          });
+          
+          // Select first available time slot by default
+          if (timeSlots.children.length > 0) {
+            selectTimeSlot(timeSlots.children[0], parseInt(data.available_hours[0].split(':')[0]), data.available_hours[0]);
+          }
+        })
+        .catch(error => {
+          console.error('❌ Failed to fetch available hours:', error);
+          timeSlots.innerHTML = '<div class="text-center text-muted">Failed to load available times</div>';
+        });
+    }
+
+    function selectTimeSlot(slot, hour, timeStr) {
+      selectedTime = hour;
+      
+      document.querySelectorAll('.time-slot').forEach(s => {
+        s.classList.remove('selected');
+      });
+      slot.classList.add('selected');
+      
+      document.getElementById('selected_time').value = timeStr;
+      
+      // Update the summary immediately
+      updatePrice();
+    }
+
+    // Navigation arrows
+    const prevWeekBtn = document.getElementById('prev_week');
+    const nextWeekBtn = document.getElementById('next_week');
+    
+    if (prevWeekBtn) {
+      prevWeekBtn.addEventListener('click', () => {
+        currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+        renderCalendar();
+      });
+    }
+    
+    if (nextWeekBtn) {
+      nextWeekBtn.addEventListener('click', () => {
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+        renderCalendar();
+      });
+    }
+
+    // === Frequency Button Logic ===
+    const frequencyButtons = document.querySelectorAll('.frequency-section .frequency-btn');
+    const frequencyInput = document.getElementById('cleaning_frequency');
+    const discountInput = document.getElementById('frequency_discount');
+
+    frequencyButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        frequencyButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        frequencyInput.value = this.dataset.frequency;
+        discountInput.value = this.dataset.discount;
+        updatePrice();
+      });
     });
+
+    // Calendar will be initialized later in the initialization sequence
+
+    // === Flatpickr Setup (keep for backward compatibility) ===
+    const dateField = document.getElementById("id_date");
+    if (dateField) {
+      flatpickr("#id_date", {
+        dateFormat: "Y-m-d",
+        minDate: new Date().fp_incr(2),
+        defaultDate: new Date().fp_incr(2),
+        disableMobile: true
+      });
+    }
   
     // === Shared DOM Elements ===
-    const dateField = document.getElementById("id_date");
     const hourSelect = document.getElementById("id_hour");
     const hoursField = document.querySelector('select[name="est_hours"]');
     const sqftSelect = document.getElementById("id_square_feet_options");
@@ -540,6 +986,8 @@
   
       const selectedName = selectedOption.textContent.trim().toLowerCase();
       const isUnder1000 = selectedName.includes("under 1000");
+      
+      console.log('🔍 toggleHomeAndExtras called:', { selectedName, isUnder1000 });
   
       if (isUnder1000) {
         homeTypeGroup.style.display = "";
@@ -549,9 +997,12 @@
         homeTypeGroup.style.display = "none";
         extrasContainer.style.display = "none";
         largeHomeOptions.style.display = "";
-  
-        document.querySelectorAll(".extra-checkbox").forEach(cb => cb.checked = false);
-  
+
+        // Clear extras for large homes since they're not available
+        document.querySelectorAll(".extra-checkbox").forEach(cb => {
+          cb.checked = false;
+        });
+
         if (selectedName.includes("1500–2000") || selectedName.includes("1500-2000")) {
           cleaningTypeSelect.innerHTML = `
             <option value="">Select Cleaning Type</option>
@@ -643,7 +1094,24 @@
     toggleHomeAndExtras();
     fetchAvailableHours();
     updatePrice();
-    resetSummary();
+    
+    // Ensure calendar is initialized after other elements
+    setTimeout(() => {
+      console.log('🔍 Checking for calendar elements...');
+      const calendarDates = document.getElementById('calendar_dates');
+      const timeSlots = document.getElementById('time_slots');
+      console.log('🔍 Calendar elements found:', { calendarDates: !!calendarDates, timeSlots: !!timeSlots });
+      
+      if (calendarDates) {
+        renderCalendar();
+      } else {
+        console.log('❌ Calendar elements not found, using fallback');
+        // Fallback: ensure the original form fields work
+        if (document.getElementById('id_date') && document.getElementById('id_hour')) {
+          console.log('🔍 Using original form fields as fallback');
+        }
+      }
+    }, 200);
   
     // === Event Bindings ===
     sqftSelect?.addEventListener("change", toggleHomeAndExtras);
@@ -651,12 +1119,58 @@
     cleaningTypeSelect?.addEventListener("change", fetchAvailableHours);
     cleanerSelect?.addEventListener("change", fetchAvailableHours);
     hoursField?.addEventListener("change", fetchAvailableHours);
+    
+    // Add event listener for home type changes
+    const homeTypeSelect = document.getElementById("id_home_types");
+    if (homeTypeSelect) {
+      homeTypeSelect.addEventListener("change", updatePrice);
+    }
   
     // Refresh on blur (when user clicks out of the input)
-    dateField.addEventListener("change", fetchAvailableHours);
-    hoursField.addEventListener("change", fetchAvailableHours);
+    if (dateField) {
+      dateField.addEventListener("change", fetchAvailableHours);
+    }
+    if (hoursField) {
+      hoursField.addEventListener("change", fetchAvailableHours);
+    }
   
-    document.querySelectorAll(".extra-checkbox").forEach(cb => cb.addEventListener("change", updatePrice));
+    document.querySelectorAll(".extra-checkbox").forEach(cb => {
+      cb.addEventListener("change", function() {
+        console.log('🔍 Extra checkbox changed:', this.checked, this.value, this.dataset.price);
+        updatePrice();
+      });
+    });
+    
+    // Handle get_in checkboxes (only one can be selected)
+    document.querySelectorAll(".get-in-checkbox").forEach(cb => {
+      cb.addEventListener("change", function() {
+        if (this.checked) {
+          // Uncheck all other get_in checkboxes
+          document.querySelectorAll(".get-in-checkbox").forEach(otherCb => {
+            if (otherCb !== this) {
+              otherCb.checked = false;
+            }
+          });
+        }
+        updatePrice();
+      });
+    });
+    
+    // Handle pet checkboxes (only one can be selected)
+    document.querySelectorAll(".pet-checkbox").forEach(cb => {
+      cb.addEventListener("change", function() {
+        if (this.checked) {
+          // Uncheck all other pet checkboxes
+          document.querySelectorAll(".pet-checkbox").forEach(otherCb => {
+            if (otherCb !== this) {
+              otherCb.checked = false;
+            }
+          });
+        }
+        updatePrice();
+      });
+    });
+    
     document.querySelectorAll("input, select").forEach(el => {
       el.addEventListener("change", updatePrice);
       el.addEventListener("input", () => {
@@ -673,6 +1187,7 @@
     // PRICE & SUMMARY CALCULATOR
     // ================================
     function updatePrice() {
+      console.log('🔍 updatePrice called');
       let subtotal = 0;
       const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
       subtotal += sqftPrice;
@@ -684,24 +1199,31 @@
         subtotal += homePrice;
       }
   
-      // Extras (only if visible)
-      if (extrasContainer?.offsetParent !== null) {
-        document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
-          subtotal += parseFloat(cb.dataset.price || 0);
-        });
-      }
+      // Extras (always check if any are selected)
+      const checkedExtras = document.querySelectorAll(".extra-checkbox:checked");
+      console.log('🔍 Processing extras for pricing:', checkedExtras.length);
+      checkedExtras.forEach(cb => {
+        const price = parseFloat(cb.dataset.price || 0);
+        console.log('🔍 Adding extra price:', price);
+        subtotal += price;
+      });
   
       // Labor cost for large homes
   let laborCost = 0;
   if (largeHomeOptions?.offsetParent !== null) {
     const numCleaners = parseInt(cleanerSelect?.value || 0);
-    const estimatedHours = parseFloat(hoursField?.value || 0); // ✅ correct value
+        const estimatedHours = parseFloat(hoursField?.value || 0);
     const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
     let hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
   
     laborCost = numCleaners * estimatedHours * hourlyRate;
     subtotal += laborCost;
   }
+      
+      // Apply frequency discount
+      const frequencyDiscount = parseInt(document.getElementById('frequency_discount')?.value || 0);
+      const frequencyDiscountAmount = subtotal * (frequencyDiscount / 100);
+      subtotal -= frequencyDiscountAmount;
   
   const taxRate = 0.08875;
 const tax = subtotal * taxRate;
@@ -753,6 +1275,8 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
   
       // Update summary items list
       const summaryContainer = document.getElementById("summary-items");
+      console.log('🔍 Summary container found:', !!summaryContainer);
+      if (summaryContainer) {
       summaryContainer.innerHTML = "";
   
       if (sqftSelect) {
@@ -767,10 +1291,13 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
       }
   
       if (isSmallHomeSelected()) {
+          console.log('🔍 Small home selected, adding home type to summary');
         const homeSelect = document.getElementById("id_home_types");
         const homeOption = homeSelect?.selectedOptions[0];
         const homeLabel = homeOption?.textContent.trim();
         const homePrice = parseFloat(homeOption?.dataset.price || 0);
+          
+          console.log('🔍 Home type details:', { homeLabel, homePrice, homeOption });
       
         if (homeLabel && homePrice > 0) {
           summaryContainer.innerHTML += `
@@ -779,11 +1306,16 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
               <div>$${homePrice.toFixed(2)}</div>
             </div>`;
         }
+        } else {
+          console.log('🔍 Large home selected, skipping home type');
       }
   
-      document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+        const checkedExtras = document.querySelectorAll(".extra-checkbox:checked");
+        console.log('🔍 Found checked extras:', checkedExtras.length);
+        checkedExtras.forEach(cb => {
         const label = cb.nextElementSibling?.textContent?.trim() || "Extra";
         const price = parseFloat(cb.dataset.price || 0).toFixed(2);
+          console.log('🔍 Adding extra to summary:', { label, price });
         summaryContainer.innerHTML += `
           <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
             <div>• ${label}</div>
@@ -804,10 +1336,49 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
           </div>`;
       }
   
-      // Update schedule info
-      const dateVal = document.getElementById("id_date")?.value || "-";
-      const timeVal = document.getElementById("id_hour")?.value || "-";
-      const recurrenceText = document.getElementById("id_recurrence_pattern")?.selectedOptions?.[0]?.textContent || "-";
+        // Show frequency discount if applicable
+        if (frequencyDiscount > 0) {
+          summaryContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-1 text-success">
+              <div><i class="fa-solid fa-tag me-2"></i>Frequency Discount (${frequencyDiscount}%)</div>
+              <div>-$${frequencyDiscountAmount.toFixed(2)}</div>
+            </div>`;
+        }
+      }
+  
+      // Update schedule info - use new calendar values if available
+      let dateVal = document.getElementById("selected_date")?.value || document.getElementById("id_date")?.value || "-";
+      let timeVal = document.getElementById("selected_time")?.value || document.getElementById("id_hour")?.value || "-";
+      let recurrenceText = document.getElementById("recurrence_pattern")?.value || document.getElementById("id_recurrence_pattern")?.selectedOptions?.[0]?.textContent || "-";
+
+      // Format time display
+      if (timeVal && timeVal !== "-") {
+        const [hour, minute] = timeVal.split(':').map(Number);
+        const ampm = hour < 12 ? 'am' : 'pm';
+        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        timeVal = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+      }
+
+      // Format date display
+      if (dateVal && dateVal !== "-") {
+        const date = new Date(dateVal);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        const year = date.getFullYear();
+        dateVal = `${month}/${day}/${year}`;
+      }
+
+      // Format recurrence text
+      const frequencyLabels = {
+        'one_time': 'One Time',
+        'daily': 'Daily',
+        'weekly': 'Weekly',
+        'bi_weekly': 'Bi-Weekly',
+        'monthly': 'Monthly'
+      };
+      if (frequencyLabels[recurrenceText]) {
+        recurrenceText = frequencyLabels[recurrenceText];
+      }
   
       document.getElementById("summary-date").textContent = `${dateVal} @ ${timeVal}`;
       document.getElementById("summary-recurrence").textContent = recurrenceText;
@@ -826,7 +1397,6 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
       totalMinutes += parseInt(cb.dataset.time || "0") || 0;
     });
   }
-      
   
       const finalHours = Math.floor(totalMinutes / 60);
       const finalMinutes = totalMinutes % 60;
@@ -910,6 +1480,37 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
     }
   
     function syncHiddenFields() {
+      console.log('🔍 syncHiddenFields called');
+      // Sync calendar fields with form fields
+      const selectedDateField = document.getElementById('selected_date');
+      const selectedTimeField = document.getElementById('selected_time');
+      const recurrenceField = document.getElementById('recurrence_pattern');
+      
+      console.log('🔍 Calendar fields:', {
+        selectedDate: selectedDateField?.value,
+        selectedTime: selectedTimeField?.value,
+        recurrence: recurrenceField?.value
+      });
+      
+      if (selectedDateField && selectedDateField.value) {
+        const dateField = document.getElementById("id_date");
+        if (dateField) {
+          dateField.value = selectedDateField.value;
+        }
+      }
+      if (selectedTimeField && selectedTimeField.value) {
+        const hourField = document.getElementById("id_hour");
+        if (hourField) {
+          hourField.value = selectedTimeField.value;
+        }
+      }
+      if (recurrenceField && recurrenceField.value) {
+        const recurrenceFieldForm = document.getElementById("id_recurrence_pattern");
+        if (recurrenceFieldForm) {
+          recurrenceFieldForm.value = recurrenceField.value;
+        }
+      }
+      
       // If large home section is visible, use that data
       if (document.getElementById("largeHomeOptions")?.offsetParent !== null) {
         const cleaners = document.querySelector('select[name="num_cleaners"]')?.value;

@@ -320,11 +320,11 @@ select::-ms-expand {
                       <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
                   </div>
                   <div class="featured-single-info">
-                    <!-- {% if user.is_authenticated %}
-                      <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Now</a>
-                    {% else %}
-                      <a class="btn-1" href="{% url 'handyman_booking' %}">Book Now</a>
-                    {% endif %} -->
+                    
+                    <button type="button" class="btn-1" onclick="openHandymanQuoteModal()">
+                      <i class="fas fa-file-invoice-dollar me-2"></i>Get a Quote
+                  </button>
+                  
                       <div class="featured-single-info-left">
                       </div>
                   </div>

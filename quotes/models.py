@@ -389,6 +389,38 @@ class Booking(models.Model):
         help_text="Amount discounted using gift card."
     )
     
+    # --- Access and Property Information ---
+    get_in = models.CharField(
+        max_length=20,
+        choices=[
+            ("at_home", "I'll be at home"),
+            ("doorman", "The key is with doorman"),
+            ("lockbox", "Lockbox on premises"),
+            ("call_organize", "Call to organize"),
+            ("other", "Other"),
+        ],
+        null=True,
+        blank=True,
+        help_text="How the cleaning team will gain access to the property"
+    )
+    parking = models.TextField(
+        null=True,
+        blank=True,
+        help_text="Parking instructions for the cleaning team"
+    )
+    pet = models.CharField(
+        max_length=10,
+        choices=[
+            ("cat", "Cat"),
+            ("dog", "Dog"),
+            ("both", "Both"),
+            ("other", "Other"),
+        ],
+        null=True,
+        blank=True,
+        help_text="Type of pet in the household"
+    )
+    
     def __str__(self):
         return f"Booking {self.id} - {self.name if self.name else 'No Name'} ({self.status})"
      
