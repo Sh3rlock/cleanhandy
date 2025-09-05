@@ -348,6 +348,12 @@
     <input type="hidden" name="num_cleaners" id="hidden_num_cleaners">
     <input type="hidden" name="cleaning_type" id="hidden_cleaning_type">
     <input type="hidden" name="service_cat" value="{{ service_cat.id }}">
+    
+    <!-- Django form fields for date and hour (hidden) -->
+    <div style="display: none;">
+      {{ form.date }}
+      {{ form.hour }}
+    </div>
   
     <!-- Step 1: Choose Service Type -->
     <div class="step mb-4" id="step1">
@@ -735,7 +741,7 @@
           <div class="date-number">${month}/${dateNumber.toString().padStart(2, '0')}</div>
         `;
         
-        dateItem.addEventListener('click', (event) => selectDate(date, event));
+        dateItem.addEventListener('click', () => selectDate(date));
         calendarDates.appendChild(dateItem);
       }
       
@@ -745,20 +751,27 @@
       }
     }
 
-    function selectDate(date, event) {
-      selectedDate = date;
-      
-      document.querySelectorAll('.date-item').forEach(item => {
-        item.classList.remove('selected');
-      });
-      if (event && event.target) {
-        event.target.closest('.date-item').classList.add('selected');
-      }
-      
-      document.getElementById('selected_date').value = date.toISOString().split('T')[0];
-      loadTimeSlots(date);
-      updatePrice();
+      function selectDate(date) {
+    selectedDate = date;
+    
+    document.querySelectorAll('.date-item').forEach(item => {
+      item.classList.remove('selected');
+    });
+    event.target.closest('.date-item').classList.add('selected');
+    
+    const dateValue = date.toISOString().split('T')[0];
+    document.getElementById('selected_date').value = dateValue;
+    
+    // Also update Django form field
+    const dateField = document.getElementById("id_date");
+    if (dateField) {
+      dateField.value = dateValue;
+      console.log('🔍 Updated Django date field to:', dateValue);
     }
+    
+    loadTimeSlots(date);
+    updatePrice();
+  }
 
     function loadTimeSlots(date) {
       const timeSlots = document.getElementById('time_slots');
@@ -796,12 +809,9 @@
       timeSlots.innerHTML = '<div class="text-center text-muted">Loading available times...</div>';
       
       fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${hoursRequested}`)
-        .then(response => {
-          console.log('🔍 API response status:', response.status);
-          return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-          console.log('🔍 API response data:', data);
+          console.log('🔍 Available hours API response:', data);
           timeSlots.innerHTML = '';
           
           if (!data.available_hours || data.available_hours.length === 0) {
@@ -835,6 +845,33 @@
         .catch(error => {
           console.error('❌ Failed to fetch available hours:', error);
           timeSlots.innerHTML = '<div class="text-center text-muted">Failed to load available times</div>';
+          
+          // Fallback to showing all time slots if API fails
+          const dayOfWeek = date.getDay();
+          let startHour = 8;
+          let endHour = 18;
+          
+          if (dayOfWeek === 0 || dayOfWeek === 6) {
+            startHour = 8;
+            endHour = 18;
+          } else {
+            startHour = 11;
+            endHour = 18;
+          }
+          
+          for (let hour = startHour; hour <= endHour; hour++) {
+            const timeSlot = document.createElement('div');
+            timeSlot.className = 'time-slot';
+            timeSlot.textContent = `${hour}:00${hour < 12 ? 'am' : hour === 12 ? 'pm' : 'pm'}`;
+            timeSlot.dataset.time = `${hour.toString().padStart(2, '0')}:00`;
+            
+            timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, hour, `${hour.toString().padStart(2, '0')}:00`));
+            timeSlots.appendChild(timeSlot);
+          }
+          
+          if (timeSlots.children.length > 0) {
+            selectTimeSlot(timeSlots.children[0], startHour, `${startHour.toString().padStart(2, '0')}:00`);
+          }
         });
     }
 
@@ -848,7 +885,13 @@
       
       document.getElementById('selected_time').value = timeStr;
       
-      // Update the summary immediately
+      // Also update Django form field
+      const hourField = document.getElementById("id_hour");
+      if (hourField) {
+        hourField.value = timeStr;
+        console.log('🔍 Updated Django hour field to:', timeStr);
+      }
+      
       updatePrice();
     }
 
@@ -1089,29 +1132,50 @@
       if (el) el.style.display = "none";
     });
   
+    // === Set Default Values ===
+    function setDefaultValues() {
+      console.log('🔍 setDefaultValues called');
+      
+      // Set default date (2 days from now)
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 2);
+      selectedDate = defaultDate;
+      console.log('🔍 Set selected date to:', selectedDate);
+      
+      // Set default time (9:00 AM)
+      selectedTime = 9;
+      console.log('🔍 Set selected time to:', selectedTime);
+      
+      // Update hidden fields with defaults
+      const dateValue = defaultDate.toISOString().split('T')[0];
+      const timeValue = '09:00';
+      
+      document.getElementById('selected_date').value = dateValue;
+      document.getElementById('selected_time').value = timeValue;
+      
+      // Also update Django form fields
+      const dateField = document.getElementById("id_date");
+      const hourField = document.getElementById("id_hour");
+      
+      if (dateField) {
+        dateField.value = dateValue;
+        console.log('🔍 Set Django date field to:', dateValue);
+      }
+      
+      if (hourField) {
+        hourField.value = timeValue;
+        console.log('🔍 Set Django hour field to:', timeValue);
+      }
+      
+      console.log('🔍 Set hidden fields - date:', dateValue, 'time:', timeValue);
+    }
+
     // Run initializers
     setDefaultSquareFeet();
     toggleHomeAndExtras();
-    fetchAvailableHours();
-    updatePrice();
-    
-    // Ensure calendar is initialized after other elements
-    setTimeout(() => {
-      console.log('🔍 Checking for calendar elements...');
-      const calendarDates = document.getElementById('calendar_dates');
-      const timeSlots = document.getElementById('time_slots');
-      console.log('🔍 Calendar elements found:', { calendarDates: !!calendarDates, timeSlots: !!timeSlots });
-      
-      if (calendarDates) {
-        renderCalendar();
-      } else {
-        console.log('❌ Calendar elements not found, using fallback');
-        // Fallback: ensure the original form fields work
-        if (document.getElementById('id_date') && document.getElementById('id_hour')) {
-          console.log('🔍 Using original form fields as fallback');
-        }
-      }
-    }, 200);
+    setDefaultValues(); // Set default values first
+    renderCalendar(); // Then render calendar with selected date
+    updatePrice(); // Finally update the summary
   
     // === Event Bindings ===
     sqftSelect?.addEventListener("change", toggleHomeAndExtras);
@@ -1481,34 +1545,25 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
   
     function syncHiddenFields() {
       console.log('🔍 syncHiddenFields called');
-      // Sync calendar fields with form fields
-      const selectedDateField = document.getElementById('selected_date');
-      const selectedTimeField = document.getElementById('selected_time');
-      const recurrenceField = document.getElementById('recurrence_pattern');
       
-      console.log('🔍 Calendar fields:', {
-        selectedDate: selectedDateField?.value,
-        selectedTime: selectedTimeField?.value,
-        recurrence: recurrenceField?.value
-      });
+      // Sync calendar fields with Django form fields
+      const selectedDate = document.getElementById('selected_date')?.value;
+      const selectedTime = document.getElementById('selected_time')?.value;
       
-      if (selectedDateField && selectedDateField.value) {
-        const dateField = document.getElementById("id_date");
-        if (dateField) {
-          dateField.value = selectedDateField.value;
-        }
+      console.log('🔍 Syncing calendar values to Django form:', { selectedDate, selectedTime });
+      
+      // Update Django form fields
+      const dateField = document.getElementById("id_date");
+      const hourField = document.getElementById("id_hour");
+      
+      if (dateField && selectedDate) {
+        dateField.value = selectedDate;
+        console.log('🔍 Set Django date field to:', selectedDate);
       }
-      if (selectedTimeField && selectedTimeField.value) {
-        const hourField = document.getElementById("id_hour");
-        if (hourField) {
-          hourField.value = selectedTimeField.value;
-        }
-      }
-      if (recurrenceField && recurrenceField.value) {
-        const recurrenceFieldForm = document.getElementById("id_recurrence_pattern");
-        if (recurrenceFieldForm) {
-          recurrenceFieldForm.value = recurrenceField.value;
-        }
+      
+      if (hourField && selectedTime) {
+        hourField.value = selectedTime;
+        console.log('🔍 Set Django hour field to:', selectedTime);
       }
       
       // If large home section is visible, use that data
@@ -1541,17 +1596,25 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
     });
 
     document.getElementById("quoteForm").addEventListener("submit", function (e) {
-      const hourSelect = document.getElementById("id_hour");
-      const selectedOption = hourSelect?.options[hourSelect.selectedIndex];
-      const selectedValue = selectedOption?.value || "";
-    
-      if (!selectedValue || selectedOption?.disabled) {
+      // Check calendar system values
+      const selectedTime = document.getElementById("selected_time")?.value;
+      const selectedDate = document.getElementById("selected_date")?.value;
+      
+      // Check Django form fields
+      const djangoDate = document.getElementById("id_date")?.value;
+      const djangoHour = document.getElementById("id_hour")?.value;
+      
+      console.log('🔍 Form validation - Calendar values:', { selectedTime, selectedDate });
+      console.log('🔍 Form validation - Django values:', { djangoDate, djangoHour });
+      
+      // Validate time and date selection (check both calendar and Django fields)
+      if (!selectedTime || !selectedDate || !djangoDate || !djangoHour) {
         e.preventDefault();
-        alert("❌ Please choose a valid available time slot before submitting.");
-        hourSelect.classList.add("is-invalid");
-      } else {
-        hourSelect.classList.remove("is-invalid");
+        alert("❌ Please choose a valid available time slot and date before submitting.");
+        return;
       }
+      
+      console.log('🔍 Form validation passed, submitting...');
     });
   });
   </script>

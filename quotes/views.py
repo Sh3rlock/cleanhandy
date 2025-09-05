@@ -735,6 +735,23 @@ def office_cleaning_quote_submitted(request, booking_id):
         )
 
 
+def booking_confirmation(request, booking_id):
+    """
+    Display the booking confirmation page for office cleaning bookings
+    """
+    try:
+        booking = get_object_or_404(Booking, id=booking_id)
+        return render(request, "quotes/booking_confirmation.html", {
+            "booking": booking
+        })
+    except Exception as e:
+        print(f"❌ Error in booking_confirmation: {e}")
+        return HttpResponse(
+            f"Error loading booking confirmation: {str(e)}",
+            content_type='text/plain'
+        )
+
+
 def handyman_quote_submit(request):
     """Handle handyman quote form submission"""
     if request.method == 'POST':

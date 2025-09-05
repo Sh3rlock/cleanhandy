@@ -1,85 +1,491 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<section class="contact-details">
-  <div class="container">
-<h2>🎉 Quote Submitted!</h2>
-<p>Thank you, {{ quote.customer.name }}! Here’s a breakdown of your cleaning request:</p>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+        :root {
+            --primary-color: #F15A29;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --dark-color: #343a40;
+            --light-color: #f8f9fa;
+        }
+        
+        .confirmation-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .confirmation-header {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .quote-id {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-top: 1rem;
+            display: inline-block;
+        }
+        
+        .confirmation-content {
+            padding: 2rem;
+        }
+        
+        .detail-section {
+            margin-bottom: 2rem;
+        }
+        
+        .detail-section h6 {
+            color: var(--primary-color);
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0;
+        }
+        
+        .detail-item .label {
+            font-weight: 600;
+            color: var(--dark-color);
+            min-width: 120px;
+        }
+        
+        .detail-item .value {
+            color: var(--secondary-color);
+            text-align: right;
+            flex: 1;
+        }
+        
+        .success-icon {
+            animation: bounceIn 0.6s ease-out;
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .next-steps {
+            background: var(--light-color);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+        }
+        
+        .steps-timeline {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        
+        .step-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-weight: 600;
+        }
+        
+        .step-content h6 {
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .step-content p {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+        
+        .contact-info {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .contact-info a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+        
+        .pricing-details {
+            background: var(--light-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0;
+        }
+        
+        .price-row.total {
+            border-top: 2px solid #dee2e6;
+            padding-top: 1rem;
+            margin-top: 1rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--success-color);
+        }
+        
+        .extra-services {
+            margin: 1rem 0;
+        }
+        
+        .badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .steps-timeline {
+                flex-direction: column;
+            }
+            
+            .step-item {
+                margin-bottom: 2rem;
+            }
+            
+            .detail-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .detail-item .value {
+                text-align: left;
+                margin-top: 0.25rem;
+            }
+        }
+    </style>
 
-<div class="card mt-4">
-    <div class="card-body">
-      <h4>💰 Price Breakdown</h4>
-      <ul class="list-group list-group-flush">
-  
-        {% if quote.square_feet_options %}
-          <li class="list-group-item">
-            Square Footage ({{ quote.square_feet_options.name }})
-          </li>
-        {% endif %}
-  
-        {% if not quote.is_large_home and quote.home_types %}
-          <li class="list-group-item">
-          Home Type ({{ quote.home_types.name }}): ${{ quote.home_types.price }}
-          </li>
-        {% endif %}
-  
-        {% if quote.extras.all %}
-          <li class="list-group-item">Extras:</li>
-          {% for extra in quote.extras.all %}
-            <li class="list-group-item ps-4">+ {{ extra.name }} — ${{ extra.price }}</li>
-          {% endfor %}
-        {% endif %}
-  
-        <li class="list-group-item">
-          Subtotal: ${{ quote.calculate_subtotal }}
-        </li>
-  
-        <li class="list-group-item">
-          Sales Tax (8.875%): ${{ quote.calculate_tax }}
-        </li>
-        <li class="list-group-item">
-          Gift Card or Discount: ${{ quote.gift_card_discount }}
-        </li>
-      </ul>
-  
-      <h5 class="mt-3">💵 Total Price: <strong>${{ quote.price }}</strong></h5>
+<div class="container py-5">
+    <div class="text-center mb-4">
+        <div class="success-icon mb-3">
+            <i class="fas fa-check-circle fa-5x text-success"></i>
+        </div>
+        <h2 class="text-success">Quote Submitted!</h2>
+        <p class="text-muted">Thank you for choosing CleanHandy. Your home cleaning quote has been submitted successfully.</p>
     </div>
-  </div>
 
-<div class="card mt-4">
-  <div class="card-body">
-    <h4>📅 Scheduled Info</h4>
-    <p><strong>Date:</strong> {{ quote.date }}</p>
-    <p><strong>Time:</strong> {{ quote.hour }}</p>
-    <p><strong>Duration:</strong> {{ quote.hours_requested }} hour(s)</p>
-    <p><strong>Recurring:</strong> 
-      {% if quote.recurrence_pattern != "one_time" %}
-        {{ quote.get_recurrence_pattern_display }}
-      {% else %}
-        One-time
-      {% endif %}
-    </p>
-  </div>
-</div>
+    <div class="row">
+        <div class="col-12">
+            <div class="confirmation-card">
+                <div class="confirmation-header">
+                    <h4><i class="fas fa-receipt text-white me-2"></i>Quote Details</h4>
+                    <div class="quote-id">Quote #{{ quote.id }}</div>
+                </div>
+                
+                <div class="confirmation-content">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-section">
+                                <h6><i class="fas fa-home text-primary me-2"></i>Service Details</h6>
+                                <div class="detail-item">
+                                    <span class="label">Service Type:</span>
+                                    <span class="value">{{ quote.service.name }}</span>
+                                </div>
+                                {% if quote.cleaning_type %}
+                                <div class="detail-item">
+                                    <span class="label">Cleaning Type:</span>
+                                    <span class="value">{{ quote.cleaning_type }}</span>
+                                </div>
+                                {% endif %}
+                                {% if quote.num_cleaners %}
+                                <div class="detail-item">
+                                    <span class="label">Number of Cleaners:</span>
+                                    <span class="value">{{ quote.num_cleaners }}</span>
+                                </div>
+                                {% endif %}
+                                {% if quote.hours_requested %}
+                                <div class="detail-item">
+                                    <span class="label">Hours Requested:</span>
+                                    <span class="value">{{ quote.hours_requested }} hours</span>
+                                </div>
+                                {% endif %}
+                                {% if quote.square_feet_options %}
+                                <div class="detail-item">
+                                    <span class="label">Square Footage:</span>
+                                    <span class="value">{{ quote.square_feet_options.name }}</span>
+                                </div>
+                                {% endif %}
+                                {% if quote.home_types %}
+                                <div class="detail-item">
+                                    <span class="label">Home Type:</span>
+                                    <span class="value">{{ quote.home_types.name }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h6><i class="fas fa-calendar-alt text-info me-2"></i>Schedule</h6>
+                                <div class="detail-item">
+                                    <span class="label">Date:</span>
+                                    <span class="value">{{ quote.date|date:"F j, Y" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Time:</span>
+                                    <span class="value">{{ quote.hour|time:"g:i A" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Duration:</span>
+                                    <span class="value">{{ quote.hours_requested|default:"2" }} hours</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Cleaning Frequency:</span>
+                                    <span class="value">
+                                        {% if quote.cleaning_frequency %}
+                                            {{ quote.get_cleaning_frequency_display }}
+                                        {% elif quote.recurrence_pattern != "one_time" %}
+                                            {{ quote.get_recurrence_pattern_display }}
+                                        {% else %}
+                                            One-time
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="detail-section">
+                                <h6><i class="fas fa-user text-primary me-2"></i>Customer Information</h6>
+                                <div class="detail-item">
+                                    <span class="label">Name:</span>
+                                    <span class="value">{{ quote.customer.name|default:"Not provided" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Email:</span>
+                                    <span class="value">{{ quote.customer.email|default:"Not provided" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Phone:</span>
+                                    <span class="value">{{ quote.customer.phone|default:"Not provided" }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h6><i class="fas fa-map-marker-alt text-danger me-2"></i>Location</h6>
+                                <div class="detail-item">
+                                    <span class="label">Address:</span>
+                                    <span class="value">
+                                        {{ quote.address|default:"Not provided" }}
+                                        {% if quote.apartment %}, Apt {{ quote.apartment }}{% endif %}
+                                    </span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">City, State, ZIP:</span>
+                                    <span class="value">{{ quote.city }}, {{ quote.state }} {{ quote.zip_code }}</span>
+                                </div>
+                                {% if quote.get_in %}
+                                <div class="detail-item">
+                                    <span class="label">Access Method:</span>
+                                    <span class="value">{{ quote.get_get_in_display }}</span>
+                                </div>
+                                {% endif %}
+                                {% if quote.parking %}
+                                <div class="detail-item">
+                                    <span class="label">Parking Instructions:</span>
+                                    <span class="value">{{ quote.parking }}</span>
+                                </div>
+                                {% endif %}
+                                {% if quote.pet %}
+                                <div class="detail-item">
+                                    <span class="label">Pet Information:</span>
+                                    <span class="value">{{ quote.get_pet_display }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if quote.extras.all %}
+                    <div class="detail-section">
+                        <h6><i class="fas fa-plus-circle text-success me-2"></i>Extra Services</h6>
+                        <div class="extra-services">
+                            {% for extra in quote.extras.all %}
+                                <span class="badge bg-success me-2 mb-2">{{ extra.name }} (+${{ extra.price }})</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if quote.job_description %}
+                    <div class="detail-section">
+                        <h6><i class="fas fa-comment text-info me-2"></i>Job Description</h6>
+                        <p class="additional-details">{{ quote.job_description }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="detail-section">
+                        <h6><i class="fas fa-dollar-sign text-success me-2"></i>Pricing</h6>
+                        <div class="pricing-details">
+                            {% if quote.square_feet_options %}
+                            <div class="price-row">
+                                <span class="label">Square Footage ({{ quote.square_feet_options.name }}):</span>
+                                <span class="value">${{ quote.square_feet_options.price|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if not quote.is_large_home and quote.home_types %}
+                            <div class="price-row">
+                                <span class="label">Home Type ({{ quote.home_types.name }}):</span>
+                                <span class="value">${{ quote.home_types.price|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if quote.is_large_home and quote.hours_requested and quote.num_cleaners %}
+                            <div class="price-row">
+                                <span class="label">Labor Cost ({{ quote.num_cleaners }} cleaner{{ quote.num_cleaners|pluralize }} × {{ quote.hours_requested }} hour{{ quote.hours_requested|pluralize }}):</span>
+                                <span class="value">
+                                    {% if quote.cleaning_type and "post" in quote.cleaning_type.lower or "renovation" in quote.cleaning_type.lower %}
+                                        ${{ quote.num_cleaners|floatformat:0 }} × {{ quote.hours_requested }} × $63.00 = ${{ quote.calculate_subtotal|floatformat:2 }}
+                                    {% else %}
+                                        ${{ quote.num_cleaners|floatformat:0 }} × {{ quote.hours_requested }} × $58.00 = ${{ quote.calculate_subtotal|floatformat:2 }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% endif %}
+                            
+                            {% for extra in quote.extras.all %}
+                            <div class="price-row">
+                                <span class="label">{{ extra.name }}:</span>
+                                <span class="value">${{ extra.price|floatformat:2 }}</span>
+                            </div>
+                            {% endfor %}
+                            
+                            <div class="price-row">
+                                <span class="label">Subtotal:</span>
+                                <span class="value">${{ quote.calculate_subtotal|floatformat:2 }}</span>
+                            </div>
+                            
+                            <div class="price-row">
+                                <span class="label">Sales Tax (8.875%):</span>
+                                <span class="value">${{ quote.calculate_tax|floatformat:2 }}</span>
+                            </div>
+                            
+                            {% if quote.gift_card_discount and quote.gift_card_discount > 0 %}
+                            <div class="price-row discount">
+                                <span class="label">Gift Card Discount:</span>
+                                <span class="value">-${{ quote.gift_card_discount|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="price-row total">
+                                <span class="label">Total:</span>
+                                <span class="value">${{ quote.price|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="card mt-4">
-  <div class="card-body">
-    <h4>🏠 Home Info</h4>
-    <p><strong>Home Type:</strong> {{ quote.home_types.name }}</p>
-    <p><strong>Square Feet:</strong> {{ quote.square_feet_options.name }}</p>
-    <p><strong>Address:</strong> {{ quote.address }}, Apt {{ quote.apartment }}</p>
-    <p><strong>ZIP:</strong> {{ quote.zip_code }}</p>
-  </div>
-</div>
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="next-steps">
+                <h5><i class="fas fa-list-check text-primary me-2"></i>What Happens Next?</h5>
+                <div class="steps-timeline">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h6>Quote Review</h6>
+                            <p>Our team will review your quote request and prepare a detailed estimate.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h6>Quote Delivery</h6>
+                            <p>You'll receive your detailed quote via email within 24 hours.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h6>Quote Approval</h6>
+                            <p>Review and approve your quote to schedule your cleaning service.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h6>Service Day</h6>
+                            <p>Our professional cleaning team will arrive and complete your service.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="card mt-4">
-  <div class="card-body">
-    <h4>👤 Customer Info</h4>
-    <p><strong>Name:</strong> {{ quote.customer.name }}</p>
-    <p><strong>Email:</strong> {{ quote.customer.email }}</p>
-    <p><strong>Phone:</strong> {{ quote.customer.phone }}</p>
-  </div>
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="contact-info">
+                <h5><i class="fas fa-headset text-primary me-2"></i>Need Help?</h5>
+                <p class="mb-3">Our customer support team is here to help with any questions about your quote.</p>
+                <div class="contact-methods">
+                    <div class="contact-method mb-2">
+                        <i class="fas fa-phone text-primary me-2"></i>
+                        <span>Call us: <a href="tel:+15166193065">+1 (516) 619-3065</a></span>
+                    </div>
+                    <div class="contact-method mb-2">
+                        <i class="fas fa-envelope text-primary me-2"></i>
+                        <span>Email us: <a href="mailto:support@thecleanhandy.com">support@thecleanhandy.com</a></span>
+                    </div>
+                    <div class="contact-method">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        <span>Support hours: Mon-Fri 8AM-6PM, Sat 9AM-3PM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'cleaning_booking' %}" class="btn btn-primary me-3">
+                <i class="fas fa-plus me-2"></i>Book Another Service
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline-primary">
+                <i class="fas fa-home me-2"></i>Back to Home
+            </a>
+        </div>
+    </div>
 </div>
-  </div>
-</section>
 {% endblock %}

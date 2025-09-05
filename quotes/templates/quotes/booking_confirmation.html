@@ -199,8 +199,8 @@
         <div class="success-icon mb-3">
             <i class="fas fa-check-circle fa-5x text-success"></i>
         </div>
-        <h2 class="text-success">Booking Submitted!</h2>
-        <p class="text-muted">Thank you for choosing CleanHandy. Your home cleaning booking has been submitted successfully.</p>
+        <h2 class="text-success">Booking Confirmed!</h2>
+        <p class="text-muted">Thank you for choosing CleanHandy. Your office cleaning service has been scheduled successfully.</p>
     </div>
 
     <div class="row">
@@ -215,39 +215,31 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="detail-section">
-                                <h6><i class="fas fa-home text-primary me-2"></i>Service Details</h6>
+                                <h6><i class="fas fa-building text-primary me-2"></i>Service Details</h6>
                                 <div class="detail-item">
                                     <span class="label">Service Type:</span>
                                     <span class="value">{{ booking.service_cat.name }}</span>
                                 </div>
-                                {% if booking.cleaning_type %}
                                 <div class="detail-item">
-                                    <span class="label">Cleaning Type:</span>
-                                    <span class="value">{{ booking.cleaning_type|title }}</span>
+                                    <span class="label">Business Type:</span>
+                                    <span class="value">{{ booking.get_business_type_display|default:"Office" }}</span>
                                 </div>
-                                {% endif %}
-                                {% if booking.num_cleaners %}
                                 <div class="detail-item">
                                     <span class="label">Number of Cleaners:</span>
-                                    <span class="value">{{ booking.num_cleaners }}</span>
+                                    <span class="value">{{ booking.num_cleaners|default:"1" }}</span>
                                 </div>
-                                {% endif %}
-                                {% if booking.hours_requested %}
                                 <div class="detail-item">
                                     <span class="label">Hours Requested:</span>
-                                    <span class="value">{{ booking.hours_requested }} hours</span>
+                                    <span class="value">{{ booking.hours_requested|default:"2" }} hours</span>
                                 </div>
-                                {% endif %}
-                                {% if booking.square_feet_options %}
                                 <div class="detail-item">
-                                    <span class="label">Square Footage:</span>
-                                    <span class="value">{{ booking.square_feet_options.name }}</span>
+                                    <span class="label">Cleaning Frequency:</span>
+                                    <span class="value">{{ booking.get_cleaning_frequency_display|default:"One Time" }}</span>
                                 </div>
-                                {% endif %}
-                                {% if booking.home_types %}
+                                {% if booking.hear_about_us %}
                                 <div class="detail-item">
-                                    <span class="label">Home Type:</span>
-                                    <span class="value">{{ booking.home_types.name }}</span>
+                                    <span class="label">How you heard about us:</span>
+                                    <span class="value">{{ booking.get_hear_about_us_display }}</span>
                                 </div>
                                 {% endif %}
                             </div>
@@ -266,31 +258,19 @@
                                     <span class="label">Duration:</span>
                                     <span class="value">{{ booking.hours_requested|default:"2" }} hours</span>
                                 </div>
-                                <div class="detail-item">
-                                    <span class="label">Cleaning Frequency:</span>
-                                    <span class="value">
-                                        {% if booking.cleaning_frequency %}
-                                            {{ booking.get_cleaning_frequency_display }}
-                                        {% elif booking.recurrence_pattern != "one_time" %}
-                                            {{ booking.get_recurrence_pattern_display }}
-                                        {% else %}
-                                            One-time
-                                        {% endif %}
-                                    </span>
-                                </div>
                             </div>
                         </div>
                         
                         <div class="col-md-6">
                             <div class="detail-section">
-                                <h6><i class="fas fa-user text-primary me-2"></i>Customer Information</h6>
+                                <h6><i class="fas fa-user text-primary me-2"></i>Contact Information</h6>
                                 <div class="detail-item">
                                     <span class="label">Name:</span>
-                                    <span class="value">{{ booking.name|default:"Not provided" }}</span>
+                                    <span class="value">{{ booking.name }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="label">Email:</span>
-                                    <span class="value">{{ booking.email|default:"Not provided" }}</span>
+                                    <span class="value">{{ booking.email }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="label">Phone:</span>
@@ -304,31 +284,13 @@
                                     <span class="label">Address:</span>
                                     <span class="value">
                                         {{ booking.address|default:"Not provided" }}
-                                        {% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}
+                                        {% if booking.apartment %}, {{ booking.apartment }}{% endif %}
                                     </span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="label">City, State, ZIP:</span>
                                     <span class="value">{{ booking.city }}, {{ booking.state }} {{ booking.zip_code }}</span>
                                 </div>
-                                {% if booking.get_in %}
-                                <div class="detail-item">
-                                    <span class="label">Access Method:</span>
-                                    <span class="value">{{ booking.get_get_in_display }}</span>
-                                </div>
-                                {% endif %}
-                                {% if booking.parking %}
-                                <div class="detail-item">
-                                    <span class="label">Parking Instructions:</span>
-                                    <span class="value">{{ booking.parking }}</span>
-                                </div>
-                                {% endif %}
-                                {% if booking.pet %}
-                                <div class="detail-item">
-                                    <span class="label">Pet Information:</span>
-                                    <span class="value">{{ booking.get_pet_display }}</span>
-                                </div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -354,57 +316,16 @@
                     <div class="detail-section">
                         <h6><i class="fas fa-dollar-sign text-success me-2"></i>Pricing</h6>
                         <div class="pricing-details">
-                            {% if booking.square_feet_options %}
                             <div class="price-row">
-                                <span class="label">Square Footage ({{ booking.square_feet_options.name }}):</span>
-                                <span class="value">${{ booking.square_feet_options.price|floatformat:2 }}</span>
+                                <span class="label">Labor Cost:</span>
+                                <span class="value">${{ booking.price|floatformat:2 }}</span>
                             </div>
-                            {% endif %}
-                            
-                            {% if not booking.is_large_home and booking.home_types %}
-                            <div class="price-row">
-                                <span class="label">Home Type ({{ booking.home_types.name }}):</span>
-                                <span class="value">${{ booking.home_types.price|floatformat:2 }}</span>
-                            </div>
-                            {% endif %}
-                            
-                            {% if booking.is_large_home and booking.hours_requested and booking.num_cleaners %}
-                            <div class="price-row">
-                                <span class="label">Labor Cost ({{ booking.num_cleaners }} cleaner{{ booking.num_cleaners|pluralize }} × {{ booking.hours_requested }} hour{{ booking.hours_requested|pluralize }}):</span>
-                                <span class="value">
-                                    {% if booking.cleaning_type and "post" in booking.cleaning_type.lower or "renovation" in booking.cleaning_type.lower %}
-                                        ${{ booking.num_cleaners|floatformat:0 }} × {{ booking.hours_requested }} × $63.00 = ${{ booking.calculate_subtotal|floatformat:2 }}
-                                    {% else %}
-                                        ${{ booking.num_cleaners|floatformat:0 }} × {{ booking.hours_requested }} × $58.00 = ${{ booking.calculate_subtotal|floatformat:2 }}
-                                    {% endif %}
-                                </span>
-                            </div>
-                            {% endif %}
-                            
-                            {% for extra in booking.extras.all %}
-                            <div class="price-row">
-                                <span class="label">{{ extra.name }}:</span>
-                                <span class="value">${{ extra.price|floatformat:2 }}</span>
-                            </div>
-                            {% endfor %}
-                            
-                            <div class="price-row">
-                                <span class="label">Subtotal:</span>
-                                <span class="value">${{ booking.calculate_subtotal|floatformat:2 }}</span>
-                            </div>
-                            
-                            <div class="price-row">
-                                <span class="label">Sales Tax (8.875%):</span>
-                                <span class="value">${{ booking.calculate_tax|floatformat:2 }}</span>
-                            </div>
-                            
                             {% if booking.gift_card_discount and booking.gift_card_discount > 0 %}
                             <div class="price-row discount">
                                 <span class="label">Gift Card Discount:</span>
                                 <span class="value">-${{ booking.gift_card_discount|floatformat:2 }}</span>
                             </div>
                             {% endif %}
-                            
                             <div class="price-row total">
                                 <span class="label">Total:</span>
                                 <span class="value">${{ booking.price|floatformat:2 }}</span>
@@ -462,11 +383,11 @@
                 <div class="contact-methods">
                     <div class="contact-method mb-2">
                         <i class="fas fa-phone text-primary me-2"></i>
-                        <span>Call us: <a href="tel:+15166193065">+1 (516) 619-3065</a></span>
+                        <span>Call us: <a href="tel:+1234567890">+1 (234) 567-890</a></span>
                     </div>
                     <div class="contact-method mb-2">
                         <i class="fas fa-envelope text-primary me-2"></i>
-                        <span>Email us: <a href="mailto:support@thecleanhandy.com">support@thecleanhandy.com</a></span>
+                        <span>Email us: <a href="mailto:support@cleanhandy.com">support@cleanhandy.com</a></span>
                     </div>
                     <div class="contact-method">
                         <i class="fas fa-clock text-primary me-2"></i>
@@ -479,11 +400,11 @@
 
     <div class="row mt-4">
         <div class="col-12 text-center">
-            <a href="{% url 'cleaning_booking' %}" class="btn btn-primary me-3">
+            <a href="{% url 'office_cleaning_booking' %}" class="btn btn-primary me-3">
                 <i class="fas fa-plus me-2"></i>Book Another Service
             </a>
-            <a href="{% url 'home' %}" class="btn btn-outline-primary">
-                <i class="fas fa-home me-2"></i>Back to Home
+            <a href="{% url 'download_office_cleaning_pdf' booking.id %}" class="btn btn-outline-primary">
+                <i class="fas fa-download me-2"></i>Download Receipt
             </a>
         </div>
     </div>
