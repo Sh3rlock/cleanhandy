@@ -9,82 +9,133 @@
     .section h4 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
     .list-item { margin-left: 20px; }
     .bold { font-weight: bold; }
+    .highlight { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; }
   </style>
 </head>
 <body>
-  <h2>🎉 Booking Submitted!</h2>
-  <p>Thank you, {{ booking.name }}! Here’s a breakdown of your cleaning request:</p>
+  <h2>🧼 Home Cleaning Booking Confirmed!</h2>
+  <p>Thank you, {{ booking.name }}! Your home cleaning service has been successfully booked.</p>
+
+  <div class="section">
+    <h4>📋 Service Details</h4>
+    <div class="highlight">
+      {% if booking.square_feet_options %}
+        <p><strong>Square Footage:</strong> {{ booking.square_feet_options.name }}</p>
+      {% endif %}
+      {% if booking.home_types %}
+        <p><strong>Home Type:</strong> {{ booking.home_types.name }}</p>
+      {% endif %}
+      {% if booking.bath_count %}
+        <p><strong>Number of Bathrooms:</strong> {{ booking.get_bath_count_display }}</p>
+      {% endif %}
+      {% if booking.cleaning_type %}
+        <p><strong>Cleaning Type:</strong> {{ booking.cleaning_type|title }}</p>
+      {% endif %}
+      {% if booking.extras.all %}
+        <p><strong>Selected Extras:</strong></p>
+        <ul>
+          {% for extra in booking.extras.all %}
+            <li>{{ extra.name }} — ${{ extra.price }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      {% if booking.recurrence_pattern != "one_time" %}
+        <p><strong>Recurring Service:</strong> {{ booking.get_recurrence_pattern_display }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="section">
+    <h4>📅 Schedule Information</h4>
+    <div class="highlight">
+      <p><strong>Date:</strong> {{ booking.date|date:"F j, Y" }}</p>
+      <p><strong>Time:</strong> {{ booking.hour|time:"g:i A" }}</p>
+      <p><strong>Duration:</strong> {{ booking.hours_requested }} hour{{ booking.hours_requested|pluralize }}</p>
+      {% if booking.num_cleaners %}
+        <p><strong>Number of Cleaners:</strong> {{ booking.num_cleaners }}</p>
+      {% endif %}
+      <p><strong>Service Type:</strong> 
+        {% if booking.recurrence_pattern != "one_time" %}
+          {{ booking.get_recurrence_pattern_display }}
+        {% else %}
+          One-time
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h4>📍 Service Location</h4>
+    <div class="highlight">
+      <p><strong>Address:</strong> {{ booking.address }}{% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}</p>
+      <p><strong>City:</strong> {{ booking.city|default:"New York" }}</p>
+      <p><strong>State:</strong> {{ booking.state|default:"NY" }}</p>
+      <p><strong>ZIP Code:</strong> {{ booking.zip_code }}</p>
+    </div>
+  </div>
 
   <div class="section">
     <h4>💰 Price Breakdown</h4>
-    {% if booking.square_feet_options %}
-      <p class="list-item">Square Footage: {{ booking.square_feet_options.name }}</p>
-    {% endif %}
-
-    {% if not booking.is_large_home and booking.home_types %}
-      <p class="list-item">Home Type: {{ booking.home_types.name }} — ${{ booking.home_types.price }}</p>
-    {% endif %}
-
-    {% if booking.extras.all %}
-      <p class="list-item">Extras:</p>
-      <ul>
-        {% for extra in booking.extras.all %}
-          <li class="list-item">+ {{ extra.name }} — ${{ extra.price }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-
-    {% if booking.is_large_home %}
-      <p class="list-item">Cleaning Type: {{ booking.cleaning_type|title }}</p>
-      <p class="list-item">Number of Cleaners: {{ booking.num_cleaners }}</p>
-      <p class="list-item">
-        Labor Cost: ${{ booking.num_cleaners }} × {{ booking.hours_requested }} hr ×
-        {% if booking.cleaning_type and booking.cleaning_type|lower == "post-renovation" %}$60{% else %}$55{% endif %}
-        = ${{ booking.calculate_subtotal }}
-      </p>
-    {% endif %}
-
-    <p class="list-item">Subtotal: ${{ booking.calculate_subtotal }}</p>
-    <p class="list-item">Sales Tax: ${{ booking.calculate_tax }}</p>
-    {% if booking.gift_card_discount > 0 %}
-      <p class="list-item">Gift Card or Discount: ${{ booking.gift_card_discount }}</p>
-    {% endif %}
-    <p class="list-item bold">Total: ${{ booking.price }}</p>
-  </div>
-
-  <div class="section">
-    <h4>📅 Schedule Info</h4>
-    <p class="list-item"><strong>Date:</strong> {{ booking.date }}</p>
-    <p class="list-item"><strong>Time:</strong> {{ booking.hour }}</p>
-    <p class="list-item"><strong>Duration:</strong> {{ booking.hours_requested }} hour(s)</p>
-    <p class="list-item"><strong>Recurring:</strong> 
-      {% if booking.recurrence_pattern != "one_time" %}
-        {{ booking.get_recurrence_pattern_display }}
-      {% else %}
-        One-time
+    <div class="highlight">
+      {% if booking.square_feet_options %}
+        <p class="list-item">Square Footage ({{ booking.square_feet_options.name }}): ${{ booking.square_feet_options.price }}</p>
       {% endif %}
-    </p>
+      {% if not booking.is_large_home and booking.home_types %}
+        <p class="list-item">Home Type ({{ booking.home_types.name }}): ${{ booking.home_types.price }}</p>
+      {% endif %}
+      {% if booking.extras.all %}
+        <p class="list-item">Extras:</p>
+        {% for extra in booking.extras.all %}
+          <p class="list-item">+ {{ extra.name }}: ${{ extra.price }}</p>
+        {% endfor %}
+      {% endif %}
+      {% if booking.is_large_home and booking.num_cleaners and booking.hours_requested %}
+        <p class="list-item">Labor Cost: ${{ booking.num_cleaners }} × {{ booking.hours_requested }} hour{{ booking.hours_requested|pluralize }} × 
+          {% if booking.cleaning_type and "post" in booking.cleaning_type|lower or "renovation" in booking.cleaning_type|lower %}$63{% else %}$58{% endif %}/hour = 
+          ${{ booking.calculate_subtotal|floatformat:2 }}
+        </p>
+      {% endif %}
+      <p class="list-item">Subtotal: ${{ booking.calculate_subtotal|floatformat:2 }}</p>
+      <p class="list-item">Sales Tax (8.875%): ${{ booking.calculate_tax|floatformat:2 }}</p>
+      {% if booking.gift_card_discount > 0 %}
+        <p class="list-item">Gift Card/Discount: -${{ booking.gift_card_discount|floatformat:2 }}</p>
+      {% endif %}
+      <p class="list-item bold">Total: ${{ booking.price|floatformat:2 }}</p>
+    </div>
+  </div>
+
+  {% if booking.job_description %}
+  <div class="section">
+    <h4>📝 Special Instructions</h4>
+    <div class="highlight">
+      <p>{{ booking.job_description }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="section">
+    <h4>📞 Contact Information</h4>
+    <div class="highlight">
+      <p><strong>Name:</strong> {{ booking.name }}</p>
+      <p><strong>Email:</strong> {{ booking.email }}</p>
+      <p><strong>Phone:</strong> {{ booking.phone }}</p>
+    </div>
   </div>
 
   <div class="section">
-    <h4>🏠 Home Info</h4>
-    {% if booking.home_types %}
-      <p class="list-item"><strong>Home Type:</strong> {{ booking.home_types.name }}</p>
-    {% endif %}
-    {% if booking.square_feet_options %}
-      <p class="list-item"><strong>Square Feet:</strong> {{ booking.square_feet_options.name }}</p>
-    {% endif %}
-    <p class="list-item"><strong>Address:</strong> {{ booking.address }}{% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}</p>
-    <p class="list-item"><strong>ZIP:</strong> {{ booking.zip_code }}</p>
+    <h4>ℹ️ Important Notes</h4>
+    <ul>
+      <li>Please ensure access to your home at the scheduled time</li>
+      <li>Our team will arrive with all necessary cleaning supplies and equipment</li>
+      <li>If you need to reschedule, please contact us at least 24 hours in advance</li>
+      <li>Payment is due upon completion of service</li>
+    </ul>
   </div>
 
-  <div class="section">
-    <h4>👤 Customer Info</h4>
-    <p class="list-item"><strong>Name:</strong> {{ booking.name }}</p>
-    <p class="list-item"><strong>Email:</strong> {{ booking.email }}</p>
-    <p class="list-item"><strong>Phone:</strong> {{ booking.phone }}</p>
-  </div>
+  <p>Thank you for choosing CleanHandy for your home cleaning needs!</p>
+  <p>If you have any questions, please don't hesitate to contact us.</p>
 
-  <p>We’ll be in touch shortly to confirm your appointment. Thanks for choosing CleanHandy!</p>
+  <hr>
+  <p><small>This is an automated confirmation email. Please do not reply to this message.</small></p>
 </body>
 </html>

@@ -32,11 +32,7 @@
                 <i class="fa-solid fa-calendar-days me-2"></i>Bookings
               </a>
             </div>
-            <div class="col-md-3 mb-2">
-              <a href="{% url 'customer_list' %}" class="btn btn-outline-orange btn-sm w-100">
-                <i class="fa-solid fa-users me-2"></i>Customers
-              </a>
-            </div>
+            
             <div class="col-md-3 mb-2">
               <a href="{% url 'office_quote_list' %}" class="btn btn-outline-orange btn-sm w-100">
                 <i class="fa-solid fa-building me-2"></i>Office Quotes
@@ -47,8 +43,18 @@
                 <i class="fa-solid fa-hammer me-2"></i>Handyman Quotes
               </a>
             </div>
+            <div class="col-md-3 mb-2">
+              <a href="{% url 'post_event_cleaning_quote_list' %}" class="btn btn-outline-orange btn-sm w-100">
+                <i class="fa-solid fa-broom me-2"></i>Post Event Cleaning Quotes
+              </a>
+            </div>
           </div>
           <div class="row mt-2">
+            <div class="col-md-3 mb-2">
+              <a href="{% url 'customer_list' %}" class="btn btn-outline-orange btn-sm w-100">
+                <i class="fa-solid fa-users me-2"></i>Customers
+              </a>
+            </div>
             <div class="col-md-3 mb-2">
               <a href="{% url 'subscriber_list' %}" class="btn btn-outline-orange btn-sm w-100">
                 <i class="fa-solid fa-newspaper me-2"></i>Subscribers
@@ -63,11 +69,6 @@
             <div class="col-md-3 mb-2">
               <a href="{% url 'giftcard_discount' %}" class="btn btn-outline-orange btn-sm w-100">
                 <i class="fa-solid fa-credit-card me-2"></i>Gift Cards
-              </a>
-            </div>
-            <div class="col-md-3 mb-2">
-              <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-orange btn-sm w-100">
-                <i class="fa-solid fa-chart-line me-2"></i>Analytics
               </a>
             </div>
           </div>
@@ -157,6 +158,28 @@
             </div>
           </div>
           <a href="{% url 'handyman_quote_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Handyman Quotes</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
+        <div class="card-body">
+          <h5 class="card-title text-primary"><i class="fa-solid fa-broom me-2 text-primary"></i> Post Event Cleaning Quotes</h5>
+          <h3 class="card-text">{{ total_post_event_cleaning_quotes }}</h3>
+          <div class="row mt-2">
+            <div class="col-6">
+              <small class="text-muted">Pending: {{ post_event_cleaning_quote_status_counts.pending }}</small><br>
+              <small class="text-muted">Contacted: {{ post_event_cleaning_quote_status_counts.contacted }}</small>
+            </div>
+            <div class="col-6">
+              <small class="text-muted">Quoted: {{ post_event_cleaning_quote_status_counts.quoted }}</small><br>
+              <small class="text-muted">Completed: {{ post_event_cleaning_quote_status_counts.completed }}</small>
+            </div>
+          </div>
+          <a href="{% url 'post_event_cleaning_quote_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Post Event Cleaning Quotes</a>
         </div>
       </div>
     </div>

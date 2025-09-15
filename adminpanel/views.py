@@ -1,7 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.db import models
-from quotes.models import Quote, Service, ServiceCategory, Booking, NewsletterSubscriber, OfficeQuote, HandymanQuote
+from django.core.paginator import Paginator
+from quotes.models import Quote, Service, ServiceCategory, Booking, NewsletterSubscriber, OfficeQuote, HandymanQuote, PostEventCleaningQuote
 from giftcards.models import GiftCard, DiscountCode
 from quotes.forms import CleaningQuoteForm, HandymanQuoteForm
 from customers.models import Customer
@@ -78,6 +79,7 @@ def admin_dashboard(request):
     total_subscribers = NewsletterSubscriber.objects.count()
     total_office_quotes = OfficeQuote.objects.count()
     total_handyman_quotes = HandymanQuote.objects.count()
+    total_post_event_cleaning_quotes = PostEventCleaningQuote.objects.count()
 
     # Status counts for handyman quotes
     handyman_quote_status_counts = {
@@ -86,6 +88,15 @@ def admin_dashboard(request):
         'quoted': HandymanQuote.objects.filter(status='quoted').count(),
         'completed': HandymanQuote.objects.filter(status='completed').count(),
         'cancelled': HandymanQuote.objects.filter(status='cancelled').count(),
+    }
+
+    # Status counts for post event cleaning quotes
+    post_event_cleaning_quote_status_counts = {
+        'pending': PostEventCleaningQuote.objects.filter(status='pending').count(),
+        'contacted': PostEventCleaningQuote.objects.filter(status='contacted').count(),
+        'quoted': PostEventCleaningQuote.objects.filter(status='quoted').count(),
+        'completed': PostEventCleaningQuote.objects.filter(status='completed').count(),
+        'cancelled': PostEventCleaningQuote.objects.filter(status='cancelled').count(),
     }
 
     # Status counts for office quotes
@@ -112,7 +123,9 @@ def admin_dashboard(request):
         "total_subscribers": total_subscribers,
         "total_office_quotes": total_office_quotes,
         "total_handyman_quotes": total_handyman_quotes,
+        "total_post_event_cleaning_quotes": total_post_event_cleaning_quotes,
         "handyman_quote_status_counts": handyman_quote_status_counts,
+        "post_event_cleaning_quote_status_counts": post_event_cleaning_quote_status_counts,
         "office_quote_status_counts": office_quote_status_counts,
     })
 
@@ -1310,6 +1323,217 @@ def delete_handyman_quote(request, quote_id):
     handyman_quote.delete()
     messages.success(request, "Handyman quote deleted successfully.")
     return redirect("handyman_quote_list")
+
+
+# ============================================================================
+# POST EVENT CLEANING QUOTE MANAGEMENT
+# ============================================================================
+
+def post_event_cleaning_quote_list(request):
+    """List all post event cleaning quotes with filtering and search"""
+    post_event_quotes = PostEventCleaningQuote.objects.all().order_by('-created_at')
+    
+    # Filter by status
+    status_filter = request.GET.get('status')
+    if status_filter:
+        post_event_quotes = post_event_quotes.filter(status=status_filter)
+    
+    # Filter by event type
+    event_type_filter = request.GET.get('event_type')
+    if event_type_filter:
+        post_event_quotes = post_event_quotes.filter(event_type=event_type_filter)
+    
+    # Filter by venue size
+    venue_size_filter = request.GET.get('venue_size')
+    if venue_size_filter:
+        post_event_quotes = post_event_quotes.filter(venue_size=venue_size_filter)
+    
+    # Search functionality
+    search_query = request.GET.get('search')
+    if search_query:
+        post_event_quotes = post_event_quotes.filter(
+            models.Q(name__icontains=search_query) |
+            models.Q(email__icontains=search_query) |
+            models.Q(phone_number__icontains=search_query) |
+            models.Q(address__icontains=search_query) |
+            models.Q(event_description__icontains=search_query) |
+            models.Q(special_requirements__icontains=search_query)
+        )
+    
+    # Date range filter
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    if from_date:
+        post_event_quotes = post_event_quotes.filter(created_at__date__gte=from_date)
+    if to_date:
+        post_event_quotes = post_event_quotes.filter(created_at__date__lte=to_date)
+    
+    # Pagination
+    paginator = Paginator(post_event_quotes, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Statistics
+    total_quotes = PostEventCleaningQuote.objects.count()
+    pending_quotes = PostEventCleaningQuote.objects.filter(status='pending').count()
+    completed_quotes = PostEventCleaningQuote.objects.filter(status='completed').count()
+    
+    context = {
+        'page_obj': page_obj,
+        'total_quotes': total_quotes,
+        'pending_quotes': pending_quotes,
+        'completed_quotes': completed_quotes,
+        'status_choices': PostEventCleaningQuote.STATUS_CHOICES,
+        'event_type_choices': PostEventCleaningQuote.EVENT_TYPE_CHOICES,
+        'venue_size_choices': PostEventCleaningQuote.VENUE_SIZE_CHOICES,
+        'current_filters': {
+            'status': status_filter,
+            'event_type': event_type_filter,
+            'venue_size': venue_size_filter,
+            'search': search_query,
+            'from_date': from_date,
+            'to_date': to_date,
+        }
+    }
+    
+    return render(request, 'adminpanel/post_event_cleaning_quote_list.html', context)
+
+
+def post_event_cleaning_quote_detail(request, quote_id):
+    """Display detailed view of a post event cleaning quote"""
+    quote = get_object_or_404(PostEventCleaningQuote, id=quote_id)
+    
+    if request.method == 'POST':
+        # Update quote status
+        new_status = request.POST.get('status')
+        admin_notes = request.POST.get('admin_notes', '')
+        
+        if new_status and new_status in [choice[0] for choice in PostEventCleaningQuote.STATUS_CHOICES]:
+            quote.status = new_status
+            quote.admin_notes = admin_notes
+            quote.save()
+            messages.success(request, f"Quote status updated to {quote.get_status_display()}")
+            return redirect('post_event_cleaning_quote_detail', quote_id=quote.id)
+    
+    return render(request, 'adminpanel/post_event_cleaning_quote_detail.html', {'quote': quote})
+
+
+def update_post_event_cleaning_quote_status(request, quote_id):
+    """Update post event cleaning quote status via AJAX"""
+    if request.method == 'POST':
+        quote = get_object_or_404(PostEventCleaningQuote, id=quote_id)
+        new_status = request.POST.get('status')
+        
+        if new_status and new_status in [choice[0] for choice in PostEventCleaningQuote.STATUS_CHOICES]:
+            quote.status = new_status
+            quote.save()
+            return JsonResponse({'success': True, 'status': quote.get_status_display()})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+
+def export_post_event_cleaning_quotes_csv(request):
+    """Export post event cleaning quotes to CSV"""
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="post_event_cleaning_quotes.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow([
+        'ID', 'Name', 'Email', 'Phone', 'Address', 'Event Type', 'Venue Size',
+        'Event Date', 'Cleaning Date', 'Event Description', 'Special Requirements',
+        'Status', 'Admin Notes', 'Created At'
+    ])
+    
+    quotes = PostEventCleaningQuote.objects.all().order_by('-created_at')
+    for quote in quotes:
+        writer.writerow([
+            quote.id,
+            quote.name,
+            quote.email,
+            quote.phone_number,
+            quote.address,
+            quote.get_event_type_display(),
+            quote.get_venue_size_display(),
+            quote.event_date,
+            quote.cleaning_date,
+            quote.event_description,
+            quote.special_requirements or '',
+            quote.get_status_display(),
+            quote.admin_notes or '',
+            quote.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        ])
+    
+    return response
+
+
+def send_post_event_cleaning_quote_email(request, quote_id):
+    """Send email to customer about their post event cleaning quote"""
+    quote = get_object_or_404(PostEventCleaningQuote, id=quote_id)
+    
+    try:
+        # Send email to customer
+        subject = f"Post Event Cleaning Quote Update - #{quote.id}"
+        message = f"""
+        Dear {quote.name},
+        
+        Thank you for your post event cleaning quote request. We have reviewed your requirements and will contact you soon.
+        
+        Quote Details:
+        - Event Type: {quote.get_event_type_display()}
+        - Venue Size: {quote.get_venue_size_display()}
+        - Event Date: {quote.event_date}
+        - Preferred Cleaning Date: {quote.cleaning_date}
+        - Status: {quote.get_status_display()}
+        
+        If you have any questions, please don't hesitate to contact us.
+        
+        Best regards,
+        CleanHandy Team
+        """
+        
+        send_mail(
+            subject,
+            message,
+            'noreply@cleanhandy.com',
+            [quote.email],
+            fail_silently=False,
+        )
+        
+        messages.success(request, f"Email sent successfully to {quote.email}")
+    except Exception as e:
+        messages.error(request, f"Failed to send email: {str(e)}")
+    
+    return redirect('post_event_cleaning_quote_detail', quote_id=quote.id)
+
+
+def generate_post_event_cleaning_quote_pdf(request, quote_id):
+    """Generate PDF for post event cleaning quote"""
+    quote = get_object_or_404(PostEventCleaningQuote, id=quote_id)
+    
+    try:
+        # Generate PDF using the template
+        template = get_template('adminpanel/post_event_cleaning_quote_pdf.html')
+        context = {'quote': quote}
+        html = template.render(context)
+        
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="post_event_cleaning_quote_{quote.id}.pdf"'
+        
+        # Use weasyprint for PDF generation
+        HTML(string=html).write_pdf(response)
+        
+        return response
+    except Exception as e:
+        messages.error(request, f"Failed to generate PDF: {str(e)}")
+        return redirect('post_event_cleaning_quote_detail', quote_id=quote.id)
+
+
+def delete_post_event_cleaning_quote(request, quote_id):
+    """Delete a post event cleaning quote"""
+    quote = get_object_or_404(PostEventCleaningQuote, id=quote_id)
+    quote.delete()
+    messages.success(request, "Post event cleaning quote deleted successfully.")
+    return redirect("post_event_cleaning_quote_list")
 
 
 

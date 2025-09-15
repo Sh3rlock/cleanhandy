@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Post Event Cleaning Quote #{{ quote.id }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #F15A29;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .company-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #F15A29;
+            margin-bottom: 5px;
+        }
+        .company-tagline {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .quote-title {
+            font-size: 24px;
+            color: #333;
+            margin-top: 20px;
+        }
+        .quote-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .info-label {
+            font-weight: bold;
+            width: 150px;
+            color: #F15A29;
+        }
+        .info-value {
+            flex: 1;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #F15A29;
+            border-bottom: 2px solid #F15A29;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        .event-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .description-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #F15A29;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            color: #666;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-contacted { background-color: #d1ecf1; color: #0c5460; }
+        .status-quoted { background-color: #cce5ff; color: #004085; }
+        .status-completed { background-color: #d4edda; color: #155724; }
+        .status-cancelled { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">CleanHandy</div>
+        <div class="company-tagline">Professional Cleaning & Handyman Services</div>
+        <div class="quote-title">Post Event Cleaning Quote</div>
+    </div>
+
+    <div class="quote-info">
+        <div class="info-row">
+            <div class="info-label">Quote ID:</div>
+            <div class="info-value">#{{ quote.id }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Date:</div>
+            <div class="info-value">{{ quote.created_at|date:"F d, Y" }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Status:</div>
+            <div class="info-value">
+                <span class="status-badge status-{{ quote.status }}">{{ quote.get_status_display }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Customer Information</div>
+        <div class="info-row">
+            <div class="info-label">Name:</div>
+            <div class="info-value">{{ quote.name }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Email:</div>
+            <div class="info-value">{{ quote.email }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Phone:</div>
+            <div class="info-value">{{ quote.phone_number }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Address:</div>
+            <div class="info-value">{{ quote.address }}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Event Details</div>
+        <div class="event-details">
+            <div class="info-row">
+                <div class="info-label">Event Type:</div>
+                <div class="info-value">{{ quote.get_event_type_display }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Venue Size:</div>
+                <div class="info-value">{{ quote.get_venue_size_display }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Event Date:</div>
+                <div class="info-value">{{ quote.event_date|date:"F d, Y" }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Cleaning Date:</div>
+                <div class="info-value">{{ quote.cleaning_date|date:"F d, Y" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Event Description</div>
+        <div class="description-box">
+            {{ quote.event_description|linebreaks }}
+        </div>
+    </div>
+
+    {% if quote.special_requirements %}
+    <div class="section">
+        <div class="section-title">Special Requirements</div>
+        <div class="description-box">
+            {{ quote.special_requirements|linebreaks }}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="section">
+        <div class="section-title">Our Post Event Cleaning Services Include</div>
+        <ul>
+            <li>Complete venue cleanup and restoration</li>
+            <li>Trash removal and disposal</li>
+            <li>Floor cleaning and sanitization</li>
+            <li>Bathroom deep cleaning</li>
+            <li>Kitchen area cleaning (if applicable)</li>
+            <li>Furniture and equipment cleaning</li>
+            <li>Window and surface cleaning</li>
+            <li>Special event-specific cleaning requirements</li>
+        </ul>
+    </div>
+
+    {% if quote.admin_notes %}
+    <div class="section">
+        <div class="section-title">Admin Notes</div>
+        <div class="description-box">
+            {{ quote.admin_notes|linebreaks }}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p><strong>CleanHandy</strong></p>
+        <p>Professional Cleaning & Handyman Services</p>
+        <p>Email: matyass91@gmail.com | Phone: (555) 123-4567</p>
+        <p>Thank you for choosing CleanHandy for your post event cleaning needs!</p>
+    </div>
+</body>
+</html>

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber, Booking, Contact, Review, OfficeQuote, HandymanQuote
+from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber, Booking, Contact, Review, OfficeQuote, HandymanQuote, PostEventCleaningQuote
 from datetime import time, datetime, timedelta
 from django.core.exceptions import ValidationError
 from giftcards.models import GiftCard, DiscountCode
@@ -318,6 +318,41 @@ class CleaningBookingForm(forms.ModelForm):
         })
     )
 
+    get_in = forms.ChoiceField(
+        label="How will we get into your home?",
+        choices=[
+            ("at_home", "I'll be at home"),
+            ("doorman", "The key is with doorman"),
+            ("lockbox", "Lockbox on premises"),
+            ("call_organize", "Call to organize"),
+            ("other", "Other"),
+        ],
+        required=False,
+        widget=forms.RadioSelect(attrs={"class": "form-check-input"})
+    )
+
+    parking = forms.CharField(
+        label="Parking Instructions",
+        required=False,
+        widget=forms.Textarea(attrs={
+            "class": "cmn-input",
+            "placeholder": "Please provide parking instructions for our cleaning team...",
+            "rows": 3
+        })
+    )
+
+    pet = forms.ChoiceField(
+        label="Do you have any pets?",
+        choices=[
+            ("cat", "Cat"),
+            ("dog", "Dog"),
+            ("both", "Both"),
+            ("other", "Other"),
+        ],
+        required=False,
+        widget=forms.RadioSelect(attrs={"class": "form-check-input"})
+    )
+
     class Meta:
         model = Booking
         fields = [
@@ -337,10 +372,16 @@ class CleaningBookingForm(forms.ModelForm):
             "address",
             "apartment",
             "zip_code",
+            "city",
+            "state",
+            "bath_count",
             "date",
             "hour",
             "hours_requested",
-            "recurrence_pattern"
+            "recurrence_pattern",
+            "get_in",
+            "parking",
+            "pet"
         ]
 
         widgets = {
@@ -356,6 +397,9 @@ class CleaningBookingForm(forms.ModelForm):
             "phone": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Phone Number (Optional)"}),
             "address": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Street Address"}),
             "apartment": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Apt/Suite #"}),
+            "city": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "City"}),
+            "state": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "State"}),
+            "bath_count": forms.Select(attrs={"class": "cmn-input"}),
             "recurrence_pattern": forms.Select(attrs={"class": "cmn-input"}),
         }
 
@@ -395,6 +439,86 @@ class CleaningBookingForm(forms.ModelForm):
             pass
 
         raise forms.ValidationError("Invalid or expired code.")
+
+
+class PostEventCleaningQuoteForm(forms.ModelForm):
+    """Form for Post Event Cleaning quote requests"""
+    
+    event_type = forms.ChoiceField(
+        label="Event Type",
+        choices=[
+            ("wedding", "Wedding"),
+            ("birthday", "Birthday Party"),
+            ("corporate", "Corporate Event"),
+            ("holiday", "Holiday Party"),
+            ("graduation", "Graduation Party"),
+            ("anniversary", "Anniversary"),
+            ("other", "Other"),
+        ],
+        widget=forms.Select(attrs={"class": "cmn-input"})
+    )
+    
+    venue_size = forms.ChoiceField(
+        label="Venue Size",
+        choices=[
+            ("small", "Small (up to 50 people)"),
+            ("medium", "Medium (50-150 people)"),
+            ("large", "Large (150+ people)"),
+        ],
+        widget=forms.Select(attrs={"class": "cmn-input"})
+    )
+    
+    event_date = forms.DateField(
+        label="Event Date",
+        widget=forms.DateInput(attrs={"type": "date", "class": "cmn-input"})
+    )
+    
+    cleaning_date = forms.DateField(
+        label="Preferred Cleaning Date",
+        widget=forms.DateInput(attrs={"type": "date", "class": "cmn-input"})
+    )
+    
+    special_requirements = forms.CharField(
+        label="Special Requirements (Optional)",
+        required=False,
+        widget=forms.Textarea(attrs={
+            "class": "cmn-input",
+            "placeholder": "Any special cleaning requirements or notes",
+            "rows": 3
+        })
+    )
+
+    class Meta:
+        model = PostEventCleaningQuote
+        fields = [
+            "name", "email", "phone_number", "address", "event_description", 
+            "event_date", "cleaning_date", "event_type", "venue_size", "special_requirements"
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Full Name"}),
+            "email": forms.EmailInput(attrs={"class": "cmn-input", "placeholder": "Email Address"}),
+            "phone_number": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Phone Number"}),
+            "address": forms.Textarea(attrs={
+                "class": "cmn-input", 
+                "placeholder": "Full Address",
+                "rows": 3
+            }),
+            "event_description": forms.Textarea(attrs={
+                "class": "cmn-input",
+                "placeholder": "Please describe your event and cleaning requirements in detail",
+                "rows": 4
+            }),
+        }
+
+    def clean_cleaning_date(self):
+        cleaning_date = self.cleaned_data.get('cleaning_date')
+        event_date = self.cleaned_data.get('event_date')
+        
+        if cleaning_date and event_date:
+            if cleaning_date <= event_date:
+                raise forms.ValidationError("Cleaning date must be after the event date.")
+        
+        return cleaning_date
 
 
 class HandymanBookingForm(forms.ModelForm):

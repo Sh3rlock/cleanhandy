@@ -136,6 +136,9 @@
         {% if booking.home_types %}
           <p class="mb-2"><strong>Home Type:</strong> {{ booking.home_types.name }}</p>
         {% endif %}
+        {% if booking.bath_count %}
+          <p class="mb-2"><strong>Bathrooms:</strong> {{ booking.get_bath_count_display }}</p>
+        {% endif %}
         {% if booking.square_feet_options %}
           <p class="mb-2"><strong>Square Feet:</strong> {{ booking.square_feet_options.name }}</p>
         {% endif %}
@@ -217,7 +220,7 @@
         <div class="card-body">
           <h4 class="mb-3">🧼 Book Home Cleaning</h4>
           <p class="mb-4">Schedule a professional cleaning with flexible extras and recurring options.</p>
-                      <a href="{% url 'request_cleaning_booking' %}" class="btn-1 w-100">Book Home Cleaning</a>
+                      <a href="{% url 'cleaning_booking' %}" class="btn-1 w-100">Book Home Cleaning</a>
         </div>
       </div>
     </div>
@@ -230,6 +233,19 @@
         </div>
       </div>
     </div>
+    {% for service in all_services %}
+      {% if service.category.name|lower == 'post event cleaning' %}
+        <div class="col-md-12 mt-4">
+          <div class="card h-100 shadow-sm border-0 text-center p-4">
+            <div class="card-body">
+              <h4 class="mb-3">🎉 Post Event Cleaning</h4>
+              <p class="mb-4">Professional post-event cleanup services for weddings, parties, and special occasions.</p>
+              <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="btn-1 w-100">Post Event Cleaning</a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
     <!-- <div class="col-md-12 mt-4">
       <div class="card h-100 shadow-sm border-0 text-center p-4">
         <div class="card-body">

@@ -1,0 +1,860 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+    @media (min-width: 992px) {
+        
+    }
+
+    .cmn-input {
+        border-radius: 8px;
+        border: 1px solid #F15A29;
+        background: var(--white-color);
+        padding: 15px 10px !important;
+        width: 100%;
+        margin-bottom: 15px !important;
+    }
+
+    .bg-layer {
+        height: 80% !important;
+    }
+
+    .common-banner {
+        padding: 30px 0 70px !important;
+      }
+
+      .service-details {
+        padding: 0px 0 !important;
+      }
+
+      .leave-comments-form textarea {
+        width: 100%;
+        height: 150px !important;
+      }
+      
+      .service-list-style {
+        padding: 1rem;
+        border: 1px solid #F15A29;
+        border-radius: 8px;
+        margin-bottom: 10px;
+      }
+      
+      /* Responsive tweaks */
+      @media (max-width: 768px) {
+        .form-row {
+          flex-direction: column;
+        }
+      
+        .form-group {
+          width: 100%;
+        }
+      }
+
+    .btn-1 {
+        padding: 0.5rem 1rem !important; 
+    }
+
+    /* Simple Modal Styles */
+    .simple-modal {
+        display: none;
+        position: fixed;
+        z-index: 99999999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(3px);
+    }
+
+    .simple-modal.show {
+        display: block;
+    }
+
+    .simple-modal-content {
+        background-color: #fff;
+        margin: 3% auto;
+        padding: 0;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 700px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        animation: modalSlideIn 0.3s ease-out;
+        position: relative;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .simple-modal-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        border-bottom: 3px solid #F15A29;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .simple-modal-header h3 {
+        color: #F15A29;
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin: 0;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .simple-modal-close {
+        background: #F15A29;
+        color: white;
+        font-size: 1.8rem;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        font-weight: bold;
+    }
+
+    .simple-modal-close:hover {
+        background: #d14a1f;
+        transform: scale(1.1);
+    }
+
+    .simple-modal-body {
+        padding: 2rem;
+    }
+
+    .simple-modal-footer {
+        padding: 1.5rem 2rem;
+        border-top: 1px solid #dee2e6;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        background: #f8f9fa;
+        border-radius: 0 0 12px 12px;
+    }
+
+    /* Form Styles */
+    .form-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        flex: 1;
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        background: #fff;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #F15A29;
+        box-shadow: 0 0 0 3px rgba(241, 90, 41, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .form-group input.error,
+    .form-group textarea.error,
+    .form-group select.error {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    }
+
+    .form-group input.error:focus,
+    .form-group textarea.error:focus,
+    .form-group select.error:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    /* Error message styling */
+    .error-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        font-weight: 500;
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Button Styles */
+    .simple-modal-footer .btn-1 {
+        background: #F15A29;
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .simple-modal-footer .btn-1:hover {
+        background: #d14a1f;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(241, 90, 41, 0.3);
+    }
+
+    .simple-modal-footer .btn-secondary {
+        background: #6c757d;
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .simple-modal-footer .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+    }
+
+    /* Alert Styles */
+    .simple-alert {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 99999999;
+        min-width: 350px;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        font-weight: 600;
+        animation: alertSlideIn 0.4s ease-out;
+        border-left: 5px solid;
+    }
+
+    @keyframes alertSlideIn {
+        from {
+            opacity: 0;
+            transform: translateX(100%) scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+        }
+    }
+
+    .simple-alert.alert-success {
+        background: linear-gradient(135deg, #d1e7dd 0%, #c3e6cb 100%);
+        color: #0f5132;
+        border-left-color: #198754;
+    }
+
+    .simple-alert.alert-danger {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        color: #721c24;
+        border-left-color: #dc3545;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .simple-modal-content {
+            width: 95%;
+            margin: 2% auto;
+            max-height: 95vh;
+        }
+        
+        .simple-modal-header,
+        .simple-modal-body,
+        .simple-modal-footer {
+            padding: 1rem;
+        }
+        
+        .form-row {
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .simple-modal-footer {
+            flex-direction: column;
+        }
+        
+        .simple-modal-footer .btn-1,
+        .simple-modal-footer .btn-secondary {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .simple-alert {
+            right: 10px;
+            left: 10px;
+            min-width: auto;
+        }
+    }
+</style>
+
+<!-- common banner -->
+<section class="common-banner">
+    <div class="bg-layer" style="background: url({% static '/assets/images/background/common-banner-bg.jpg' %});"></div>
+    <div class="common-banner-content">
+        <h3>Service Details</h3>
+        <div class="breadcrumb">
+            <ul>
+              <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+              <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Service Details</li>
+            </ul>
+        </div>
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+        {% endif %}
+    </div>
+  </section>
+  <!-- common banner -->
+
+<!-- service details -->
+<section class="service-details">
+    <div class="container">
+        <div class="common-title">
+            <h3>{{ service.name }}</h3>
+            <div class="service-details-top-btn">
+                <div class="btn-left">
+                    <a href="#0">Post Event Cleaning</a>
+                    <a href="#0"><i class="fa-light fa-location-dot"></i> New York, USA</a>
+                </div>
+                <div class="btn-right d-flex gap-2">
+                    
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="mb-4">
+                    <button type="button" class="btn-1" onclick="openPostEventCleaningQuoteModal()">
+                        <i class="fa-solid fa-file-alt me-2"></i>Request a Post Event Cleaning Quote
+                    </button>
+                  </div> 
+                {% if service.service_detail_image %}
+                <div class="service-details-image">
+                    <img src="{{ service.service_detail_image.url }}" alt="image"> 
+                </div>
+                {% endif %}
+               
+               <div class="service-details-content">
+                
+                   {{ service.description|safe }}
+                   <div class="mt-4">
+                       <button type="button" class="btn-1" onclick="openPostEventCleaningQuoteModal()">
+                           <i class="fa-solid fa-file-alt me-2"></i>Request a Post Event Cleaning Quote
+                       </button>
+                   </div>
+               </div>
+            </div>
+  
+            <div class="col-lg-4">
+              <div class="service-form-card">
+                <h4 class="form-title mb-3">Our Services</h4>
+    
+                <div class="list-group">
+                  <!-- Cleaning Services -->
+                  <div style="margin-top: 0.5em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Cleaning Services</div>
+                  {% for service in all_services %}
+                    {% if service.category.name|lower == 'cleaning' %}
+                      <a href="{% url 'request_cleaning_quote' service.id %}" class="service-list-style list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>{{ service.name }}</strong><br />
+                        </div>
+                        <i class="fa-solid fa-arrow-right text-muted"></i>
+                      </a>
+                    {% endif %}
+                  {% endfor %}
+                  <!-- Handyman Services -->
+                  <div style="margin-top: 1em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Handyman Services</div>
+                  {% for service in all_services %}
+                    {% if service.category.name|lower == 'handyman' %}
+                      <a href="{% url 'request_handyman_quote' service.id %}" class="service-list-style list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>{{ service.name }}</strong><br />
+                        </div>
+                        <i class="fa-solid fa-arrow-right text-muted"></i>
+                      </a>
+                    {% endif %}
+                  {% endfor %}
+                  <!-- Post Event Cleaning Services -->
+                  <div style="margin-top: 1em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Post Event Cleaning Services</div>
+                  {% for service in all_services %}
+                    {% if service.category.name|lower == 'post event cleaning' %}
+                      <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="service-list-style list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>{{ service.name }}</strong><br />
+                        </div>
+                        <i class="fa-solid fa-arrow-right text-muted"></i>
+                      </a>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+        </div>
+  </section>
+  <!-- service details -->
+  
+  
+  <!-- service 2 -->
+  <section class="service-two pt-0" style="background-color: transparent;">
+    <div class="container">
+        <div class="common-title">
+            <h6><i class="fa-solid fa-angles-right"></i> Another Service </h6>
+            <h3>Most Related Services</h3>
+        </div>
+  
+        <div class="row">
+            
+        {% for service in related_services %}
+        <div class="col-lg-4 col-md-6">
+          <div class="service-tow-single">
+              {% if service.service_detail_image %}
+              <div class="service-tow-single-img">
+                  <img src="{{ service.service_detail_image.url }}" alt="image">
+              </div>
+              {% endif %}
+              <div class="service-tow-single-content">
+                  <a href="{% url 'request_cleaning_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
+                  <div class="service-tow-single-rating">
+                      <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
+                  </div>
+                  <div class="featured-single-info">
+                      <a href="{% url 'request_cleaning_quote' service.id %}" class="btn-1">
+                        <i class="fa-solid fa-file-alt me-2"></i>Get a Quote
+                     </a>
+                  
+                      <div class="featured-single-info-left">
+                      </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+        {% endfor %}
+            
+        </div>
+    </div>
+  </section>
+  <!-- service 2 -->
+
+<!-- Custom Post Event Cleaning Quote Modal -->
+<div id="postEventCleaningQuoteModal" class="simple-modal">
+    <div class="simple-modal-content">
+        <div class="simple-modal-header">
+            <h3>Request Post Event Cleaning Quote</h3>
+            <span class="simple-modal-close" onclick="closePostEventCleaningQuoteModal()">&times;</span>
+        </div>
+        <div class="simple-modal-body">
+            <form id="postEventCleaningQuoteForm">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_name">Full Name *</label>
+                        <input type="text" id="id_name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_email">Email Address *</label>
+                        <input type="email" id="id_email" name="email" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_phone_number">Phone Number *</label>
+                        <input type="tel" id="id_phone_number" name="phone_number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_event_type">Event Type *</label>
+                        <select id="id_event_type" name="event_type" required>
+                            <option value="">Select Event Type</option>
+                            <option value="wedding">Wedding</option>
+                            <option value="birthday">Birthday Party</option>
+                            <option value="corporate">Corporate Event</option>
+                            <option value="holiday">Holiday Party</option>
+                            <option value="graduation">Graduation Party</option>
+                            <option value="anniversary">Anniversary</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_address">Address *</label>
+                    <textarea id="id_address" name="address" rows="3" placeholder="Enter the address where post event cleaning is needed" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_event_date">Event Date *</label>
+                        <input type="date" id="id_event_date" name="event_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_cleaning_date">Preferred Cleaning Date *</label>
+                        <input type="date" id="id_cleaning_date" name="cleaning_date" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_venue_size">Venue Size *</label>
+                        <select id="id_venue_size" name="venue_size" required>
+                            <option value="">Select Venue Size</option>
+                            <option value="small">Small (up to 50 people)</option>
+                            <option value="medium">Medium (50-150 people)</option>
+                            <option value="large">Large (150+ people)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_event_description">Event Description *</label>
+                    <textarea id="id_event_description" name="event_description" rows="4" placeholder="Please describe your event and cleaning requirements in detail..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="id_special_requirements">Special Requirements (Optional)</label>
+                    <textarea id="id_special_requirements" name="special_requirements" rows="3" placeholder="Any special cleaning requirements or notes..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="simple-modal-footer">
+            <button type="button" class="btn-secondary" onclick="closePostEventCleaningQuoteModal()">Cancel</button>
+            <button type="button" class="btn-1" onclick="submitPostEventCleaningQuote()">Submit Quote Request</button>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Message -->
+<div id="postEventCleaningQuoteAlert" class="simple-alert" style="display: none;"></div>
+
+<script>
+  function openPostEventCleaningQuoteModal() {
+    document.getElementById("postEventCleaningQuoteModal").style.display = "block";
+  }
+
+  function closePostEventCleaningQuoteModal() {
+    document.getElementById("postEventCleaningQuoteModal").style.display = "none";
+    // Reset form and clear validation errors
+    document.getElementById("postEventCleaningQuoteForm").reset();
+    clearPostEventCleaningValidationErrors();
+  }
+
+  function clearPostEventCleaningValidationErrors() {
+    // Remove all error classes and messages
+    const form = document.getElementById('postEventCleaningQuoteForm');
+    const inputs = form.querySelectorAll('input, textarea, select');
+    
+    inputs.forEach(input => {
+      input.classList.remove('error');
+      const errorDiv = input.parentNode.querySelector('.error-message');
+      if (errorDiv) {
+        errorDiv.remove();
+      }
+    });
+  }
+
+  function showPostEventCleaningFieldError(field, message) {
+    // Remove existing error message
+    const existingError = field.parentNode.querySelector('.error-message');
+    if (existingError) {
+      existingError.remove();
+    }
+    
+    // Add error class to field
+    field.classList.add('error');
+    
+    // Create and insert error message
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    errorDiv.style.color = '#dc3545';
+    errorDiv.style.fontSize = '0.875rem';
+    errorDiv.style.marginTop = '0.25rem';
+    
+    field.parentNode.appendChild(errorDiv);
+  }
+
+  function removePostEventCleaningFieldError(field) {
+    field.classList.remove('error');
+    const errorDiv = field.parentNode.querySelector('.error-message');
+    if (errorDiv) {
+      errorDiv.remove();
+    }
+  }
+
+  function validatePostEventCleaningField(field) {
+    const value = field.value.trim();
+    const fieldName = field.name;
+    
+    // Remove any existing error
+    removePostEventCleaningFieldError(field);
+    
+    // Required field validation
+    if (!value) {
+      showPostEventCleaningFieldError(field, `${getPostEventCleaningFieldLabel(fieldName)} is required`);
+      return false;
+    }
+    
+    // Specific field validations
+    switch (fieldName) {
+      case 'name':
+        if (value.length < 2) {
+          showPostEventCleaningFieldError(field, 'Name must be at least 2 characters long');
+          return false;
+        }
+        if (!/^[a-zA-Z\s]+$/.test(value)) {
+          showPostEventCleaningFieldError(field, 'Name can only contain letters and spaces');
+          return false;
+        }
+        break;
+        
+      case 'email':
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          showPostEventCleaningFieldError(field, 'Please enter a valid email address');
+          return false;
+        }
+        break;
+        
+      case 'phone_number':
+        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+        if (!phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))) {
+          showPostEventCleaningFieldError(field, 'Please enter a valid phone number');
+          return false;
+        }
+        break;
+        
+      case 'address':
+        if (value.length < 10) {
+          showPostEventCleaningFieldError(field, 'Address must be at least 10 characters long');
+          return false;
+        }
+        break;
+        
+      case 'event_description':
+        if (value.length < 20) {
+          showPostEventCleaningFieldError(field, 'Event description must be at least 20 characters long');
+          return false;
+        }
+        break;
+        
+      case 'event_date':
+        const eventDate = new Date(value);
+        const today = new Date();
+        if (eventDate < today) {
+          showPostEventCleaningFieldError(field, 'Event date cannot be in the past');
+          return false;
+        }
+        break;
+        
+      case 'cleaning_date':
+        const cleaningDate = new Date(value);
+        const eventDateValue = document.getElementById('id_event_date').value;
+        if (eventDateValue) {
+          const eventDate = new Date(eventDateValue);
+          if (cleaningDate <= eventDate) {
+            showPostEventCleaningFieldError(field, 'Cleaning date must be after the event date');
+            return false;
+          }
+        }
+        break;
+    }
+    
+    return true;
+  }
+
+  function getPostEventCleaningFieldLabel(fieldName) {
+    const labels = {
+      'name': 'Full Name',
+      'email': 'Email Address',
+      'phone_number': 'Phone Number',
+      'address': 'Address',
+      'event_description': 'Event Description',
+      'event_date': 'Event Date',
+      'cleaning_date': 'Cleaning Date',
+      'event_type': 'Event Type',
+      'venue_size': 'Venue Size'
+    };
+    return labels[fieldName] || fieldName;
+  }
+
+  function validatePostEventCleaningForm() {
+    const form = document.getElementById('postEventCleaningQuoteForm');
+    const inputs = form.querySelectorAll('input, textarea, select');
+    let isValid = true;
+    
+    // Validate each field
+    inputs.forEach(input => {
+      if (!validatePostEventCleaningField(input)) {
+        isValid = false;
+      }
+    });
+    
+    return isValid;
+  }
+
+  function submitPostEventCleaningQuote() {
+    // Clear any existing validation errors
+    clearPostEventCleaningValidationErrors();
+    
+    // Validate form before submission
+    if (!validatePostEventCleaningForm()) {
+      showPostEventCleaningAlert('danger', 'Please fix the errors in the form before submitting.');
+      return;
+    }
+    
+    // Disable submit button to prevent double submission
+    const submitBtn = document.querySelector('#postEventCleaningQuoteModal .btn-1');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...';
+    
+    // Get form data
+    const formData = new FormData(document.getElementById('postEventCleaningQuoteForm'));
+    
+    // Submit form via AJAX
+    fetch('{% url "post_event_cleaning_quote_submit" %}', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Show success message
+        showPostEventCleaningAlert('success', data.message);
+        
+        // Reset form and close modal
+        document.getElementById("postEventCleaningQuoteForm").reset();
+        closePostEventCleaningQuoteModal();
+        
+        // Reset submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Submit Quote Request';
+        
+        // Redirect to confirmation page
+        setTimeout(() => {
+          window.location.href = '{% url "quote_submitted_post_event_cleaning" 0 %}'.replace('0', data.quote_id);
+        }, 2000);
+      } else {
+        // Show error message
+        showPostEventCleaningAlert('danger', data.message || 'An error occurred. Please try again.');
+        
+        // Reset submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Submit Quote Request';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showPostEventCleaningAlert('danger', 'An error occurred. Please try again.');
+      
+      // Reset submit button
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Submit Quote Request';
+    });
+  }
+
+  function showPostEventCleaningAlert(type, message) {
+    const alertDiv = document.getElementById('postEventCleaningQuoteAlert');
+    alertDiv.className = `simple-alert alert-${type}`;
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">&times;</button>
+    `;
+    alertDiv.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      alertDiv.style.display = 'none';
+    }, 5000);
+  }
+
+  // Add real-time validation on input blur
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('postEventCleaningQuoteForm');
+    const inputs = form.querySelectorAll('input, textarea, select');
+    
+    inputs.forEach(input => {
+      input.addEventListener('blur', function() {
+        validatePostEventCleaningField(this);
+      });
+      
+      input.addEventListener('input', function() {
+        // Remove error when user starts typing
+        if (this.classList.contains('error')) {
+          removePostEventCleaningFieldError(this);
+        }
+      });
+    });
+  });
+
+  // Close modal when clicking outside it
+  window.onclick = function(event) {
+    const modal = document.getElementById("postEventCleaningQuoteModal");
+    if (event.target === modal) {
+      closePostEventCleaningQuoteModal();
+    }
+  }
+</script>
+
+{% endblock %}

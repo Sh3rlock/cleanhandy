@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from .models import (
     Quote, Service, ServiceCategory, CleaningExtra, HomeType, 
     SquareFeetOption, NewsletterSubscriber, Booking, Contact, 
-    Review, ContactInfo, AboutContent, HourlyRate, HandymanQuote
+    Review, ContactInfo, AboutContent, HourlyRate, HandymanQuote, PostEventCleaningQuote
 )
 
 # ============================================================================
@@ -628,5 +628,91 @@ class HandymanQuoteAdmin(admin.ModelAdmin):
     
     def has_change_permission(self, request, obj=None):
         """Allow editing handyman quotes"""
+        return True
+
+
+# ============================================================================
+# POST EVENT CLEANING QUOTE ADMIN
+# ============================================================================
+
+@admin.register(PostEventCleaningQuote)
+class PostEventCleaningQuoteAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'get_name_display', 'get_email_display', 'get_phone_display', 
+        'get_address_short', 'event_type', 'venue_size', 'get_status_badge', 
+        'event_date', 'cleaning_date', 'created_at', 'actions_column'
+    ]
+    list_filter = ['status', 'event_type', 'venue_size', 'created_at', 'event_date']
+    search_fields = ['name', 'email', 'phone_number', 'address', 'event_description', 'special_requirements']
+    readonly_fields = ['created_at']
+    list_per_page = 25
+    ordering = ['-created_at']
+    date_hierarchy = 'created_at'
+    
+    fieldsets = (
+        ('Customer Information', {
+            'fields': ('name', 'email', 'phone_number', 'address')
+        }),
+        ('Event Details', {
+            'fields': ('event_type', 'venue_size', 'event_date', 'cleaning_date', 'event_description')
+        }),
+        ('Additional Information', {
+            'fields': ('special_requirements',),
+            'classes': ('collapse',)
+        }),
+        ('Quote Management', {
+            'fields': ('status', 'admin_notes', 'created_at')
+        }),
+    )
+    
+    def get_name_display(self, obj):
+        return obj.name
+    get_name_display.short_description = 'Name'
+    
+    def get_email_display(self, obj):
+        return obj.email
+    get_email_display.short_description = 'Email'
+    
+    def get_phone_display(self, obj):
+        return obj.phone_number
+    get_phone_display.short_description = 'Phone'
+    
+    def get_address_short(self, obj):
+        return obj.address[:50] + '...' if len(obj.address) > 50 else obj.address
+    get_address_short.short_description = 'Address'
+    
+    def get_status_badge(self, obj):
+        status_colors = {
+            'pending': 'warning',
+            'contacted': 'info',
+            'quoted': 'primary',
+            'completed': 'success',
+            'cancelled': 'danger'
+        }
+        color = status_colors.get(obj.status, 'secondary')
+        return format_html(
+            '<span class="badge bg-{}">{}</span>',
+            color,
+            obj.get_status_display()
+        )
+    get_status_badge.short_description = 'Status'
+    
+    def actions_column(self, obj):
+        return format_html(
+            '<a href="{}" class="btn btn-sm btn-outline-primary">View</a>',
+            reverse('admin:quotes_posteventcleaningquote_change', args=[obj.pk])
+        )
+    actions_column.short_description = 'Actions'
+    
+    def has_add_permission(self, request):
+        """Allow adding post event cleaning quotes"""
+        return True
+    
+    def has_change_permission(self, request, obj=None):
+        """Allow editing post event cleaning quotes"""
+        return True
+    
+    def has_delete_permission(self, request, obj=None):
+        """Allow deleting post event cleaning quotes"""
         return True
 

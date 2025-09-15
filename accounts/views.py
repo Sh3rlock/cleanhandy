@@ -227,8 +227,10 @@ def booking_detail(request, booking_id):
     # Determine template based on service category
     service_cat_name = booking.service_cat.name.lower() if booking.service_cat else ''
 
-    if service_cat_name == 'cleaning':
+    if service_cat_name == 'home':
         template_name = 'accounts/booking_detail_user.html'
+    elif service_cat_name == 'commercial':
+        template_name = 'accounts/booking_detail_user.html'  # Same template but with conditional logic
     else:
         template_name = 'accounts/handyman_detail_user.html'
 

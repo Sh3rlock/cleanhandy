@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+    .success-container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 40px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        background: #28a745;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+    }
+    
+    .success-icon i {
+        font-size: 2.5rem;
+        color: #fff;
+    }
+    
+    .success-title {
+        color: #28a745;
+        font-size: 2rem;
+        margin-bottom: 20px;
+    }
+    
+    .success-message {
+        color: #666;
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+    
+    .quote-details {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        text-align: left;
+    }
+    
+    .quote-details h4 {
+        color: #F15A29;
+        margin-bottom: 15px;
+    }
+    
+    .quote-details p {
+        margin-bottom: 10px;
+        color: #333;
+    }
+    
+    .quote-details strong {
+        color: #F15A29;
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    @media (max-width: 768px) {
+        .success-container {
+            margin: 20px;
+            padding: 30px 20px;
+        }
+        
+        .btn-group {
+            flex-direction: column;
+        }
+        
+        .btn-group .btn-1 {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="success-container">
+    <div class="success-icon">
+        <i class="fa-solid fa-check"></i>
+    </div>
+    
+    <h1 class="success-title">Quote Request Submitted!</h1>
+    
+    <p class="success-message">
+        Thank you for your Post Event Cleaning quote request. We have received your information and will contact you within 24 hours to discuss your event cleaning needs.
+    </p>
+    
+    <div class="quote-details">
+        <h4>Quote Request Details</h4>
+        <p><strong>Name:</strong> {{ quote.name }}</p>
+        <p><strong>Email:</strong> {{ quote.email }}</p>
+        <p><strong>Phone:</strong> {{ quote.phone_number }}</p>
+        <p><strong>Event Type:</strong> {{ quote.get_event_type_display }}</p>
+        <p><strong>Venue Size:</strong> {{ quote.get_venue_size_display }}</p>
+        <p><strong>Event Date:</strong> {{ quote.event_date|date:"F d, Y" }}</p>
+        <p><strong>Preferred Cleaning Date:</strong> {{ quote.cleaning_date|date:"F d, Y" }}</p>
+        <p><strong>Quote ID:</strong> #{{ quote.id }}</p>
+        <p><strong>Submitted:</strong> {{ quote.created_at|date:"F d, Y \a\t g:i A" }}</p>
+    </div>
+    
+    <div class="btn-group">
+        <a href="{% url 'home' %}" class="btn-1">Back to Home</a>
+        <a href="{% url 'contact' %}" class="btn-1">Contact Us</a>
+    </div>
+    
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+        <p style="color: #666; font-size: 0.9rem;">
+            <i class="fa-solid fa-info-circle"></i>
+            If you have any questions or need to make changes to your quote request, please contact us at 
+            <a href="mailto:matyass91@gmail.com" style="color: #F15A29;">matyass91@gmail.com</a> 
+            or call us directly.
+        </p>
+    </div>
+</div>
+
+{% endblock %}

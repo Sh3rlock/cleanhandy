@@ -374,6 +374,21 @@ class Booking(models.Model):
     city = models.CharField(max_length=100, null=True, blank=True, default="New York")
     state = models.CharField(max_length=50, null=True, blank=True, default="NY")
     zip_code = models.CharField(max_length=10, null=True, blank=True)
+    
+    # Home Cleaning specific fields
+    bath_count = models.PositiveIntegerField(
+        choices=[
+            (1, "1 Bathroom"),
+            (2, "2 Bathrooms"),
+            (3, "3 Bathrooms"),
+            (4, "4 Bathrooms"),
+            (5, "5 Bathrooms"),
+            (6, "More than 5 Bathrooms")
+        ],
+        null=True,
+        blank=True,
+        help_text="Number of bathrooms in the home"
+    )
 
     # --- New Gift Card fields ---
     gift_card = models.ForeignKey(
@@ -594,6 +609,75 @@ class HandymanQuote(models.Model):
         ordering = ['-created_at']
         verbose_name = "Handyman Quote"
         verbose_name_plural = "Handyman Quotes"
+
+
+class PostEventCleaningQuote(models.Model):
+    """Model for storing post event cleaning quote requests"""
+    
+    # Choices as class attributes
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("contacted", "Contacted"),
+        ("quoted", "Quoted"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+    
+    EVENT_TYPE_CHOICES = [
+        ("wedding", "Wedding"),
+        ("birthday", "Birthday Party"),
+        ("corporate", "Corporate Event"),
+        ("holiday", "Holiday Party"),
+        ("graduation", "Graduation Party"),
+        ("anniversary", "Anniversary"),
+        ("other", "Other"),
+    ]
+    
+    VENUE_SIZE_CHOICES = [
+        ("small", "Small (up to 50 people)"),
+        ("medium", "Medium (50-150 people)"),
+        ("large", "Large (150+ people)"),
+    ]
+    
+    name = models.CharField(max_length=100, help_text="Full name of the customer")
+    email = models.EmailField(help_text="Email address of the customer")
+    phone_number = models.CharField(max_length=20, help_text="Phone number of the customer")
+    address = models.TextField(help_text="Address where the post event cleaning is needed")
+    event_description = models.TextField(help_text="Detailed description of the event and cleaning requirements")
+    event_date = models.DateField(help_text="Date of the event")
+    cleaning_date = models.DateField(help_text="Preferred date for cleaning")
+    event_type = models.CharField(
+        max_length=50,
+        choices=EVENT_TYPE_CHOICES,
+        help_text="Type of event"
+    )
+    venue_size = models.CharField(
+        max_length=50,
+        choices=VENUE_SIZE_CHOICES,
+        help_text="Size of the venue"
+    )
+    special_requirements = models.TextField(
+        blank=True, 
+        null=True, 
+        help_text="Any special cleaning requirements or notes"
+    )
+    
+    # System fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+    admin_notes = models.TextField(blank=True, null=True, help_text="Internal notes for admin")
+    
+    def __str__(self):
+        return f"Post Event Cleaning Quote - {self.name} ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Post Event Cleaning Quote"
+        verbose_name_plural = "Post Event Cleaning Quotes"
 
 
 

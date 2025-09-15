@@ -1,53 +1,354 @@
 {% extends "accounts/partials/account_base.html" %}
 {% load static %}
 {% block account_content %}
+<style>
+  .booking-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  
+  .booking-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #F15A29;
+  }
+  
+  .booking-header {
+    background: linear-gradient(135deg, #F15A29 0%, #ff7a4d 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    position: relative;
+  }
+  
+  .booking-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: translate(30px, -30px);
+  }
+  
+  .service-icon {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+  }
+  
+  .status-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .status-pending { background: #fff3cd; color: #856404; }
+  .status-confirmed { background: #d1ecf1; color: #0c5460; }
+  .status-completed { background: #d4edda; color: #155724; }
+  .status-cancelled { background: #f8d7da; color: #721c24; }
+  
+  .booking-details {
+    padding: 1.5rem;
+  }
+  
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f8f9fa;
+  }
+  
+  .detail-row:last-child {
+    border-bottom: none;
+  }
+  
+  .detail-label {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+  
+  .detail-value {
+    color: #212529;
+    font-weight: 500;
+  }
+  
+  .price-highlight {
+    background: linear-gradient(135deg, #F15A29, #ff7a4d);
+    color: white;
+    padding: 0.8rem 1.2rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-align: center;
+    margin: 1rem 0;
+  }
+  
+  .booking-actions {
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+  }
+  
+  .btn-modern {
+    background: linear-gradient(135deg, #F15A29, #ff7a4d);
+    border: none;
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-modern:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(241, 90, 41, 0.4);
+    color: white;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #6c757d;
+  }
+  
+  .empty-state i {
+    font-size: 4rem;
+    color: #dee2e6;
+    margin-bottom: 1rem;
+  }
+  
+  .page-header {
+    background: linear-gradient(135deg, #F15A29 0%, #ff7a4d 100%);
+    color: white;
+    padding: 2rem 0;
+    margin: -1.5rem -1.5rem 2rem -1.5rem;
+    border-radius: 0 0 20px 20px;
+  }
+  
+  .booking-option-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  
+  .booking-option-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #F15A29;
+  }
+  
+  .booking-option-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .service-icon-large {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .booking-option-header h4 {
+    margin: 0;
+    color: #212529;
+    font-weight: 600;
+  }
+  
+  .booking-option-body {
+    padding: 1.5rem;
+    text-align: center;
+  }
+  
+  .booking-option-body p {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+</style>
+
 <div class="col-12 col-lg-8">
-<div class="container py-4">
-  <h3>My Bookings</h3>
-  {% if bookings %}
-    <ul class="list-group">
-      {% for booking in bookings %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <strong>{{ booking.service_cat.name }}</strong><br>
-            Date: {{ booking.date }} | Duration: {{ booking.hours_requested }} hours | Price: ${{ booking.price }} | Status: <span class="badge bg-secondary">{{ booking.status }}</span>
+  <div class="container py-4">
+    <div class="page-header">
+      <div class="container">
+        <h2 class="mb-2">📅 My Bookings</h2>
+        <p class="mb-0 opacity-90">Manage and track all your service bookings</p>
+      </div>
+    </div>
+    
+    {% if bookings %}
+      <div class="bookings-list">
+        {% for booking in bookings %}
+          <div class="booking-card">
+            <div class="booking-header">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 class="mb-1">
+                    <span class="">
+                      {% if booking.service_cat.name|lower == 'commercial' %}
+                        🏢
+                      {% elif booking.service_cat.name|lower == 'home' %}
+                        🧼
+                      {% else %}
+                        🛠️
+                      {% endif %}
+                    </span>
+                    {{ booking.service_cat.name|title }} Cleaning
+                  </h5>
+                  <p class="mb-0 opacity-90">Booking #{{ booking.id }}</p>
+                </div>
+                <div>
+                  <span class="status-badge status-{{ booking.status }}">
+                    {{ booking.status|title }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="booking-details">
+              <div class="detail-row">
+                <span class="detail-label">📅 Date & Time</span>
+                <span class="detail-value">{{ booking.date|date:"M d, Y" }} at {{ booking.hour|time:"g:i A" }}</span>
+              </div>
+              
+              <div class="detail-row">
+                <span class="detail-label">⏱️ Duration</span>
+                <span class="detail-value">{{ booking.hours_requested }} hour{{ booking.hours_requested|pluralize }}</span>
+              </div>
+              
+              <div class="detail-row">
+                <span class="detail-label">📍 Location</span>
+                <span class="detail-value">{{ booking.address }}{% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}</span>
+              </div>
+              
+              {% if booking.service_cat.name|lower == 'commercial' and booking.business_type %}
+                <div class="detail-row">
+                  <span class="detail-label">🏢 Business Type</span>
+                  <span class="detail-value">{{ booking.business_type|title }}</span>
+                </div>
+              {% elif booking.service_cat.name|lower == 'home' and booking.home_types %}
+                <div class="detail-row">
+                  <span class="detail-label">🏠 Home Type</span>
+                  <span class="detail-value">{{ booking.home_types.name }}</span>
+                </div>
+              {% endif %}
+              {% if booking.service_cat.name|lower == 'home' and booking.bath_count %}
+                <div class="detail-row">
+                  <span class="detail-label">🚿 Bathrooms</span>
+                  <span class="detail-value">{{ booking.get_bath_count_display }}</span>
+                </div>
+              {% endif %}
+              
+              <div class="price-highlight">
+                Total: ${{ booking.price|floatformat:2 }}
+              </div>
+            </div>
+            
+            <div class="booking-actions">
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                  Created: {{ booking.created_at|date:"M d, Y" }}
+                </small>
+                <a href="{% url 'booking_detail' booking.id %}" class="btn-modern">
+                  View Details
+                </a>
+              </div>
+            </div>
           </div>
-          <a href="{% url 'booking_detail' booking.id %}" class="btn btn-sm btn-outline-primary">View</a>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>You have no booking yet.</p>
-  {% endif %}
-</div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <i class="fas fa-calendar-times"></i>
+        <h4>No Bookings Yet</h4>
+        <p>You haven't made any bookings yet. Start by booking a cleaning service!</p>
+        <a href="{% url 'cleaning_booking' %}" class="btn-modern mt-3">
+          Book Your First Service
+        </a>
+      </div>
+    {% endif %}
+  </div>
 </div>
 <div class="col-12 col-lg-4 mt-4 mt-lg-0">
-  <!-- Booking options as big buttons -->
+  <!-- Modern booking options -->
   <div class="row mb-5">
     <div class="col-md-12">
-      <div class="card h-100 shadow-sm border-0 text-center p-4">
-        <div class="card-body">
-          <h4 class="mb-3">🧼 Book Home Cleaning</h4>
-          <p class="mb-4">Schedule a professional cleaning with flexible extras and recurring options.</p>
-                      <a href="{% url 'request_cleaning_booking' %}" class="btn-1 w-100">Book Home Cleaning</a>
+      <div class="booking-option-card">
+        <div class="booking-option-header">
+          <div class="service-icon-large">🧼</div>
+          <h4>Book Home Cleaning</h4>
+        </div>
+        <div class="booking-option-body">
+          <p>Schedule a professional cleaning with flexible extras and recurring options.</p>
+          <a href="{% url 'cleaning_booking' %}" class="btn-modern w-100">
+            Book Home Cleaning
+          </a>
         </div>
       </div>
     </div>
+    
     <div class="col-md-12 mt-4">
-      <div class="card h-100 shadow-sm border-0 text-center p-4">
-        <div class="card-body">
-          <h4 class="mb-3">🏢 Book Office Cleaning</h4>
-          <p class="mb-4">Professional cleaning services for offices, retail spaces, and commercial properties.</p>
-                      <a href="{% url 'office_cleaning_booking' %}" class="btn-1 w-100">Book Office Cleaning</a>
+      <div class="booking-option-card">
+        <div class="booking-option-header">
+          <div class="service-icon-large">🏢</div>
+          <h4>Book Office Cleaning</h4>
+        </div>
+        <div class="booking-option-body">
+          <p>Professional cleaning services for offices, retail spaces, and commercial properties.</p>
+          <a href="{% url 'office_cleaning_booking' %}" class="btn-modern w-100">
+            Book Office Cleaning
+          </a>
         </div>
       </div>
     </div>
+    
+    {% for service in all_services %}
+      {% if service.category.name|lower == 'post event cleaning' %}
+        <div class="col-md-12 mt-4">
+          <div class="booking-option-card">
+            <div class="booking-option-header">
+              <div class="service-icon-large">🎉</div>
+              <h4>Post Event Cleaning</h4>
+            </div>
+            <div class="booking-option-body">
+              <p>Professional post-event cleanup services for weddings, parties, and special occasions.</p>
+              <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="btn-modern w-100">
+                Post Event Cleaning
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+    
     <!-- <div class="col-md-12 mt-4">
-      <div class="card h-100 shadow-sm border-0 text-center p-4">
-        <div class="card-body">
-          <h4 class="mb-3">🛠️ Book Handyman</h4>
-          <p class="mb-4">Need help with home repairs, installations, or improvements?</p>
-          <a href="{% url 'request_handyman_booking' %}" class="btn-1 w-100">Book Handyman</a>
+      <div class="booking-option-card">
+        <div class="booking-option-header">
+          <div class="service-icon-large">🛠️</div>
+          <h4>Book Handyman</h4>
+        </div>
+        <div class="booking-option-body">
+          <p>Need help with home repairs, installations, or improvements?</p>
+          <a href="{% url 'request_handyman_booking' %}" class="btn-modern w-100">
+            Book Handyman
+          </a>
         </div>
       </div>
     </div> -->

@@ -76,6 +76,10 @@
         <p>Home Type: {{ booking.home_types.name }} — ${{ booking.home_types.price }}</p>
       {% endif %}
 
+      {% if booking.bath_count %}
+        <p>Number of Bathrooms: {{ booking.get_bath_count_display }}</p>
+      {% endif %}
+
       {% if booking.extras.all %}
         <p>Extras:</p>
         <ul>
@@ -125,6 +129,9 @@
     <div class="info">
       {% if booking.home_types %}
         <p>Home Type: {{ booking.home_types.name }}</p>
+      {% endif %}
+      {% if booking.bath_count %}
+        <p>Number of Bathrooms: {{ booking.get_bath_count_display }}</p>
       {% endif %}
       {% if booking.square_feet_options %}
         <p>Square Feet: {{ booking.square_feet_options.name }}</p>

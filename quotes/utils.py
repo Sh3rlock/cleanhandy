@@ -1,4 +1,4 @@
-from datetime import time, timedelta, datetime
+from datetime import time, timedelta, datetime, date
 from quotes.models import Quote, Booking
 from adminpanel.models import BlockedTimeSlot
 from datetime import datetime, timedelta, time
@@ -130,6 +130,71 @@ def send_quote_email_cleaning(booking):
     admin_email.attach(filename, pdf_buffer.read(), "application/pdf")
     admin_email.send()
 
+
+def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discount_amount, subtotal, tax):
+    """
+    Send confirmation emails for office cleaning bookings to both customer and admin
+    """
+    try:
+        # Calculate discount percentage for display
+        discount_percent = 0
+        if discount_amount > 0 and labor_cost > 0:
+            discount_percent = (discount_amount / labor_cost) * 100
+
+        # Calculate end time
+        start_datetime = datetime.combine(booking.date, booking.hour)
+        end_datetime = start_datetime + timedelta(hours=booking.hours_requested)
+        end_time = end_datetime.time()
+
+        # Email to customer
+        customer_html = render_to_string("quotes/email_office_cleaning_summary.html", {
+            "booking": booking,
+            "hourly_rate": hourly_rate,
+            "labor_cost": labor_cost,
+            "discount_amount": discount_amount,
+            "discount_percent": discount_percent,
+            "subtotal": subtotal,
+            "tax": tax
+        })
+        
+        customer_email = EmailMessage(
+            subject="🏢 Office Cleaning Booking Confirmed - CleanHandy",
+            body=customer_html,
+            from_email="matyass91@gmail.com",
+            to=[booking.email],
+        )
+        customer_email.content_subtype = "html"
+        customer_email.send()
+
+        # Email to admin/staff
+        admin_html = render_to_string("quotes/email_office_cleaning_admin.html", {
+            "booking": booking,
+            "hourly_rate": hourly_rate,
+            "labor_cost": labor_cost,
+            "discount_amount": discount_amount,
+            "discount_percent": discount_percent,
+            "subtotal": subtotal,
+            "tax": tax,
+            "end_time": end_time,
+            "today": date.today(),
+            "tomorrow": date.today() + timedelta(days=1)
+        })
+        
+        admin_email = EmailMessage(
+            subject=f"🏢 New Office Cleaning Booking from {booking.name} - #{booking.id}",
+            body=admin_html,
+            from_email="matyass91@gmail.com",
+            to=[settings.DEFAULT_FROM_EMAIL],
+        )
+        admin_email.content_subtype = "html"
+        admin_email.send()
+        
+        print(f"✅ Office cleaning booking emails sent successfully for booking {booking.id}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Failed to send office cleaning booking emails for booking {booking.id}: {e}")
+        return False
 
 def send_office_cleaning_quote_email(booking):
     """

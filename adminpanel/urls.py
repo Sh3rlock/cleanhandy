@@ -5,7 +5,8 @@ from .views import (
     add_service, edit_service, delete_service, booking_calendar, get_upcoming_quotes, quote_approval_view, quote_decline_view, block_time_slot,
     get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv, delete_quote, send_quote_email_view, get_booking_detail,
     giftcard_discount, subscriber_list, add_subscriber, export_subscribers_csv, office_quote_list, office_quote_detail, export_office_quotes_csv, send_office_quote_email, generate_office_quote_pdf,
-    handyman_quote_list, handyman_quote_detail, update_handyman_quote_status, export_handyman_quotes_csv, send_handyman_quote_email, generate_handyman_quote_pdf, delete_handyman_quote
+    handyman_quote_list, handyman_quote_detail, update_handyman_quote_status, export_handyman_quotes_csv, send_handyman_quote_email, generate_handyman_quote_pdf, delete_handyman_quote,
+    post_event_cleaning_quote_list, post_event_cleaning_quote_detail, update_post_event_cleaning_quote_status, export_post_event_cleaning_quotes_csv, send_post_event_cleaning_quote_email, generate_post_event_cleaning_quote_pdf, delete_post_event_cleaning_quote
 )
 
 urlpatterns = [
@@ -92,5 +93,15 @@ urlpatterns = [
     path("handyman-quotes/export-csv/", export_handyman_quotes_csv, name="export_handyman_quotes_csv"),
     path("handyman-quotes/<int:quote_id>/send-email/", send_handyman_quote_email, name="send_handyman_quote_email"),
     path("handyman-quotes/<int:quote_id>/generate-pdf/", generate_handyman_quote_pdf, name="generate_handyman_quote_pdf"),
+
+    # Post Event Cleaning Quotes Management
+    path("post-event-cleaning-quotes/", post_event_cleaning_quote_list, name="post_event_cleaning_quote_list"),
+    path("post-event-cleaning-quotes/<int:quote_id>/", post_event_cleaning_quote_detail, name="post_event_cleaning_quote_detail"),
+    path("post-event-cleaning-quotes/<int:quote_id>/delete/", delete_post_event_cleaning_quote, name="delete_post_event_cleaning_quote"),
+    path("admin/post-event-cleaning-quotes/update-status/<int:quote_id>/", update_post_event_cleaning_quote_status, name="update_post_event_cleaning_quote_status"),
+    path("post-event-cleaning-quotes/<int:quote_id>/update-status/", update_post_event_cleaning_quote_status, name="update_post_event_cleaning_quote_detail_status"),
+    path("post-event-cleaning-quotes/export-csv/", export_post_event_cleaning_quotes_csv, name="export_post_event_cleaning_quotes_csv"),
+    path("post-event-cleaning-quotes/<int:quote_id>/send-email/", send_post_event_cleaning_quote_email, name="send_post_event_cleaning_quote_email"),
+    path("post-event-cleaning-quotes/<int:quote_id>/generate-pdf/", generate_post_event_cleaning_quote_pdf, name="generate_post_event_cleaning_quote_pdf"),
 
 ]   

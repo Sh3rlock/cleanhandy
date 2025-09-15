@@ -211,6 +211,9 @@ select {
             {% if not booking.is_large_home and booking.home_types %}
               <p><strong>Home Type:</strong> {{ booking.home_types.name }} (${{ booking.home_types.price }})</p>
             {% endif %}
+            {% if booking.bath_count %}
+              <p><strong>Number of Bathrooms:</strong> {{ booking.get_bath_count_display }}</p>
+            {% endif %}
             <p><strong>Is Large Home:</strong> {{ booking.is_large_home|yesno:"Yes,No" }}</p>
             <p><strong>Recurring:</strong> 
               {% if booking.recurrence_pattern != "one_time" %}

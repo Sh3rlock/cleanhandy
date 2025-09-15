@@ -115,7 +115,7 @@
           </ul>
       </div>
       {% if user.is_authenticated %}
-          <a class="btn-1" href="{% url 'request_cleaning_booking' %}">Book Home Cleaning</a>
+          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
         {% else %}
           <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
         {% endif %}
@@ -129,6 +129,15 @@
       {% else %}
         <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
       {% endif %}
+      {% for service in all_services %}
+        {% if service.category.name|lower == 'post event cleaning' %}
+          {% if user.is_authenticated %}
+            <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+          {% else %}
+            <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
   </div>
 </section>
 <!-- common banner -->
@@ -166,7 +175,7 @@
                 Book Now
               </a>
               <ul class="dropdown-menu" aria-labelledby="bookNowDropdown">
-                <li><a class="dropdown-item" href="{% url 'request_cleaning_booking' %}">Cleaning</a></li>
+                <li><a class="dropdown-item" href="{% url 'cleaning_booking' %}">Cleaning</a></li>
                 <!-- <li><a class="dropdown-item" href="{% url 'request_handyman_booking' %}">Handyman</a></li> -->
               </ul>
             </li>
@@ -271,7 +280,7 @@
           <div class="card-body">
             <h4 class="mb-3">🧼 Book Home Cleaning</h4>
             <p class="mb-4">Schedule a professional cleaning with flexible extras and recurring options.</p>
-                          <a href="{% url 'request_cleaning_booking' %}" class="btn-1 w-100">Book Home Cleaning</a>
+                          <a href="{% url 'cleaning_booking' %}" class="btn-1 w-100">Book Home Cleaning</a>
           </div>
         </div>
       </div>
@@ -293,6 +302,19 @@
           </div>
         </div>
       </div>
+      {% for service in all_services %}
+        {% if service.category.name|lower == 'post event cleaning' %}
+          <div class="col-md-12 mt-4">
+            <div class="card h-100 shadow-sm border-0 text-center p-4">
+              <div class="card-body">
+                <h4 class="mb-3">🎉 Post Event Cleaning</h4>
+                <p class="mb-4">Professional post-event cleanup services for weddings, parties, and special occasions.</p>
+                <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="btn-1 w-100">Post Event Cleaning</a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
     </div>
   </div>
 </div>

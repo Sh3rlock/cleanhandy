@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber, Booking, Review, OfficeQuote, HandymanQuote
+from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber, Booking, Review, OfficeQuote, HandymanQuote, PostEventCleaningQuote
 from customers.models import Customer  # Import Customer from the correct app
-from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm, CleaningBookingForm, HandymanBookingForm, ContactForm, OfficeQuoteForm, OfficeCleaningBookingForm, HandymanQuoteForm
+from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm, CleaningBookingForm, HandymanBookingForm, ContactForm, OfficeQuoteForm, OfficeCleaningBookingForm, HandymanQuoteForm, PostEventCleaningQuoteForm
 from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
-from .utils import get_available_hours_for_date, send_quote_email_cleaning
+from .utils import get_available_hours_for_date, send_quote_email_cleaning, send_office_cleaning_booking_emails
 from django.http import JsonResponse, HttpResponse
 from datetime import datetime, time, timedelta, date
 from django.core.mail import EmailMultiAlternatives
@@ -315,6 +315,11 @@ def cleaning_booking(request):
         if home_category else Service.objects.none()
     )
 
+    # Initialize saved_addresses for authenticated users
+    saved_addresses = []
+    if request.user.is_authenticated and hasattr(request.user, "profile"):
+        saved_addresses = request.user.profile.addresses.all()
+
 
     if request.method == "POST":
         form = CleaningBookingForm(request.POST)
@@ -377,14 +382,36 @@ def cleaning_booking(request):
                 "related_services": related_services,
             })
     else:
-        form = CleaningBookingForm()
-
+        # Initialize form with user data if logged in
+        initial_data = {}
+        
+        if request.user.is_authenticated:
+            initial_data["email"] = request.user.email
+            
+            if hasattr(request.user, "profile"):
+                profile = request.user.profile
+                initial_data["name"] = profile.full_name
+                initial_data["phone"] = profile.phone
+                
+                # Pre-fill with first saved address if available
+                if saved_addresses.exists():
+                    default_address = saved_addresses.first()
+                    initial_data.update({
+                        "address": default_address.street_address,
+                        "apartment": default_address.apt_suite,
+                        "zip_code": default_address.zip_code,
+                        "city": default_address.city or "New York",
+                        "state": default_address.state or "NY",
+                    })
+        
+        form = CleaningBookingForm(initial=initial_data)
 
     return render(request, "booking/cleaning_booking.html", {
         "form": form,
         "cleaning_extras": extras,
         "service_cat": service_cat,
         "related_services": related_services,
+        "saved_addresses": saved_addresses,
     })
 
 def handyman_booking(request):
@@ -597,19 +624,53 @@ def office_cleaning_booking(request):
             print(f"   - Tax: ${tax:.2f}")
             print(f"   - Total: ${total:.2f}")
             
+            # Send confirmation emails
+            try:
+                send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discount_amount, subtotal, tax)
+                print(f"✅ Office cleaning booking emails sent successfully for booking {booking.id}")
+            except Exception as e:
+                print(f"❌ Failed to send office cleaning booking emails for booking {booking.id}: {e}")
+                # Continue to redirect even if email fails
+            
             # Redirect to confirmation page
             return redirect('booking_confirmation', booking_id=booking.id)
         else:
             print("❌ Form validation failed and missing essential data")
             # Continue to render form with errors
     else:
-        form = OfficeCleaningBookingForm()
+        # Initialize form with user data if logged in
+        initial_data = {}
+        saved_addresses = []
+
+        if request.user.is_authenticated:
+            initial_data["email"] = request.user.email
+
+            if hasattr(request.user, "profile"):
+                profile = request.user.profile
+                initial_data["name"] = profile.full_name
+                initial_data["phone"] = profile.phone
+
+                addresses = profile.addresses.all()
+                saved_addresses = addresses
+
+                if addresses.exists():
+                    default_address = addresses.first()
+                    initial_data.update({
+                        "address": default_address.street_address,
+                        "apartment": default_address.apt_suite,
+                        "zip_code": default_address.zip_code,
+                        "city": default_address.city or "New York",
+                        "state": default_address.state or "NY",
+                    })
+
+        form = OfficeCleaningBookingForm(initial=initial_data)
 
     return render(request, "booking/office_cleaning_booking.html", {
         "form": form,
         "extras": extras,
         "related_services": related_services,
-        "hourly_rate": hourly_rate
+        "hourly_rate": hourly_rate,
+        "saved_addresses": saved_addresses
     })
 
 
@@ -805,6 +866,74 @@ def handyman_quote_submit(request):
         'success': False,
         'message': 'Invalid request method.'
     })
+
+
+def request_post_event_cleaning_quote(request, service_id):
+    """Display Post Event Cleaning service detail page with quote form"""
+    service = get_object_or_404(Service, id=service_id)
+
+    # Get the 3 most used cleaning services as related services for post event cleaning
+    cleaning_category = ServiceCategory.objects.filter(name__iexact='cleaning').first()
+
+    related_services = Service.objects.filter(
+        category=cleaning_category
+    ).order_by('-view_count')[:3] if cleaning_category else Service.objects.none()
+
+    # Increment the view count for the service
+    service.view_count += 1
+    service.save()
+
+    return render(request, "quotes/request_post_event_cleaning_quote.html", {
+        "service": service,
+        "related_services": related_services,
+    })
+
+
+def post_event_cleaning_quote_submit(request):
+    """Handle Post Event Cleaning quote form submission"""
+    if request.method == 'POST':
+        form = PostEventCleaningQuoteForm(request.POST)
+        
+        if form.is_valid():
+            try:
+                # Save the post event cleaning quote
+                post_event_quote = form.save()
+                
+                # Send email notification (optional)
+                # You can implement email sending here similar to handyman quotes
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Your Post Event Cleaning quote request has been submitted successfully!',
+                    'quote_id': post_event_quote.id
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'An error occurred: {str(e)}'
+                })
+        else:
+            # Return form errors
+            errors = {}
+            for field, field_errors in form.errors.items():
+                errors[field] = [str(error) for error in field_errors]
+            
+            return JsonResponse({
+                'success': False,
+                'message': 'Please correct the errors in the form.',
+                'errors': errors
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method.'
+    })
+
+
+def quote_submitted_post_event_cleaning(request, quote_id):
+    """Display confirmation page after Post Event Cleaning quote submission"""
+    quote = get_object_or_404(PostEventCleaningQuote, id=quote_id)
+    return render(request, "quotes/quote_submitted_post_event_cleaning.html", {"quote": quote})
 
 
 

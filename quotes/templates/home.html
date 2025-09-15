@@ -190,6 +190,13 @@
                 <div class="banner-search">
                   <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
                 </div>
+                {% for service in all_services %}
+                  {% if service.category.name|lower == 'post event cleaning' %}
+                    <div class="banner-search">
+                      <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+                    </div>
+                  {% endif %}
+                {% endfor %}
               </div>
               <div class="customer-box">
                 <div class="customer-list">
@@ -359,6 +366,8 @@
               <div class="service-tow-single-content">
                     {% if service.category.name|lower == "cleaning" %}
                         <a href="{% url 'bookings:home_cleaning_booking' %}" class="service-tow-single-title">{{ service.name }}</a>
+                    {% elif service.category.name|lower == "post event cleaning" %}
+                        <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
                     {% elif service.category.name|lower == "handyman" %}
                         <!-- <a href="{% url 'request_handyman_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a> -->
                     {% endif %}

@@ -180,6 +180,72 @@
       width: 100%;
     }
   }
+
+  /* Custom Modal Styles */
+  .custom-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .custom-modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .custom-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .custom-modal-header h5 {
+    margin: 0;
+    color: #333;
+  }
+
+  .custom-modal-close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .custom-modal-close:hover,
+  .custom-modal-close:focus {
+    color: #F15A29;
+    text-decoration: none;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .custom-modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    background-color: #f8f9fa;
+    border-radius: 0 0 8px 8px;
+  }
 </style>
 
 <div class="row">
@@ -313,17 +379,74 @@
       {{ form.name }}
       {{ form.email }}
       {{ form.phone }}
-      {{ form.city }}
-      {{ form.state }}
-      <div class="row">
-        <div class="col-9">
-            {{ form.address }}
+
+      <!-- Saved Address Select -->
+      {% if saved_addresses %}
+        <div class="card mb-4 shadow-sm" style="border: 1px solid #F15A29;">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title mb-0">Select Address</h5>
+              <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddAddressModal()">
+                + Add New Address
+              </button>
+            </div>
+            <div class="form-group mb-3">
+              <label for="addressSelect" class="form-label">Your Saved Addresses</label>
+              <select id="addressSelect" class="form-select">
+                <option value="">Select Address</option>
+                {% for addr in saved_addresses %}
+                  <option 
+                    data-street="{{ addr.street_address }}"
+                    data-apt="{{ addr.apt_suite }}"
+                    data-zip="{{ addr.zip_code }}"
+                    data-city="{{ addr.city }}"
+                    data-state="{{ addr.state }}"
+                  >
+                    {{ addr.street_address }}, Apt {{ addr.apt_suite }}, {{ addr.zip_code }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Preview of selected address -->
+            <div id="selectedAddressDetails" class="row g-2 d-none">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Street</label>
+                <p class="form-control-plaintext" id="addressStreet">–</p>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Apt/Suite</label>
+                <p class="form-control-plaintext" id="addressApt">–</p>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">ZIP Code</label>
+                <p class="form-control-plaintext" id="addressZip">–</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="col-3">
-            {{ form.apartment }}
+      {% endif %}
+
+      <!-- Manual address fields -->
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="{{ form.address.id_for_label }}" class="form-label">Street Address</label>
+          {{ form.address }}
+        </div>
+        <div class="col-md-3">
+          <label for="{{ form.apartment.id_for_label }}" class="form-label">Apt/Suite</label>
+          {{ form.apartment }}
+        </div>
+        <div class="col-md-3">
+          <label for="{{ form.zip_code.id_for_label }}" class="form-label">ZIP Code</label>
+          {{ form.zip_code }}
         </div>
       </div>
-      {{ form.zip_code }}
+      <!-- Hidden city and state fields (default to New York) -->
+      <div style="display: none;">
+        {{ form.city }}
+        {{ form.state }}
+      </div>
 
       <!-- Terms -->
       <div class="checkbox-wrap mb-4">
@@ -379,7 +502,39 @@
       </div>
     </div>
   </div>
+  </div>
 </div>
+
+<!-- Custom Add Address Modal -->
+<div id="customAddAddressModal" class="custom-modal" style="margin-top:50px;">
+  <div class="custom-modal-content">
+    <div class="custom-modal-header">
+      <h5>Add New Address</h5>
+      <span class="custom-modal-close" onclick="closeAddAddressModal()">&times;</span>
+    </div>
+    <form method="post" action="{% url 'add_customer_address' %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div class="form-group mb-2">
+          <label>Street Address</label>
+          <input type="text" name="street_address" class="cmn-input" required>
+        </div>
+        <div class="form-group mb-2">
+          <label>Apt / Suite</label>
+          <input type="text" name="apt_suite" class="cmn-input">
+        </div>
+        <div class="form-group mb-2">
+          <label>ZIP Code</label>
+          <input type="text" name="zip_code" class="cmn-input" required>
+        </div>
+       
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddAddressModal()">Cancel</button>
+        <button type="submit" class="btn-1">Save Address</button>
+      </div>
+    </form>
+  </div>
 </div>
   
 <script>
@@ -816,6 +971,39 @@ document.addEventListener("DOMContentLoaded", function () {
         summary.style.width = `${wrapper.offsetWidth}px`;
       }
     });
+  }
+});
+
+// Address Selection Functionality
+document.addEventListener("DOMContentLoaded", function () {
+  const addrSelect = document.getElementById("addressSelect");
+  if (addrSelect) {
+    addrSelect.addEventListener("change", function () {
+      const selected = this.selectedOptions[0];
+      if (!selected) return;
+
+      document.getElementById("id_address").value = selected.dataset.street || "";
+      document.getElementById("id_apartment").value = selected.dataset.apt || "";
+      document.getElementById("id_zip_code").value = selected.dataset.zip || "";
+      document.getElementById("id_city").value = selected.dataset.city || "New York";
+      document.getElementById("id_state").value = selected.dataset.state || "NY";
+    });
+  }
+});
+
+// Modal Functions
+function openAddAddressModal() {
+  document.getElementById("customAddAddressModal").style.display = "block";
+}
+
+function closeAddAddressModal() {
+  document.getElementById("customAddAddressModal").style.display = "none";
+}
+
+window.addEventListener("click", function (event) {
+  const modal = document.getElementById("customAddAddressModal");
+  if (event.target === modal) {
+    closeAddAddressModal();
   }
 });
 </script>

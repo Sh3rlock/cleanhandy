@@ -4,266 +4,543 @@
 <style>
   .card {
     border: 1px solid #F15A29;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+  }
+  
+  .booking-header {
+    background: linear-gradient(135deg, #F15A29 0%, #ff7a4d 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 1.5rem;
+    margin: -1rem -1rem 1.5rem -1rem;
+  }
+  
+  .status-badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  
+  .price-highlight {
+    background: linear-gradient(135deg, #F15A29, #ff7a4d);
+    color: white;
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+    margin: 1rem 0;
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+  
+  .info-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+  }
+  
+  .info-card:hover {
+    background: #ffffff;
+    border-color: #F15A29;
+    transform: translateY(-2px);
+  }
+  
+  .info-card h6 {
+    color: #F15A29;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .progress-timeline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    margin: 2rem 0;
+  }
+  
+  .progress-timeline::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e9ecef;
+    z-index: 1;
+  }
+  
+  .timeline-step {
+    background: white;
+    border: 3px solid #e9ecef;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+  }
+  
+  .timeline-step.active {
+    border-color: #F15A29;
+    background: #F15A29;
+    color: white;
+  }
+  
+  .timeline-step.completed {
+    border-color: #28a745;
+    background: #28a745;
+    color: white;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .btn-modern {
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+  }
+  
+  .btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .service-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .detail-row:last-child {
+    border-bottom: none;
+  }
+  
+  .detail-label {
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .detail-value {
+    color: #666;
+    text-align: right;
   }
 </style>
 <div class="col-12 col-lg-8">
   <div class="container py-4">
-    <h2>📋 Booking Details</h2>
-    <p>Thank you, {{ booking.name }}! Here's your full booking breakdown:</p>
+    <!-- Modern Header -->
+    <div class="booking-header">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="mb-2">
+            {% if booking.service_cat.name|lower == 'commercial' %}
+              🏢 Office Cleaning Booking
+            {% else %}
+              🧼 Home Cleaning Booking
+            {% endif %}
+          </h2>
+          <p class="mb-0 opacity-90">Booking #{{ booking.id }}</p>
+        </div>
+        <div class="text-end">
+          <div class="status-badge 
+            {% if booking.status == 'pending' %}bg-warning text-dark
+            {% elif booking.status == 'confirmed' %}bg-success
+            {% elif booking.status == 'cancelled' %}bg-danger
+            {% else %}bg-secondary
+            {% endif %}">
+            {{ booking.status|title }}
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <!-- Booking Progress Timeline -->
-    <div class="card mt-4">
+    <!-- Modern Progress Timeline -->
+    <div class="card">
       <div class="card-body">
-        <h4>🕓 Booking Progress</h4>
-        <div class="d-flex justify-content-between text-center align-items-center flex-wrap">
+        <h4 class="mb-4">📊 Booking Progress</h4>
+        <div class="progress-timeline">
           {% with status=booking.status %}
-            <div class="flex-fill px-2">
-              <div class="badge {% if status == 'pending' or status == 'confirmed' or status == 'completed' %}bg-primary{% else %}bg-light text-muted{% endif %}">Pending</div>
-              <small class="d-block mt-1">Request Received</small>
+            <div class="text-center">
+              <div class="timeline-step {% if status == 'pending' or status == 'confirmed' or status == 'completed' %}completed{% elif status == 'pending' %}active{% endif %}">
+                <i class="fas fa-clock"></i>
+              </div>
+              <small class="d-block mt-2 fw-semibold">Request Received</small>
             </div>
-            <div class="flex-fill px-2">
-              <div class="badge {% if status == 'confirmed' or status == 'completed' %}bg-primary{% else %}bg-light text-muted{% endif %}">Confirmed</div>
-              <small class="d-block mt-1">Scheduled</small>
+            <div class="text-center">
+              <div class="timeline-step {% if status == 'confirmed' or status == 'completed' %}completed{% elif status == 'confirmed' %}active{% endif %}">
+                <i class="fas fa-check"></i>
+              </div>
+              <small class="d-block mt-2 fw-semibold">Confirmed</small>
             </div>
-            <div class="flex-fill px-2">
-              <div class="badge {% if status == 'completed' %}bg-primary{% else %}bg-light text-muted{% endif %}">Completed</div>
-              <small class="d-block mt-1">Done</small>
+            <div class="text-center">
+              <div class="timeline-step {% if status == 'completed' %}completed{% endif %}">
+                <i class="fas fa-star"></i>
+              </div>
+              <small class="d-block mt-2 fw-semibold">Completed</small>
             </div>
           {% endwith %}
         </div>
       </div>
     </div>
 
-    <!-- Booking Summary -->
-    <div class="card mt-4 shadow-sm position-relative">
+    <!-- Modern Booking Summary -->
+    <div class="card">
       <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start mb-3">
-          <h5 class="mb-0">📦 Booking Summary</h5>
-    
+        <div class="d-flex justify-content-between align-items-start mb-4">
+          <h5 class="mb-0">📋 Booking Summary</h5>
           {% if booking.pdf_file %}
-            <a href="{{ booking.pdf_file.url }}" target="_blank" class="btn btn-md btn-outline-dark">
-              🧾 Download PDF
+            <a href="{{ booking.pdf_file.url }}" target="_blank" class="btn btn-outline-primary btn-modern">
+              <i class="fas fa-download me-2"></i>Download PDF
             </a>
           {% endif %}
         </div>
-    
-        <div class="row align-items-center">
-          <!-- Left: Info -->
-          <div class="col-md-8">
-            <p class="mb-2"><strong>Service:</strong> {{ booking.service_cat.name }}</p>
-            <p class="mb-2"><strong>Date:</strong> {{ booking.date }} at {{ booking.hour }}</p>
-            {% if booking.is_large_home %}
-              <p class="mb-2"><strong>Cleaners:</strong> {{ booking.num_cleaners }}, <strong>Hours:</strong> {{ booking.hours_requested }}</p>
-            {% else %}
-              <p class="mb-2"><strong>Hours:</strong> {{ booking.hours_requested }}</p>
-            {% endif%}
-            <p class="mb-2">
-              <strong>Total Price:</strong>
-              <span class="badge rounded-pill" style="background-color: #F15A29; color: #fff; font-size: 1rem;">
-                ${{ booking.price|floatformat:2 }}
-              </span>
-            </p>
-            <p class="mb-2">
-              <strong>Status:</strong>
-              <span class="badge 
-                {% if booking.status == 'pending' %}bg-warning text-dark
-                {% elif booking.status == 'confirmed' %}bg-success
-                {% elif booking.status == 'cancelled' %}bg-danger
-                {% else %}bg-secondary
-                {% endif %}
-              ">
-                {{ booking.status|title }}
-              </span>
-            </p>
-          </div>
-    
-          <!-- Right: Action Buttons -->
-          <div class="col-md-4 text-md-end text-start mt-3 mt-md-0">
-            {% if booking.status == "pending" or booking.status == "confirmed" %}
-              <div class="d-flex flex-md-column gap-2 justify-content-md-end">
-                <a href="{% url 'reschedule_booking' booking.id %}" class="btn btn-outline-primary w-100">
-                  📅 Reschedule
-                </a>
-                <form method="post" action="{% url 'cancel_booking' booking.id %}">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-outline-danger w-100"
-                    onclick="return confirm('Are you sure you want to cancel this booking?')">
-                    ❌ Cancel
-                  </button>
-                </form>
-              </div>
+
+        <!-- Price Highlight -->
+        <div class="price-highlight">
+          <h3 class="mb-1">${{ booking.price|floatformat:2 }}</h3>
+          <p class="mb-0 opacity-90">Total Amount</p>
+        </div>
+
+        <!-- Service Details -->
+        <div class="info-grid">
+          <div class="info-card">
+            <h6><i class="fas fa-calendar-alt"></i> Schedule</h6>
+            <div class="detail-row">
+              <span class="detail-label">Date</span>
+              <span class="detail-value">{{ booking.date|date:"M j, Y" }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Time</span>
+              <span class="detail-value">{{ booking.hour|time:"g:i A" }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Duration</span>
+              <span class="detail-value">{{ booking.hours_requested }} hour{{ booking.hours_requested|pluralize }}</span>
+            </div>
+            {% if booking.recurrence_pattern != "one_time" %}
+            <div class="detail-row">
+              <span class="detail-label">Frequency</span>
+              <span class="detail-value">{{ booking.get_recurrence_pattern_display }}</span>
+            </div>
             {% endif %}
           </div>
+
+          <div class="info-card">
+            <h6><i class="fas fa-users"></i> Service Details</h6>
+            {% if booking.service_cat.name|lower == 'commercial' %}
+              <!-- Office Cleaning Details -->
+              <div class="detail-row">
+                <span class="detail-label">Business Type</span>
+                <span class="detail-value">{{ booking.business_type|title }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Crew Size</span>
+                <span class="detail-value">{{ booking.num_cleaners }} cleaner{{ booking.num_cleaners|pluralize }}</span>
+              </div>
+              {% if booking.crew_size_hours %}
+              <div class="detail-row">
+                <span class="detail-label">Service Package</span>
+                <span class="detail-value">{{ booking.crew_size_hours|title }}</span>
+              </div>
+              {% endif %}
+              {% if booking.cleaning_frequency %}
+              <div class="detail-row">
+                <span class="detail-label">Frequency</span>
+                <span class="detail-value">{{ booking.cleaning_frequency|title }}</span>
+              </div>
+              {% endif %}
+            {% else %}
+              <!-- Home Cleaning Details -->
+              {% if booking.square_feet_options %}
+              <div class="detail-row">
+                <span class="detail-label">Square Footage</span>
+                <span class="detail-value">{{ booking.square_feet_options.name }}</span>
+              </div>
+              {% endif %}
+              {% if booking.home_types %}
+              <div class="detail-row">
+                <span class="detail-label">Home Type</span>
+                <span class="detail-value">{{ booking.home_types.name }}</span>
+              </div>
+              {% endif %}
+              {% if booking.bath_count %}
+              <div class="detail-row">
+                <span class="detail-label">Bathrooms</span>
+                <span class="detail-value">{{ booking.get_bath_count_display }}</span>
+              </div>
+              {% endif %}
+              {% if booking.is_large_home %}
+              <div class="detail-row">
+                <span class="detail-label">Cleaners</span>
+                <span class="detail-value">{{ booking.num_cleaners }}</span>
+              </div>
+              {% endif %}
+              {% if booking.cleaning_type %}
+              <div class="detail-row">
+                <span class="detail-label">Cleaning Type</span>
+                <span class="detail-value">{{ booking.cleaning_type|title }}</span>
+              </div>
+              {% endif %}
+            {% endif %}
+          </div>
+
+          <div class="info-card">
+            <h6><i class="fas fa-map-marker-alt"></i> 
+              {% if booking.service_cat.name|lower == 'commercial' or booking.business_type %}
+                Commercial Building Info
+              {% else %}
+                Location
+              {% endif %}
+            </h6>
+            <div class="detail-row">
+              <span class="detail-label">Address</span>
+              <span class="detail-value">{{ booking.address }}{% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">City</span>
+              <span class="detail-value">{{ booking.city|default:"New York" }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">ZIP Code</span>
+              <span class="detail-value">{{ booking.zip_code }}</span>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <h6><i class="fas fa-user"></i> Contact Info</h6>
+            <div class="detail-row">
+              <span class="detail-label">Name</span>
+              <span class="detail-value">{{ booking.name }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Email</span>
+              <span class="detail-value">{{ booking.email }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Phone</span>
+              <span class="detail-value">{{ booking.phone }}</span>
+            </div>
+          </div>
         </div>
+
+        <!-- Action Buttons -->
+        {% if booking.status == "pending" or booking.status == "confirmed" %}
+        <div class="action-buttons">
+          <a href="{% url 'reschedule_booking' booking.id %}" class="btn btn-outline-primary btn-modern flex-fill">
+            <i class="fas fa-calendar-alt me-2"></i>Reschedule
+          </a>
+          <form method="post" action="{% url 'cancel_booking' booking.id %}" class="flex-fill">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger btn-modern w-100"
+              onclick="return confirm('Are you sure you want to cancel this booking?')">
+              <i class="fas fa-times me-2"></i>Cancel
+            </button>
+          </form>
+        </div>
+        {% endif %}
       </div>
     </div>
-    
-    
-    
-
-    <!-- Compact 2-column layout for sections -->
-<div class="row mt-4 g-4">
-
-  <!-- Price Breakdown -->
-  <div class="col-md-6">
-    <div class="card h-100 shadow-sm">
+    <!-- Modern Price Breakdown -->
+    <div class="card">
       <div class="card-body">
-        <h5 class="mb-3">💰 Price Breakdown</h5>
-        <ul class="list-group list-group-flush small">
-          {% if booking.square_feet_options %}
-            <li class="list-group-item">Square Footage: {{ booking.square_feet_options.name }}</li>
-          {% endif %}
-          {% if not booking.is_large_home and booking.home_types %}
-            <li class="list-group-item">Home Type: {{ booking.home_types.name }} (${{ booking.home_types.price }})</li>
-          {% endif %}
-          {% for extra in booking.extras.all %}
-            <li class="list-group-item ps-4">+ {{ extra.name }} — ${{ extra.price }}</li>
-          {% endfor %}
-          {% if booking.is_large_home %}
-            <li class="list-group-item">Cleaners: {{ booking.num_cleaners }}</li>
-            <li class="list-group-item">Labor Cost: {{ booking.calculate_subtotal|floatformat:2 }}</li>
-          {% endif %}
-          <li class="list-group-item">Subtotal: ${{ booking.calculate_subtotal }}</li>
-          <li class="list-group-item">Tax: ${{ booking.calculate_tax }}</li>
-          {% if booking.gift_card_discount > 0 %}
-            <li class="list-group-item">Gift Card or Discount: ${{ booking.gift_card_discount }}</li>
-          {% endif %}
-        </ul>
-        <h6 class="mt-3 text-primary fw-bold">Total: ${{ booking.price }}</h6>
-      </div>
-    </div>
-  </div>
-
-  <!-- Schedule Info -->
-  <div class="col-md-6">
-    <div class="card h-100 shadow-sm">
-      <div class="card-body">
-        <h5 class="mb-3">📅 Schedule</h5>
-        <p class="mb-2"><strong>Date:</strong> {{ booking.date }}</p>
-        <p class="mb-2"><strong>Time:</strong> {{ booking.hour|time:"H:i" }}</p>
-        <p class="mb-2"><strong>Duration:</strong> {{ booking.hours_requested }} hour(s)</p>
-        <p class="mb-0"><strong>Recurring:</strong> 
-          {% if booking.recurrence_pattern != "one_time" %}
-            {{ booking.get_recurrence_pattern_display }}
+        <h5 class="mb-4">💰 Price Breakdown</h5>
+        <div class="info-card">
+          {% if booking.service_cat.name|lower == 'commercial' %}
+            <!-- Office Cleaning Price Breakdown -->
+            <div class="detail-row">
+              <span class="detail-label">Labor Cost</span>
+              <span class="detail-value">${{ booking.num_cleaners }} × {{ booking.hours_requested }}h × $75/h</span>
+            </div>
+            {% if booking.gift_card_discount > 0 %}
+            <div class="detail-row">
+              <span class="detail-label">Gift Card/Discount</span>
+              <span class="detail-value">-${{ booking.gift_card_discount|floatformat:2 }}</span>
+            </div>
+            {% endif %}
           {% else %}
-            One-time
+            <!-- Home Cleaning Price Breakdown -->
+            {% if booking.square_feet_options %}
+            <div class="detail-row">
+              <span class="detail-label">Square Footage</span>
+              <span class="detail-value">{{ booking.square_feet_options.name }}</span>
+            </div>
+            {% endif %}
+            {% if not booking.is_large_home and booking.home_types %}
+            <div class="detail-row">
+              <span class="detail-label">Home Type</span>
+              <span class="detail-value">${{ booking.home_types.price|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+            {% for extra in booking.extras.all %}
+            <div class="detail-row">
+              <span class="detail-label">+ {{ extra.name }}</span>
+              <span class="detail-value">${{ extra.price|floatformat:2 }}</span>
+            </div>
+            {% endfor %}
+            {% if booking.is_large_home %}
+            <div class="detail-row">
+              <span class="detail-label">Labor Cost ({{ booking.num_cleaners }} cleaners)</span>
+              <span class="detail-value">${{ booking.calculate_subtotal|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+            {% if booking.gift_card_discount > 0 %}
+            <div class="detail-row">
+              <span class="detail-label">Gift Card/Discount</span>
+              <span class="detail-value">-${{ booking.gift_card_discount|floatformat:2 }}</span>
+            </div>
+            {% endif %}
           {% endif %}
-        </p>
+          <hr>
+          <div class="detail-row">
+            <span class="detail-label">Subtotal</span>
+            <span class="detail-value">${{ booking.calculate_subtotal|floatformat:2 }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Sales Tax (8.875%)</span>
+            <span class="detail-value">${{ booking.calculate_tax|floatformat:2 }}</span>
+          </div>
+          <hr>
+          <div class="detail-row">
+            <span class="detail-label fw-bold fs-5">Total</span>
+            <span class="detail-value fw-bold fs-5 text-primary">${{ booking.price|floatformat:2 }}</span>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Home Info -->
-  <div class="col-md-6">
-    <div class="card h-100 shadow-sm">
+    <!-- Modern Review Section -->
+    <div class="card">
       <div class="card-body">
-        <h5 class="mb-3">🏠 Home Info</h5>
-        {% if booking.home_types %}
-          <p class="mb-2"><strong>Home Type:</strong> {{ booking.home_types.name }}</p>
+        <h5 class="mb-4">📝 Leave a Review</h5>
+        {% if review_submitted %}
+          <div class="alert alert-success">
+            <i class="fas fa-check-circle me-2"></i>Thank you for your review!
+          </div>
         {% endif %}
-        {% if booking.square_feet_options %}
-          <p class="mb-2"><strong>Square Feet:</strong> {{ booking.square_feet_options.name }}</p>
+        <form method="post" action="">
+          {% csrf_token %}
+          {{ review_form.non_field_errors }}
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="id_rating" class="form-label fw-semibold">Rating (1-5)</label>
+              {{ review_form.rating }}
+              {% for error in review_form.rating.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-12 mb-3">
+              <label for="id_review" class="form-label fw-semibold">Your Review</label>
+              {{ review_form.review }}
+              {% for error in review_form.review.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-modern">
+              <i class="fas fa-star me-2"></i>Submit Review
+            </button>
+          </div>
+        </form>
+        
+        {% if reviews %}
+          <hr class="my-4">
+          <h6 class="mb-3">Previous Reviews</h6>
+          <div class="row">
+            {% for r in reviews %}
+              <div class="col-md-6 mb-3">
+                <div class="info-card">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="d-flex align-items-center">
+                      {% for i in "12345" %}
+                        <i class="fas fa-star {% if forloop.counter <= r.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                      {% endfor %}
+                    </div>
+                    <small class="text-muted">{{ r.created_at|date:"M d, Y" }}</small>
+                  </div>
+                  <p class="mb-0">{{ r.review|linebreaksbr }}</p>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
         {% endif %}
-        <p class="mb-2"><strong>Address:</strong> {{ booking.address }}{% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}</p>
-        <p class="mb-0"><strong>ZIP:</strong> {{ booking.zip_code }}</p>
       </div>
     </div>
-  </div>
 
-  <!-- Customer Info -->
-  <div class="col-md-6">
-    <div class="card h-100 shadow-sm">
-      <div class="card-body">
-        <h5 class="mb-3">👤 Customer Info</h5>
-        <p class="mb-2"><strong>Name:</strong> {{ booking.name }}</p>
-        <p class="mb-2"><strong>Email:</strong> {{ booking.email }}</p>
-        <p class="mb-0"><strong>Phone:</strong> {{ booking.phone }}</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Review Form -->
-<div class="col-md-12">
-  <div class="card h-100 shadow-sm mt-3">
-    <div class="card-body">
-      <h5 class="mb-3">📝 Leave a Review</h5>
-      {% if review_submitted %}
-        <div class="alert alert-success">Thank you for your review!</div>
-      {% endif %}
-      <form method="post" action="">
-        {% csrf_token %}
-        {{ review_form.non_field_errors }}
-        <div class="mb-3">
-          <label for="id_rating" class="form-label"><strong>Rating (1-5)</strong></label>
-          {{ review_form.rating }}
-          {% for error in review_form.rating.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-        </div>
-        <div class="mb-3">
-          <label for="id_review" class="form-label"><strong>Your Review</strong></label>
-          {{ review_form.review }}
-          {% for error in review_form.review.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
-        </div>
-        <div class="d-grid">
-          <button type="submit" class="btn btn-primary">Submit Review</button>
-        </div>
-      </form>
-      {% if reviews %}
-        <hr />
-        <h6 class="mt-4">Previous Reviews</h6>
-        <ul class="list-group mt-2">
-          {% for r in reviews %}
-            <li class="list-group-item">
-              <strong>Rating:</strong> {{ r.rating }}<br />
-              <strong>Review:</strong> {{ r.review|linebreaksbr }}<br />
-              <small class="text-muted">{{ r.created_at|date:"M d, Y H:i" }}</small>
-            </li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    </div>
-  </div>
-</div>
-
-
-</div>
-
-
+    <!-- Back Button -->
     <div class="mt-4 text-center">
-      <a href="{% url 'my_bookings' %}" class="btn-1">← Back to My Bookings</a>
+      <a href="{% url 'my_bookings' %}" class="btn btn-outline-secondary btn-modern">
+        <i class="fas fa-arrow-left me-2"></i>Back to My Bookings
+      </a>
     </div>
   </div>
 </div>
 
 <div class="col-12 col-lg-4 mt-4 mt-lg-0">
-  <!-- Booking options as big buttons -->
-  <div class="row mb-5">
-    <div class="col-md-12">
-      <div class="card h-100 shadow-sm border-0 text-center p-4">
-        <div class="card-body">
-          <h4 class="mb-3">🧼 Book Home Cleaning</h4>
-          <p class="mb-4">Schedule a professional cleaning with flexible extras and recurring options.</p>
-                      <a href="{% url 'request_cleaning_booking' %}" class="btn-1 w-100">Book Home Cleaning</a>
+  <!-- Modern Sidebar -->
+  <div class="sticky-top" style="top: 2rem;">
+    <div class="card">
+      <div class="card-body text-center">
+        <h5 class="mb-4">📅 Book Another Service</h5>
+        
+        <div class="d-grid gap-3">
+          <a href="{% url 'cleaning_booking' %}" class="btn btn-outline-primary btn-modern">
+            <div class="service-icon">🧼</div>
+            <div>
+              <strong>Home Cleaning</strong>
+              <br><small class="text-muted">Professional residential cleaning</small>
+            </div>
+          </a>
+          
+          <a href="{% url 'office_cleaning_booking' %}" class="btn btn-outline-primary btn-modern">
+            <div class="service-icon">🏢</div>
+            <div>
+              <strong>Office Cleaning</strong>
+              <br><small class="text-muted">Commercial & business spaces</small>
+            </div>
+          </a>
+        </div>
+        
+        <hr class="my-4">
+        
+        <div class="text-center">
+          <h6 class="mb-3">Need Help?</h6>
+          <p class="text-muted small mb-3">Contact our support team for any questions about your booking.</p>
+          <a href="{% url 'help' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-question-circle me-2"></i>Get Help
+          </a>
         </div>
       </div>
     </div>
-    <div class="col-md-12 mt-4">
-      <div class="card h-100 shadow-sm border-0 text-center p-4">
-        <div class="card-body">
-          <h4 class="mb-3">🏢 Book Office Cleaning</h4>
-          <p class="mb-4">Professional cleaning services for offices, retail spaces, and commercial properties.</p>
-                      <a href="{% url 'office_cleaning_booking' %}" class="btn-1 w-100">Book Office Cleaning</a>
-        </div>
-      </div>
-    </div>
-    <!-- <div class="col-md-12 mt-4">
-      <div class="card h-100 shadow-sm border-0 text-center p-4">
-        <div class="card-body">
-          <h4 class="mb-3">🛠️ Book Handyman</h4>
-          <p class="mb-4">Need help with home repairs, installations, or improvements?</p>
-          <a href="{% url 'request_handyman_booking' %}" class="btn-1 w-100">Book Handyman</a>
-        </div>
-      </div>
-    </div> -->
   </div>
 </div>
 {% endblock %}

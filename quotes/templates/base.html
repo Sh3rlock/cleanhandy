@@ -7,6 +7,9 @@
 
     <!-- Stylesheets -->
     <link href="{% static 'assets/css/style.css' %}" rel="stylesheet" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <link rel="shortcut icon" href="{% static '/assets/images/favicon.png' %}" type="image/x-icon" />
     <link rel="icon" href="{% static '/assets/images/favicon.png' %}" type="image/x-icon" />
@@ -100,6 +103,10 @@
                                 <li>
                                   <a href="{% url 'request_cleaning_quote' service.id %}">{{ service.name }}</a>
                                 </li>
+                              {% elif service.category.name|lower == 'post event cleaning' %}
+                                <li>
+                                  <a href="{% url 'request_post_event_cleaning_quote' service.id %}">{{ service.name }}</a>
+                                </li>
                               {% endif %}
                             {% endfor %}
                             <li style="margin-top: 1em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Handyman</li>
@@ -110,6 +117,7 @@
                                 </li>
                               {% endif %}
                             {% endfor %}
+                           
                           </ul>
                         </li>
                         <li>
@@ -131,7 +139,7 @@
                   {% if contact_info %}
                     <a href="tel:{{ contact_info.phone }}"><i class="icon-call-2"></i> {{ contact_info.phone }}</a>
                   {% else %}
-                    <a href="tel:+15166193065"><i class="icon-call-2"></i> +1 516 619 3065</a>
+                    <a href="tel:3472861466"><i class="icon-call-2"></i> (347) 286-1466</a>
                   {% endif %}
                 </div>
                 <div class="header-right-btn-area">
@@ -179,7 +187,7 @@
                   </div>
                   <div class="header-right-btn-area">
                     {% if user.is_authenticated %}
-                      <a class="btn btn-sm btn-outline-primary" href="{% url 'request_cleaning_booking' %}">Book Home Cleaning</a>
+                      <a class="btn btn-sm btn-outline-primary" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
                     {% else %}
                       <a class="btn btn-sm btn-outline-primary" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
                     {% endif %}
@@ -195,6 +203,16 @@
                     {% else %}
                       <a class="btn btn-sm btn-outline-primary" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
                     {% endif %}
+
+                    {% for service in all_services %}
+                      {% if service.category.name|lower == 'post event cleaning' %}
+                        {% if user.is_authenticated %}
+                          <a class="btn btn-sm btn-outline-primary" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+                        {% else %}
+                          <a class="btn btn-sm btn-outline-primary" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+                        {% endif %}
+                      {% endif %}
+                    {% endfor %}
 
                     {% if user.is_authenticated %}
                         <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">My Profile</a>
@@ -228,14 +246,24 @@
 
             <div class="mobile-menu-buttons mt-4 text-center">
               {% if user.is_authenticated %}
-                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'request_cleaning_booking' %}">Book Home Cleaning</a>
+                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
                 <!-- <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'request_handyman_booking' %}">Book Handyman</a> -->
                 <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+                {% for service in all_services %}
+                  {% if service.category.name|lower == 'post event cleaning' %}
+                    <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+                  {% endif %}
+                {% endfor %}
                 <a class="btn btn-sm btn-outline-primary d-block" style="margin-left: 25px; margin-right: 25px;" href="{% url 'profile' %}">My Profile</a>
               {% else %}
                 <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
                 <!-- <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'handyman_booking' %}">Book Handyman</a> -->
                 <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+                {% for service in all_services %}
+                  {% if service.category.name|lower == 'post event cleaning' %}
+                    <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+                  {% endif %}
+                {% endfor %}
                 <a class="btn btn-1 d-block" href="{% url 'login' %}">Sign In</a>
                 <a class="btn btn-1 d-block" href="{% url 'register' %}">Sign Up</a>
               {% endif %}
@@ -340,6 +368,10 @@
                       {% for service in all_services %}
                         {% if service.category.name|lower == 'cleaning' %}
                           <li><a href="{% url 'request_cleaning_quote' service.id %}">{{ service.name }}</a></li>
+                        {% elif service.category.name|lower == 'post event cleaning' %}
+                        <li>
+                          <a href="{% url 'request_post_event_cleaning_quote' service.id %}">{{ service.name }}</a>
+                        </li>
                         {% endif %}
                       {% endfor %}
                       <li style="margin-top: 1em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Handyman</li>
@@ -348,6 +380,7 @@
                           <li><a href="{% url 'request_handyman_quote' service.id %}">{{ service.name }}</a></li>
                         {% endif %}
                       {% endfor %}
+                      
                     </ul>
                   </div>
                 </div>
