@@ -233,6 +233,21 @@ select {
               {% endfor %}
             </ul>
           {% endif %}
+          
+          <!-- Property Access and Conditions -->
+          {% if booking.parking or booking.get_in or booking.pet %}
+            <hr>
+            <h6 class="text-primary">Property Access & Conditions</h6>
+            {% if booking.parking %}
+              <p><strong>Parking:</strong> {{ booking.parking }}</p>
+            {% endif %}
+            {% if booking.get_in %}
+              <p><strong>Access Method:</strong> {{ booking.get_get_in_display }}</p>
+            {% endif %}
+            {% if booking.pet %}
+              <p><strong>Pets:</strong> {{ booking.get_pet_display }}</p>
+            {% endif %}
+          {% endif %}
         </div>
       </div>
 
@@ -245,7 +260,7 @@ select {
           
           <!-- Additional Commercial Info -->
           {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
-            <p><strong>Company:</strong> {{ booking.company_name|default:"Not specified" }}</p>
+             <!-- <p><strong>Company:</strong> {{ booking.company_name|default:"Not specified" }}</p> -->
             <p><strong>Contact Person:</strong> {{ booking.contact_person|default:booking.name }}</p>
           {% endif %}
         </div>

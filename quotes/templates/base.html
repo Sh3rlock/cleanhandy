@@ -66,6 +66,126 @@
       color: #fff;
       border-color: #F15A29;
     }
+    
+    /* Modern booking buttons row styling */
+    .booking-buttons-row {
+      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+      border-top: 1px solid rgba(241, 90, 41, 0.1);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .booking-buttons-row::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, #F15A29, #ff6b3d, #F15A29);
+      background-size: 200% 100%;
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    .booking-buttons-row .btn {
+      margin: 4px 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.5rem 1.2rem;
+      border-radius: 25px;
+      border: 2px solid #F15A29;
+      background: transparent;
+      color: #F15A29;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      text-transform: none;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(241, 90, 41, 0.15);
+    }
+    
+    .booking-buttons-row .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .booking-buttons-row .btn:hover {
+      background: #F15A29;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(241, 90, 41, 0.3);
+      border-color: #F15A29;
+    }
+    
+    .booking-buttons-row .btn:hover::before {
+      left: 100%;
+    }
+    
+    .booking-buttons-row .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(241, 90, 41, 0.2);
+    }
+    
+    .booking-buttons-row .btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(241, 90, 41, 0.2);
+    }
+    
+    /* Container styling */
+    .booking-buttons-container {
+      padding: 1rem 0;
+      position: relative;
+    }
+    
+    .booking-buttons-container .d-flex {
+      gap: 0.5rem;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+      .booking-buttons-row .btn {
+        font-size: 0.85rem;
+        padding: 0.45rem 1rem;
+        margin: 3px 4px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .booking-buttons-container .d-flex {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      
+      .booking-buttons-row .btn {
+        width: 220px;
+        margin: 2px 0;
+        font-size: 0.9rem;
+        padding: 0.6rem 1.5rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .booking-buttons-row .btn {
+        width: 200px;
+        font-size: 0.85rem;
+        padding: 0.5rem 1.2rem;
+      }
+    }
     </style>
     <div class="page-wrapper">
       
@@ -161,6 +281,7 @@
         <div class="sticky-header">
           <div class="header-upper">
             <div class="container">
+              <!-- Main navigation row -->
               <div class="inner-container d-flex align-items-center justify-content-between">
                 <div class="left-column d-flex align-items-center">
                   <div class="logo-box">
@@ -187,40 +308,47 @@
                   </div>
                   <div class="header-right-btn-area">
                     {% if user.is_authenticated %}
-                      <a class="btn btn-sm btn-outline-primary" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
-                    {% else %}
-                      <a class="btn btn-sm btn-outline-primary" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
-                    {% endif %}
-
-                    <!-- {% if user.is_authenticated %}
-                      <a class="btn btn-sm btn-outline-primary" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
-                    {% else %}
-                      <a class="btn btn-sm btn-outline-primary" href="{% url 'handyman_booking' %}">Book Handyman</a>
-                    {% endif %} -->
-
-                    {% if user.is_authenticated %}
-                      <a class="btn btn-sm btn-outline-primary" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
-                    {% else %}
-                      <a class="btn btn-sm btn-outline-primary" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
-                    {% endif %}
-
-                    {% for service in all_services %}
-                      {% if service.category.name|lower == 'post event cleaning' %}
-                        {% if user.is_authenticated %}
-                          <a class="btn btn-sm btn-outline-primary" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
-                        {% else %}
-                          <a class="btn btn-sm btn-outline-primary" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
-                        {% endif %}
-                      {% endif %}
-                    {% endfor %}
-
-                    {% if user.is_authenticated %}
                         <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">My Profile</a>
                     {% else %}
                     <!-- Example buttons to trigger the modals -->
                     <a href="{% url 'login' %}" class="btn btn-sm btn-outline-primary" >Sign In</a>
                     <a href="{% url 'register' %}" class="btn btn-sm btn-outline-primary" >Sign Up</a>
                     {% endif %}
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Booking buttons row -->
+              <div class="booking-buttons-row">
+                <div class="booking-buttons-container">
+                  <div class="d-flex flex-wrap justify-content-center">
+                  {% if user.is_authenticated %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+                  {% else %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+                  {% endif %}
+
+                  <!-- {% if user.is_authenticated %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+                  {% else %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'handyman_booking' %}">Book Handyman</a>
+                  {% endif %} -->
+
+                  {% if user.is_authenticated %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+                  {% else %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+                  {% endif %}
+
+                  {% for service in all_services %}
+                    {% if service.category.name|lower == 'post event cleaning' %}
+                      {% if user.is_authenticated %}
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+                      {% else %}
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
                   </div>
                 </div>
               </div>

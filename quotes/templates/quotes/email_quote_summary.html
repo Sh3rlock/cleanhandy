@@ -13,7 +13,7 @@
   </style>
 </head>
 <body>
-  <h2>🧼 Home Cleaning Booking Confirmed!</h2>
+  <h2>🏠 Home Cleaning Booking Confirmed!</h2>
   <p>Thank you, {{ booking.name }}! Your home cleaning service has been successfully booked.</p>
 
   <div class="section">
@@ -41,6 +41,18 @@
       {% endif %}
       {% if booking.recurrence_pattern != "one_time" %}
         <p><strong>Recurring Service:</strong> {{ booking.get_recurrence_pattern_display }}</p>
+      {% endif %}
+      {% if booking.bath_count %}
+        <p><strong>Number of Bathrooms:</strong> {{ booking.get_bath_count_display }}</p>
+      {% endif %}
+      {% if booking.pet %}
+        <p><strong>Pets:</strong> {{ booking.get_pet_display }}</p>
+      {% endif %}
+      {% if booking.parking %}
+        <p><strong>Parking:</strong> {{ booking.parking }}</p>
+      {% endif %}
+      {% if booking.get_in %}
+        <p><strong>How we'll get in:</strong> {{ booking.get_get_in_display }}</p>
       {% endif %}
     </div>
   </div>
@@ -71,6 +83,15 @@
       <p><strong>City:</strong> {{ booking.city|default:"New York" }}</p>
       <p><strong>State:</strong> {{ booking.state|default:"NY" }}</p>
       <p><strong>ZIP Code:</strong> {{ booking.zip_code }}</p>
+      {% if booking.parking %}
+        <p><strong>Parking:</strong> {{ booking.parking }}</p>
+      {% endif %}
+      {% if booking.get_in %}
+        <p><strong>How we'll get in:</strong> {{ booking.get_get_in_display }}</p>
+      {% endif %}
+      {% if booking.pet %}
+        <p><strong>Pets:</strong> {{ booking.get_pet_display }}</p>
+      {% endif %}
     </div>
   </div>
 
@@ -129,6 +150,15 @@
       <li>Our team will arrive with all necessary cleaning supplies and equipment</li>
       <li>If you need to reschedule, please contact us at least 24 hours in advance</li>
       <li>Payment is due upon completion of service</li>
+      {% if booking.parking %}
+      <li><strong>Parking:</strong> {{ booking.parking }}</li>
+      {% endif %}
+      {% if booking.pet %}
+      <li><strong>Pets:</strong> {{ booking.get_pet_display }}</li>
+      {% endif %}
+      {% if booking.get_in %}
+      <li><strong>Access:</strong> {{ booking.get_get_in_display }}</li>
+      {% endif %}
     </ul>
   </div>
 

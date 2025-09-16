@@ -92,21 +92,28 @@ def send_quote_email_handyman(quote):
 from django.conf import settings
 
 def send_quote_email_cleaning(booking):
-    # Render PDF HTML and generate PDF
-    pdf_html = render_to_string("quotes/quote_pdf.html", {"booking": booking})
+    # Get contact info for PDF template
+    from .models import ContactInfo
+    contact_info = ContactInfo.get_active()
+    
+    # Render PDF HTML and generate PDF using home cleaning specific template
+    pdf_html = render_to_string("quotes/home_cleaning_pdf.html", {
+        "booking": booking,
+        "contact_info": contact_info
+    })
     pdf_buffer = BytesIO()
     HTML(string=pdf_html).write_pdf(target=pdf_buffer)
     pdf_buffer.seek(0)
 
     # Save PDF to model
-    filename = f"quote-{booking.id}.pdf"
+    filename = f"home_cleaning_quote-{booking.id}.pdf"
     booking.pdf_file.save(filename, ContentFile(pdf_buffer.read()), save=True)
     pdf_buffer.seek(0)
 
     # Email to customer
     html_message = render_to_string("quotes/email_quote_summary.html", {"booking": booking})
     customer_email = EmailMessage(
-        subject="Your Cleaning Quote",
+        subject="Your Home Cleaning Quote - CleanHandy",
         body=html_message,
         from_email="matyass91@gmail.com",
         to=[booking.email],
@@ -118,10 +125,10 @@ def send_quote_email_cleaning(booking):
     # Reset PDF buffer for second email
     pdf_buffer.seek(0)
 
-    # Email to admin/staff
-    admin_message = render_to_string("quotes/email_quote_admin.html", {"booking": booking})
+    # Email to admin/staff using home cleaning admin template
+    admin_message = render_to_string("quotes/email_home_cleaning_admin.html", {"booking": booking})
     admin_email = EmailMessage(
-        subject=f"New Cleaning Booking from {booking.name}",
+        subject=f"New Home Cleaning Booking from {booking.name}",
         body=admin_message,
         from_email="matyass91@gmail.com",
         to=[settings.DEFAULT_FROM_EMAIL],  # or use a hardcoded staff email here
@@ -143,7 +150,9 @@ def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discou
 
         # Calculate end time
         start_datetime = datetime.combine(booking.date, booking.hour)
-        end_datetime = start_datetime + timedelta(hours=booking.hours_requested)
+        # Convert Decimal to float for timedelta calculation
+        hours = float(booking.hours_requested) if booking.hours_requested else 2.0
+        end_datetime = start_datetime + timedelta(hours=hours)
         end_time = end_datetime.time()
 
         # Email to customer
@@ -201,8 +210,15 @@ def send_office_cleaning_quote_email(booking):
     Send office cleaning quote email with PDF attachment to both customer and admin
     """
     try:
+        # Get contact info for PDF template
+        from .models import ContactInfo
+        contact_info = ContactInfo.get_active()
+        
         # Generate PDF using office cleaning specific template
-        pdf_html = render_to_string("quotes/office_cleaning_pdf.html", {"booking": booking})
+        pdf_html = render_to_string("quotes/office_cleaning_pdf.html", {
+            "booking": booking,
+            "contact_info": contact_info
+        })
         pdf_buffer = BytesIO()
         HTML(string=pdf_html).write_pdf(target=pdf_buffer)
         pdf_buffer.seek(0)

@@ -57,9 +57,11 @@ class AdminQuoteForm(forms.ModelForm):
         # If we're editing an existing quote, pre-fill the fields
         if self.instance and self.instance.hour and self.instance.hours_requested:
             start = self.instance.hour
+            # Convert Decimal to float for timedelta calculation
+            hours = float(self.instance.hours_requested) if self.instance.hours_requested else 2.0
             end_dt = (
                 datetime.combine(date.today(), start)
-                + timedelta(hours=self.instance.hours_requested)
+                + timedelta(hours=hours)
             )
             end = end_dt.time()
 

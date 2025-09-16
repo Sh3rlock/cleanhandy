@@ -204,11 +204,11 @@ class NewsletterSubscriberAdmin(admin.ModelAdmin):
 class BookingAdmin(admin.ModelAdmin):
     list_display = [
         "id", "get_name_display", "get_service_display", "get_business_type_display", 
-        "get_frequency_display", "date", "get_price_formatted", "get_status_badge", "pdf_link"
+        "get_frequency_display", "get_home_cleaning_details", "date", "get_price_formatted", "get_status_badge", "pdf_link"
     ]
     list_filter = ["status", "service_cat", "business_type", "cleaning_frequency", "created_at"]
     search_fields = ["name", "email", "phone", "address", "business_type"]
-    readonly_fields = ["pdf_preview", "pdf_file", "created_at"]
+    readonly_fields = ["pdf_preview", "pdf_file", "created_at", "get_is_large_home_display"]
     list_per_page = 25
     ordering = ['-created_at']
     
@@ -221,9 +221,19 @@ class BookingAdmin(admin.ModelAdmin):
             'fields': ('service_cat', 'business_type', 'crew_size_hours', 'cleaning_frequency', 'cleaning_type', 'num_cleaners', 'hours_requested'),
             'description': 'Service configuration and requirements'
         }),
+        ('Home Cleaning Specific', {
+            'fields': ('square_feet_options', 'home_types', 'bath_count', 'get_is_large_home_display', 'extras'),
+            'description': 'Home cleaning specific details',
+            'classes': ('collapse',)
+        }),
         ('Location', {
             'fields': ('address', 'apartment', 'city', 'state', 'zip_code'),
             'description': 'Service location details'
+        }),
+        ('Property Access & Conditions', {
+            'fields': ('get_in', 'parking', 'pet'),
+            'description': 'Property access and special conditions',
+            'classes': ('collapse',)
         }),
         ('Scheduling', {
             'fields': ('date', 'hour', 'recurrence_pattern', 'job_description'),
@@ -321,6 +331,42 @@ class BookingAdmin(admin.ModelAdmin):
             return format_html('<iframe src="{}" width="100%" height="500px" style="border: 1px solid #ddd; border-radius: 4px;"></iframe>', obj.pdf_file.url)
         return "No PDF available"
     pdf_preview.short_description = 'PDF Preview'
+    
+    def get_home_cleaning_details(self, obj):
+        """Display home cleaning specific details"""
+        if obj.service_cat and obj.service_cat.name.lower() != 'commercial':
+            details = []
+            if obj.square_feet_options:
+                details.append(f"SQ: {obj.square_feet_options.name}")
+            if obj.home_types:
+                details.append(f"Type: {obj.home_types.name}")
+            if obj.bath_count:
+                details.append(f"Baths: {obj.get_bath_count_display()}")
+            if obj.parking:
+                details.append(f"Parking: {obj.parking}")
+            if obj.pet:
+                details.append(f"Pets: {obj.get_pet_display()}")
+            return format_html(
+                '<span style="color: #6F42C1; font-size: 12px;">{}</span>',
+                ' | '.join(details) if details else 'No details'
+            )
+        return "N/A"
+    get_home_cleaning_details.short_description = 'Home Details'
+    
+    def get_is_large_home_display(self, obj):
+        """Display whether the home is large or small"""
+        if obj.service_cat and obj.service_cat.name.lower() != 'commercial':
+            is_large = obj.is_large_home()
+            if is_large:
+                return format_html(
+                    '<span style="background-color: #FFC107; color: #000; padding: 4px 8px; border-radius: 12px; font-size: 12px;">🏠 Large Home</span>'
+                )
+            else:
+                return format_html(
+                    '<span style="background-color: #17A2B8; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">🏠 Small Home</span>'
+                )
+        return "N/A"
+    get_is_large_home_display.short_description = 'Home Size'
 
 # ============================================================================
 # CONTACT INFO ADMIN

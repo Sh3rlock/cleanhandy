@@ -23,15 +23,18 @@ class CleaningQuoteForm(forms.ModelForm):
         })
     )
 
-    hours_requested = forms.IntegerField(
+    hours_requested = forms.DecimalField(
         label="Hours Requested",
         required=True,
         initial=2,
         min_value=2,
+        max_digits=4,
+        decimal_places=1,
         widget=forms.NumberInput(attrs={
             "class": "cmn-input",
             "placeholder": "Enter number of hours",
-            "min": 2
+            "min": 2,
+            "step": 0.5
         })
     )
 
@@ -89,9 +92,9 @@ class CleaningQuoteForm(forms.ModelForm):
         # Only show Home cleaning services
         self.fields["service"].queryset = Service.objects.filter(category__name="Home")
 
-        # 30-minute time slots from 09:00 to 17:00
+        # 30-minute time slots from 08:00 to 20:00
         time_slots = []
-        t = datetime.strptime("09:00", "%H:%M")
+        t = datetime.strptime("08:00", "%H:%M")
         while t.time() <= time(20, 0):
             time_slots.append((t.strftime("%H:%M"), t.strftime("%H:%M")))
             t += timedelta(minutes=30)
@@ -276,15 +279,18 @@ class CleaningBookingForm(forms.ModelForm):
         })
     )
 
-    hours_requested = forms.IntegerField(
+    hours_requested = forms.DecimalField(
         label="Hours Requested",
         required=True,
         initial=2,
         min_value=2,
+        max_digits=4,
+        decimal_places=1,
         widget=forms.NumberInput(attrs={
             "class": "cmn-input",
             "placeholder": "Enter number of hours",
-            "min": 2
+            "min": 2,
+            "step": 0.5
         })
     )
 
@@ -409,9 +415,9 @@ class CleaningBookingForm(forms.ModelForm):
         # Only show Cleaning services
         # self.fields["service"].queryset = Service.objects.filter(category__name="Cleaning")
 
-        # 30-minute time slots from 09:00 to 17:00
+        # 30-minute time slots from 08:00 to 20:00
         time_slots = []
-        t = datetime.strptime("09:00", "%H:%M")
+        t = datetime.strptime("08:00", "%H:%M")
         while t.time() <= time(20, 0):
             time_slots.append((t.strftime("%H:%M"), t.strftime("%H:%M")))
             t += timedelta(minutes=30)

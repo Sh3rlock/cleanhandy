@@ -433,7 +433,9 @@ def delete_service(request, service_id):
 
 def format_time_slot(quote):
     start = datetime.combine(quote.date, quote.hour)
-    duration = timedelta(hours=quote.hours_requested or 2)
+    # Convert Decimal to float for timedelta calculation
+    hours = float(quote.hours_requested) if quote.hours_requested else 2.0
+    duration = timedelta(hours=hours)
     end = (start + duration).time()
     return f"{quote.hour.strftime('%H:%M')} - {end.strftime('%H:%M')}"
 
@@ -580,30 +582,41 @@ def add_quote(request):
 
 def get_quotes_for_calendar(request):
     events = []
+    
+    # Debug: Print total bookings count
+    total_bookings = Booking.objects.count()
+    print(f"🔍 Total bookings in database: {total_bookings}")
 
     # 🟢 1. Add all Quotes
     for quote in Booking.objects.all():
-        duration = max(quote.hours_requested or 2, 2)  # Minimum 2 hours
-        start_time = datetime.combine(quote.date, quote.hour)
-        end_time = start_time + timedelta(hours=duration)
+        try:
+            # Convert Decimal to float for timedelta calculation
+            hours = float(quote.hours_requested) if quote.hours_requested else 2.0
+            duration = max(hours, 2.0)  # Minimum 2 hours
+            start_time = datetime.combine(quote.date, quote.hour)
+            end_time = start_time + timedelta(hours=duration)
 
-        events.append({
-            "id": f"quote-{quote.id}",
-            "title": f"{quote.name} - {quote.service_cat.name}",
-            "start": start_time.isoformat(),
-            "end": end_time.isoformat(),
-            "color": "#28a745" if quote.status == "booked" else "#ffc107",
-            "extendedProps": {
-                "customer": quote.name if quote.name else "N/A",
-                "zip_code": quote.zip_code or "N/A",
-                "email": quote.email if quote.name else "N/A",
-                "service": quote.service_cat.name,
-                "job_description": quote.job_description or "N/A",
-                "time_slots": f"{quote.hour.strftime('%H:%M')} - {end_time.strftime('%H:%M')}",
-                "price": str(quote.price) if quote.price else "N/A",
-                "status": quote.status,
-            }
-        })
+            events.append({
+                "id": f"quote-{quote.id}",
+                "title": f"{quote.name} - {quote.service_cat.name}",
+                "start": start_time.isoformat(),
+                "end": end_time.isoformat(),
+                "color": "#28a745" if quote.status == "booked" else "#ffc107",
+                "extendedProps": {
+                    "customer": quote.name if quote.name else "N/A",
+                    "zip_code": quote.zip_code or "N/A",
+                    "email": quote.email if quote.name else "N/A",
+                    "service": quote.service_cat.name,
+                    "job_description": quote.job_description or "N/A",
+                    "time_slots": f"{quote.hour.strftime('%H:%M')} - {end_time.strftime('%H:%M')}",
+                    "price": str(quote.price) if quote.price else "N/A",
+                    "status": quote.status,
+                }
+            })
+            print(f"✅ Added event for booking {quote.id}: {quote.name}")
+        except Exception as e:
+            print(f"❌ Error processing booking {quote.id}: {e}")
+            continue
 
     # 🔴 2. Add Blocked Time Slots
     for block in BlockedTimeSlot.objects.all():
@@ -642,6 +655,11 @@ def get_quotes_for_calendar(request):
                 }
             })
 
+    # Debug: Print total events being returned
+    print(f"🔍 Total events being returned: {len(events)}")
+    for i, event in enumerate(events[:3]):  # Print first 3 events
+        print(f"Event {i+1}: {event.get('title', 'No title')} - {event.get('start', 'No start')}")
+    
     return JsonResponse(events, safe=False)
 
 
@@ -655,7 +673,9 @@ def get_event_details(request):
 
     # Format time slot
     start = datetime.combine(quote.date, quote.hour)
-    end = (start + timedelta(hours=quote.hours_requested or 2)).time()
+    # Convert Decimal to float for timedelta calculation
+    hours = float(quote.hours_requested) if quote.hours_requested else 2.0
+    end = (start + timedelta(hours=hours)).time()
     time_slot = f"{quote.hour.strftime('%H:%M')} - {end.strftime('%H:%M')}"
 
     return JsonResponse({
@@ -706,7 +726,9 @@ def decline_quote(request):
 
 def format_time_slot(quote):
     start = datetime.combine(quote.date, quote.hour)
-    duration = timedelta(hours=quote.hours_requested or 2)
+    # Convert Decimal to float for timedelta calculation
+    hours = float(quote.hours_requested) if quote.hours_requested else 2.0
+    duration = timedelta(hours=hours)
     end = (start + duration).time()
     return f"{quote.hour.strftime('%H:%M')} - {end.strftime('%H:%M')}"
 

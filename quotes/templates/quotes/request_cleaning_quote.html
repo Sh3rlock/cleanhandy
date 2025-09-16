@@ -442,10 +442,6 @@ select::-ms-expand {
                     <i class="fa-solid fa-arrow-right text-muted"></i>
                   </a>
                 {% endif %}
-              {% endfor %}
-              <!-- Post Event Cleaning Services -->
-              <div style="margin-top: 1em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Post Event Cleaning Services</div>
-              {% for service in all_services %}
                 {% if service.category.name|lower == 'post event cleaning' %}
                   <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="service-list-style list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                     <div>
@@ -455,6 +451,7 @@ select::-ms-expand {
                   </a>
                 {% endif %}
               {% endfor %}
+             
               <!-- Handyman Services -->
               <div style="margin-top: 1em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Handyman Services</div>
               {% for service in all_services %}

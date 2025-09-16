@@ -447,6 +447,22 @@
         {{ form.city }}
         {{ form.state }}
       </div>
+      
+      <!-- Set default values for city and state -->
+      <script>
+        document.addEventListener("DOMContentLoaded", function() {
+          // Set default values for city and state
+          const cityField = document.getElementById('id_city');
+          const stateField = document.getElementById('id_state');
+          
+          if (cityField && !cityField.value) {
+            cityField.value = 'New York';
+          }
+          if (stateField && !stateField.value) {
+            stateField.value = 'NY';
+          }
+        });
+      </script>
 
       <!-- Terms -->
       <div class="checkbox-wrap mb-4">
@@ -690,14 +706,14 @@ document.addEventListener("DOMContentLoaded", function () {
         // Fallback to showing all time slots if API fails
         const dayOfWeek = date.getDay();
         let startHour = 8;
-        let endHour = 18;
+        let endHour = 20;
         
         if (dayOfWeek === 0 || dayOfWeek === 6) {
           startHour = 8;
-          endHour = 18;
+          endHour = 20;
         } else {
-          startHour = 11;
-          endHour = 18;
+          startHour = 8;
+          endHour = 20;
         }
         
         for (let hour = startHour; hour <= endHour; hour++) {
@@ -806,7 +822,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Update date and time
     if (selectedDate) {
       const formattedDate = `${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}/${selectedDate.getDate().toString().padStart(2, '0')}/${selectedDate.getFullYear()}`;
-      document.getElementById('summary-date').textContent = `${formattedDate} @ ${selectedTime || '9:00'} ${(selectedTime || 9) < 12 ? 'am' : 'pm'}`;
+      document.getElementById('summary-date').textContent = `${formattedDate} @ ${selectedTime || '8:00'} ${(selectedTime || 8) < 12 ? 'am' : 'pm'}`;
     }
     
     // Update duration
@@ -867,13 +883,13 @@ document.addEventListener("DOMContentLoaded", function () {
     selectedDate = defaultDate;
     console.log('🔍 Set selected date to:', selectedDate);
     
-    // Set default time (9:00 AM)
-    selectedTime = 9;
+    // Set default time (8:00 AM)
+    selectedTime = 8;
     console.log('🔍 Set selected time to:', selectedTime);
     
     // Update hidden fields with defaults
     document.getElementById('selected_date').value = defaultDate.toISOString().split('T')[0];
-    document.getElementById('selected_time').value = '09:00';
+    document.getElementById('selected_time').value = '08:00';
     console.log('🔍 Set hidden fields - date:', document.getElementById('selected_date').value, 'time:', document.getElementById('selected_time').value);
     
     // Force update the summary with default values

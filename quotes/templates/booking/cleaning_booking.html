@@ -31,9 +31,9 @@
     border-radius: 8px;
     border: 1px solid #F15A29;
     background: var(--white-color);
-    padding: 0.5rem 1rem;
+    /* padding: 0.5rem 1rem; */
     width: 100%;
-    margin-bottom: 5px !important;
+    margin-bottom: 15px !important;
   }
 
   /* Make form-check divs clickable */
@@ -209,7 +209,7 @@
     -moz-appearance: none;    /* Firefox */
     background-color: #fff;
     color: #333;
-    padding: 0.5rem 1rem;
+    /* padding: 0.5rem 1rem; */
     border: 1px solid #F15A29;
     border-radius: 8px;
     font-size: 1rem;
@@ -308,6 +308,81 @@
       justify-content: flex-end;
       background-color: #f8f9fa;
       border-radius: 0 0 8px 8px;
+    }
+    
+    /* Form Validation Styles */
+    .is-invalid {
+      border-color: #dc3545 !important;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+    
+    .is-invalid:focus {
+      border-color: #dc3545 !important;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+    
+    .invalid-feedback {
+      display: block;
+      width: 100%;
+      margin-top: 0.25rem;
+      font-size: 0.875em;
+      color: #dc3545;
+      font-weight: 500;
+    }
+    
+    /* Validation styles for radio button groups */
+    .form-check.is-invalid {
+      border: 1px solid #dc3545;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .form-check.is-invalid .form-check-input {
+      border-color: #dc3545;
+    }
+    
+    /* Validation styles for select elements */
+    select.is-invalid {
+      border-color: #dc3545 !important;
+    }
+    
+    /* Validation styles for checkbox */
+    .checkbox-wrap.is-invalid {
+      border: 1px solid #dc3545;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    
+    /* Error message animation */
+    .invalid-feedback {
+      animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Success state for valid fields */
+    .is-valid {
+      border-color: #28a745 !important;
+      box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+    }
+    
+    /* Enhanced focus states */
+    .cmn-input:focus,
+    select.cmn-input:focus {
+      border-color: #F15A29 !important;
+      box-shadow: 0 0 0 0.2rem rgba(241, 90, 41, 0.25) !important;
+      outline: 0;
     }
     
   </style>
@@ -425,6 +500,8 @@
             {% endif %}
   <h3 class="mb-0">Book Home Cleaning</h3>
     <p>Get professional cleaning services for your home.</p>
+    
+   
   <h3>Recommended number of cleaners and time according to square footage and type of service.</h3>
               <div class="table-responsive mt-4">
                 <table class="table table-clean text-center align-middle">
@@ -661,8 +738,8 @@
       </div>
       <!-- Hidden city and state fields (default to New York) -->
       <div style="display: none;">
-        {{ form.city }}
-        {{ form.state }}
+        <input type="text" name="city" id="id_city" value="New York">
+        <input type="text" name="state" id="id_state" value="NY">
       </div>
   
   <!-- Property Access and Conditions -->
@@ -1362,13 +1439,41 @@
       
       console.log('🔍 Set hidden fields - date:', dateValue, 'time:', timeValue);
     }
+    
+    // === Set Default Location ===
+    function setDefaultLocation() {
+      console.log('🔍 setDefaultLocation called');
+      
+      // Set default city and state to New York, NY
+      const cityField = document.getElementById("id_city");
+      const stateField = document.getElementById("id_state");
+      
+      if (cityField) {
+        cityField.value = "New York";
+        console.log('🔍 Set city field to: New York');
+      }
+      
+      if (stateField) {
+        stateField.value = "NY";
+        console.log('🔍 Set state field to: NY');
+      }
+      
+      console.log('🔍 Default location set to: New York, NY');
+    }
 
     // Run initializers
     setDefaultSquareFeet();
     toggleHomeAndExtras();
     setDefaultValues(); // Set default values first
+    setDefaultLocation(); // Set default city and state
     renderCalendar(); // Then render calendar with selected date
     updatePrice(); // Finally update the summary
+    
+    // Initialize real-time validation
+    setupRealTimeValidation();
+    
+    // Initialize form progress tracking
+    setupFormProgressTracking();
   
     // === Event Bindings ===
     sqftSelect?.addEventListener("change", toggleHomeAndExtras);
@@ -1743,6 +1848,20 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
         console.log('🔍 Set Django hour field to:', selectedTime);
       }
       
+      // Ensure city and state are set to New York, NY
+      const cityField = document.getElementById("id_city");
+      const stateField = document.getElementById("id_state");
+      
+      if (cityField) {
+        cityField.value = "New York";
+        console.log('🔍 Set city field to: New York');
+      }
+      
+      if (stateField) {
+        stateField.value = "NY";
+        console.log('🔍 Set state field to: NY');
+      }
+      
       // If large home section is visible, use that data
       if (document.getElementById("largeHomeOptions")?.offsetParent !== null) {
         const cleaners = document.querySelector('select[name="num_cleaners"]')?.value;
@@ -1772,26 +1891,543 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
       syncHiddenFields(); // ✅ ensures all values are ready
     });
 
-    document.getElementById("quoteForm").addEventListener("submit", function (e) {
-      // Check calendar system values
+    // ================================
+    // FORM VALIDATION SYSTEM
+    // ================================
+    
+    function validateForm() {
+      console.log('🔍 Starting form validation...');
+      let isValid = true;
+      let errorMessages = [];
+      
+      // Clear previous validation errors
+      clearValidationErrors();
+      
+      // 1. Validate Contact Information
+      const name = document.getElementById("id_name")?.value?.trim();
+      const email = document.getElementById("id_email")?.value?.trim();
+      const phone = document.getElementById("id_phone")?.value?.trim();
+      
+      if (!name || name.length < 2) {
+        showFieldError("id_name", "Please enter your full name (at least 2 characters)");
+        isValid = false;
+        errorMessages.push("Name is required");
+      }
+      
+      if (!email || !isValidEmail(email)) {
+        showFieldError("id_email", "Please enter a valid email address");
+        isValid = false;
+        errorMessages.push("Valid email is required");
+      }
+      
+      if (!phone || !isValidPhone(phone)) {
+        showFieldError("id_phone", "Please enter a valid phone number");
+        isValid = false;
+        errorMessages.push("Valid phone number is required");
+      }
+      
+      // 2. Validate Address Information
+      const address = document.getElementById("id_address")?.value?.trim();
+      const zipCode = document.getElementById("id_zip_code")?.value?.trim();
+      
+      if (!address || address.length < 5) {
+        showFieldError("id_address", "Please enter a complete street address");
+        isValid = false;
+        errorMessages.push("Street address is required");
+      }
+      
+      if (!zipCode || !isValidZipCode(zipCode)) {
+        showFieldError("id_zip_code", "Please enter a valid ZIP code");
+        isValid = false;
+        errorMessages.push("Valid ZIP code is required");
+      }
+      
+      // 3. Validate Service Selection
+      const squareFeet = document.getElementById("id_square_feet_options")?.value;
+      if (!squareFeet) {
+        showFieldError("id_square_feet_options", "Please select square footage");
+        isValid = false;
+        errorMessages.push("Square footage selection is required");
+      }
+      
+      // 4. Validate Home Type (for small homes)
+      if (isSmallHomeSelected()) {
+        const homeType = document.getElementById("id_home_types")?.value;
+        if (!homeType) {
+          showFieldError("id_home_types", "Please select home type");
+          isValid = false;
+          errorMessages.push("Home type selection is required");
+        }
+      }
+      
+      // 5. Validate Large Home Options (for large homes)
+      if (document.getElementById("largeHomeOptions")?.offsetParent !== null) {
+        const cleaningType = document.querySelector('select[name="cleaning_type"]')?.value;
+        const numCleaners = document.querySelector('select[name="num_cleaners"]')?.value;
+        const hours = document.querySelector('select[name="est_hours"]')?.value;
+        
+        if (!cleaningType) {
+          showFieldError('select[name="cleaning_type"]', "Please select cleaning type");
+          isValid = false;
+          errorMessages.push("Cleaning type is required for large homes");
+        }
+        
+        if (!numCleaners || numCleaners < 1) {
+          showFieldError('select[name="num_cleaners"]', "Please select number of cleaners");
+          isValid = false;
+          errorMessages.push("Number of cleaners is required");
+        }
+        
+        if (!hours || hours < 1) {
+          showFieldError('select[name="est_hours"]', "Please select number of hours");
+          isValid = false;
+          errorMessages.push("Number of hours is required");
+        }
+      }
+      
+      // 6. Validate Bathroom Count
+      const bathCount = document.getElementById("id_bath_count")?.value;
+      if (!bathCount) {
+        showFieldError("id_bath_count", "Please select number of bathrooms");
+        isValid = false;
+        errorMessages.push("Number of bathrooms is required");
+      }
+      
+      // 7. Validate Access Method
+      const getIn = document.querySelector('input[name="get_in"]:checked');
+      if (!getIn) {
+        showFieldError('input[name="get_in"]', "Please select how we'll get into your home");
+        isValid = false;
+        errorMessages.push("Access method is required");
+      }
+      
+      // 8. Validate Parking Information
+      const parking = document.getElementById("id_parking")?.value;
+      if (!parking) {
+        showFieldError("id_parking", "Please select parking information");
+        isValid = false;
+        errorMessages.push("Parking information is required");
+      }
+      
+      // 9. Validate Pet Information
+      const pet = document.querySelector('input[name="pet"]:checked');
+      if (!pet) {
+        showFieldError('input[name="pet"]', "Please select pet information");
+        isValid = false;
+        errorMessages.push("Pet information is required");
+      }
+      
+      // 10. Validate Schedule Selection
       const selectedTime = document.getElementById("selected_time")?.value;
       const selectedDate = document.getElementById("selected_date")?.value;
+      const djangoDate = document.getElementById("id_date")?.value;
+      const djangoHour = document.getElementById("id_hour")?.value;
       
-      // Check Django form fields
+      if (!selectedTime || !selectedDate || !djangoDate || !djangoHour) {
+        showFieldError("selected_time", "Please select a date and time for your service");
+        isValid = false;
+        errorMessages.push("Date and time selection is required");
+      }
+      
+      // 11. Validate Terms Agreement
+      const termsAccepted = document.getElementById("terms")?.checked;
+      if (!termsAccepted) {
+        showFieldError("terms", "You must agree to the terms and conditions");
+        isValid = false;
+        errorMessages.push("Terms and conditions must be accepted");
+      }
+      
+      // 12. Validate Minimum Service Value
+      const subtotal = parseFloat(document.getElementById("subtotalPrice")?.textContent || "0");
+      if (subtotal < 50) {
+        alert("❌ Minimum service value is $50. Please adjust your selections.");
+        isValid = false;
+        errorMessages.push("Service value below minimum");
+      }
+      
+      if (!isValid) {
+        // Scroll to first error
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Show summary of errors
+        if (errorMessages.length > 0) {
+          alert("❌ Please fix the following issues:\n\n• " + errorMessages.join("\n• "));
+        }
+      }
+      
+      console.log('🔍 Form validation result:', { isValid, errorMessages });
+      return isValid;
+    }
+    
+    function showFieldError(fieldSelector, message) {
+      const field = document.querySelector(fieldSelector);
+      if (!field) return;
+      
+      // Add error class
+      field.classList.add('is-invalid');
+      
+      // Create or update error message
+      let errorElement = field.parentNode.querySelector('.invalid-feedback');
+      if (!errorElement) {
+        errorElement = document.createElement('div');
+        errorElement.className = 'invalid-feedback';
+        field.parentNode.appendChild(errorElement);
+      }
+      errorElement.textContent = message;
+      
+      // For radio button groups, show error on the container
+      if (field.type === 'radio') {
+        const container = field.closest('.form-check') || field.closest('.row');
+        if (container) {
+          container.classList.add('is-invalid');
+          let containerError = container.querySelector('.invalid-feedback');
+          if (!containerError) {
+            containerError = document.createElement('div');
+            containerError.className = 'invalid-feedback';
+            container.appendChild(containerError);
+          }
+          containerError.textContent = message;
+        }
+      }
+    }
+    
+    function clearValidationErrors() {
+      // Remove error classes and messages
+      document.querySelectorAll('.is-invalid').forEach(element => {
+        element.classList.remove('is-invalid');
+      });
+      
+      document.querySelectorAll('.invalid-feedback').forEach(element => {
+        element.remove();
+      });
+    }
+    
+    function isValidEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
+    
+    function isValidPhone(phone) {
+      // Remove all non-digit characters
+      const digits = phone.replace(/\D/g, '');
+      // Check if it's a valid US phone number (10 digits)
+      return digits.length === 10;
+    }
+    
+    function isValidZipCode(zipCode) {
+      // Check if it's a valid US ZIP code (5 digits or 5+4 format)
+      const zipRegex = /^\d{5}(-\d{4})?$/;
+      return zipRegex.test(zipCode);
+    }
+    
+    // Phone number formatting
+    function formatPhoneNumber(input) {
+      let value = input.value.replace(/\D/g, '');
+      if (value.length >= 6) {
+        value = value.substring(0, 3) + '-' + value.substring(3, 6) + '-' + value.substring(6, 10);
+      } else if (value.length >= 3) {
+        value = value.substring(0, 3) + '-' + value.substring(3);
+      }
+      input.value = value;
+    }
+    
+    // ZIP code formatting
+    function formatZipCode(input) {
+      let value = input.value.replace(/\D/g, '');
+      if (value.length > 5) {
+        value = value.substring(0, 5) + '-' + value.substring(5, 9);
+      }
+      input.value = value;
+    }
+    
+    // Form progress tracking
+    function setupFormProgressTracking() {
+      const requiredFields = [
+        'id_name',
+        'id_email', 
+        'id_phone',
+        'id_address',
+        'id_zip_code',
+        'id_square_feet_options',
+        'id_bath_count',
+        'id_parking',
+        'terms'
+      ];
+      
+      const conditionalFields = [
+        'id_home_types', // Only for small homes
+        'select[name="cleaning_type"]', // Only for large homes
+        'select[name="num_cleaners"]', // Only for large homes
+        'select[name="est_hours"]' // Only for large homes
+      ];
+      
+      const radioGroups = [
+        'input[name="get_in"]',
+        'input[name="pet"]'
+      ];
+      
+      function updateFormProgress() {
+        let completedFields = 0;
+        let totalRequiredFields = requiredFields.length;
+        
+        // Check required fields
+        requiredFields.forEach(fieldId => {
+          const field = document.getElementById(fieldId);
+          if (field && field.value && field.value.trim() !== '') {
+            completedFields++;
+          }
+        });
+        
+        // Check conditional fields based on home size
+        if (isSmallHomeSelected()) {
+          const homeType = document.getElementById('id_home_types');
+          if (homeType && homeType.value) {
+            completedFields++;
+          }
+          totalRequiredFields++;
+        } else if (document.getElementById("largeHomeOptions")?.offsetParent !== null) {
+          const cleaningType = document.querySelector('select[name="cleaning_type"]');
+          const numCleaners = document.querySelector('select[name="num_cleaners"]');
+          const hours = document.querySelector('select[name="est_hours"]');
+          
+          if (cleaningType && cleaningType.value) completedFields++;
+          if (numCleaners && numCleaners.value) completedFields++;
+          if (hours && hours.value) completedFields++;
+          
+          totalRequiredFields += 3;
+        }
+        
+        // Check radio button groups
+        radioGroups.forEach(groupSelector => {
+          const selected = document.querySelector(groupSelector + ':checked');
+          if (selected) {
+            completedFields++;
+          }
+          totalRequiredFields++;
+        });
+        
+        // Check date and time selection
+        const selectedTime = document.getElementById("selected_time")?.value;
+        const selectedDate = document.getElementById("selected_date")?.value;
+        if (selectedTime && selectedDate) {
+          completedFields++;
+        }
+        totalRequiredFields++;
+        
+        const progressPercentage = Math.round((completedFields / totalRequiredFields) * 100);
+        
+        // Update progress bar
+        const progressBar = document.getElementById('formProgress');
+        const progressText = document.getElementById('progressText');
+        
+        if (progressBar) {
+          progressBar.style.width = progressPercentage + '%';
+          progressBar.setAttribute('aria-valuenow', progressPercentage);
+        }
+        
+        if (progressText) {
+          progressText.textContent = progressPercentage + '% Complete';
+        }
+      }
+      
+      // Add event listeners to all form fields
+      const allInputs = document.querySelectorAll('input, select, textarea');
+      allInputs.forEach(input => {
+        input.addEventListener('change', updateFormProgress);
+        input.addEventListener('input', updateFormProgress);
+        input.addEventListener('blur', updateFormProgress);
+      });
+      
+      // Initial progress update
+      updateFormProgress();
+    }
+    
+    // Real-time validation on input change
+    function setupRealTimeValidation() {
+      // Name validation with character restrictions
+      const nameField = document.getElementById("id_name");
+      if (nameField) {
+        nameField.addEventListener('input', function() {
+          // Only allow letters, spaces, hyphens, and apostrophes
+          this.value = this.value.replace(/[^a-zA-Z\s\-']/g, '');
+        });
+        
+        nameField.addEventListener('blur', function() {
+          if (this.value.trim().length < 2) {
+            showFieldError("id_name", "Name must be at least 2 characters");
+          } else {
+            this.classList.remove('is-invalid');
+            const errorElement = this.parentNode.querySelector('.invalid-feedback');
+            if (errorElement) errorElement.remove();
+          }
+        });
+      }
+      
+      // Email validation
+      const emailField = document.getElementById("id_email");
+      if (emailField) {
+        emailField.addEventListener('blur', function() {
+          if (!isValidEmail(this.value)) {
+            showFieldError("id_email", "Please enter a valid email address");
+          } else {
+            this.classList.remove('is-invalid');
+            const errorElement = this.parentNode.querySelector('.invalid-feedback');
+            if (errorElement) errorElement.remove();
+          }
+        });
+      }
+      
+      // Phone validation and formatting
+      const phoneField = document.getElementById("id_phone");
+      if (phoneField) {
+        phoneField.addEventListener('input', function() {
+          // Only allow digits
+          this.value = this.value.replace(/\D/g, '');
+          formatPhoneNumber(this);
+        });
+        
+        phoneField.addEventListener('blur', function() {
+          if (!isValidPhone(this.value)) {
+            showFieldError("id_phone", "Please enter a valid phone number (10 digits)");
+          } else {
+            this.classList.remove('is-invalid');
+            const errorElement = this.parentNode.querySelector('.invalid-feedback');
+            if (errorElement) errorElement.remove();
+          }
+        });
+      }
+      
+      // Address validation
+      const addressField = document.getElementById("id_address");
+      if (addressField) {
+        addressField.addEventListener('blur', function() {
+          if (this.value.trim().length < 5) {
+            showFieldError("id_address", "Please enter a complete street address");
+          } else {
+            this.classList.remove('is-invalid');
+            const errorElement = this.parentNode.querySelector('.invalid-feedback');
+            if (errorElement) errorElement.remove();
+          }
+        });
+      }
+      
+      // ZIP code validation and formatting
+      const zipField = document.getElementById("id_zip_code");
+      if (zipField) {
+        zipField.addEventListener('input', function() {
+          // Only allow digits
+          this.value = this.value.replace(/\D/g, '');
+          formatZipCode(this);
+        });
+        
+        zipField.addEventListener('blur', function() {
+          if (!isValidZipCode(this.value)) {
+            showFieldError("id_zip_code", "Please enter a valid ZIP code (5 digits or 5+4 format)");
+          } else {
+            this.classList.remove('is-invalid');
+            const errorElement = this.parentNode.querySelector('.invalid-feedback');
+            if (errorElement) errorElement.remove();
+          }
+        });
+      }
+      
+      // Real-time validation for required selects
+      const requiredSelects = [
+        'id_square_feet_options',
+        'id_home_types',
+        'id_bath_count',
+        'id_parking'
+      ];
+      
+      requiredSelects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (select) {
+          select.addEventListener('change', function() {
+            if (this.value) {
+              this.classList.remove('is-invalid');
+              const errorElement = this.parentNode.querySelector('.invalid-feedback');
+              if (errorElement) errorElement.remove();
+            }
+          });
+        }
+      });
+      
+      // Real-time validation for radio buttons
+      const radioGroups = [
+        'input[name="get_in"]',
+        'input[name="pet"]'
+      ];
+      
+      radioGroups.forEach(groupSelector => {
+        document.querySelectorAll(groupSelector).forEach(radio => {
+          radio.addEventListener('change', function() {
+            // Clear errors for all radios in this group
+            document.querySelectorAll(groupSelector).forEach(r => {
+              const container = r.closest('.form-check') || r.closest('.row');
+              if (container) {
+                container.classList.remove('is-invalid');
+                const errorElement = container.querySelector('.invalid-feedback');
+                if (errorElement) errorElement.remove();
+              }
+            });
+          });
+        });
+      });
+      
+      // Terms checkbox validation
+      const termsCheckbox = document.getElementById("terms");
+      if (termsCheckbox) {
+        termsCheckbox.addEventListener('change', function() {
+          if (this.checked) {
+            this.classList.remove('is-invalid');
+            const errorElement = this.parentNode.querySelector('.invalid-feedback');
+            if (errorElement) errorElement.remove();
+          }
+        });
+      }
+    }
+
+    document.getElementById("quoteForm").addEventListener("submit", function (e) {
+      // Ensure city and state are set before validation
+      const cityField = document.getElementById("id_city");
+      const stateField = document.getElementById("id_state");
+      
+      if (cityField && !cityField.value) {
+        cityField.value = "New York";
+        console.log('🔍 Set city field to: New York (fallback)');
+      }
+      
+      if (stateField && !stateField.value) {
+        stateField.value = "NY";
+        console.log('🔍 Set state field to: NY (fallback)');
+      }
+      
+      // Run comprehensive validation
+      if (!validateForm()) {
+        e.preventDefault();
+        return false;
+      }
+      
+      // Additional validation for calendar system
+      const selectedTime = document.getElementById("selected_time")?.value;
+      const selectedDate = document.getElementById("selected_date")?.value;
       const djangoDate = document.getElementById("id_date")?.value;
       const djangoHour = document.getElementById("id_hour")?.value;
       
       console.log('🔍 Form validation - Calendar values:', { selectedTime, selectedDate });
       console.log('🔍 Form validation - Django values:', { djangoDate, djangoHour });
       
-      // Validate time and date selection (check both calendar and Django fields)
       if (!selectedTime || !selectedDate || !djangoDate || !djangoHour) {
         e.preventDefault();
         alert("❌ Please choose a valid available time slot and date before submitting.");
-        return;
+        return false;
       }
       
-      console.log('🔍 Form validation passed, submitting...');
+      console.log('🔍 All form validation passed, submitting...');
+      return true;
     });
   });
   </script>

@@ -153,7 +153,7 @@ class Quote(models.Model):
     # Scheduling
     date = models.DateField()
     hour = models.TimeField()
-    hours_requested = models.IntegerField(null=True, blank=True)
+    hours_requested = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
     recurrence_pattern = models.CharField(
         max_length=20,
         choices=[
@@ -350,7 +350,7 @@ class Booking(models.Model):
     # Scheduling
     date = models.DateField()
     hour = models.TimeField()
-    hours_requested = models.IntegerField(null=True, blank=True)
+    hours_requested = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
     recurrence_pattern = models.CharField(
         max_length=20,
         choices=[

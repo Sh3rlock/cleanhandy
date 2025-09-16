@@ -739,9 +739,14 @@ def download_office_cleaning_pdf(request, booking_id):
         # Get the booking
         booking = get_object_or_404(Booking, id=booking_id)
         
+        # Get contact info for PDF template
+        from .models import ContactInfo
+        contact_info = ContactInfo.get_active()
+        
         # Render the PDF template
         html_content = render_to_string('quotes/office_cleaning_pdf.html', {
-            'booking': booking
+            'booking': booking,
+            'contact_info': contact_info
         })
         
         # Generate PDF using weasyprint
@@ -899,8 +904,39 @@ def post_event_cleaning_quote_submit(request):
                 # Save the post event cleaning quote
                 post_event_quote = form.save()
                 
-                # Send email notification (optional)
-                # You can implement email sending here similar to handyman quotes
+                # Send email notification to admin
+                try:
+                    from django.template.loader import render_to_string
+                    from django.core.mail import EmailMessage
+                    from django.conf import settings
+                    from django.urls import reverse
+                    
+                    # Generate admin URL
+                    admin_url = request.build_absolute_uri(
+                        reverse('admin:quotes_posteventcleaningquote_change', args=[post_event_quote.id])
+                    )
+                    
+                    # Render email template
+                    admin_html = render_to_string("quotes/email_post_event_cleaning_admin.html", {
+                        "quote": post_event_quote,
+                        "admin_url": admin_url
+                    })
+                    
+                    # Send email to admin
+                    admin_email = EmailMessage(
+                        subject=f"🎉 New Post Event Cleaning Quote Request from {post_event_quote.name} - #{post_event_quote.id}",
+                        body=admin_html,
+                        from_email="matyass91@gmail.com",
+                        to=["matyass91@gmail.com"],  # Admin email
+                    )
+                    admin_email.content_subtype = "html"
+                    admin_email.send()
+                    
+                    print(f"✅ Post event cleaning quote email sent to admin for quote #{post_event_quote.id}")
+                    
+                except Exception as email_error:
+                    print(f"❌ Failed to send post event cleaning quote email: {email_error}")
+                    # Continue execution even if email fails
                 
                 return JsonResponse({
                     'success': True,

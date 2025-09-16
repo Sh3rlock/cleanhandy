@@ -314,8 +314,11 @@ document.addEventListener("DOMContentLoaded", function() {
             right: "dayGridMonth,timeGridWeek,timeGridDay"
         },
         events: "{% url 'get_quotes_for_calendar' %}",
-
-        eventDidMount: function (info) {
+        
+        // Add debugging and styling for events
+        eventDidMount: function(info) {
+            console.log("🔍 Event mounted:", info.event.title, info.event.start);
+            
             if (info.event.extendedProps.time_slots) {
                 info.el.style.borderRadius = "5px";
                 info.el.style.opacity = "0.95";
@@ -353,6 +356,11 @@ document.addEventListener("DOMContentLoaded", function() {
                     customClass: "calendar-tooltip"
                 });
             }
+        },
+        
+        // Add error handling
+        eventSourceFailure: function(error) {
+            console.error("❌ Calendar event source failed:", error);
         }
     });
 
