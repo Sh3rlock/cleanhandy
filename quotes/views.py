@@ -4,7 +4,7 @@ from customers.models import Customer  # Import Customer from the correct app
 from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm, CleaningBookingForm, HandymanBookingForm, ContactForm, OfficeQuoteForm, OfficeCleaningBookingForm, HandymanQuoteForm, PostEventCleaningQuoteForm
 from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
-from .utils import get_available_hours_for_date, send_quote_email_cleaning, send_office_cleaning_booking_emails
+from .utils import get_available_hours_for_date, send_quote_email_cleaning, send_office_cleaning_booking_emails, send_email_with_timeout
 from django.http import JsonResponse, HttpResponse
 from datetime import datetime, time, timedelta, date
 from django.core.mail import EmailMultiAlternatives
@@ -1037,9 +1037,13 @@ def post_event_cleaning_quote_submit(request):
                         to=["support@thecleanhandy.com"],  # Admin email
                     )
                     admin_email.content_subtype = "html"
-                    admin_email.send()
                     
-                    print(f"✅ Post event cleaning quote email sent to admin for quote #{post_event_quote.id}")
+                    # Send admin email with timeout
+                    email_timeout = getattr(settings, 'EMAIL_TIMEOUT', 10)
+                    if send_email_with_timeout(admin_email, email_timeout):
+                        print(f"✅ Post event cleaning quote email sent to admin for quote #{post_event_quote.id}")
+                    else:
+                        print(f"❌ Failed to send post event cleaning quote admin email (timeout or connection error)")
                     
                 except Exception as email_error:
                     print(f"❌ Failed to send post event cleaning quote email: {email_error}")

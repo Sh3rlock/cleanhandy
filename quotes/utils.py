@@ -45,6 +45,16 @@ def send_email_with_timeout(email_message, timeout=10):
     except socket.timeout:
         print(f"❌ Email timeout after {timeout} seconds")
         return False
+    except socket.error as e:
+        if e.errno == 101:  # Network is unreachable
+            print(f"❌ Email failed: Network is unreachable (SMTP server unavailable)")
+        elif e.errno == 110:  # Connection timed out
+            print(f"❌ Email failed: Connection timed out to SMTP server")
+        elif e.errno == 111:  # Connection refused
+            print(f"❌ Email failed: Connection refused by SMTP server")
+        else:
+            print(f"❌ Email failed: Network error ({e.errno}): {str(e)}")
+        return False
     except Exception as e:
         print(f"❌ Email sending failed: {str(e)}")
         return False
@@ -156,12 +166,13 @@ def send_quote_email_handyman(quote):
     from django.conf import settings
     msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [quote.email, settings.DEFAULT_FROM_EMAIL])
     msg.attach_alternative(html_content, "text/html")
-    try:
-        msg.send()
+    # Send handyman quote email with timeout
+    email_timeout = getattr(settings, 'EMAIL_TIMEOUT', 10)
+    if send_email_with_timeout(msg, email_timeout):
         print(f"✅ Handyman quote email sent successfully to {quote.email}")
-    except Exception as e:
-        print(f"❌ Failed to send handyman quote email: {str(e)}")
-        raise
+    else:
+        print(f"❌ Failed to send handyman quote email to {quote.email} (timeout or connection error)")
+        # Don't raise - email failure shouldn't break the quote process
 
 from django.conf import settings
 
@@ -215,11 +226,13 @@ def send_quote_email_cleaning(booking):
         if pdf_buffer.getvalue():
             customer_email.attach(filename, pdf_buffer.read(), "application/pdf")
         
-        customer_email.send()
-        print(f"✅ Home cleaning quote email sent successfully to {booking.email}")
-    except Exception as e:
-        print(f"❌ Failed to send home cleaning quote email: {str(e)}")
-        # Don't raise - email failure shouldn't break the booking process
+        # Send customer email with timeout
+        email_timeout = getattr(settings, 'EMAIL_TIMEOUT', 10)
+        if send_email_with_timeout(customer_email, email_timeout):
+            print(f"✅ Home cleaning quote email sent successfully to {booking.email}")
+        else:
+            print(f"❌ Failed to send home cleaning quote email to {booking.email} (timeout or connection error)")
+            # Don't raise - email failure shouldn't break the booking process
 
     # Reset PDF buffer for second email
     pdf_buffer.seek(0)
@@ -239,11 +252,12 @@ def send_quote_email_cleaning(booking):
         if pdf_buffer.getvalue():
             admin_email.attach(filename, pdf_buffer.read(), "application/pdf")
         
-        admin_email.send()
-        print(f"✅ Admin notification email sent successfully")
-    except Exception as e:
-        print(f"❌ Failed to send admin notification email: {str(e)}")
-        # Don't raise here - admin email failure shouldn't break the booking
+        # Send admin email with timeout
+        if send_email_with_timeout(admin_email, email_timeout):
+            print(f"✅ Admin notification email sent successfully")
+        else:
+            print(f"❌ Failed to send admin notification email (timeout or connection error)")
+            # Don't raise here - admin email failure shouldn't break the booking
 
 
 def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discount_amount, subtotal, tax):
@@ -365,7 +379,11 @@ def send_office_cleaning_quote_email(booking):
         )
         customer_email.content_subtype = "html"
         customer_email.attach(filename, pdf_buffer.read(), "application/pdf")
-        customer_email.send()
+        
+        # Send customer email with timeout
+        email_timeout = getattr(settings, 'EMAIL_TIMEOUT', 10)
+        if not send_email_with_timeout(customer_email, email_timeout):
+            print(f"❌ Failed to send office cleaning quote email to {booking.email} (timeout or connection error)")
 
         # Reset PDF buffer for admin email
         pdf_buffer.seek(0)
@@ -380,7 +398,10 @@ def send_office_cleaning_quote_email(booking):
         )
         admin_email.content_subtype = "html"
         admin_email.attach(filename, pdf_buffer.read(), "application/pdf")
-        admin_email.send()
+        
+        # Send admin email with timeout
+        if not send_email_with_timeout(admin_email, email_timeout):
+            print(f"❌ Failed to send office cleaning quote admin email (timeout or connection error)")
         
         print(f"✅ Office cleaning PDF emails sent successfully for booking {booking.id}")
         return True
@@ -397,9 +418,15 @@ def send_office_cleaning_quote_email(booking):
                 to=[booking.email],
             )
             customer_email.content_subtype = "html"
-            customer_email.send()
-            print(f"✅ Fallback email sent without PDF for office cleaning booking {booking.id}")
-            return True
+            
+            # Send fallback email with timeout
+            email_timeout = getattr(settings, 'EMAIL_TIMEOUT', 10)
+            if send_email_with_timeout(customer_email, email_timeout):
+                print(f"✅ Fallback email sent without PDF for office cleaning booking {booking.id}")
+                return True
+            else:
+                print(f"❌ Fallback email failed for office cleaning booking {booking.id} (timeout or connection error)")
+                return False
         except Exception as fallback_error:
             print(f"❌ Fallback email also failed for office cleaning booking {booking.id}: {fallback_error}")
             return False
