@@ -493,4 +493,38 @@ def help(request):
     })
 
 
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.http import JsonResponse
+
+@ensure_csrf_cookie
+def refresh_csrf_token(request):
+    """Refresh CSRF token for AJAX requests"""
+    return JsonResponse({'status': 'success'})
+
+
+from django.core.mail import send_mail
+from django.conf import settings
+
+def test_email(request):
+    """Test email functionality"""
+    if not request.user.is_superuser:
+        return JsonResponse({'status': 'error', 'message': 'Access denied'})
+    
+    try:
+        send_mail(
+            'Test Email from CleanHandy',
+            'This is a test email to verify email functionality is working correctly.',
+            settings.DEFAULT_FROM_EMAIL,
+            [request.user.email],
+            fail_silently=False,
+        )
+        return JsonResponse({
+            'status': 'success', 
+            'message': f'Test email sent successfully to {request.user.email}'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error', 
+            'message': f'Failed to send test email: {str(e)}'
+        })
 

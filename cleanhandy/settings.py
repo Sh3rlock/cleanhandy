@@ -42,14 +42,14 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_TRUSTED_ORIGINS = ['https://cleanhandy-production.up.railway.app']
 
 
+# Email Configuration
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = "TheCleanHandy"
-EMAIL_HOST_USER = "matyass91@gmail.com"
-EMAIL_HOST_PASSWORD = "weqwmobbdznudgff"
-DEFAULT_FROM_EMAIL = "matyass91@gmail.com"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "matyass91@gmail.com")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "weqwmobbdznudgff")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "support@thecleanhandy.com")
 
 
 LOGIN_REDIRECT_URL = 'profile'

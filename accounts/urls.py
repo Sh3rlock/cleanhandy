@@ -23,6 +23,8 @@ urlpatterns = [
     path("booking/<int:booking_id>/cancel/", views.cancel_booking, name="cancel_booking"),
 
     path('accounts/help/', views.help, name='help'),
+    path('refresh-csrf/', views.refresh_csrf_token, name='refresh_csrf_token'),
+    path('test-email/', views.test_email, name='test_email'),
 
     path("activate/<uidb64>/<token>/", account_views.activate, name="activate"),
     path("login/", views.login_view, name="login"),

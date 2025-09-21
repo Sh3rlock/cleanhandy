@@ -657,6 +657,60 @@
     <script src="{% static '/assets/js/flatpickr-min.js' %}"></script>
     <script src="{% static '/assets/js/socialSharing.js' %}"></script>
     <script src="{% static '/assets/js/script.js' %}"></script>
+    
+    <!-- CSRF Token Utility -->
+    <script>
+      // Get CSRF token from cookies
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+      
+      // Set CSRF token for AJAX requests
+      const csrftoken = getCookie('csrftoken');
+      if (csrftoken) {
+        $.ajaxSetup({
+          beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+              xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+          }
+        });
+      }
+      
+      function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+      }
+      
+      // Refresh CSRF token if needed
+      function refreshCSRFToken() {
+        $.ajax({
+          url: '{% url "refresh_csrf_token" %}',
+          type: 'GET',
+          success: function() {
+            console.log('CSRF token refreshed');
+          },
+          error: function() {
+            console.log('Failed to refresh CSRF token');
+          }
+        });
+      }
+      
+      // Auto-refresh CSRF token every 30 minutes
+      setInterval(refreshCSRFToken, 30 * 60 * 1000);
+    </script>
+    
     {% block modals %}{% endblock %}
   </body>
 </html>
