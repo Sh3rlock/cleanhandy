@@ -1,3 +1,4 @@
+{% load quote_filters %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -90,7 +91,7 @@
       {% endif %}
 
       {% if booking.is_large_home %}
-        <p>Cleaning Type: {{ booking.cleaning_type|title }}</p>
+        <p>Cleaning Type: {{ booking.cleaning_type|clean_cleaning_type }}</p>
         <p>Number of Cleaners: {{ booking.num_cleaners }}</p>
         <p>
           Labor Cost: ${{ booking.num_cleaners }} × {{ booking.hours_requested }} hr ×

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load quote_filters %}
 
 {% block content %}
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -223,7 +224,7 @@
                                 {% if quote.cleaning_type %}
                                 <div class="detail-item">
                                     <span class="label">Cleaning Type:</span>
-                                    <span class="value">{{ quote.cleaning_type }}</span>
+                                    <span class="value">{{ quote.cleaning_type|clean_cleaning_type }}</span>
                                 </div>
                                 {% endif %}
                                 {% if quote.num_cleaners %}
