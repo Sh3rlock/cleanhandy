@@ -166,16 +166,30 @@ def handyman_services(request):
     return render(request, "quotes/handyman_services.html", {"services": services})
 
 def available_hours_api(request):
-    date_str = request.GET.get("date")
-    hours = int(request.GET.get("hours", 2))  # get from query param or default 2
     try:
-        date = datetime.strptime(date_str, "%Y-%m-%d").date()
-    except (ValueError, TypeError):
-        return JsonResponse({"error": "Invalid date"}, status=400)
+        date_str = request.GET.get("date")
+        hours = int(request.GET.get("hours", 2))  # get from query param or default 2
+        
+        print(f"🕐 Available hours API called: date={date_str}, hours={hours}")
+        
+        try:
+            date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            print(f"❌ Invalid date format: {date_str}")
+            return JsonResponse({"error": "Invalid date"}, status=400)
 
-    available = get_available_hours_for_date(date, hours_requested=hours)
-    formatted = [slot.strftime("%H:%M") for slot in available]
-    return JsonResponse({"available_hours": formatted})
+        print(f"📅 Parsed date: {date}")
+        available = get_available_hours_for_date(date, hours_requested=hours)
+        print(f"✅ Found {len(available)} available hours")
+        
+        formatted = [slot.strftime("%H:%M") for slot in available]
+        return JsonResponse({"available_hours": formatted})
+        
+    except Exception as e:
+        print(f"❌ Error in available_hours_api: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"error": "Internal server error"}, status=500)
 
 
 def subscribe_newsletter(request):
@@ -207,12 +221,13 @@ def subscribe_newsletter(request):
 # Booking a service
 def request_cleaning_booking(request, service_cat_id):
     try:
+        print("🏠 Home cleaning booking view started")
         service_cat = get_object_or_404(ServiceCategory, id=service_cat_id)
         extras = CleaningExtra.objects.all()
         print(f"✅ Service category found: {service_cat}")
         print(f"✅ Cleaning extras count: {extras.count()}")
     except Exception as e:
-        print(f"❌ Error in view setup: {str(e)}")
+        print(f"❌ Error in home cleaning view setup: {str(e)}")
         import traceback
         traceback.print_exc()
         raise
@@ -274,10 +289,13 @@ def request_cleaning_booking(request, service_cat_id):
 
             try:
                 send_quote_email_cleaning(booking)
+                print(f"✅ Email sending completed for booking {booking.id}")
             except Exception as e:
-                print("❌ Email send failed:", e)
+                print(f"❌ Email send failed: {str(e)}")
             
-            return redirect("quote_submitted", quote_id=booking.id)
+            print(f"🔄 About to redirect to booking_submitted_cleaning with booking_id={booking.id}")
+            print(f"🔄 Redirect URL should be: /accounts/submitted/{booking.id}/")
+            return redirect("booking_submitted_cleaning", booking_id=booking.id)
         else:
             print("❌ Form errors:", form.errors)
             return render(request, "booking/request_cleaning_booking.html", {
@@ -354,7 +372,9 @@ def cleaning_booking(request):
             
             form = CleaningBookingForm(request.POST)
             print(f"🔍 Form validation: {form.is_valid()}")
+            
             if form.is_valid():
+                print("✅ Form is valid, processing booking...")
                 booking = form.save(commit=False)
                 booking.service_cat = service_cat
 
@@ -368,49 +388,49 @@ def cleaning_booking(request):
                     booking.extras.set(selected_extras)
                     print(f"✅ Set extras: {[extra.name for extra in selected_extras]}")
 
-            # --- Handle Gift Card or Discount Code ---
-            code_data = form.cleaned_data.get("gift_card_code")
+                # --- Handle Gift Card or Discount Code ---
+                code_data = form.cleaned_data.get("gift_card_code")
 
-            try:
-                # Calculate initial price
-                booking.price = booking.calculate_total_price()
-                print(f"✅ Calculated booking price: {booking.price}")
+                try:
+                    # Calculate initial price
+                    booking.price = booking.calculate_total_price()
+                    print(f"✅ Calculated booking price: {booking.price}")
+                    
+                    if code_data:
+                        code_type, code_obj = code_data
+
+                        if code_type == "giftcard":
+                            booking.gift_card = code_obj
+                            booking.gift_card_discount = min(code_obj.balance, booking.price)
+
+                        elif code_type == "discount":
+                            if code_obj.discount_type == "fixed":
+                                booking.gift_card_discount = min(code_obj.value, booking.price)
+                            elif code_obj.discount_type == "percent":
+                                booking.gift_card_discount = booking.price * (code_obj.value / 100)
+                            code_obj.times_used += 1
+                            code_obj.save()
+
+                    # Recalculate final price after discount
+                    booking.price = booking.calculate_total_price()
+                    print(f"✅ Final booking price: {booking.price}")
+                    
+                except Exception as e:
+                    print(f"❌ Error calculating booking price: {str(e)}")
+                    # Set a default price to prevent booking failure
+                    booking.price = Decimal("100.00")  # Default price
+                    booking.gift_card_discount = None
                 
+                booking.save()
+
+                # --- Deduct Gift Card balance if used ---
                 if code_data:
                     code_type, code_obj = code_data
-
-                    if code_type == "giftcard":
-                        booking.gift_card = code_obj
-                        booking.gift_card_discount = min(code_obj.balance, booking.price)
-
-                    elif code_type == "discount":
-                        if code_obj.discount_type == "fixed":
-                            booking.gift_card_discount = min(code_obj.value, booking.price)
-                        elif code_obj.discount_type == "percent":
-                            booking.gift_card_discount = booking.price * (code_obj.value / 100)
-                        code_obj.times_used += 1
+                    if code_type == "giftcard" and booking.gift_card_discount:
+                        code_obj.balance -= booking.gift_card_discount
+                        if code_obj.balance <= 0:
+                            code_obj.is_active = False
                         code_obj.save()
-
-                # Recalculate final price after discount
-                booking.price = booking.calculate_total_price()
-                print(f"✅ Final booking price: {booking.price}")
-                
-            except Exception as e:
-                print(f"❌ Error calculating booking price: {str(e)}")
-                # Set a default price to prevent booking failure
-                booking.price = Decimal("100.00")  # Default price
-                booking.gift_card_discount = None
-            
-            booking.save()
-
-            # --- Deduct Gift Card balance if used ---
-            if code_data:
-                code_type, code_obj = code_data
-                if code_type == "giftcard" and booking.gift_card_discount:
-                    code_obj.balance -= booking.gift_card_discount
-                    if code_obj.balance <= 0:
-                        code_obj.is_active = False
-                    code_obj.save()
 
                 try:
                     send_quote_email_cleaning(booking)

@@ -17,18 +17,30 @@ from .models import HourlyRate
 from decimal import Decimal
 
 def get_available_hours_for_date(date, hours_requested=2):
-    # Get day of week (0=Monday, 1=Tuesday, ..., 6=Sunday)
-    day_of_week = date.weekday()
-    
-    # Set hours based on day of week
-    if day_of_week == 6:  # Sunday - Closed
+    try:
+        print(f"🕐 get_available_hours_for_date called: date={date}, hours_requested={hours_requested}")
+        
+        # Get day of week (0=Monday, 1=Tuesday, ..., 6=Sunday)
+        day_of_week = date.weekday()
+        print(f"📅 Day of week: {day_of_week}")
+        
+        # Set hours based on day of week
+        if day_of_week == 6:  # Sunday - Closed
+            print("❌ Sunday - Closed")
+            return []
+        elif day_of_week == 5:  # Saturday - 8:00-17:00
+            start_hour = 8
+            end_hour = 17
+            print(f"📅 Saturday hours: {start_hour}:00-{end_hour}:00")
+        else:  # Monday-Friday - 8:00-18:00
+            start_hour = 8
+            end_hour = 18
+            print(f"📅 Weekday hours: {start_hour}:00-{end_hour}:00")
+    except Exception as e:
+        print(f"❌ Error in get_available_hours_for_date: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return []
-    elif day_of_week == 5:  # Saturday - 8:00-17:00
-        start_hour = 8
-        end_hour = 17
-    else:  # Monday-Friday - 8:00-18:00
-        start_hour = 8
-        end_hour = 18
     
     interval = 30  # minutes
     duration_minutes = max(hours_requested * 60, 120)  # Minimum 2 hours
@@ -43,16 +55,28 @@ def get_available_hours_for_date(date, hours_requested=2):
 
     # Collect unavailable time ranges
     unavailable_ranges = []
-    for quote in Booking.objects.filter(date=date):
-        duration = max(quote.hours_requested or 2, 2)
-        start = datetime.combine(date, quote.hour)
-        end = start + timedelta(hours=duration)
-        unavailable_ranges.append((start.time(), end.time()))
+    try:
+        existing_bookings = Booking.objects.filter(date=date)
+        print(f"📋 Found {existing_bookings.count()} existing bookings for {date}")
+        
+        for quote in existing_bookings:
+            duration = max(quote.hours_requested or 2, 2)
+            start = datetime.combine(date, quote.hour)
+            end = start + timedelta(hours=duration)
+            unavailable_ranges.append((start.time(), end.time()))
+            print(f"🚫 Blocked: {quote.hour} - {end.time()}")
+    except Exception as e:
+        print(f"⚠️ Warning: Could not load existing bookings: {str(e)}")
+        # Continue without existing bookings if there's an error
     
       # 3. ❌ Exclude admin-blocked slots
-    blocked_slots = BlockedTimeSlot.objects.filter(date=date)
-    for block in blocked_slots:
-        unavailable_ranges.append((block.start_time, block.end_time))
+    try:
+        blocked_slots = BlockedTimeSlot.objects.filter(date=date)
+        for block in blocked_slots:
+            unavailable_ranges.append((block.start_time, block.end_time))
+    except Exception as e:
+        print(f"⚠️ Warning: Could not load blocked time slots: {str(e)}")
+        # Continue without blocked slots if there's an error
 
     # Check if each slot fits entirely in available range
     valid_slots = []
