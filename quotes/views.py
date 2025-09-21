@@ -267,12 +267,18 @@ def request_cleaning_booking(request, service_cat_id):
                 send_quote_email_cleaning(booking)
             except Exception as e:
                 print("❌ Email send failed:", e)
-                return redirect("quote_submitted", booking_id=booking.id)
-            else:
-                print("❌ Form errors:", form.errors)
-                return HttpResponseBadRequest("Invalid form submission")
+            
+            return redirect("quote_submitted", quote_id=booking.id)
+        else:
+            print("❌ Form errors:", form.errors)
+            return render(request, "booking/request_cleaning_booking.html", {
+                "form": form,
+                "cleaning_extras": extras,
+                "service_cat": service_cat,
+                "related_services": related_services,
+            })
     else:
-        form = CleaningBookingForm(initial={'service': booking.id})
+        form = CleaningBookingForm(initial={'service_cat': service_cat.id})
 
     return render(request, "booking/request_cleaning_booking.html", {
         "form": form,

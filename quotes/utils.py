@@ -113,31 +113,51 @@ def send_quote_email_cleaning(booking):
     from .models import ContactInfo
     contact_info = ContactInfo.get_active()
     
+    # Create default contact info if none exists
+    if not contact_info:
+        contact_info = {
+            'email': 'support@thecleanhandy.com',
+            'phone': '(555) 123-4567',
+            'address': 'New York, NY'
+        }
+        print("⚠️ No ContactInfo found, using default values")
+    
     # Render PDF HTML and generate PDF using home cleaning specific template
-    pdf_html = render_to_string("quotes/home_cleaning_pdf.html", {
-        "booking": booking,
-        "contact_info": contact_info
-    })
-    pdf_buffer = BytesIO()
-    HTML(string=pdf_html).write_pdf(target=pdf_buffer)
-    pdf_buffer.seek(0)
+    try:
+        pdf_html = render_to_string("quotes/home_cleaning_pdf.html", {
+            "booking": booking,
+            "contact_info": contact_info
+        })
+        pdf_buffer = BytesIO()
+        HTML(string=pdf_html).write_pdf(target=pdf_buffer)
+        pdf_buffer.seek(0)
 
-    # Save PDF to model
-    filename = f"home_cleaning_quote-{booking.id}.pdf"
-    booking.pdf_file.save(filename, ContentFile(pdf_buffer.read()), save=True)
-    pdf_buffer.seek(0)
+        # Save PDF to model
+        filename = f"home_cleaning_quote-{booking.id}.pdf"
+        booking.pdf_file.save(filename, ContentFile(pdf_buffer.read()), save=True)
+        pdf_buffer.seek(0)
+        print(f"✅ PDF generated successfully for booking {booking.id}")
+    except Exception as e:
+        print(f"❌ Failed to generate PDF for booking {booking.id}: {str(e)}")
+        # Create empty buffer to prevent further errors
+        pdf_buffer = BytesIO()
+        filename = f"home_cleaning_quote-{booking.id}.pdf"
 
     # Email to customer
-    html_message = render_to_string("quotes/email_quote_summary.html", {"booking": booking})
-    customer_email = EmailMessage(
-        subject="Your Home Cleaning Quote - CleanHandy",
-        body=html_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[booking.email],
-    )
-    customer_email.content_subtype = "html"
-    customer_email.attach(filename, pdf_buffer.read(), "application/pdf")
     try:
+        html_message = render_to_string("quotes/email_quote_summary.html", {"booking": booking})
+        customer_email = EmailMessage(
+            subject="Your Home Cleaning Quote - CleanHandy",
+            body=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[booking.email],
+        )
+        customer_email.content_subtype = "html"
+        
+        # Only attach PDF if it was generated successfully
+        if pdf_buffer.getvalue():
+            customer_email.attach(filename, pdf_buffer.read(), "application/pdf")
+        
         customer_email.send()
         print(f"✅ Home cleaning quote email sent successfully to {booking.email}")
     except Exception as e:
@@ -148,16 +168,25 @@ def send_quote_email_cleaning(booking):
     pdf_buffer.seek(0)
 
     # Email to admin/staff using home cleaning admin template
-    admin_message = render_to_string("quotes/email_home_cleaning_admin.html", {"booking": booking})
-    admin_email = EmailMessage(
-        subject=f"New Home Cleaning Booking from {booking.name}",
-        body=admin_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[settings.DEFAULT_FROM_EMAIL],  # Admin email
-    )
-    admin_email.content_subtype = "html"
-    admin_email.attach(filename, pdf_buffer.read(), "application/pdf")
-    admin_email.send()
+    try:
+        admin_message = render_to_string("quotes/email_home_cleaning_admin.html", {"booking": booking})
+        admin_email = EmailMessage(
+            subject=f"New Home Cleaning Booking from {booking.name}",
+            body=admin_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[settings.DEFAULT_FROM_EMAIL],  # Admin email
+        )
+        admin_email.content_subtype = "html"
+        
+        # Only attach PDF if it was generated successfully
+        if pdf_buffer.getvalue():
+            admin_email.attach(filename, pdf_buffer.read(), "application/pdf")
+        
+        admin_email.send()
+        print(f"✅ Admin notification email sent successfully")
+    except Exception as e:
+        print(f"❌ Failed to send admin notification email: {str(e)}")
+        # Don't raise here - admin email failure shouldn't break the booking
 
 
 def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discount_amount, subtotal, tax):
