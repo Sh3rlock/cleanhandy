@@ -26,6 +26,8 @@ urlpatterns = [
     path('refresh-csrf/', views.refresh_csrf_token, name='refresh_csrf_token'),
     path('test-email/', views.test_email, name='test_email'),
     path('csrf-debug/', views.csrf_debug, name='csrf_debug'),
+    path('debug-booking/', views.debug_booking_calculation, name='debug_booking_calculation'),
+    path('debug-form/', views.debug_form_validation, name='debug_form_validation'),
 
     path("activate/<uidb64>/<token>/", account_views.activate, name="activate"),
     path("login/", views.login_view, name="login"),

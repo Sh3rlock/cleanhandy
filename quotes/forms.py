@@ -103,8 +103,12 @@ class CleaningQuoteForm(forms.ModelForm):
 
     def clean_hour(self):
         hour = self.cleaned_data.get("hour")
+        print(f"🔍 Cleaning hour: '{hour}'")
+        print(f"🔍 Available hour choices: {self.fields['hour'].choices}")
         if not hour or hour in ["", "No available time"]:
+            print(f"❌ Invalid hour: '{hour}'")
             raise forms.ValidationError("Please select a valid available start time.")
+        print(f"✅ Valid hour: '{hour}'")
         return hour
 
 
@@ -426,22 +430,29 @@ class CleaningBookingForm(forms.ModelForm):
 
     def clean_gift_card_code(self):
         code = self.cleaned_data.get("gift_card_code", "").strip()
+        print(f"🔍 Cleaning gift_card_code: '{code}'")
         if not code:
             return None
 
         # 1. Try GiftCard
         try:
             giftcard = GiftCard.objects.get(code__iexact=code, is_active=True, balance__gt=0)
+            print(f"✅ Found gift card: {giftcard.code}")
             return ("giftcard", giftcard)
         except GiftCard.DoesNotExist:
+            print(f"❌ Gift card not found: {code}")
             pass
 
         # 2. Try DiscountCode
         try:
             discount = DiscountCode.objects.get(code__iexact=code, is_active=True)
             if discount.usage_limit > discount.times_used and (not discount.expires_at or timezone.now() < discount.expires_at):
+                print(f"✅ Found discount code: {discount.code}")
                 return ("discount", discount)
+            else:
+                print(f"❌ Discount code expired or usage limit reached: {code}")
         except DiscountCode.DoesNotExist:
+            print(f"❌ Discount code not found: {code}")
             pass
 
         raise forms.ValidationError("Invalid or expired code.")

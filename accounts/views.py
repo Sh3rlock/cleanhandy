@@ -551,3 +551,128 @@ def csrf_debug(request):
             'csrf_token': request.POST.get('csrfmiddlewaretoken', 'Not provided')
         })
 
+
+def debug_booking_calculation(request):
+    """Debug booking price calculation"""
+    if not request.user.is_superuser:
+        return JsonResponse({'status': 'error', 'message': 'Access denied'})
+    
+    try:
+        from quotes.models import Booking, ServiceCategory, SquareFeetOption, HomeType, CleaningExtra
+        
+        # Create a test booking
+        service_cat = ServiceCategory.objects.filter(name__iexact='home').first()
+        if not service_cat:
+            return JsonResponse({'status': 'error', 'message': 'No home service category found'})
+        
+        # Get sample data
+        square_feet_option = SquareFeetOption.objects.first()
+        home_type = HomeType.objects.first()
+        
+        booking = Booking(
+            service_cat=service_cat,
+            square_feet_options=square_feet_option,
+            home_types=home_type,
+            hours_requested=3,
+            num_cleaners=2
+        )
+        
+        # Test calculations
+        is_large = booking.is_large_home()
+        subtotal = booking.calculate_subtotal()
+        tax = booking.calculate_tax()
+        total = booking.calculate_total_price()
+        
+        return JsonResponse({
+            'status': 'success',
+            'data': {
+                'service_cat': str(service_cat),
+                'square_feet_option': str(square_feet_option) if square_feet_option else 'None',
+                'home_type': str(home_type) if home_type else 'None',
+                'is_large_home': is_large,
+                'subtotal': float(subtotal),
+                'tax': float(tax),
+                'total': float(total),
+                'hours_requested': float(booking.hours_requested) if booking.hours_requested else None,
+                'num_cleaners': booking.num_cleaners
+            }
+        })
+        
+    except Exception as e:
+        import traceback
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'traceback': traceback.format_exc()
+        })
+
+
+def debug_form_validation(request):
+    """Debug form validation with test data"""
+    if not request.user.is_superuser:
+        return JsonResponse({'status': 'error', 'message': 'Access denied'})
+    
+    try:
+        from quotes.forms import CleaningBookingForm
+        from quotes.models import ServiceCategory
+        
+        # Get service category
+        service_cat = ServiceCategory.objects.filter(name__iexact='home').first()
+        if not service_cat:
+            return JsonResponse({'status': 'error', 'message': 'No home service category found'})
+        
+        # Test data similar to the actual form submission
+        test_data = {
+            'service_cat': service_cat.id,
+            'hours_requested': 5,
+            'num_cleaners': 2,
+            'cleaning_type': '1000-1500 (Regular)',
+            'date': '2025-09-24',
+            'hour': '09:00',
+            'square_feet_options': 1,
+            'home_types': 2,
+            'bath_count': 2,
+            'extras': [1, 2, 6],
+            'name': 'Test User',
+            'email': 'test@example.com',
+            'phone': '1234567890',
+            'address': 'Test Address',
+            'apartment': '7',
+            'zip_code': '53560',
+            'city': 'New York',
+            'state': 'NY',
+            'get_in': 'call_organize',
+            'parking': 'Garage',
+            'pet': 'cat',
+            'cleaning_frequency': 'bi_weekly',
+            'frequency_discount': '10',
+            'selected_date': '2025-09-24',
+            'selected_time': '09:00',
+            'recurrence_pattern': 'one_time',
+            'job_description': 'Test cleaning job',
+            'gift_card_code': ''
+        }
+        
+        # Test form validation
+        form = CleaningBookingForm(test_data)
+        is_valid = form.is_valid()
+        
+        result = {
+            'status': 'success' if is_valid else 'error',
+            'is_valid': is_valid,
+            'errors': dict(form.errors),
+            'non_field_errors': form.non_field_errors(),
+            'cleaned_data': form.cleaned_data if is_valid else None,
+            'test_data': test_data
+        }
+        
+        return JsonResponse(result)
+        
+    except Exception as e:
+        import traceback
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'traceback': traceback.format_exc()
+        })
+

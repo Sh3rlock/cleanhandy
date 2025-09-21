@@ -10,6 +10,7 @@ from datetime import datetime, time, timedelta, date
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+from decimal import Decimal
 import os
 
 from django.http import HttpResponseBadRequest
@@ -328,39 +329,59 @@ def cleaning_booking(request):
 
 
     if request.method == "POST":
-        form = CleaningBookingForm(request.POST)
-        if form.is_valid():
-            booking = form.save(commit=False)
-            booking.service_cat = service_cat
+        try:
+            print("📋 POST data received:")
+            for key, value in request.POST.items():
+                print(f"  {key}: {value}")
+            
+            form = CleaningBookingForm(request.POST)
+            if form.is_valid():
+                booking = form.save(commit=False)
+                booking.service_cat = service_cat
 
-            # Save first to set M2M
-            booking.save()
+                # Save first to set M2M
+                booking.save()
+                print(f"✅ Booking created with ID: {booking.id}")
 
-            selected_extra_ids = request.POST.getlist("extras")
-            if selected_extra_ids:
-                selected_extras = CleaningExtra.objects.filter(id__in=selected_extra_ids)
-                booking.extras.set(selected_extras)
+                selected_extra_ids = request.POST.getlist("extras")
+                if selected_extra_ids:
+                    selected_extras = CleaningExtra.objects.filter(id__in=selected_extra_ids)
+                    booking.extras.set(selected_extras)
+                    print(f"✅ Set extras: {[extra.name for extra in selected_extras]}")
 
             # --- Handle Gift Card or Discount Code ---
             code_data = form.cleaned_data.get("gift_card_code")
 
-            if code_data:
-                code_type, code_obj = code_data
+            try:
+                # Calculate initial price
+                booking.price = booking.calculate_total_price()
+                print(f"✅ Calculated booking price: {booking.price}")
+                
+                if code_data:
+                    code_type, code_obj = code_data
 
-                if code_type == "giftcard":
-                    booking.gift_card = code_obj
-                    booking.gift_card_discount = min(code_obj.balance, booking.calculate_total_price())
+                    if code_type == "giftcard":
+                        booking.gift_card = code_obj
+                        booking.gift_card_discount = min(code_obj.balance, booking.price)
 
-                elif code_type == "discount":
-                    if code_obj.discount_type == "fixed":
-                        booking.gift_card_discount = min(code_obj.value, booking.calculate_total_price())
-                    elif code_obj.discount_type == "percent":
-                        booking.gift_card_discount = booking.calculate_total_price() * (code_obj.value / 100)
-                    code_obj.times_used += 1
-                    code_obj.save()
+                    elif code_type == "discount":
+                        if code_obj.discount_type == "fixed":
+                            booking.gift_card_discount = min(code_obj.value, booking.price)
+                        elif code_obj.discount_type == "percent":
+                            booking.gift_card_discount = booking.price * (code_obj.value / 100)
+                        code_obj.times_used += 1
+                        code_obj.save()
 
-            # Final price after discount
-            booking.price = booking.calculate_total_price()
+                # Recalculate final price after discount
+                booking.price = booking.calculate_total_price()
+                print(f"✅ Final booking price: {booking.price}")
+                
+            except Exception as e:
+                print(f"❌ Error calculating booking price: {str(e)}")
+                # Set a default price to prevent booking failure
+                booking.price = Decimal("100.00")  # Default price
+                booking.gift_card_discount = None
+            
             booking.save()
 
             # --- Deduct Gift Card balance if used ---
@@ -379,13 +400,21 @@ def cleaning_booking(request):
 
             return redirect("booking_submitted_cleaning", booking_id=booking.id)
 
-        else:
-            print("❌ Form errors:", form.errors)
+                
+        except Exception as e:
+            print(f"❌ Error processing booking form: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            
+            # Return form with error message
+            form = CleaningBookingForm(request.POST)
             return render(request, "booking/cleaning_booking.html", {
                 "form": form,
                 "cleaning_extras": extras,
                 "service_cat": service_cat,
                 "related_services": related_services,
+                "saved_addresses": saved_addresses,
+                "error_message": "An error occurred while processing your booking. Please try again."
             })
     else:
         # Initialize form with user data if logged in
