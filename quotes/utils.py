@@ -4,7 +4,7 @@ from adminpanel.models import BlockedTimeSlot
 from datetime import datetime, timedelta, time
 from django.http import JsonResponse
 from .models import Customer
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.template.loader import render_to_string
 from django.core.files.base import ContentFile
 from weasyprint import HTML
@@ -13,8 +13,41 @@ from django.core.mail import EmailMessage
 from django.http import HttpRequest
 from django.conf import settings
 from django.core.cache import cache
+import socket
 from .models import HourlyRate
 from decimal import Decimal
+
+def send_email_with_timeout(email_message, timeout=10):
+    """
+    Send email with timeout handling to prevent worker timeouts.
+    Returns True if successful, False otherwise.
+    """
+    try:
+        # Create a connection with timeout settings
+        connection = get_connection(
+            backend='django.core.mail.backends.smtp.EmailBackend',
+            timeout=timeout,
+            fail_silently=False
+        )
+        
+        # Set socket timeout for the connection
+        original_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(timeout)
+        
+        try:
+            # Send the email
+            result = email_message.send(connection=connection)
+            return result > 0
+        finally:
+            # Restore original socket timeout
+            socket.setdefaulttimeout(original_timeout)
+            
+    except socket.timeout:
+        print(f"❌ Email timeout after {timeout} seconds")
+        return False
+    except Exception as e:
+        print(f"❌ Email sending failed: {str(e)}")
+        return False
 
 def get_available_hours_for_date(date, hours_requested=2):
     try:
@@ -198,7 +231,7 @@ def send_quote_email_cleaning(booking):
             subject=f"New Home Cleaning Booking from {booking.name}",
             body=admin_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=["matyass91@gmail.com"],  # Admin email
+            to=[settings.DEFAULT_FROM_EMAIL],  # Admin email
         )
         admin_email.content_subtype = "html"
         
@@ -255,11 +288,12 @@ def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discou
         )
         customer_email.content_subtype = "html"
         
-        try:
-            customer_email.send()
+        # Send customer email with timeout
+        email_timeout = getattr(settings, 'EMAIL_TIMEOUT', 10)
+        if send_email_with_timeout(customer_email, email_timeout):
             print(f"✅ Customer email sent successfully to {booking.email}")
-        except Exception as email_error:
-            print(f"❌ Failed to send customer email to {booking.email}: {str(email_error)}")
+        else:
+            print(f"❌ Failed to send customer email to {booking.email} (timeout or connection error)")
             # Don't raise - continue with booking process
 
         # Email to admin/staff
@@ -276,21 +310,21 @@ def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discou
             "tomorrow": date.today() + timedelta(days=1)
         })
         
-        print(f"📧 Sending admin email to: matyass91@gmail.com")
+        print(f"📧 Sending admin email to: {settings.DEFAULT_FROM_EMAIL}")
         
         admin_email = EmailMessage(
             subject=f"🏢 New Office Cleaning Booking from {booking.name} - #{booking.id}",
             body=admin_html,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=["matyass91@gmail.com"],
+            to=[settings.DEFAULT_FROM_EMAIL],
         )
         admin_email.content_subtype = "html"
         
-        try:
-            admin_email.send()
+        # Send admin email with timeout
+        if send_email_with_timeout(admin_email, email_timeout):
             print(f"✅ Admin email sent successfully")
-        except Exception as email_error:
-            print(f"❌ Failed to send admin email: {str(email_error)}")
+        else:
+            print(f"❌ Failed to send admin email (timeout or connection error)")
             # Don't raise - continue with booking process
         
         print(f"✅ Office cleaning booking emails sent successfully for booking {booking.id}")
@@ -342,7 +376,7 @@ def send_office_cleaning_quote_email(booking):
             subject=f"New Office Cleaning Booking from {booking.name}",
             body=admin_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=["matyass91@gmail.com"],  # Admin email
+            to=[settings.DEFAULT_FROM_EMAIL],  # Admin email
         )
         admin_email.content_subtype = "html"
         admin_email.attach(filename, pdf_buffer.read(), "application/pdf")

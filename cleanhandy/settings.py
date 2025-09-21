@@ -71,6 +71,14 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "matyass91@gmail.com")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "weqwmobbdznudgff")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "matyass91@gmail.com")
 
+# Email timeout settings to prevent worker timeouts
+EMAIL_TIMEOUT = 10  # 10 seconds timeout for SMTP operations
+EMAIL_CONNECTION_TIMEOUT = 5  # 5 seconds for connection establishment
+
+# Additional email settings for production reliability
+EMAIL_SUBJECT_PREFIX = '[TheCleanHandy] '
+EMAIL_USE_LOCALTIME = True
+
 
 LOGIN_REDIRECT_URL = 'profile'
 LOGOUT_REDIRECT_URL = 'home'

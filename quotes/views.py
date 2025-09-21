@@ -724,13 +724,20 @@ def office_cleaning_booking(request):
             print(f"   - Tax: ${tax:.2f}")
             print(f"   - Total: ${total:.2f}")
             
-            # Send confirmation emails
+            # Send confirmation emails (non-blocking)
             try:
-                send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discount_amount, subtotal, tax)
-                print(f"✅ Office cleaning booking emails sent successfully for booking {booking.id}")
+                # Use timeout settings from Django settings
+                email_timeout = getattr(settings, 'EMAIL_TIMEOUT', 10)
+                print(f"📧 Attempting to send emails with {email_timeout}s timeout...")
+                
+                email_success = send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discount_amount, subtotal, tax)
+                if email_success:
+                    print(f"✅ Office cleaning booking emails sent successfully for booking {booking.id}")
+                else:
+                    print(f"⚠️ Office cleaning booking emails failed for booking {booking.id} (non-critical)")
             except Exception as e:
                 print(f"❌ Failed to send office cleaning booking emails for booking {booking.id}: {e}")
-                # Continue to redirect even if email fails
+                # Continue to redirect even if email fails - emails are non-critical for booking completion
             
             # Redirect to confirmation page
             return redirect('booking_confirmation', booking_id=booking.id)
