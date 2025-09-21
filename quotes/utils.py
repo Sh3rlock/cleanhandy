@@ -162,7 +162,7 @@ def send_quote_email_cleaning(booking):
         print(f"✅ Home cleaning quote email sent successfully to {booking.email}")
     except Exception as e:
         print(f"❌ Failed to send home cleaning quote email: {str(e)}")
-        raise
+        # Don't raise - email failure shouldn't break the booking process
 
     # Reset PDF buffer for second email
     pdf_buffer.seek(0)

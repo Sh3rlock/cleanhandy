@@ -353,6 +353,7 @@ def cleaning_booking(request):
                 print(f"❌ Error checking database objects: {str(e)}")
             
             form = CleaningBookingForm(request.POST)
+            print(f"🔍 Form validation: {form.is_valid()}")
             if form.is_valid():
                 booking = form.save(commit=False)
                 booking.service_cat = service_cat
@@ -413,9 +414,11 @@ def cleaning_booking(request):
 
                 try:
                     send_quote_email_cleaning(booking)
+                    print(f"✅ Email sending completed for booking {booking.id}")
                 except Exception as e:
-                    print("❌ Email send failed:", e)
+                    print(f"❌ Email send failed: {str(e)}")
 
+                print(f"🔄 Redirecting to booking_submitted_cleaning with booking_id={booking.id}")
                 return redirect("booking_submitted_cleaning", booking_id=booking.id)
 
             else:

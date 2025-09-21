@@ -248,7 +248,9 @@ def booking_detail(request, booking_id):
 
 # Booking a service
 def booking_submitted_cleaning(request, booking_id):
+    print(f"🎯 booking_submitted_cleaning view called with booking_id={booking_id}")
     booking = get_object_or_404(Booking, id=booking_id)
+    print(f"✅ Booking found: {booking.id} - {booking.name} ({booking.email})")
     return render(request, "accounts/booking_submitted_cleaning.html", {
         "booking": booking
     })
