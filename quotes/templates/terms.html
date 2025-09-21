@@ -222,7 +222,7 @@
     <strong>TheCleanHandy LLC</strong><br>
     {% if contact_info %}{{ contact_info.address|linebreaksbr }}{% else %}[Insert street address]<br>
     New York, NY [ZIP]{% endif %}<br>
-    Email: <a href="mailto:{% if contact_info %}{{ contact_info.email }}{% else %}support@thecleanhandy.com{% endif %}">{% if contact_info %}{{ contact_info.email }}{% else %}support@thecleanhandy.com{% endif %}</a><br>
+    Email: <a href="mailto:support@thecleanhandy.com">support@thecleanhandy.com</a><br>
     Telephone: {% if contact_info %}{{ contact_info.phone }}{% else %}[Insert phone number]{% endif %}
   </address>
 

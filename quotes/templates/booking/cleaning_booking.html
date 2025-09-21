@@ -1114,34 +1114,7 @@
         })
         .catch(error => {
           console.error('❌ Failed to fetch available hours:', error);
-          timeSlots.innerHTML = '<div class="text-center text-muted">Failed to load available times</div>';
-          
-          // Fallback to showing all time slots if API fails
-          const dayOfWeek = date.getDay();
-          let startHour = 8;
-          let endHour = 18;
-          
-          if (dayOfWeek === 0 || dayOfWeek === 6) {
-            startHour = 8;
-            endHour = 18;
-          } else {
-            startHour = 11;
-            endHour = 18;
-          }
-          
-          for (let hour = startHour; hour <= endHour; hour++) {
-            const timeSlot = document.createElement('div');
-            timeSlot.className = 'time-slot';
-            timeSlot.textContent = `${hour}:00${hour < 12 ? 'am' : hour === 12 ? 'pm' : 'pm'}`;
-            timeSlot.dataset.time = `${hour.toString().padStart(2, '0')}:00`;
-            
-            timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, hour, `${hour.toString().padStart(2, '0')}:00`));
-            timeSlots.appendChild(timeSlot);
-          }
-          
-          if (timeSlots.children.length > 0) {
-            selectTimeSlot(timeSlots.children[0], startHour, `${startHour.toString().padStart(2, '0')}:00`);
-          }
+          timeSlots.innerHTML = '<div class="text-center text-muted p-3" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; color: #6c757d;"><i class="fa-solid fa-exclamation-triangle me-2"></i>No available times for this date. Please try selecting a different date.</div>';
         });
     }
 
@@ -1420,8 +1393,23 @@
       const dateValue = defaultDate.toISOString().split('T')[0];
       const timeValue = '09:00';
       
-      document.getElementById('selected_date').value = dateValue;
-      document.getElementById('selected_time').value = timeValue;
+      // Ensure hidden fields exist before setting values
+      const selectedDateField = document.getElementById('selected_date');
+      const selectedTimeField = document.getElementById('selected_time');
+      
+      if (selectedDateField) {
+        selectedDateField.value = dateValue;
+        console.log('🔍 Set selected_date field to:', dateValue);
+      } else {
+        console.warn('⚠️ selected_date field not found');
+      }
+      
+      if (selectedTimeField) {
+        selectedTimeField.value = timeValue;
+        console.log('🔍 Set selected_time field to:', timeValue);
+      } else {
+        console.warn('⚠️ selected_time field not found');
+      }
       
       // Also update Django form fields
       const dateField = document.getElementById("id_date");
@@ -1430,14 +1418,18 @@
       if (dateField) {
         dateField.value = dateValue;
         console.log('🔍 Set Django date field to:', dateValue);
+      } else {
+        console.warn('⚠️ Django date field (id_date) not found');
       }
       
       if (hourField) {
         hourField.value = timeValue;
         console.log('🔍 Set Django hour field to:', timeValue);
+      } else {
+        console.warn('⚠️ Django hour field (id_hour) not found');
       }
       
-      console.log('🔍 Set hidden fields - date:', dateValue, 'time:', timeValue);
+      console.log('🔍 Set default values - date:', dateValue, 'time:', timeValue);
     }
     
     // === Set Default Location ===
@@ -2023,10 +2015,35 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
       const djangoDate = document.getElementById("id_date")?.value;
       const djangoHour = document.getElementById("id_hour")?.value;
       
-      if (!selectedTime || !selectedDate || !djangoDate || !djangoHour) {
-        showFieldError("selected_time", "Please select a date and time for your service");
-        isValid = false;
-        errorMessages.push("Date and time selection is required");
+      // Check if at least one set of date/time fields is populated
+      const hasCalendarSelection = selectedTime && selectedDate;
+      const hasDjangoSelection = djangoDate && djangoHour;
+      
+      if (!hasCalendarSelection && !hasDjangoSelection) {
+        // Try to set default values as a fallback
+        console.log('🔍 No date/time selected, attempting to set defaults...');
+        setDefaultValues();
+        
+        // Re-check after setting defaults
+        const updatedSelectedTime = document.getElementById("selected_time")?.value;
+        const updatedSelectedDate = document.getElementById("selected_date")?.value;
+        const updatedDjangoDate = document.getElementById("id_date")?.value;
+        const updatedDjangoHour = document.getElementById("id_hour")?.value;
+        
+        const hasUpdatedCalendarSelection = updatedSelectedTime && updatedSelectedDate;
+        const hasUpdatedDjangoSelection = updatedDjangoDate && updatedDjangoHour;
+        
+        if (!hasUpdatedCalendarSelection && !hasUpdatedDjangoSelection) {
+          showFieldError("selected_time", "Please select a date and time for your service");
+          isValid = false;
+          errorMessages.push("Date and time selection is required");
+        }
+      } else if (!hasDjangoSelection && hasCalendarSelection) {
+        // Sync calendar values to Django fields if they're missing
+        const dateField = document.getElementById("id_date");
+        const hourField = document.getElementById("id_hour");
+        if (dateField) dateField.value = selectedDate;
+        if (hourField) hourField.value = selectedTime;
       }
       
       // 11. Validate Terms Agreement

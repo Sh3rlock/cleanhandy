@@ -400,7 +400,7 @@ class CleaningBookingForm(forms.ModelForm):
             "cleaning_frequency": forms.Select(attrs={"class": "cmn-input"}),
             "name": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Full Name"}),
             "email": forms.EmailInput(attrs={"class": "cmn-input", "placeholder": "Email"}),
-            "phone": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Phone Number (Optional)"}),
+            "phone": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Phone Number"}),
             "address": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Street Address"}),
             "apartment": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Apt/Suite #"}),
             "city": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "City"}),
@@ -575,7 +575,7 @@ class HandymanBookingForm(forms.ModelForm):
                 "service_cat": forms.Select(attrs={"class": "cmn-input"}),
                 "name": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Full Name"}),
                 "email": forms.EmailInput(attrs={"class": "cmn-input", "placeholder": "Email"}),
-                "phone": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Phone Number (Optional)"}),
+                "phone": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Phone Number"}),
                 "address": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Street Address"}),
                 "apartment": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Apt/Suite #"}),
         }

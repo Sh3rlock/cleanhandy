@@ -17,8 +17,19 @@ from .models import HourlyRate
 from decimal import Decimal
 
 def get_available_hours_for_date(date, hours_requested=2):
-    start_hour = 9
-    end_hour = 20
+    # Get day of week (0=Monday, 1=Tuesday, ..., 6=Sunday)
+    day_of_week = date.weekday()
+    
+    # Set hours based on day of week
+    if day_of_week == 6:  # Sunday - Closed
+        return []
+    elif day_of_week == 5:  # Saturday - 8:00-17:00
+        start_hour = 8
+        end_hour = 17
+    else:  # Monday-Friday - 8:00-18:00
+        start_hour = 8
+        end_hour = 18
+    
     interval = 30  # minutes
     duration_minutes = max(hours_requested * 60, 120)  # Minimum 2 hours
 
@@ -85,7 +96,7 @@ def send_quote_email_handyman(quote):
     <p>{quote.job_description}</p>
     """
 
-    msg = EmailMultiAlternatives(subject, text_content, "matyass91@gmail.com", [quote.email, "matyass91@gmail.com"])
+    msg = EmailMultiAlternatives(subject, text_content, "support@thecleanhandy.com", [quote.email, "support@thecleanhandy.com"])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
 
@@ -115,7 +126,7 @@ def send_quote_email_cleaning(booking):
     customer_email = EmailMessage(
         subject="Your Home Cleaning Quote - CleanHandy",
         body=html_message,
-        from_email="matyass91@gmail.com",
+        from_email="support@thecleanhandy.com",
         to=[booking.email],
     )
     customer_email.content_subtype = "html"
@@ -130,8 +141,8 @@ def send_quote_email_cleaning(booking):
     admin_email = EmailMessage(
         subject=f"New Home Cleaning Booking from {booking.name}",
         body=admin_message,
-        from_email="matyass91@gmail.com",
-        to=[settings.DEFAULT_FROM_EMAIL],  # or use a hardcoded staff email here
+        from_email="support@thecleanhandy.com",
+        to=["support@thecleanhandy.com"],  # Admin email
     )
     admin_email.content_subtype = "html"
     admin_email.attach(filename, pdf_buffer.read(), "application/pdf")
@@ -169,7 +180,7 @@ def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discou
         customer_email = EmailMessage(
             subject="🏢 Office Cleaning Booking Confirmed - CleanHandy",
             body=customer_html,
-            from_email="matyass91@gmail.com",
+            from_email="support@thecleanhandy.com",
             to=[booking.email],
         )
         customer_email.content_subtype = "html"
@@ -192,8 +203,8 @@ def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discou
         admin_email = EmailMessage(
             subject=f"🏢 New Office Cleaning Booking from {booking.name} - #{booking.id}",
             body=admin_html,
-            from_email="matyass91@gmail.com",
-            to=[settings.DEFAULT_FROM_EMAIL],
+            from_email="support@thecleanhandy.com",
+            to=["support@thecleanhandy.com"],
         )
         admin_email.content_subtype = "html"
         admin_email.send()
@@ -231,7 +242,7 @@ def send_office_cleaning_quote_email(booking):
         customer_email = EmailMessage(
             subject="Your Office Cleaning Quote - CleanHandy",
             body=html_message,
-            from_email="matyass91@gmail.com",
+            from_email="support@thecleanhandy.com",
             to=[booking.email],
         )
         customer_email.content_subtype = "html"
@@ -246,8 +257,8 @@ def send_office_cleaning_quote_email(booking):
         admin_email = EmailMessage(
             subject=f"New Office Cleaning Booking from {booking.name}",
             body=admin_message,
-            from_email="matyass91@gmail.com",
-            to=[settings.DEFAULT_FROM_EMAIL],  # or use a hardcoded staff email here
+            from_email="support@thecleanhandy.com",
+            to=["support@thecleanhandy.com"],  # Admin email
         )
         admin_email.content_subtype = "html"
         admin_email.attach(filename, pdf_buffer.read(), "application/pdf")
@@ -264,7 +275,7 @@ def send_office_cleaning_quote_email(booking):
             customer_email = EmailMessage(
                 subject="Your Office Cleaning Quote - CleanHandy",
                 body=html_message,
-                from_email="matyass91@gmail.com",
+                from_email="support@thecleanhandy.com",
                 to=[booking.email],
             )
             customer_email.content_subtype = "html"

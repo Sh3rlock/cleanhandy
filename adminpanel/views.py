@@ -857,9 +857,9 @@ def send_quote_email_view(request, quote_id):
             quote.approval_token = secrets.token_urlsafe(32)
 
         subject = "Your Quote from Clean & Handy Services"
-        from_email = "matyass91@gmail.com"
-        to_email = ["matyass91@gmail.com"]
-        bcc = ["matyass91@gmail.com"]
+        from_email = "support@thecleanhandy.com"
+        to_email = ["support@thecleanhandy.com"]
+        bcc = ["support@thecleanhandy.com"]
 
         context = {
             "customer": customer,
@@ -918,7 +918,7 @@ def quote_approval_view(request, quote_id, token):
         f"Job Description: {quote.job_description}"
     )
     from_email = "noreply@cleanhandy.com"
-    recipients = [quote.email, "matyass91@gmail.com"]
+    recipients = [quote.email, "support@thecleanhandy.com"]
 
     send_mail(
         subject=subject,
@@ -1062,7 +1062,7 @@ def send_office_quote_email(request, quote_id):
                 body=text_content,
                 from_email="noreply@cleanhandy.com",
                 to=[office_quote.email],
-                bcc=["matyass91@gmail.com"]  # Admin copy
+                bcc=["support@thecleanhandy.com"]  # Admin copy
             )
             email.attach_alternative(html_content, "text/html")
             email.send()
@@ -1293,7 +1293,7 @@ def send_handyman_quote_email(request, quote_id):
                 body=text_content,
                 from_email="noreply@cleanhandy.com",
                 to=[handyman_quote.email],
-                bcc=["matyass91@gmail.com"]  # Admin copy
+                bcc=["support@thecleanhandy.com"]  # Admin copy
             )
             email.attach_alternative(html_content, "text/html")
             email.send()

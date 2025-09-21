@@ -1,6 +1,8 @@
-{% extends "accounts/partials/account_base.html" %}
+{% extends 'adminpanel/base_admin_with_nav.html' %}
 {% load static %}
-{% block account_content %}
+{% block page_title %}Booking Calendar{% endblock %}
+{% block breadcrumb %}Booking Calendar{% endblock %}
+{% block admin_content %}
 
 <!-- Tippy.js -->
 <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/animations/scale.css" />
@@ -16,6 +18,211 @@
     .text-primary {
         color: #F15A29 !important;
       }
+
+    /* Simple Modal Styles */
+    .simple-modal {
+        display: none;
+        position: fixed;
+        z-index: 99999999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(3px);
+    }
+
+    .simple-modal.show {
+        display: block;
+    }
+
+    .simple-modal-content {
+        background-color: #fff;
+        margin: 3% auto;
+        padding: 0;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        animation: modalSlideIn 0.3s ease-out;
+        position: relative;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .simple-modal-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        border-bottom: 3px solid #F15A29;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .simple-modal-header h3 {
+        color: #F15A29;
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin: 0;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .simple-modal-close {
+        background: #F15A29;
+        color: white;
+        font-size: 1.8rem;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        font-weight: bold;
+    }
+
+    .simple-modal-close:hover {
+        background: #d14a1f;
+        transform: scale(1.1);
+    }
+
+    .simple-modal-body {
+        padding: 2rem;
+    }
+
+    .simple-modal-footer {
+        padding: 1.5rem 2rem;
+        border-top: 1px solid #dee2e6;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        background: #f8f9fa;
+        border-radius: 0 0 12px 12px;
+    }
+
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        background: #fff;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #F15A29;
+        box-shadow: 0 0 0 3px rgba(241, 90, 41, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .form-check-input {
+        margin-right: 0.5rem;
+    }
+
+    .form-check-label {
+        font-weight: 500;
+        color: #333;
+        cursor: pointer;
+    }
+
+    /* Button Styles */
+    .simple-modal-footer .btn-1 {
+        background: #F15A29;
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .simple-modal-footer .btn-1:hover {
+        background: #d14a1f;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(241, 90, 41, 0.3);
+    }
+
+    .simple-modal-footer .btn-secondary {
+        background: #6c757d;
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .simple-modal-footer .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .simple-modal-content {
+            width: 95%;
+            margin: 2% auto;
+            max-height: 95vh;
+        }
+        
+        .simple-modal-header,
+        .simple-modal-body,
+        .simple-modal-footer {
+            padding: 1rem;
+        }
+        
+        .simple-modal-footer {
+            flex-direction: column;
+        }
+        
+        .simple-modal-footer .btn-1,
+        .simple-modal-footer .btn-secondary {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
 </style>
 
 <a href="{% url 'admin_dashboard' %}" class="text-primary mb-2"><i class="fa fa-arrow-left" aria-hidden="true"></i>
@@ -26,7 +233,7 @@
 <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#quoteModal">
     + Create New Quote
 </button>-->
-<button class="btn btn-danger mb-3" data-bs-toggle="modal" data-bs-target="#blockSlotModal">
+<button class="btn btn-danger mb-3" onclick="openBlockSlotModal()">
     ⛔ Block Time Slot
 </button>
 
@@ -103,45 +310,54 @@
   </div>
 
 
-  <div class="modal fade" id="blockSlotModal" tabindex="-1" aria-labelledby="blockSlotModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <form method="POST" action="{% url 'block_time_slot' %}">
-        {% csrf_token %}
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="blockSlotModalLabel">Block Time Slot</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  <!-- Custom Block Time Slot Modal -->
+  <div id="blockSlotModal" class="simple-modal">
+    <div class="simple-modal-content">
+      <div class="simple-modal-header">
+        <h3>Block Time Slot</h3>
+        <span class="simple-modal-close" onclick="closeBlockSlotModal()">&times;</span>
+      </div>
+      <div class="simple-modal-body">
+        <form id="blockSlotForm" method="POST" action="{% url 'block_time_slot' %}">
+          {% csrf_token %}
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="all_day" id="allDayCheckbox">
+            <label class="form-check-label" for="allDayCheckbox">All Day Block</label>
           </div>
-          <div class="modal-body">
-            <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" name="all_day" id="allDayCheckbox">
-                <label class="form-check-label" for="allDayCheckbox">All Day Block</label>
-              </div>
-            <label>Date:</label>
-            <input type="date" name="date" class="form-control" required>
-  
-            <label class="mt-2">Start Time:</label>
-            <select name="start_time" class="form-select" id="startTimeSelect" required>
-                {% for t in time_choices %}
-                    <option value="{{ t }}">{{ t }}</option>
-                {% endfor %}
+          
+          <div class="form-group">
+            <label for="blockDate">Date *</label>
+            <input type="date" name="date" id="blockDate" class="cmn-input" required>
+          </div>
+
+          <div class="form-group">
+            <label for="startTimeSelect">Start Time *</label>
+            <select name="start_time" id="startTimeSelect" class="cmn-input" required>
+              {% for t in time_choices %}
+                <option value="{{ t }}">{{ t }}</option>
+              {% endfor %}
             </select>
-
-            <label class="mt-2">End Time:</label>
-            <select name="end_time" class="form-select" id="endTimeSelect" required>
-                {% for t in time_choices %}
-                    <option value="{{ t }}">{{ t }}</option>
-                {% endfor %}
-            </select>   
-
-            <label class="mt-2">Reason:</label>
-            <input type="text" name="reason" class="form-control" placeholder="Optional reason (e.g. Maintenance)">
           </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-danger">Block</button>
+
+          <div class="form-group">
+            <label for="endTimeSelect">End Time *</label>
+            <select name="end_time" id="endTimeSelect" class="fcmn-input" required>
+              {% for t in time_choices %}
+                <option value="{{ t }}">{{ t }}</option>
+              {% endfor %}
+            </select>
           </div>
-        </div>
-      </form>
+
+          <div class="form-group">
+            <label for="blockReason">Reason (Optional)</label>
+            <input type="text" name="reason" id="blockReason" class="cmn-input" placeholder="Optional reason (e.g. Maintenance)">
+          </div>
+        </form>
+      </div>
+      <div class="simple-modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeBlockSlotModal()">Cancel</button>
+        <button type="button" class="btn-1" onclick="submitBlockSlot()">Block Time Slot</button>
+      </div>
     </div>
   </div>
   
@@ -462,13 +678,72 @@ function declineQuote(quoteId) {
 
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const form = document.querySelector("#blockSlotModal form");
+    // Block Slot Modal Functions
+    function openBlockSlotModal() {
+        document.getElementById("blockSlotModal").style.display = "block";
+    }
+
+    function closeBlockSlotModal() {
+        document.getElementById("blockSlotModal").style.display = "none";
+        // Reset form
+        document.getElementById("blockSlotForm").reset();
+    }
+
+    function submitBlockSlot() {
+        const form = document.getElementById("blockSlotForm");
         const startTimeSelect = document.getElementById("startTimeSelect");
         const endTimeSelect = document.getElementById("endTimeSelect");
         const allDayCheckbox = document.getElementById("allDayCheckbox");
 
-         // 🔁 Disable/Enable start and end time based on All Day checkbox
+        // Only validate if not all-day
+        if (!allDayCheckbox.checked) {
+            const startTime = startTimeSelect.value;
+            const endTime = endTimeSelect.value;
+
+            if (!startTime || !endTime) {
+                alert("Please select both start and end time.");
+                return;
+            }
+
+            if (startTime >= endTime) {
+                alert("❌ End time must be after start time.");
+                return;
+            }
+
+            const start = parseTime(startTime);
+            const end = parseTime(endTime);
+            const diffMinutes = (end - start) / (1000 * 60);
+
+            if (diffMinutes < 30) {
+                alert("⚠️ Time slot must be at least 30 minutes long.");
+                return;
+            }
+        }
+
+        // Submit the form
+        form.submit();
+    }
+
+    function parseTime(timeStr) {
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+    }
+
+    // Close modal when clicking outside it
+    window.onclick = function(event) {
+        const modal = document.getElementById("blockSlotModal");
+        if (event.target === modal) {
+            closeBlockSlotModal();
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const startTimeSelect = document.getElementById("startTimeSelect");
+        const endTimeSelect = document.getElementById("endTimeSelect");
+        const allDayCheckbox = document.getElementById("allDayCheckbox");
+
+        // 🔁 Disable/Enable start and end time based on All Day checkbox
         function toggleTimeInputs() {
             const isAllDay = allDayCheckbox.checked;
             startTimeSelect.disabled = isAllDay;
@@ -483,45 +758,10 @@ function declineQuote(quoteId) {
         // ✅ Initial state
         toggleTimeInputs();
 
-    // 🔁 React to checkbox change
-    allDayCheckbox.addEventListener("change", toggleTimeInputs);
-    
-        form.addEventListener("submit", function (e) {
-            // Only validate if not all-day
-            if (!allDayCheckbox.checked) {
-                const startTime = startTimeSelect.value;
-                const endTime = endTimeSelect.value;
-    
-                if (!startTime || !endTime) {
-                    alert("Please select both start and end time.");
-                    e.preventDefault();
-                    return;
-                }
-    
-                if (startTime >= endTime) {
-                    alert("❌ End time must be after start time.");
-                    e.preventDefault();
-                    return;
-                }
-    
-                const start = parseTime(startTime);
-                const end = parseTime(endTime);
-                const diffMinutes = (end - start) / (1000 * 60);
-    
-                if (diffMinutes < 30) {
-                    alert("⚠️ Time slot must be at least 30 minutes long.");
-                    e.preventDefault();
-                }
-            }
-        });
-    
-        function parseTime(timeStr) {
-            const [hours, minutes] = timeStr.split(":").map(Number);
-            const now = new Date();
-            return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
-        }
+        // 🔁 React to checkbox change
+        allDayCheckbox.addEventListener("change", toggleTimeInputs);
     });
-    </script>
+</script>
     
   
   

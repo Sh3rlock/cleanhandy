@@ -83,7 +83,7 @@ def contact(request):
                 subject,
                 message,
                 "noreply@cleanhandy.com",
-                ["matyass91@gmail.com"],
+                ["support@thecleanhandy.com"],
                 fail_silently=False,
             )
             success = True
@@ -700,7 +700,7 @@ def office_quote_submit(request):
                     subject,
                     message,
                     "noreply@cleanhandy.com",
-                    ["matyass91@gmail.com"],  # Admin email
+                    ["support@thecleanhandy.com"],  # Admin email
                     fail_silently=False,
                 )
             except Exception as e:
@@ -926,8 +926,8 @@ def post_event_cleaning_quote_submit(request):
                     admin_email = EmailMessage(
                         subject=f"🎉 New Post Event Cleaning Quote Request from {post_event_quote.name} - #{post_event_quote.id}",
                         body=admin_html,
-                        from_email="matyass91@gmail.com",
-                        to=["matyass91@gmail.com"],  # Admin email
+                        from_email="support@thecleanhandy.com",
+                        to=["support@thecleanhandy.com"],  # Admin email
                     )
                     admin_email.content_subtype = "html"
                     admin_email.send()

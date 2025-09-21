@@ -180,8 +180,42 @@ class BookingDetailView(LoginRequiredMixin, DetailView):
 
 
 def home_cleaning_booking(request):
-    """Redirect to the comprehensive cleaning booking page in quotes app"""
-    return redirect('cleaning_booking')
+    """Home cleaning booking form - show the comprehensive cleaning_booking.html template"""
+    from quotes.models import ServiceCategory, SquareFeetOption, HomeType, CleaningExtra
+    from quotes.forms import CleaningBookingForm
+    
+    try:
+        # Get the cleaning service category
+        service_cat = ServiceCategory.objects.filter(name__icontains='cleaning').first()
+        
+        # Get all required data for the comprehensive form
+        square_feet_options = SquareFeetOption.objects.all()
+        home_types = HomeType.objects.all()
+        cleaning_extras = CleaningExtra.objects.all()
+        
+        # Create the form
+        form = CleaningBookingForm()
+        
+        # Get all services for the banner
+        all_services = []
+        try:
+            from quotes.models import Service
+            all_services = Service.objects.all()
+        except:
+            pass
+        
+        return render(request, 'booking/cleaning_booking.html', {
+            'form': form,
+            'service_cat': service_cat,
+            'square_feet_options': square_feet_options,
+            'home_types': home_types,
+            'cleaning_extras': cleaning_extras,
+            'saved_addresses': [],  # Empty list since CustomerAddress doesn't exist
+            'all_services': all_services,
+        })
+    except Exception as e:
+        messages.error(request, f'There was an issue loading the booking form: {str(e)}')
+        return redirect('bookings:booking_home')
 
 
 def office_cleaning_booking(request):

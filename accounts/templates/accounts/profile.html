@@ -99,8 +99,9 @@
 
   .leave-comments-form textarea {
     width: 100%;
-    height: 150px !important;s
+    height: 150px !important;
   }
+
 </style>
 
 <!-- common banner -->
@@ -145,61 +146,8 @@
 <section class="service-details mb-4" style="margin-top:-50px">
   <div class="container">
 
-   <!-- Responsive Horizontal Navigation Bar -->
-<div class="row mb-4">
-  <div class="col-12">
-    <nav class="navbar navbar-expand-md bg-white shadow-sm p-3 rounded">
-      <div class="container-fluid justify-content-center">
-        <!-- Toggler for mobile view -->
-        <button class="navbar-toggler d-flex align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#userNavBar" aria-controls="userNavBar" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="fw-semibold">Menu:</span>
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <!-- Collapsible content -->
-        <div class="collapse navbar-collapse justify-content-center" id="userNavBar">
-          <ul class="navbar-nav gap-3 flex-nowrap align-items-center text-center">
-            {% if request.user.is_superuser %}
-              <li class="nav-item">
-                <a href="/admin/" class="nav-link">Admin</a>
-              </li>
-            {% endif %}
-            <li class="nav-item">
-              <a href="{% url 'profile' %}" class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">Profile Info</a>
-            </li>
-            <li class="nav-item">
-              <a href="{% url 'my_bookings' %}" class="nav-link {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}">Booking History</a>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="bookNowDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Book Now
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="bookNowDropdown">
-                <li><a class="dropdown-item" href="{% url 'cleaning_booking' %}">Cleaning</a></li>
-                <!-- <li><a class="dropdown-item" href="{% url 'request_handyman_booking' %}">Handyman</a></li> -->
-              </ul>
-            </li>
-            <li class="nav-item">
-              <a href="{% url 'purchase_gift_card' %}" class="nav-link {% if request.resolver_match.url_name == 'giftcard' %}active{% endif %}">Gift Card</a>
-            </li>
-            <li class="nav-item">
-              <a href="{% url 'help' %}" class="nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}">Help</a>
-            </li>
-            <li class="nav-item">
-              <a href="#" class="nav-link">Billing Info</a>
-            </li>
-            <li class="nav-item">
-              <form action="{% url 'logout' %}" method="post" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="nav-link text-danger bg-transparent border-0 p-0" style="color: red !important;">Logout</button>
-              </form>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-  </div>
-</div>
+   <!-- Include Navigation Menu -->
+   {% include 'accounts/partials/navigation_menu.html' %}
 
     
 <div class="row">

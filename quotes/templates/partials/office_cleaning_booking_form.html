@@ -701,34 +701,7 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .catch(error => {
         console.error('❌ Failed to fetch available hours:', error);
-        timeSlots.innerHTML = '<div class="text-center text-muted">Failed to load available times</div>';
-        
-        // Fallback to showing all time slots if API fails
-        const dayOfWeek = date.getDay();
-        let startHour = 8;
-        let endHour = 20;
-        
-        if (dayOfWeek === 0 || dayOfWeek === 6) {
-          startHour = 8;
-          endHour = 20;
-        } else {
-          startHour = 8;
-          endHour = 20;
-        }
-        
-        for (let hour = startHour; hour <= endHour; hour++) {
-          const timeSlot = document.createElement('div');
-          timeSlot.className = 'time-slot';
-          timeSlot.textContent = `${hour}:00${hour < 12 ? 'am' : hour === 12 ? 'pm' : 'pm'}`;
-          timeSlot.dataset.time = `${hour.toString().padStart(2, '0')}:00`;
-          
-          timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, hour, `${hour.toString().padStart(2, '0')}:00`));
-          timeSlots.appendChild(timeSlot);
-        }
-        
-        if (timeSlots.children.length > 0) {
-          selectTimeSlot(timeSlots.children[0], startHour, `${startHour.toString().padStart(2, '0')}:00`);
-        }
+        timeSlots.innerHTML = '<div class="text-center text-muted p-3" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; color: #6c757d;"><i class="fa-solid fa-exclamation-triangle me-2"></i>No available times for this date. Please try selecting a different date.</div>';
       });
   }
 
