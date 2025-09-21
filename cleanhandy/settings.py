@@ -63,12 +63,25 @@ SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 
 
 # Email Configuration
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "matyass91@gmail.com")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "weqwmobbdznudgff")
+# Railway blocks SMTP on free/trial/hobby plans, so we use different backends based on environment
+
+# Check if we're on Railway and have SMTP restrictions
+IS_RAILWAY = os.getenv("RAILWAY_ENVIRONMENT", "").lower() in ["production", "preview"]
+RAILWAY_PLAN = os.getenv("RAILWAY_PLAN", "").lower()
+
+# Use Railway-aware email backend that handles SMTP restrictions
+if IS_RAILWAY and RAILWAY_PLAN in ["free", "trial", "hobby", ""]:
+    print("🚀 Railway free/trial/hobby plan detected - Using Railway-aware email backend")
+    EMAIL_BACKEND = "quotes.email_backends.RailwayAwareEmailBackend"
+else:
+    # Use SMTP for local development and Railway Pro/Enterprise
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = "smtp.gmail.com"
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "matyass91@gmail.com")
+    EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "weqwmobbdznudgff")
+
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "matyass91@gmail.com")
 
 # Email timeout settings to prevent worker timeouts
