@@ -198,7 +198,7 @@ def send_quote_email_cleaning(booking):
             subject=f"New Home Cleaning Booking from {booking.name}",
             body=admin_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[settings.DEFAULT_FROM_EMAIL],  # Admin email
+            to=["matyass91@gmail.com"],  # Admin email
         )
         admin_email.content_subtype = "html"
         
@@ -276,13 +276,13 @@ def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discou
             "tomorrow": date.today() + timedelta(days=1)
         })
         
-        print(f"📧 Sending admin email to: {settings.DEFAULT_FROM_EMAIL}")
+        print(f"📧 Sending admin email to: matyass91@gmail.com")
         
         admin_email = EmailMessage(
             subject=f"🏢 New Office Cleaning Booking from {booking.name} - #{booking.id}",
             body=admin_html,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[settings.DEFAULT_FROM_EMAIL],
+            to=["matyass91@gmail.com"],
         )
         admin_email.content_subtype = "html"
         
@@ -342,7 +342,7 @@ def send_office_cleaning_quote_email(booking):
             subject=f"New Office Cleaning Booking from {booking.name}",
             body=admin_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[settings.DEFAULT_FROM_EMAIL],  # Admin email
+            to=["matyass91@gmail.com"],  # Admin email
         )
         admin_email.content_subtype = "html"
         admin_email.attach(filename, pdf_buffer.read(), "application/pdf")

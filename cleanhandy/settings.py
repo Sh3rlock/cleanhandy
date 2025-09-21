@@ -69,7 +69,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "matyass91@gmail.com")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "weqwmobbdznudgff")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "support@thecleanhandy.com")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "matyass91@gmail.com")
 
 
 LOGIN_REDIRECT_URL = 'profile'
