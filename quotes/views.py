@@ -206,8 +206,16 @@ def subscribe_newsletter(request):
 
 # Booking a service
 def request_cleaning_booking(request, service_cat_id):
-    service_cat = get_object_or_404(ServiceCategory, id=service_cat_id)
-    extras = CleaningExtra.objects.all()
+    try:
+        service_cat = get_object_or_404(ServiceCategory, id=service_cat_id)
+        extras = CleaningExtra.objects.all()
+        print(f"✅ Service category found: {service_cat}")
+        print(f"✅ Cleaning extras count: {extras.count()}")
+    except Exception as e:
+        print(f"❌ Error in view setup: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise
 
     # Get related services in the Home category (for suggestion sidebar)
     home_category = ServiceCategory.objects.filter(name__iexact='home').first()
@@ -334,6 +342,16 @@ def cleaning_booking(request):
             for key, value in request.POST.items():
                 print(f"  {key}: {value}")
             
+            # Check if required database objects exist
+            try:
+                from quotes.models import SquareFeetOption, HomeType
+                square_feet_options = SquareFeetOption.objects.all()
+                home_types = HomeType.objects.all()
+                print(f"✅ SquareFeetOption count: {square_feet_options.count()}")
+                print(f"✅ HomeType count: {home_types.count()}")
+            except Exception as e:
+                print(f"❌ Error checking database objects: {str(e)}")
+            
             form = CleaningBookingForm(request.POST)
             if form.is_valid():
                 booking = form.save(commit=False)
@@ -393,16 +411,30 @@ def cleaning_booking(request):
                         code_obj.is_active = False
                     code_obj.save()
 
-            try:
-                send_quote_email_cleaning(booking)
-            except Exception as e:
-                print("❌ Email send failed:", e)
+                try:
+                    send_quote_email_cleaning(booking)
+                except Exception as e:
+                    print("❌ Email send failed:", e)
 
-            return redirect("booking_submitted_cleaning", booking_id=booking.id)
+                return redirect("booking_submitted_cleaning", booking_id=booking.id)
 
+            else:
+                print("❌ Form errors:", form.errors)
+                print("❌ Form non-field errors:", form.non_field_errors())
+                for field, errors in form.errors.items():
+                    print(f"❌ Field '{field}' errors: {errors}")
+                return render(request, "booking/cleaning_booking.html", {
+                    "form": form,
+                    "cleaning_extras": extras,
+                    "service_cat": service_cat,
+                    "related_services": related_services,
+                    "saved_addresses": saved_addresses,
+                })
                 
         except Exception as e:
             print(f"❌ Error processing booking form: {str(e)}")
+            print(f"❌ Environment: {settings.DEBUG}")
+            print(f"❌ Database: {settings.DATABASES['default']['ENGINE']}")
             import traceback
             traceback.print_exc()
             
@@ -414,7 +446,7 @@ def cleaning_booking(request):
                 "service_cat": service_cat,
                 "related_services": related_services,
                 "saved_addresses": saved_addresses,
-                "error_message": "An error occurred while processing your booking. Please try again."
+                "error_message": f"An error occurred while processing your booking: {str(e)}"
             })
     else:
         # Initialize form with user data if logged in
