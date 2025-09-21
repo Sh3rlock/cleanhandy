@@ -364,21 +364,26 @@
                   <img src="{{ service.service_detail_image.url }}" alt="image">
               </div>
               <div class="service-tow-single-content">
-                    {% if service.category.name|lower == "cleaning" %}
-                        <a href="{% url 'bookings:home_cleaning_booking' %}" class="service-tow-single-title">{{ service.name }}</a>
-                    {% elif service.category.name|lower == "post event cleaning" %}
-                        <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
-                    {% elif service.category.name|lower == "handyman" %}
-                        <!-- <a href="{% url 'request_handyman_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a> -->
-                    {% endif %}
+                    <div class="service-tow-single-title">
+                        <span>{{ service.name }}</span>
+                    </div>
                   <div class="service-tow-single-rating">
                       <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
                   </div>
                   <div class="featured-single-info">
-                      <!-- <a href="{% url 'request_handyman_quote' service.id %}">Book Now</a> -->
-                      <div class="featured-single-info-left">
-                          <p>Starting from:</p><h5>${{ service.base_price }}</h5>
-                      </div>
+                      {% if service.category.name|lower == "cleaning" %}
+                          <a href="{% url 'cleaning_booking' %}" class="btn-1">Book Now</a>
+                      {% elif service.category.name|lower == "office cleaning" %}
+                          <a href="{% url 'office_cleaning_booking' %}" class="btn-1">Book Now</a>
+                      {% elif service.category.name|lower == "post event cleaning" %}
+                          <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="btn-1">Get a Quote</a>
+                      {% elif service.category.name|lower == "handyman" %}
+                          <a href="{% url 'request_handyman_quote' service.id %}" class="btn-1">Get a Quote</a>
+                      {% else %}
+                          <div class="featured-single-info-left">
+                              <p>Starting from:</p><h5>${{ service.base_price }}</h5>
+                          </div>
+                      {% endif %}
                   </div>
               </div>
           </div>
@@ -475,10 +480,110 @@
           <div class="swiper-container">
             <div class="swiper single-item-carousel">
               <div class="swiper-wrapper">
-                {% for review in reviews %}
+                <!-- Hardcoded positive reviews -->
                 <div class="swiper-slide testimonial-slider-item">
                   <div class="testimonial-slider-single">
-                    <!-- image removed on purpose -->
+                    <div class="testimonial-slider-content">
+                      <div class="rating">
+                        <ul>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li>5</li>
+                        </ul>
+                      </div>
+                      <div class="testimonial-comments">
+                        <p>TheCleanHandy's home cleaning service exceeded my expectations! The team was professional, thorough, and left my apartment spotless. They paid attention to every detail and used eco-friendly products. I've been using their service monthly for 6 months now and couldn't be happier!</p>
+                      </div>
+                      <div class="testimonial-info-box">
+                        <div class="testimonial-info">
+                          <h5>Sarah Johnson</h5>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="swiper-slide testimonial-slider-item">
+                  <div class="testimonial-slider-single">
+                    <div class="testimonial-slider-content">
+                      <div class="rating">
+                        <ul>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li>5</li>
+                        </ul>
+                      </div>
+                      <div class="testimonial-comments">
+                        <p>Outstanding office cleaning service! TheCleanHandy transformed our workspace into a pristine environment. Their team works efficiently around our schedule and maintains the highest standards. Our employees love coming to work in such a clean, fresh office. Highly recommend for any business!</p>
+                      </div>
+                      <div class="testimonial-info-box">
+                        <div class="testimonial-info">
+                          <h5>Michael Chen</h5>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="swiper-slide testimonial-slider-item">
+                  <div class="testimonial-slider-single">
+                    <div class="testimonial-slider-content">
+                      <div class="rating">
+                        <ul>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li>5</li>
+                        </ul>
+                      </div>
+                      <div class="testimonial-comments">
+                        <p>After hosting my daughter's wedding reception at home, I was overwhelmed by the cleanup needed. TheCleanHandy's post-event cleaning service was a lifesaver! They handled everything from deep cleaning carpets to restoring furniture. The team was incredibly thorough and respectful. Worth every penny!</p>
+                      </div>
+                      <div class="testimonial-info-box">
+                        <div class="testimonial-info">
+                          <h5>Linda Rodriguez</h5>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="swiper-slide testimonial-slider-item">
+                  <div class="testimonial-slider-single">
+                    <div class="testimonial-slider-content">
+                      <div class="rating">
+                        <ul>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li>5</li>
+                        </ul>
+                      </div>
+                      <div class="testimonial-comments">
+                        <p>I've tried several cleaning services in NYC, but TheCleanHandy stands out! Their attention to detail is incredible - they clean areas I didn't even think needed cleaning. The team is always punctual, friendly, and respectful of my home. My place has never looked better!</p>
+                      </div>
+                      <div class="testimonial-info-box">
+                        <div class="testimonial-info">
+                          <h5>David Martinez</h5>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!--{% for review in reviews %}
+                <div class="swiper-slide testimonial-slider-item">
+                  <div class="testimonial-slider-single">
         
                     <div class="testimonial-slider-content">
                       <div class="rating">
@@ -512,16 +617,16 @@
                   <div class="swiper-slide">
                     <p>No reviews yet.</p>
                   </div>
-                {% endfor %}
+                {% endfor %} -->
               </div>
             </div>
           </div>
         
           <div class="swiper-button-next">
-            <i class="fa-regular fa-angle-right"></i>
+            <i class="fa-solid fa-angle-right"></i>
           </div>
           <div class="swiper-button-prev">
-            <i class="fa-sharp fa-regular fa-angle-left"></i>
+            <i class="fa-solid fa-angle-left"></i>
           </div>
         </div>
         

@@ -7,6 +7,33 @@
         
     }
 
+    /* Fix Font Awesome icons in buttons */
+    .btn-1 i.fa-solid {
+        font-family: "Font Awesome 6 Free" !important;
+        font-weight: 900 !important;
+        font-size: 14px !important;
+        display: inline-block !important;
+        width: auto !important;
+        height: auto !important;
+        line-height: 1 !important;
+        vertical-align: middle !important;
+        margin-right: 8px !important;
+        margin-left: 0 !important;
+    }
+
+    /* Ensure Font Awesome loads properly */
+    .fa-solid:before {
+        font-family: "Font Awesome 6 Free" !important;
+        font-weight: 900 !important;
+    }
+
+    /* Ensure proper button text alignment */
+    .btn-1 {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
     .cmn-input {
         border-radius: 8px;
         border: 1px solid #F15A29;
@@ -148,6 +175,11 @@ select::-ms-expand {
         </div>
         <div class="row">
             <div class="col-lg-8">
+              <div class="mb-4">
+                <button type="button" class="btn-1" onclick="openHandymanQuoteModal()">
+                    <i class="fa-solid fa-clipboard "></i>Request a Handyman Quote
+                </button>
+              </div> 
                 {% if service.service_detail_image %}
                 <div class="service-details-image">
                     <img src="{{ service.service_detail_image.url }}" alt="image"> 
@@ -155,15 +187,11 @@ select::-ms-expand {
                 {% endif %}
                
                <div class="service-details-content">
-                <div class="mt-4 mb-4">
-                  <button type="button" class="btn-1" onclick="openHandymanQuoteModal()">
-                      <i class="fas fa-file-invoice-dollar me-2"></i>Request a Handyman Quote
-                  </button>
-                </div> 
+                
                    {{ service.description|safe }}
                    <div class="mt-4">
                        <button type="button" class="btn-1" onclick="openHandymanQuoteModal()">
-                           <i class="fas fa-file-invoice-dollar me-2"></i>Request a Handyman Quote
+                           <i class="fa-solid fa-clipboard "></i>Request a Handyman Quote
                        </button>
                    </div>
                </div>
@@ -343,7 +371,7 @@ select::-ms-expand {
                   </div>
                   <div class="featured-single-info">
                       <button type="button" class="btn-1" onclick="openHandymanQuoteModal()">
-                        <i class="fas fa-file-invoice-dollar me-2"></i>Get a Quote
+                        <i class="fa-solid fa-clipboard "></i>Get a Quote
                      </button>
                   
                       <div class="featured-single-info-left">
@@ -847,7 +875,7 @@ select::-ms-expand {
     // Disable submit button to prevent double submission
     const submitBtn = document.querySelector('#handymanQuoteModal .btn-1');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...';
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm " role="status" aria-hidden="true"></span>Submitting...';
     
     // Get form data
     const formData = new FormData(document.getElementById('handymanQuoteForm'));

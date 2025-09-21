@@ -614,7 +614,7 @@ select::-ms-expand {
                     {% endif %}
                   {% endif %}
                   {% for post_event_service in all_services %}
-                    {% if post_event_service.category.name|lower == 'post event cleaning' %}
+                  {% if "event" in service.name|lower %}
                       {% if user.is_authenticated %}
                         <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' post_event_service.id %}">Post Event Cleaning</a>
                       {% else %}

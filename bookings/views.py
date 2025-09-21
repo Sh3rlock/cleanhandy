@@ -180,47 +180,8 @@ class BookingDetailView(LoginRequiredMixin, DetailView):
 
 
 def home_cleaning_booking(request):
-    """Complete Home Cleaning booking in one form"""
-    try:
-        if request.method == 'POST':
-            form = HomeCleaningForm(request.POST)
-            if form.is_valid():
-                # Create the booking
-                booking = form.save(commit=False)
-                
-                # Calculate pricing
-                booking.base_price = calculate_base_price(booking)
-                booking.extra_services_total = calculate_extra_services_price(booking)
-                booking.calculate_total_price()
-                booking.save()
-                
-                # Add extra services
-                if form.cleaned_data.get('extra_services'):
-                    booking.extra_services.set(form.cleaned_data['extra_services'])
-                
-                messages.success(request, 'Home Cleaning booking created successfully! You will receive a confirmation email shortly.')
-                return redirect('bookings:booking_confirmation', booking_id=booking.id)
-        else:
-            try:
-                form = HomeCleaningForm()
-            except Exception as form_error:
-                # If the form can't be created, create a simple message form
-                messages.error(request, f'There was an issue loading the booking form: {str(form_error)}')
-                return redirect('bookings:booking_home')
-        
-        try:
-            extra_services = ExtraService.objects.all()
-        except:
-            extra_services = []
-        
-        return render(request, 'bookings/home_cleaning_booking.html', {
-            'form': form,
-            'extra_services': extra_services
-        })
-    except Exception as e:
-        # If there's an issue with the form (e.g., ExtraService model doesn't exist)
-        messages.error(request, f'There was an issue loading the booking form: {str(e)}')
-        return redirect('bookings:booking_home')
+    """Redirect to the comprehensive cleaning booking page in quotes app"""
+    return redirect('cleaning_booking')
 
 
 def office_cleaning_booking(request):
