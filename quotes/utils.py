@@ -4,7 +4,7 @@ from adminpanel.models import BlockedTimeSlot
 from datetime import datetime, timedelta, time
 from django.http import JsonResponse
 from .models import Customer
-from django.core.mail import EmailMultiAlternatives, get_connection
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.core.files.base import ContentFile
 from weasyprint import HTML
@@ -23,20 +23,13 @@ def send_email_with_timeout(email_message, timeout=10):
     Returns True if successful, False otherwise.
     """
     try:
-        # Create a connection with timeout settings
-        connection = get_connection(
-            backend='django.core.mail.backends.smtp.EmailBackend',
-            timeout=timeout,
-            fail_silently=False
-        )
-        
         # Set socket timeout for the connection
         original_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(timeout)
         
         try:
-            # Send the email
-            result = email_message.send(connection=connection)
+            # Send the email using the standard send method
+            result = email_message.send()
             return result > 0
         finally:
             # Restore original socket timeout
