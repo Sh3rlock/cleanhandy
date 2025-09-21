@@ -233,6 +233,9 @@ def send_quote_email_cleaning(booking):
         else:
             print(f"❌ Failed to send home cleaning quote email to {booking.email} (timeout or connection error)")
             # Don't raise - email failure shouldn't break the booking process
+    except Exception as e:
+        print(f"❌ Failed to send home cleaning quote email: {str(e)}")
+        # Don't raise - email failure shouldn't break the booking process
 
     # Reset PDF buffer for second email
     pdf_buffer.seek(0)
@@ -258,6 +261,9 @@ def send_quote_email_cleaning(booking):
         else:
             print(f"❌ Failed to send admin notification email (timeout or connection error)")
             # Don't raise here - admin email failure shouldn't break the booking
+    except Exception as e:
+        print(f"❌ Failed to send admin notification email: {str(e)}")
+        # Don't raise here - admin email failure shouldn't break the booking
 
 
 def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discount_amount, subtotal, tax):
