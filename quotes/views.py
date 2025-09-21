@@ -516,12 +516,22 @@ def handyman_booking(request):
     return render(request, "booking/handyman_booking.html", {"form": form, "service_cat": service_cat, "related_services": related_services})
 
 def office_cleaning_booking(request):
-    service_cat = ServiceCategory.objects.filter(name__iexact='commercial').first()
-    extras = CleaningExtra.objects.all()
+    try:
+        print("🏢 Office cleaning booking view started")
+        service_cat = ServiceCategory.objects.filter(name__iexact='commercial').first()
+        extras = CleaningExtra.objects.all()
+        print(f"✅ Service category: {service_cat}")
+        print(f"✅ Extras count: {extras.count()}")
 
-    # Get the hourly rate for office cleaning
-    from .utils import get_hourly_rate
-    hourly_rate = get_hourly_rate('office_cleaning')
+        # Get the hourly rate for office cleaning
+        from .utils import get_hourly_rate
+        hourly_rate = get_hourly_rate('office_cleaning')
+        print(f"✅ Hourly rate: {hourly_rate}")
+    except Exception as e:
+        print(f"❌ Error in office cleaning booking view setup: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise
 
     # Related services for sidebar
     commercial_category = ServiceCategory.objects.filter(name__iexact='commercial').first()

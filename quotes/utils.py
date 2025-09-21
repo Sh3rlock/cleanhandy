@@ -217,6 +217,12 @@ def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discou
             "tax": tax
         })
         
+        print(f"📧 Sending customer email to: {booking.email}")
+        print(f"📧 From email: {settings.DEFAULT_FROM_EMAIL}")
+        print(f"📧 SMTP Host: {settings.EMAIL_HOST}")
+        print(f"📧 SMTP Port: {settings.EMAIL_PORT}")
+        print(f"📧 SMTP User: {settings.EMAIL_HOST_USER}")
+        
         customer_email = EmailMessage(
             subject="🏢 Office Cleaning Booking Confirmed - TheCleanHandy",
             body=customer_html,
@@ -224,7 +230,13 @@ def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discou
             to=[booking.email],
         )
         customer_email.content_subtype = "html"
-        customer_email.send()
+        
+        try:
+            customer_email.send()
+            print(f"✅ Customer email sent successfully to {booking.email}")
+        except Exception as email_error:
+            print(f"❌ Failed to send customer email to {booking.email}: {str(email_error)}")
+            # Don't raise - continue with booking process
 
         # Email to admin/staff
         admin_html = render_to_string("quotes/email_office_cleaning_admin.html", {
@@ -240,6 +252,8 @@ def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discou
             "tomorrow": date.today() + timedelta(days=1)
         })
         
+        print(f"📧 Sending admin email to: {settings.DEFAULT_FROM_EMAIL}")
+        
         admin_email = EmailMessage(
             subject=f"🏢 New Office Cleaning Booking from {booking.name} - #{booking.id}",
             body=admin_html,
@@ -247,7 +261,13 @@ def send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discou
             to=[settings.DEFAULT_FROM_EMAIL],
         )
         admin_email.content_subtype = "html"
-        admin_email.send()
+        
+        try:
+            admin_email.send()
+            print(f"✅ Admin email sent successfully")
+        except Exception as email_error:
+            print(f"❌ Failed to send admin email: {str(email_error)}")
+            # Don't raise - continue with booking process
         
         print(f"✅ Office cleaning booking emails sent successfully for booking {booking.id}")
         return True
