@@ -69,10 +69,10 @@ SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 IS_RAILWAY = os.getenv("RAILWAY_ENVIRONMENT", "").lower() in ["production", "preview"]
 RAILWAY_PLAN = os.getenv("RAILWAY_PLAN", "").lower()
 
-# Use Railway-aware email backend that handles SMTP restrictions
+# Use console backend for Railway free/trial/hobby plans to avoid SMTP restrictions
 if IS_RAILWAY and RAILWAY_PLAN in ["free", "trial", "hobby", ""]:
-    print("🚀 Railway free/trial/hobby plan detected - Using Railway-aware email backend")
-    EMAIL_BACKEND = "quotes.email_backends.RailwayAwareEmailBackend"
+    print("🚀 Railway free/trial/hobby plan detected - Using console email backend")
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     # Use SMTP for local development and Railway Pro/Enterprise
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

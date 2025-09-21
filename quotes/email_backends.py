@@ -4,7 +4,20 @@ Custom email backends for handling Railway SMTP restrictions
 import os
 import logging
 from django.core.mail.backends.base import BaseEmailBackend
-from django.core.mail.backends.console import ConsoleEmailBackend
+try:
+    from django.core.mail.backends.console import ConsoleEmailBackend
+except ImportError:
+    from django.core.mail.backends.base import BaseEmailBackend
+    class ConsoleEmailBackend(BaseEmailBackend):
+        """Fallback console backend"""
+        def send_messages(self, email_messages):
+            for message in email_messages:
+                print(f"EMAIL: To: {message.to}")
+                print(f"EMAIL: From: {message.from_email}")
+                print(f"EMAIL: Subject: {message.subject}")
+                print(f"EMAIL: Body: {message.body}")
+                print("EMAIL: ---")
+            return len(email_messages)
 from django.core.mail.backends.smtp import EmailBackend as SMTPEmailBackend
 from django.conf import settings
 
