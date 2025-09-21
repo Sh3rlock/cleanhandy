@@ -528,3 +528,26 @@ def test_email(request):
             'message': f'Failed to send test email: {str(e)}'
         })
 
+
+def csrf_debug(request):
+    """Debug CSRF token issues"""
+    from django.middleware.csrf import get_token
+    
+    if request.method == 'GET':
+        # Get fresh CSRF token
+        csrf_token = get_token(request)
+        return JsonResponse({
+            'csrf_token': csrf_token,
+            'cookies': dict(request.COOKIES),
+            'session_key': request.session.session_key,
+            'user': str(request.user) if request.user.is_authenticated else 'Anonymous',
+            'status': 'success'
+        })
+    elif request.method == 'POST':
+        # Test CSRF validation
+        return JsonResponse({
+            'status': 'success',
+            'message': 'CSRF token is valid',
+            'csrf_token': request.POST.get('csrfmiddlewaretoken', 'Not provided')
+        })
+

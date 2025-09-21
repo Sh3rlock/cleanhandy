@@ -39,7 +39,27 @@ SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
 # Add this if not present
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-CSRF_TRUSTED_ORIGINS = ['https://cleanhandy-production.up.railway.app']
+CSRF_TRUSTED_ORIGINS = [
+    'https://cleanhandy-production.up.railway.app',
+    'https://thecleanhandy.com',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000'
+]
+
+# CSRF Settings for better compatibility
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript access for AJAX requests
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False  # Use cookies instead of sessions for CSRF tokens
+CSRF_COOKIE_AGE = 31449600  # 1 year in seconds
+CSRF_COOKIE_NAME = 'csrftoken'
+
+# Session Settings
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 
 
 # Email Configuration
