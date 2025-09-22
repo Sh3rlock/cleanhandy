@@ -119,27 +119,39 @@ class ResendEmailBackend(BaseEmailBackend):
                         "from": message.from_email,
                         "to": message.to,
                         "subject": message.subject,
-                        "html": message.body if message.content_subtype == "html" else None,
-                        "text": message.body if message.content_subtype != "html" else None,
                     }
+                    
+                    # Add body content based on content type
+                    if message.content_subtype == "html":
+                        resend_message["html"] = message.body
+                    else:
+                        resend_message["text"] = message.body
                     
                     # Handle attachments if any
                     if hasattr(message, 'attachments') and message.attachments:
                         resend_message["attachments"] = []
                         for attachment in message.attachments:
+                            # Convert bytes to base64 for Resend API
+                            import base64
+                            content = attachment[1]
+                            if isinstance(content, bytes):
+                                content = base64.b64encode(content).decode('utf-8')
+                            
                             resend_message["attachments"].append({
                                 "filename": attachment[0],
-                                "content": attachment[1],
+                                "content": content,
                                 "type": attachment[2] if len(attachment) > 2 else "application/octet-stream"
                             })
                     
                     # Send via Resend
+                    logger.info(f"📧 Sending email via Resend to: {message.to}")
                     response = resend.Emails.send(resend_message)
                     logger.info(f"✅ Email sent via Resend: {response['id']}")
                     sent_count += 1
                     
                 except Exception as e:
                     logger.error(f"❌ Failed to send email via Resend: {e}")
+                    logger.error(f"   Email details: to={message.to}, subject={message.subject}")
                     if not self.fail_silently:
                         raise e
             

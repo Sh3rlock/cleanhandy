@@ -72,15 +72,18 @@ RAILWAY_PLAN = os.getenv("RAILWAY_PLAN", "").lower()
 # Email backend configuration based on environment
 if IS_RAILWAY and RAILWAY_PLAN in ["free", "trial", "hobby", ""]:
     # Check if Resend API key is available for real email sending
-    if os.getenv("RESEND_API_KEY"):
+    resend_api_key = os.getenv("RESEND_API_KEY")
+    if resend_api_key:
         print("🚀 Railway free plan detected - Using Resend email service")
+        print(f"🔑 Resend API Key: {resend_api_key[:10]}...")
         EMAIL_BACKEND = "quotes.email_backends.ResendEmailBackend"
-        RESEND_API_KEY = os.getenv("RESEND_API_KEY")
     else:
         print("🚀 Railway free plan detected - Using console email backend (no RESEND_API_KEY found)")
+        print("💡 To enable real email delivery, add RESEND_API_KEY to Railway environment variables")
         EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     # Use SMTP for local development and Railway Pro/Enterprise
+    print("🏠 Local development detected - Using SMTP email backend")
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     EMAIL_HOST = "smtp.gmail.com"
     EMAIL_PORT = 587
