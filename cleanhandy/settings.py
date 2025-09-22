@@ -91,7 +91,8 @@ else:
     EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "matyass91@gmail.com")
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "weqwmobbdznudgff")
 
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "matyass91@gmail.com")
+# Use Resend's default domain for email sending
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "onboarding@resend.dev")
 
 # Email timeout settings to prevent worker timeouts
 EMAIL_TIMEOUT = 10  # 10 seconds timeout for SMTP operations
