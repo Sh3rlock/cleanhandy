@@ -69,10 +69,16 @@ SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 IS_RAILWAY = os.getenv("RAILWAY_ENVIRONMENT", "").lower() in ["production", "preview"]
 RAILWAY_PLAN = os.getenv("RAILWAY_PLAN", "").lower()
 
-# Use console backend for Railway free/trial/hobby plans to avoid SMTP restrictions
+# Email backend configuration based on environment
 if IS_RAILWAY and RAILWAY_PLAN in ["free", "trial", "hobby", ""]:
-    print("🚀 Railway free/trial/hobby plan detected - Using console email backend")
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    # Check if Resend API key is available for real email sending
+    if os.getenv("RESEND_API_KEY"):
+        print("🚀 Railway free plan detected - Using Resend email service")
+        EMAIL_BACKEND = "quotes.email_backends.ResendEmailBackend"
+        RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+    else:
+        print("🚀 Railway free plan detected - Using console email backend (no RESEND_API_KEY found)")
+        EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     # Use SMTP for local development and Railway Pro/Enterprise
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

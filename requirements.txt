@@ -6,3 +6,4 @@ pytz==2025.1
 sqlparse==0.5.3
 whitenoise==6.9.0
 weasyprint==65.0
+resend==0.8.0
