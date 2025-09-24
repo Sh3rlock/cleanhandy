@@ -92,7 +92,7 @@ else:
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "weqwmobbdznudgff")
 
 # Use Resend's default domain for email sending
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "onboarding@resend.dev")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "support@thecleanhandy.com")
 
 # Email timeout settings to prevent worker timeouts
 EMAIL_TIMEOUT = 10  # 10 seconds timeout for SMTP operations
