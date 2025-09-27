@@ -827,7 +827,23 @@
 /* Optional: Hide native arrow in IE */
 select::-ms-expand {
   display: none;
-}  
+}
+
+/* Hide booking buttons on mobile when on booking pages */
+@media (max-width: 768px) {
+  .booking-buttons-row {
+    display: none !important;
+  }
+  
+  .sticky-header {
+    height: auto !important;
+    min-height: auto !important;
+  }
+  
+  .header-upper {
+    padding-bottom: 0 !important;
+  }
+}
 </style>
 
 <script>
