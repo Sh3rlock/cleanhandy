@@ -48,7 +48,7 @@ def home(request):
     home_services = Service.objects.filter(category__name="Home")
     commercial_services = Service.objects.filter(category__name="Commercial")
     handyman_services = Service.objects.filter(category__name="Handyman")
-    top_services = Service.objects.order_by('-view_count')[:3]
+    top_services = Service.objects.order_by('-view_count')[:6]
     reviews = Review.objects.all()
 
     return render(request, "home.html", {

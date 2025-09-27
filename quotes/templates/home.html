@@ -356,8 +356,9 @@
         <img src="{% static '/assets/images/shape/title-shape-1.png' %}" alt="shape" />
         <h6>FEATURED SERVICES</h6>
       </div>
+      <!-- Top row - first 3 services -->
       <div class="row">
-        {% for service in top_services %}
+        {% for service in top_services|slice:":3" %}
         <div class="col-lg-4 col-md-6">
           <div class="service-tow-single">
               <div class="service-tow-single-img">
@@ -389,7 +390,42 @@
           </div>
         </div>
         {% endfor %}
-        
+      </div>
+      
+      <!-- Bottom row - last 3 services -->
+      <div class="row" style="margin-top: 30px;">
+        {% for service in top_services|slice:"3:6" %}
+        <div class="col-lg-4 col-md-6">
+          <div class="service-tow-single">
+              <div class="service-tow-single-img">
+                  <img src="{{ service.service_detail_image.url }}" alt="image">
+              </div>
+              <div class="service-tow-single-content">
+                    <div class="service-tow-single-title">
+                        <span>{{ service.name }}</span>
+                    </div>
+                  <div class="service-tow-single-rating">
+                      <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
+                  </div>
+                  <div class="featured-single-info">
+                      {% if service.category.name|lower == "cleaning" %}
+                          <a href="{% url 'cleaning_booking' %}" class="btn-1">Book Now</a>
+                      {% elif service.category.name|lower == "office cleaning" %}
+                          <a href="{% url 'office_cleaning_booking' %}" class="btn-1">Book Now</a>
+                      {% elif service.category.name|lower == "post event cleaning" %}
+                          <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="btn-1">Get a Quote</a>
+                      {% elif service.category.name|lower == "handyman" %}
+                          <a href="{% url 'request_handyman_quote' service.id %}" class="btn-1">Get a Quote</a>
+                      {% else %}
+                          <div class="featured-single-info-left">
+                              <p>Starting from:</p><h5>${{ service.base_price }}</h5>
+                          </div>
+                      {% endif %}
+                  </div>
+              </div>
+          </div>
+        </div>
+        {% endfor %}
       </div>
     </div>
   </section>
