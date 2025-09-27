@@ -438,20 +438,40 @@ def cleaning_booking(request):
                 except Exception as e:
                     print(f"❌ Email send failed: {str(e)}")
 
-                print(f"🔄 Redirecting to booking_submitted_cleaning with booking_id={booking.id}")
-                return redirect("booking_submitted_cleaning", booking_id=booking.id)
+                # Check if this is an AJAX request (for Stripe payment)
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'booking_id': booking.id,
+                        'total_amount': float(booking.price),
+                        'redirect_url': f'/accounts/submitted/{booking.id}/'
+                    })
+                else:
+                    print(f"🔄 Redirecting to booking_submitted_cleaning with booking_id={booking.id}")
+                    return redirect("booking_submitted_cleaning", booking_id=booking.id)
 
             else:
                 print("❌ Form errors:", form.errors)
                 print("❌ Form non-field errors:", form.non_field_errors())
                 for field, errors in form.errors.items():
                     print(f"❌ Field '{field}' errors: {errors}")
-                return render(request, "booking/cleaning_booking.html", {
+                
+                # Check if this is an AJAX request
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Form validation failed',
+                        'errors': form.errors,
+                        'non_field_errors': form.non_field_errors()
+                    })
+                else:
+                    return render(request, "booking/cleaning_booking.html", {
                     "form": form,
                     "cleaning_extras": extras,
                     "service_cat": service_cat,
                     "related_services": related_services,
                     "saved_addresses": saved_addresses,
+                    "STRIPE_PUBLISHABLE_KEY": settings.STRIPE_PUBLISHABLE_KEY,
                 })
                 
         except Exception as e:
@@ -461,16 +481,24 @@ def cleaning_booking(request):
             import traceback
             traceback.print_exc()
             
-            # Return form with error message
-            form = CleaningBookingForm(request.POST)
-            return render(request, "booking/cleaning_booking.html", {
-                "form": form,
-                "cleaning_extras": extras,
-                "service_cat": service_cat,
-                "related_services": related_services,
-                "saved_addresses": saved_addresses,
-                "error_message": f"An error occurred while processing your booking: {str(e)}"
-            })
+            # Check if this is an AJAX request
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'error': f'An error occurred while processing your booking: {str(e)}'
+                })
+            else:
+                # Return form with error message
+                form = CleaningBookingForm(request.POST)
+                return render(request, "booking/cleaning_booking.html", {
+                    "form": form,
+                    "cleaning_extras": extras,
+                    "service_cat": service_cat,
+                    "related_services": related_services,
+                    "saved_addresses": saved_addresses,
+                    "error_message": f"An error occurred while processing your booking: {str(e)}",
+                    "STRIPE_PUBLISHABLE_KEY": settings.STRIPE_PUBLISHABLE_KEY,
+                })
     else:
         # Initialize form with user data if logged in
         initial_data = {}
@@ -502,6 +530,7 @@ def cleaning_booking(request):
         "service_cat": service_cat,
         "related_services": related_services,
         "saved_addresses": saved_addresses,
+        "STRIPE_PUBLISHABLE_KEY": settings.STRIPE_PUBLISHABLE_KEY,
     })
 
 def handyman_booking(request):
@@ -739,11 +768,31 @@ def office_cleaning_booking(request):
                 print(f"❌ Failed to send office cleaning booking emails for booking {booking.id}: {e}")
                 # Continue to redirect even if email fails - emails are non-critical for booking completion
             
-            # Redirect to confirmation page
-            return redirect('booking_confirmation', booking_id=booking.id)
+            # Check if this is an AJAX request (for Stripe payment)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'booking_id': booking.id,
+                    'total_amount': float(booking.price),
+                    'redirect_url': f'/booking/confirmation/{booking.id}/'
+                })
+            else:
+                # Redirect to confirmation page
+                return redirect('booking_confirmation', booking_id=booking.id)
         else:
             print("❌ Form validation failed and missing essential data")
-            # Continue to render form with errors
+            
+            # Check if this is an AJAX request
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Form validation failed and missing essential data',
+                    'errors': form.errors if form else {},
+                    'non_field_errors': form.non_field_errors() if form else []
+                })
+            else:
+                # Continue to render form with errors
+                pass
     else:
         # Initialize form with user data if logged in
         initial_data = {}
@@ -777,7 +826,8 @@ def office_cleaning_booking(request):
         "extras": extras,
         "related_services": related_services,
         "hourly_rate": hourly_rate,
-        "saved_addresses": saved_addresses
+        "saved_addresses": saved_addresses,
+        "STRIPE_PUBLISHABLE_KEY": settings.STRIPE_PUBLISHABLE_KEY,
     })
 
 

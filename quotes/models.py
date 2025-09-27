@@ -436,6 +436,31 @@ class Booking(models.Model):
         help_text="Type of pet in the household"
     )
     
+    # Payment fields
+    payment_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("unpaid", "Unpaid"),
+            ("partial", "Partial Payment"),
+            ("paid", "Fully Paid"),
+            ("refunded", "Refunded"),
+        ],
+        default="unpaid",
+        help_text="Overall payment status for this booking"
+    )
+    payment_method = models.CharField(
+        max_length=50,
+        choices=[
+            ("stripe", "Stripe"),
+            ("cash", "Cash"),
+            ("check", "Check"),
+            ("gift_card", "Gift Card"),
+        ],
+        null=True,
+        blank=True,
+        help_text="Payment method used for this booking"
+    )
+    
     def __str__(self):
         return f"Booking {self.id} - {self.name if self.name else 'No Name'} ({self.status})"
      
@@ -502,6 +527,42 @@ class Booking(models.Model):
                 total = Decimal("0.00")
 
         return total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    
+    def get_payment_split(self):
+        """Get or create payment split for this booking"""
+        try:
+            return self.payment_split
+        except:
+            from .payment_models import PaymentSplit
+            total = self.calculate_total_price()
+            return PaymentSplit.objects.create(booking=self).create_split(total)
+    
+    def update_payment_status(self):
+        """Update payment status based on individual payments"""
+        try:
+            split = self.get_payment_split()
+            if split.is_fully_paid:
+                self.payment_status = "paid"
+            elif split.is_deposit_paid:
+                self.payment_status = "partial"
+            else:
+                self.payment_status = "unpaid"
+            self.save()
+        except Exception as e:
+            print(f"Error updating payment status for booking {self.id}: {e}")
+    
+    def get_deposit_amount(self):
+        """Get the deposit amount (50% of total)"""
+        return self.get_payment_split().deposit_amount
+    
+    def get_final_amount(self):
+        """Get the final payment amount (50% of total)"""
+        return self.get_payment_split().final_amount
+    
+    def can_make_final_payment(self):
+        """Check if final payment can be made (deposit must be paid)"""
+        split = self.get_payment_split()
+        return split.is_deposit_paid and not split.final_paid
 
 
 
