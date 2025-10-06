@@ -9,6 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from datetime import date, timedelta
 import json
+from django.conf import settings
 
 from .models import Booking, ExtraService, ServiceType, TimeSlot
 from .forms import (
@@ -212,6 +213,7 @@ def home_cleaning_booking(request):
             'cleaning_extras': cleaning_extras,
             'saved_addresses': [],  # Empty list since CustomerAddress doesn't exist
             'all_services': all_services,
+            'STRIPE_PUBLISHABLE_KEY': settings.STRIPE_PUBLISHABLE_KEY,
         })
     except Exception as e:
         messages.error(request, f'There was an issue loading the booking form: {str(e)}')

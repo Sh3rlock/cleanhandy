@@ -535,6 +535,7 @@ class Booking(models.Model):
         except:
             from .payment_models import PaymentSplit
             total = self.calculate_total_price()
+            print(f"Creating PaymentSplit for booking {self.id} with total: {total}")
             return PaymentSplit.objects.create(booking=self).create_split(total)
     
     def update_payment_status(self):

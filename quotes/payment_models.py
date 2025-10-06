@@ -102,6 +102,7 @@ class PaymentSplit(models.Model):
     
     def create_split(self, total_amount):
         """Create a 50/50 split from total amount"""
+        print(f"Creating payment split with total_amount: {total_amount}")
         self.total_amount = total_amount
         self.deposit_amount = total_amount / 2
         self.final_amount = total_amount / 2
@@ -110,5 +111,6 @@ class PaymentSplit(models.Model):
         if self.total_amount % 2 != 0:
             self.deposit_amount += Decimal('0.01')
         
+        print(f"Payment split amounts - total: {self.total_amount}, deposit: {self.deposit_amount}, final: {self.final_amount}")
         self.save()
         return self
