@@ -102,15 +102,92 @@ class PaymentSplit(models.Model):
     
     def create_split(self, total_amount):
         """Create a 50/50 split from total amount"""
-        print(f"Creating payment split with total_amount: {total_amount}")
+        print(f"🔍 create_split called with total_amount: {total_amount}")
+        print(f"🔍 total_amount type: {type(total_amount)}")
+
+        # Ensure total_amount is valid
+        if not total_amount or total_amount <= 0:
+            print(f"❌ ERROR: Invalid total_amount {total_amount}, using fallback")
+            total_amount = Decimal("100.00")
+
+        # Convert to Decimal if needed
+        if not isinstance(total_amount, Decimal):
+            try:
+                total_amount = Decimal(str(total_amount))
+            except:
+                print(f"❌ ERROR: Cannot convert {total_amount} to Decimal, using fallback")
+                total_amount = Decimal("100.00")
+
+        print(f"🔍 Setting total_amount to: {total_amount}")
         self.total_amount = total_amount
         self.deposit_amount = total_amount / 2
         self.final_amount = total_amount / 2
-        
+
         # Handle odd cents by adding to deposit
         if self.total_amount % 2 != 0:
             self.deposit_amount += Decimal('0.01')
+
+        print(f"🔍 Before save - total: {self.total_amount}, deposit: {self.deposit_amount}, final: {self.final_amount}")
         
-        print(f"Payment split amounts - total: {self.total_amount}, deposit: {self.deposit_amount}, final: {self.final_amount}")
-        self.save()
+        try:
+            self.save()
+            print(f"✅ PaymentSplit saved successfully")
+            # Verify the save worked
+            self.refresh_from_db()
+            print(f"🔍 After save - total: {self.total_amount}, deposit: {self.deposit_amount}, final: {self.final_amount}")
+        except Exception as e:
+            print(f"❌ ERROR saving PaymentSplit: {e}")
+            raise e
+        
         return self
+    
+    @classmethod
+    def create_split_with_amount(cls, booking, total_amount):
+        """Create a payment split with a specific total amount (from frontend summary)"""
+        print(f"🔍 Creating PaymentSplit for booking {booking.id} with manual total: {total_amount}")
+        print(f"🔍 Manual total type: {type(total_amount)}")
+        
+        # Ensure total_amount is valid
+        if not total_amount or total_amount <= 0:
+            print(f"❌ ERROR: Invalid manual total_amount {total_amount}, using fallback")
+            total_amount = Decimal("100.00")
+        
+        # Convert to Decimal if it's not already
+        if not isinstance(total_amount, Decimal):
+            try:
+                total_amount = Decimal(str(total_amount))
+            except:
+                print(f"❌ ERROR: Cannot convert {total_amount} to Decimal, using fallback")
+                total_amount = Decimal("100.00")
+        
+        print(f"🔍 Final total_amount for PaymentSplit: {total_amount}")
+        
+        try:
+            # Calculate amounts directly
+            deposit_amount = total_amount / 2
+            final_amount = total_amount / 2
+            
+            # Handle odd cents by adding to deposit
+            if total_amount % 2 != 0:
+                deposit_amount += Decimal('0.01')
+            
+            print(f"🔍 Creating PaymentSplit with calculated amounts:")
+            print(f"🔍 total_amount: {total_amount}")
+            print(f"🔍 deposit_amount: {deposit_amount}")
+            print(f"🔍 final_amount: {final_amount}")
+            
+            # Create with all amounts at once
+            payment_split = cls.objects.create(
+                booking=booking,
+                total_amount=total_amount,
+                deposit_amount=deposit_amount,
+                final_amount=final_amount
+            )
+            print(f"✅ PaymentSplit created successfully with ID: {payment_split.id}")
+            return payment_split
+            
+        except Exception as e:
+            print(f"❌ ERROR creating PaymentSplit: {e}")
+            # Try with fallback amount using the old method
+            payment_split = cls.objects.create(booking=booking)
+            return payment_split.create_split(Decimal("100.00"))

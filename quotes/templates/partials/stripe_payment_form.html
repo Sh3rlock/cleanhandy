@@ -243,6 +243,7 @@ document.addEventListener("DOMContentLoaded", function () {
       body: JSON.stringify({
         booking_id: currentBookingId,
         payment_type: currentPaymentType,
+        frontend_total_amount: parseFloat(document.getElementById("totalPrice").textContent),
       }),
     })
     .then(response => response.json())

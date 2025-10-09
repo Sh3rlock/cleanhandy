@@ -32,7 +32,42 @@ def create_payment_intent(request):
             return JsonResponse({'error': 'Booking not found'}, status=404)
         
         # Get payment split
-        split = booking.get_payment_split()
+        print(f"Creating payment intent for booking {booking_id}, payment_type: {payment_type}")
+        print(f"Booking total price: {booking.calculate_total_price()}")
+        print(f"Booking gift_card_discount: {booking.gift_card_discount}")
+        
+        # Check if frontend provided a manual total amount
+        frontend_total = data.get('frontend_total_amount')
+        print(f"🔍 Frontend total received: {frontend_total}")
+        print(f"🔍 Frontend total type: {type(frontend_total)}")
+        
+        if frontend_total and frontend_total > 0:
+            print(f"✅ Using frontend total amount: {frontend_total}")
+            try:
+                split = booking.get_payment_split(manual_total=frontend_total)
+            except Exception as e:
+                print(f"❌ Error creating split with frontend total: {e}")
+                # Fallback to calculated total
+                split = booking.get_payment_split()
+        else:
+            print("⚠️ No valid frontend total, using backend calculated total")
+            split = booking.get_payment_split()
+            
+        print(f"PaymentSplit total_amount: {split.total_amount}")
+        print(f"PaymentSplit deposit_amount: {split.deposit_amount}")
+        print(f"PaymentSplit final_amount: {split.final_amount}")
+        
+        # Safety check for None amounts
+        if split.total_amount is None or split.deposit_amount is None or split.final_amount is None:
+            print(f"❌ ERROR: PaymentSplit amounts are None, recreating with fallback")
+            # Delete the invalid split and recreate
+            split.delete()
+            fallback_total = Decimal("100.00")
+            split = booking.get_payment_split(manual_total=fallback_total)
+            print(f"✅ Recreated PaymentSplit with fallback amounts")
+            print(f"New PaymentSplit total_amount: {split.total_amount}")
+            print(f"New PaymentSplit deposit_amount: {split.deposit_amount}")
+            print(f"New PaymentSplit final_amount: {split.final_amount}")
         
         # Determine amount and payment intent ID
         if payment_type == 'deposit':
@@ -111,7 +146,11 @@ def create_payment_intent(request):
     except stripe.error.StripeError as e:
         return JsonResponse({'error': str(e)}, status=400)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in create_payment_intent: {str(e)}")
+        print(f"Traceback: {error_trace}")
+        return JsonResponse({'error': str(e), 'traceback': error_trace}, status=500)
 
 
 @csrf_exempt

@@ -1486,6 +1486,9 @@
       appliedGiftCardAmount = 0;
       discountCode = null;
       appliedDiscountAmount = 0;
+      
+      // Update pricing and payment amounts
+      updatePrice();
     
       // Clear input field
       document.getElementById("gift_card_code").value = "";
@@ -1742,6 +1745,9 @@ if (discount > 0 && giftEl && giftAmtEl) {
 document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
 document.getElementById("salesTax").innerText = tax.toFixed(2);
 document.getElementById("totalPrice").innerText = total.toFixed(2);
+
+// ✅ Update payment amounts to match the new total
+updatePaymentAmounts();
   
       // Update summary items list
       const summaryContainer = document.getElementById("summary-items");
@@ -1947,6 +1953,9 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
       document.getElementById("subtotalPrice").innerText = price.toFixed(2);
       document.getElementById("salesTax").innerText = tax.toFixed(2);
       document.getElementById("totalPrice").innerText = total.toFixed(2);
+      
+      // ✅ Update payment amounts to match the new total
+      updatePaymentAmounts();
     }
   
     function syncHiddenFields() {
@@ -2717,6 +2726,12 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
     function createBookingAndProcessStripePayment() {
       const formData = new FormData(document.getElementById("quoteForm"));
       
+      // Add gift card discount amount if applied
+      if (giftCardActive && giftCardDiscountAmount > 0) {
+        formData.append('applied_gift_card_amount', giftCardDiscountAmount.toString());
+        console.log('🔍 Sending gift card discount to backend:', giftCardDiscountAmount);
+      }
+      
       // Show loading state
       const submitBtn = document.getElementById("submit-booking-btn");
       const originalText = submitBtn.innerHTML;
@@ -2734,7 +2749,17 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
       .then(data => {
         if (data.success && data.booking_id) {
           currentBookingId = data.booking_id;
-          const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
+          const frontendTotalAmount = parseFloat(document.getElementById("totalPrice").textContent);
+          const backendTotalAmount = parseFloat(data.calculated_total || 0);
+          
+          console.log('🔍 Amount comparison:', {
+            frontend: frontendTotalAmount,
+            backend: backendTotalAmount,
+            difference: Math.abs(frontendTotalAmount - backendTotalAmount)
+          });
+          
+          // Use frontend amount if there's a significant difference
+          const totalAmount = Math.abs(frontendTotalAmount - backendTotalAmount) > 1 ? frontendTotalAmount : backendTotalAmount;
           
           // Create payment intent and process payment
           createPaymentIntentAndProcess(data.booking_id, totalAmount, submitBtn, originalText);
@@ -2826,7 +2851,8 @@ document.getElementById("totalPrice").innerText = total.toFixed(2);
     // Initialize Stripe when page loads
     initializeStripeElements();
     
-    // Update payment amounts when pricing changes
+    // Update payment amounts initially and when pricing changes
+    updatePaymentAmounts();
     const originalUpdatePrice = window.updatePrice;
     if (originalUpdatePrice) {
       window.updatePrice = function() {

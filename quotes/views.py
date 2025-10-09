@@ -390,6 +390,15 @@ def cleaning_booking(request):
 
                 # --- Handle Gift Card or Discount Code ---
                 code_data = form.cleaned_data.get("gift_card_code")
+                
+                # Check if gift card discount is applied via frontend JavaScript
+                gift_card_discount_from_frontend = request.POST.get('applied_gift_card_amount')
+                if gift_card_discount_from_frontend:
+                    try:
+                        booking.gift_card_discount = Decimal(gift_card_discount_from_frontend)
+                        print(f"✅ Applied gift card discount from frontend: {booking.gift_card_discount}")
+                    except:
+                        print(f"❌ Invalid gift card discount from frontend: {gift_card_discount_from_frontend}")
 
                 try:
                     # Calculate initial price
@@ -444,6 +453,7 @@ def cleaning_booking(request):
                         'success': True,
                         'booking_id': booking.id,
                         'total_amount': float(booking.price),
+                        'calculated_total': float(booking.calculate_total_price()),
                         'redirect_url': f'/accounts/submitted/{booking.id}/'
                     })
                 else:
@@ -774,7 +784,8 @@ def office_cleaning_booking(request):
                     'success': True,
                     'booking_id': booking.id,
                     'total_amount': float(booking.price),
-                    'redirect_url': f'/booking/confirmation/{booking.id}/'
+                    'calculated_total': float(booking.calculate_total_price()),
+                    'redirect_url': f'/quotes/booking/confirmation/{booking.id}/'
                 })
             else:
                 # Redirect to confirmation page

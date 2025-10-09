@@ -912,6 +912,9 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('salesTax').innerText = tax.toFixed(2);
     document.getElementById('totalPrice').innerText = total.toFixed(2);
     
+    // Update payment amounts to match the new total
+    updateStripePaymentAmounts();
+    
     console.log('🔍 Summary updated successfully');
   }
 
@@ -1212,6 +1215,7 @@ document.addEventListener("DOMContentLoaded", function () {
       body: JSON.stringify({
         booking_id: bookingId,
         payment_type: stripeCurrentPaymentType,
+        frontend_total_amount: parseFloat(document.getElementById("totalPrice").textContent),
       }),
     })
     .then(response => response.json())
@@ -1266,7 +1270,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Redirect to confirmation page after a short delay
     setTimeout(() => {
-      window.location.href = `/booking/confirmation/${stripeCurrentBookingId}/`;
+      window.location.href = `/quotes/booking/confirmation/${stripeCurrentBookingId}/`;
     }, 2000);
   }
 

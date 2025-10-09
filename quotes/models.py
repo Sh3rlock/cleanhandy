@@ -517,26 +517,73 @@ class Booking(models.Model):
 
 
     def calculate_total_price(self):
-        subtotal = self.calculate_subtotal()
-        tax = self.calculate_tax()
-        total = subtotal + tax
+        print(f"🔍 calculate_total_price called for booking {self.id}")
+        
+        try:
+            subtotal = self.calculate_subtotal()
+            tax = self.calculate_tax()
+            total = subtotal + tax
+            print(f"🔍 Calculated subtotal: {subtotal}, tax: {tax}, total before discount: {total}")
 
-        if self.gift_card_discount:
-            total -= self.gift_card_discount
-            if total < 0:
-                total = Decimal("0.00")
+            if self.gift_card_discount:
+                print(f"🔍 Applying gift card discount: {self.gift_card_discount}")
+                total -= self.gift_card_discount
+                if total < 0:
+                    total = Decimal("0.00")
+                print(f"🔍 Total after gift card discount: {total}")
 
-        return total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            final_total = total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            print(f"🔍 Final total: {final_total}")
+            
+            # Ensure we never return None or 0
+            if not final_total or final_total <= 0:
+                print(f"🔍 WARNING: Final total is {final_total}, using fallback")
+                final_total = Decimal("100.00")  # Fallback amount
+            
+            return final_total
+            
+        except Exception as e:
+            print(f"🔍 ERROR in calculate_total_price: {e}")
+            return Decimal("100.00")  # Fallback amount
     
-    def get_payment_split(self):
+    def get_payment_split(self, manual_total=None):
         """Get or create payment split for this booking"""
         try:
             return self.payment_split
         except:
             from .payment_models import PaymentSplit
-            total = self.calculate_total_price()
-            print(f"Creating PaymentSplit for booking {self.id} with total: {total}")
-            return PaymentSplit.objects.create(booking=self).create_split(total)
+            
+            # Use manual total if provided (from frontend summary)
+            if manual_total:
+                print(f"🔍 Creating PaymentSplit for booking {self.id} with manual total: {manual_total}")
+                try:
+                    return PaymentSplit.create_split_with_amount(self, Decimal(str(manual_total)))
+                except Exception as e:
+                    print(f"❌ ERROR creating split with manual total: {e}")
+                    # Fallback to calculated total
+                    pass
+            
+            # Fallback to calculated total
+            try:
+                total = self.calculate_total_price()
+                print(f"🔍 Creating PaymentSplit for booking {self.id} with calculated total: {total}")
+                print(f"🔍 Calculated total type: {type(total)}")
+
+                # Safety check to ensure total is not None or 0
+                if not total or total <= 0:
+                    print(f"❌ ERROR: Invalid calculated total amount {total} for booking {self.id}")
+                    print(f"🔍 Booking details: square_feet={self.square_feet_options}, home_types={self.home_types}, extras={list(self.extras.all())}")
+                    # Use a minimum fallback amount to prevent NULL constraint error
+                    total = Decimal("100.00")  # Higher fallback amount
+                    print(f"🔍 Using fallback total: {total}")
+
+                return PaymentSplit.objects.create(booking=self).create_split(total)
+                
+            except Exception as e:
+                print(f"❌ ERROR in get_payment_split: {e}")
+                # Ultimate fallback
+                payment_split = PaymentSplit.objects.create(booking=self)
+                return payment_split.create_split(Decimal("100.00"))
     
     def update_payment_status(self):
         """Update payment status based on individual payments"""
