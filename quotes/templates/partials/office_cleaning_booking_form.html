@@ -1087,7 +1087,16 @@ document.addEventListener("DOMContentLoaded", function () {
   // ================================
   
   // Initialize Stripe
-  const stripe = Stripe('{{ STRIPE_PUBLISHABLE_KEY }}');
+  const stripePublishableKey = '{{ STRIPE_PUBLISHABLE_KEY }}';
+  console.log('🔍 Stripe publishable key:', stripePublishableKey ? 'Present' : 'Missing');
+  
+  if (!stripePublishableKey || stripePublishableKey === 'None' || stripePublishableKey.trim() === '') {
+    console.error('❌ Stripe publishable key is missing or invalid');
+    alert('Payment system is not properly configured. Please contact support.');
+    return;
+  }
+  
+  const stripe = Stripe(stripePublishableKey);
   let stripeElements;
   let stripeCardElement;
   let stripeClientSecret;
@@ -1096,20 +1105,36 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initialize Stripe Elements when page loads
   function initializeStripeElements() {
-    stripeElements = stripe.elements();
-    stripeCardElement = stripeElements.create('card', {
-      style: {
-        base: {
-          fontSize: '16px',
-          color: '#424770',
-          '::placeholder': {
-            color: '#aab7c4',
+    try {
+      console.log('🔍 Initializing Stripe Elements...');
+      
+      const cardElementContainer = document.getElementById('card-element');
+      if (!cardElementContainer) {
+        console.error('❌ Card element container not found');
+        alert('Payment form is not properly loaded. Please refresh the page.');
+        return;
+      }
+      
+      stripeElements = stripe.elements();
+      stripeCardElement = stripeElements.create('card', {
+        style: {
+          base: {
+            fontSize: '16px',
+            color: '#424770',
+            '::placeholder': {
+              color: '#aab7c4',
+            },
           },
         },
-      },
-    });
+      });
 
-    stripeCardElement.mount('#card-element');
+      stripeCardElement.mount('#card-element');
+      console.log('✅ Stripe card element mounted successfully');
+      
+    } catch (error) {
+      console.error('❌ Error initializing Stripe Elements:', error);
+      alert('Failed to initialize payment form. Please refresh the page and try again.');
+    }
 
     // Handle real-time validation errors from the card Element
     stripeCardElement.on('change', function(event) {
@@ -1235,6 +1260,10 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       // Confirm payment with Stripe
+      if (!stripeCardElement) {
+        throw new Error('Payment form is not properly initialized. Please refresh the page.');
+      }
+      
       return stripe.confirmCardPayment(stripeClientSecret, {
         payment_method: {
           card: stripeCardElement,
@@ -1275,6 +1304,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Initialize Stripe when page loads
+  console.log('🔍 Page loaded, initializing Stripe Elements...');
   initializeStripeElements();
   
   // Update payment amounts when pricing changes
