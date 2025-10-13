@@ -512,13 +512,12 @@
 
      
 
-      <!-- Payment Information Section -->
+      <!-- Payment Option Selection -->
       <div class="card mt-4 border-0 shadow-sm">
         <div class="card-header text-white" style="background-color: #F15A29;">
-          <h5 class="mb-0"><i class="fa-solid fa-credit-card me-2"></i>Payment Information</h5>
+          <h5 class="mb-0"><i class="fa-solid fa-credit-card me-2"></i>Payment Option</h5>
         </div>
         <div class="card-body">
-          <!-- Payment Method Selection -->
           <div class="mb-3">
             <h6>Choose Payment Option:</h6>
             <div class="form-check">
@@ -534,26 +533,9 @@
               </label>
             </div>
           </div>
-
-          <!-- Card Information -->
-          <div class="mb-3">
-            <label for="card-element" class="form-label">Card Information</label>
-            <div id="card-element" class="cmn-input" style="min-height: 50px;">
-              <!-- Stripe Elements will create form elements here -->
-            </div>
-            <div id="card-errors" role="alert" class="invalid-feedback"></div>
-          </div>
-
-          <!-- Billing Information -->
-          <div class="row">
-            <div class="col-md-6">
-              <label for="billing-email" class="form-label">Billing Email</label>
-              <input type="email" id="billing-email" name="billing_email" class="cmn-input" placeholder="Enter your email address" required>
-            </div>
-            <div class="col-md-6">
-              <label for="billing-name" class="form-label">Cardholder Name</label>
-              <input type="text" id="billing-name" name="billing_name" class="cmn-input" placeholder="Enter cardholder name" required>
-            </div>
+          <div class="alert alert-info">
+            <i class="fa-solid fa-info-circle me-2"></i>
+            You will be redirected to our secure payment page to complete your booking.
           </div>
         </div>
       </div>
@@ -734,6 +716,12 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('selected_date').value = date.toISOString().split('T')[0];
     loadTimeSlots(date);
     updateSummary();
+    
+    // Trigger validation update
+    validateDateAndTime();
+    if (typeof updateSubmitButtonState === 'function') {
+      updateSubmitButtonState();
+    }
   }
 
   function loadTimeSlots(date) {
@@ -810,6 +798,12 @@ document.addEventListener("DOMContentLoaded", function () {
     
     document.getElementById('selected_time').value = timeStr;
     updateSummary();
+    
+    // Trigger validation update
+    validateDateAndTime();
+    if (typeof updateSubmitButtonState === 'function') {
+      updateSubmitButtonState();
+    }
   }
 
   // Navigation arrows
@@ -914,6 +908,11 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Update payment amounts to match the new total
     updateStripePaymentAmounts();
+    
+    // Trigger validation update
+    if (typeof updateSubmitButtonState === 'function') {
+      updateSubmitButtonState();
+    }
     
     console.log('🔍 Summary updated successfully');
   }
@@ -1082,6 +1081,272 @@ document.addEventListener("DOMContentLoaded", function () {
   renderCalendar(); // Then render calendar with selected date
   updateSummary(); // Finally update the summary
   
+  // Live validation with visual feedback
+  function validateField(fieldId, fieldName, value, showVisualFeedback = true) {
+    const field = document.getElementById(fieldId);
+    if (!field) return { isValid: false, message: '' };
+    
+    // Clear previous feedback
+    if (showVisualFeedback) {
+      clearFieldFeedback(fieldId);
+    }
+    
+    let isValid = true;
+    let message = '';
+    
+    // Required field check
+    if (!value || value.trim() === '') {
+      isValid = false;
+      message = `${fieldName} is required`;
+    } else {
+      // Field-specific validation
+      switch (fieldId) {
+        case 'id_email':
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(value)) {
+            isValid = false;
+            message = 'Please enter a valid email address';
+          }
+          break;
+          
+        case 'id_phone':
+          const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+          if (!phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))) {
+            isValid = false;
+            message = 'Please enter a valid phone number';
+          }
+          break;
+          
+        case 'id_zip_code':
+          const zipRegex = /^\d{5}(-\d{4})?$/;
+          if (!zipRegex.test(value)) {
+            isValid = false;
+            message = 'Please enter a valid ZIP code';
+          }
+          break;
+      }
+    }
+    
+    // Apply visual feedback
+    if (showVisualFeedback) {
+      if (isValid) {
+        showFieldSuccess(fieldId, fieldName);
+      } else {
+        showFieldError(fieldId, message);
+      }
+    }
+    
+    return { isValid, message };
+  }
+  
+  // Clear previous validation feedback
+  function clearFieldFeedback(fieldId) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+    
+    // Remove existing feedback elements
+    const existingError = field.parentNode.querySelector('.field-error');
+    const existingSuccess = field.parentNode.querySelector('.field-success');
+    
+    if (existingError) existingError.remove();
+    if (existingSuccess) existingSuccess.remove();
+    
+    // Reset field styling
+    field.classList.remove('is-valid', 'is-invalid');
+    field.style.borderColor = '';
+  }
+  
+  // Show field error
+  function showFieldError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+    
+    field.classList.add('is-invalid');
+    field.style.borderColor = '#dc3545';
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'field-error text-danger small mt-1';
+    errorDiv.innerHTML = `<i class="fa-solid fa-exclamation-circle me-1"></i>${message}`;
+    field.parentNode.appendChild(errorDiv);
+  }
+  
+  // Show field success
+  function showFieldSuccess(fieldId, fieldName) {
+    const field = document.getElementById(fieldId);
+    if (!field || !field.value || field.value.trim() === '') return;
+    
+    // Just clear any invalid styling, no positive styling
+    field.classList.remove('is-invalid');
+    field.style.borderColor = '';
+  }
+  
+  // Validate date and time selection
+  function validateDateAndTime(showVisualFeedback = true) {
+    const dateValid = selectedDate !== null;
+    const timeValid = selectedTime !== null;
+    
+    if (showVisualFeedback) {
+      // Clear previous calendar feedback
+      document.querySelectorAll('.calendar-error, .calendar-success').forEach(el => el.remove());
+      
+      // Validate date
+      const calendarContainer = document.querySelector('.calendar-container');
+      if (calendarContainer) {
+        if (dateValid) {
+          calendarContainer.classList.remove('is-invalid');
+        } else {
+          calendarContainer.classList.add('is-invalid');
+        }
+      }
+      
+      // Validate time
+      const timeSlotsContainer = document.getElementById('time_slots');
+      if (timeSlotsContainer) {
+        if (timeValid) {
+          timeSlotsContainer.classList.remove('is-invalid');
+        } else {
+          timeSlotsContainer.classList.add('is-invalid');
+        }
+      }
+    }
+    
+    return dateValid && timeValid;
+  }
+  
+  // Validate terms acceptance
+  function validateTerms(showVisualFeedback = true) {
+    const termsCheckbox = document.getElementById('terms');
+    const isValid = termsCheckbox && termsCheckbox.checked;
+    
+    if (showVisualFeedback) {
+      const termsContainer = document.getElementById('terms').closest('.form-check');
+      if (termsContainer) {
+        // Clear previous feedback
+        const existingFeedback = termsContainer.querySelector('.terms-feedback');
+        if (existingFeedback) existingFeedback.remove();
+        
+        if (isValid) {
+          termsContainer.classList.remove('is-invalid');
+        } else {
+          termsContainer.classList.remove('is-valid');
+          termsContainer.classList.add('is-invalid');
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'terms-feedback text-danger small mt-1';
+          errorDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle me-1"></i>Please accept the terms and conditions';
+          termsContainer.appendChild(errorDiv);
+        }
+      }
+    }
+    
+    return isValid;
+  }
+  
+  // Real-time validation function
+  function validateFormRealTime(showVisualFeedback = true) {
+    const errors = [];
+    
+    // Validate all required fields
+    const requiredFields = [
+      { id: 'id_name', name: 'Name' },
+      { id: 'id_email', name: 'Email' },
+      { id: 'id_phone', name: 'Phone' },
+      { id: 'id_address', name: 'Street Address' },
+      { id: 'id_zip_code', name: 'ZIP Code' },
+      { id: 'crew_size_hours', name: 'Crew/Size/Hours' }
+    ];
+    
+    // Check each required field
+    requiredFields.forEach(field => {
+      const element = document.getElementById(field.id);
+      const value = element ? element.value : '';
+      const validation = validateField(field.id, field.name, value, showVisualFeedback);
+      if (!validation.isValid) {
+        errors.push(validation.message);
+      }
+    });
+    
+    // Validate date and time
+    if (!validateDateAndTime(showVisualFeedback)) {
+      if (!selectedDate) errors.push('Please select a date for your booking');
+      if (!selectedTime) errors.push('Please select a time for your booking');
+    }
+    
+    // Validate terms
+    if (!validateTerms(showVisualFeedback)) {
+      errors.push('Please accept the terms and conditions');
+    }
+    
+    // Check if total amount is valid
+    const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
+    if (!totalAmount || totalAmount <= 0) {
+      errors.push('Please complete all booking details to calculate the total amount');
+    }
+    
+    return errors.length === 0;
+  }
+
+  // Update submit button state based on validation
+  function updateSubmitButtonState() {
+    const submitBtn = document.getElementById("submit-booking-btn");
+    const isValid = validateFormRealTime();
+    
+    if (isValid) {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('btn-secondary');
+      submitBtn.classList.add('btn-primary');
+    } else {
+      submitBtn.disabled = true;
+      submitBtn.classList.remove('btn-primary');
+      submitBtn.classList.add('btn-secondary');
+    }
+  }
+
+  // Initialize payment options when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    initializePaymentOptions();
+    
+    // Add live validation listeners
+    const formFields = [
+      { id: 'id_name', name: 'Name' },
+      { id: 'id_email', name: 'Email' },
+      { id: 'id_phone', name: 'Phone' },
+      { id: 'id_address', name: 'Street Address' },
+      { id: 'id_zip_code', name: 'ZIP Code' },
+      { id: 'crew_size_hours', name: 'Crew/Size/Hours' }
+    ];
+    
+    formFields.forEach(field => {
+      const element = document.getElementById(field.id);
+      if (element) {
+        // Live validation on input
+        element.addEventListener('input', function() {
+          validateField(field.id, field.name, this.value);
+          updateSubmitButtonState();
+        });
+        
+        // Live validation on blur
+        element.addEventListener('blur', function() {
+          validateField(field.id, field.name, this.value);
+        });
+        
+        // Update button state on change
+        element.addEventListener('change', updateSubmitButtonState);
+      }
+    });
+    
+    // Terms checkbox validation
+    const termsCheckbox = document.getElementById('terms');
+    if (termsCheckbox) {
+      termsCheckbox.addEventListener('change', function() {
+        validateTerms();
+        updateSubmitButtonState();
+      });
+    }
+    
+    // Initial validation check
+    updateSubmitButtonState();
+  });
+  
   // ================================
   // STRIPE PAYMENT INTEGRATION
   // ================================
@@ -1103,57 +1368,62 @@ document.addEventListener("DOMContentLoaded", function () {
   let stripeCurrentBookingId = null;
   let stripeCurrentPaymentType = 'deposit';
 
-  // Initialize Stripe Elements when page loads
-  function initializeStripeElements() {
-    try {
-      console.log('🔍 Initializing Stripe Elements...');
-      
-      const cardElementContainer = document.getElementById('card-element');
-      if (!cardElementContainer) {
-        console.error('❌ Card element container not found');
-        alert('Payment form is not properly loaded. Please refresh the page.');
-        return;
-      }
-      
-      stripeElements = stripe.elements();
-      stripeCardElement = stripeElements.create('card', {
-        style: {
-          base: {
-            fontSize: '16px',
-            color: '#424770',
-            '::placeholder': {
-              color: '#aab7c4',
-            },
-          },
-        },
-      });
+  // No need for billing field auto-population since we're using Stripe Checkout
 
-      stripeCardElement.mount('#card-element');
-      console.log('✅ Stripe card element mounted successfully');
+  // Add CSS for live validation styling
+  const style = document.createElement('style');
+  style.textContent = `
+    .field-error, .field-success, .terms-feedback {
+      display: block !important;
+      margin-top: 5px;
+      font-size: 12px;
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    .is-invalid {
+      border-color: #dc3545 !important;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+    
+    .calendar-container.is-invalid {
+      border: 2px solid #dc3545 !important;
+      border-radius: 8px;
+    }
+    
+    #time_slots.is-invalid {
+      border: 2px solid #dc3545 !important;
+      border-radius: 8px;
+    }
+    
+    .form-check.is-invalid {
+      border: 1px solid #dc3545 !important;
+      border-radius: 8px;
+      padding: 10px;
+      background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Initialize payment options when page loads
+  function initializePaymentOptions() {
+    try {
+      console.log('🔍 Initializing payment options...');
+      
+      // Update payment amounts when total changes
+      updateStripePaymentAmounts();
+      
+      // Handle payment option changes
+      document.getElementById('payment_deposit').addEventListener('change', handleStripePaymentOptionChange);
+      document.getElementById('payment_full').addEventListener('change', handleStripePaymentOptionChange);
       
     } catch (error) {
-      console.error('❌ Error initializing Stripe Elements:', error);
-      alert('Failed to initialize payment form. Please refresh the page and try again.');
+      console.error('❌ Error initializing payment options:', error);
     }
-
-    // Handle real-time validation errors from the card Element
-    stripeCardElement.on('change', function(event) {
-      const displayError = document.getElementById('card-errors');
-      if (event.error) {
-        displayError.textContent = event.error.message;
-        displayError.style.display = 'block';
-      } else {
-        displayError.textContent = '';
-        displayError.style.display = 'none';
-      }
-    });
-
-    // Update payment amounts when total changes
-    updateStripePaymentAmounts();
-    
-    // Handle payment option changes
-    document.getElementById('payment_deposit').addEventListener('change', handleStripePaymentOptionChange);
-    document.getElementById('payment_full').addEventListener('change', handleStripePaymentOptionChange);
   }
 
   function updateStripePaymentAmounts() {
@@ -1192,7 +1462,108 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  // Validate form before processing payment
+  function validateBookingForm() {
+    const errors = [];
+    const invalidFields = [];
+    const form = document.getElementById("quoteForm");
+    
+    // Clear previous error styling
+    document.querySelectorAll('.form-error').forEach(el => el.remove());
+    document.querySelectorAll('.cmn-input, select').forEach(el => {
+      el.style.borderColor = '';
+      el.classList.remove('is-invalid');
+    });
+    
+    // Required fields validation
+    const requiredFields = [
+      { id: 'id_name', name: 'Name' },
+      { id: 'id_email', name: 'Email' },
+      { id: 'id_phone', name: 'Phone' },
+      { id: 'id_address', name: 'Street Address' },
+      { id: 'id_zip_code', name: 'ZIP Code' },
+      { id: 'crew_size_hours', name: 'Crew/Size/Hours' },
+      { id: 'selected_date', name: 'Date' },
+      { id: 'selected_time', name: 'Time' }
+    ];
+    
+    // Check each required field
+    requiredFields.forEach(field => {
+      const element = document.getElementById(field.id);
+      if (!element || !element.value || element.value.trim() === '') {
+        errors.push(`${field.name} is required`);
+        invalidFields.push(field.id);
+      }
+    });
+    
+    // Validate email format
+    const emailField = document.getElementById('id_email');
+    if (emailField && emailField.value) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailField.value)) {
+        errors.push('Please enter a valid email address');
+        invalidFields.push('id_email');
+      }
+    }
+    
+    // Validate phone format (basic)
+    const phoneField = document.getElementById('id_phone');
+    if (phoneField && phoneField.value) {
+      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+      if (!phoneRegex.test(phoneField.value.replace(/[\s\-\(\)]/g, ''))) {
+        errors.push('Please enter a valid phone number');
+        invalidFields.push('id_phone');
+      }
+    }
+    
+    // Check if terms are accepted
+    const termsCheckbox = document.getElementById('terms');
+    if (!termsCheckbox || !termsCheckbox.checked) {
+      errors.push('Please accept the terms and conditions');
+      invalidFields.push('terms');
+    }
+    
+    // Check if date and time are selected
+    if (!selectedDate) {
+      errors.push('Please select a date for your booking');
+    }
+    
+    if (!selectedTime) {
+      errors.push('Please select a time for your booking');
+    }
+    
+    // Check if total amount is valid
+    const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
+    if (!totalAmount || totalAmount <= 0) {
+      errors.push('Please complete all booking details to calculate the total amount');
+    }
+    
+    // Highlight invalid fields
+    invalidFields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.style.borderColor = '#dc3545';
+        field.classList.add('is-invalid');
+        
+        // Add error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'form-error text-danger small mt-1';
+        errorDiv.textContent = 'This field is required';
+        field.parentNode.appendChild(errorDiv);
+      }
+    });
+    
+    return errors;
+  }
+
   function createBookingAndProcessStripePayment() {
+    // Validate form first
+    const validationErrors = validateBookingForm();
+    if (validationErrors.length > 0) {
+      alert('Please fix the following errors:\n\n' + validationErrors.join('\n'));
+      return;
+    }
+    
     const formData = new FormData(document.getElementById("quoteForm"));
     
     // Show loading state
@@ -1214,8 +1585,8 @@ document.addEventListener("DOMContentLoaded", function () {
         stripeCurrentBookingId = data.booking_id;
         const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
         
-        // Create payment intent and process payment
-        createStripePaymentIntentAndProcess(data.booking_id, totalAmount, submitBtn, originalText);
+        // Create checkout session and redirect to payment
+        createStripeCheckoutSessionAndRedirect(data.booking_id, totalAmount, submitBtn, originalText);
       } else {
         throw new Error(data.error || 'Failed to create booking');
       }
@@ -1228,59 +1599,37 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  function createStripePaymentIntentAndProcess(bookingId, totalAmount, submitBtn, originalText) {
-    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Processing Payment...';
-    
-    fetch('/quotes/api/create-payment-intent/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-      },
-      body: JSON.stringify({
+    function createStripeCheckoutSessionAndRedirect(bookingId, totalAmount, submitBtn, originalText) {
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Redirecting to Payment...';
+
+      const frontendTotal = parseFloat(document.getElementById("totalPrice").textContent);
+      console.log('🔍 Creating checkout session with:', {
         booking_id: bookingId,
         payment_type: stripeCurrentPaymentType,
-        frontend_total_amount: parseFloat(document.getElementById("totalPrice").textContent),
-      }),
-    })
+        frontend_total_amount: frontendTotal,
+        totalPrice_element: document.getElementById("totalPrice").textContent
+      });
+
+      fetch('/quotes/api/create-checkout-session/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({
+          booking_id: bookingId,
+          payment_type: stripeCurrentPaymentType,
+          frontend_total_amount: frontendTotal,
+        }),
+      })
     .then(response => response.json())
     .then(data => {
       if (data.error) {
         throw new Error(data.error);
       }
       
-      stripeClientSecret = data.client_secret;
-      
-      // Get billing information
-      const billingEmail = document.getElementById('billing-email').value;
-      const billingName = document.getElementById('billing-name').value;
-
-      if (!billingEmail || !billingName) {
-        throw new Error('Please fill in all billing information');
-      }
-
-      // Confirm payment with Stripe
-      if (!stripeCardElement) {
-        throw new Error('Payment form is not properly initialized. Please refresh the page.');
-      }
-      
-      return stripe.confirmCardPayment(stripeClientSecret, {
-        payment_method: {
-          card: stripeCardElement,
-          billing_details: {
-            name: billingName,
-            email: billingEmail,
-          },
-        },
-      });
-    })
-    .then(function(result) {
-      if (result.error) {
-        throw new Error(result.error.message);
-      } else {
-        // Payment succeeded
-        handleStripePaymentSuccess(result.paymentIntent, submitBtn, originalText);
-      }
+      // Redirect to Stripe Checkout
+      window.location.href = data.checkout_url;
     })
     .catch(error => {
       console.error('Payment error:', error);
@@ -1303,9 +1652,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 2000);
   }
 
-  // Initialize Stripe when page loads
-  console.log('🔍 Page loaded, initializing Stripe Elements...');
-  initializeStripeElements();
+  // Stripe Elements no longer needed - using hosted checkout
   
   // Update payment amounts when pricing changes
   const originalUpdateSummary = window.updateSummary;

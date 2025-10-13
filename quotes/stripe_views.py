@@ -8,6 +8,7 @@ from django.utils import timezone
 from decimal import Decimal
 from .models import Booking
 from .payment_models import Payment, PaymentSplit
+from django.urls import reverse
 
 # Configure Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -78,6 +79,12 @@ def create_payment_intent(request):
                 return JsonResponse({'error': 'Deposit must be paid before final payment'}, status=400)
             amount = split.final_amount
             existing_intent_id = split.final_payment_intent_id
+        elif payment_type == 'full':
+            # For full payment, use the total amount and check if any payment has been made
+            if split.deposit_paid or split.final_paid:
+                return JsonResponse({'error': 'Partial payments already made, cannot process full payment'}, status=400)
+            amount = split.total_amount
+            existing_intent_id = split.deposit_payment_intent_id  # Use deposit intent ID for full payments
         else:
             return JsonResponse({'error': 'Invalid payment_type'}, status=400)
         
@@ -86,6 +93,8 @@ def create_payment_intent(request):
             return JsonResponse({'error': 'Deposit already paid'}, status=400)
         elif payment_type == 'final' and split.final_paid:
             return JsonResponse({'error': 'Final payment already paid'}, status=400)
+        elif payment_type == 'full' and (split.deposit_paid or split.final_paid):
+            return JsonResponse({'error': 'Payment already made'}, status=400)
         
         # Convert to cents for Stripe
         amount_cents = int(amount * 100)
@@ -118,8 +127,10 @@ def create_payment_intent(request):
             # Save payment intent ID
             if payment_type == 'deposit':
                 split.deposit_payment_intent_id = intent.id
-            else:
+            elif payment_type == 'final':
                 split.final_payment_intent_id = intent.id
+            elif payment_type == 'full':
+                split.deposit_payment_intent_id = intent.id  # Store full payment in deposit intent ID
             split.save()
             
             # Create Payment record
@@ -153,6 +164,142 @@ def create_payment_intent(request):
         return JsonResponse({'error': str(e), 'traceback': error_trace}, status=500)
 
 
+def create_checkout_session(request):
+    """Create a Stripe Checkout Session for deposit or final payment"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        booking_id = data.get('booking_id')
+        payment_type = data.get('payment_type')  # 'deposit', 'final', or 'full'
+        
+        if not booking_id or not payment_type:
+            return JsonResponse({'error': 'Missing booking_id or payment_type'}, status=400)
+        
+        try:
+            booking = Booking.objects.get(id=booking_id)
+        except Booking.DoesNotExist:
+            return JsonResponse({'error': 'Booking not found'}, status=404)
+        
+        # Get payment split
+        print(f"🔍 Creating checkout session for booking {booking_id}, payment_type: {payment_type}")
+        
+        # Check if frontend provided a manual total amount
+        frontend_total = data.get('frontend_total_amount')
+        print(f"🔍 Frontend total received: {frontend_total}")
+        print(f"🔍 Frontend total type: {type(frontend_total)}")
+        
+        if frontend_total and frontend_total > 0:
+            print(f"✅ Using frontend total amount: {frontend_total}")
+            try:
+                split = booking.get_payment_split(manual_total=frontend_total)
+            except Exception as e:
+                print(f"❌ Error creating split with frontend total: {e}")
+                split = booking.get_payment_split()
+        else:
+            print("⚠️ No valid frontend total, using backend calculated total")
+            split = booking.get_payment_split()
+            
+        print(f"🔍 PaymentSplit total_amount: {split.total_amount}")
+        print(f"🔍 PaymentSplit deposit_amount: {split.deposit_amount}")
+        print(f"🔍 PaymentSplit final_amount: {split.final_amount}")
+        
+        # Determine amount and check payment status
+        if payment_type == 'deposit':
+            amount = split.deposit_amount
+            print(f"🔍 Using deposit amount: {amount}")
+            if split.deposit_paid:
+                return JsonResponse({'error': 'Deposit already paid'}, status=400)
+        elif payment_type == 'final':
+            if not split.deposit_paid:
+                return JsonResponse({'error': 'Deposit must be paid before final payment'}, status=400)
+            amount = split.final_amount
+            print(f"🔍 Using final amount: {amount}")
+            if split.final_paid:
+                return JsonResponse({'error': 'Final payment already paid'}, status=400)
+        elif payment_type == 'full':
+            if split.deposit_paid or split.final_paid:
+                return JsonResponse({'error': 'Partial payments already made, cannot process full payment'}, status=400)
+            amount = split.total_amount
+            print(f"🔍 Using full amount: {amount}")
+        else:
+            return JsonResponse({'error': 'Invalid payment_type'}, status=400)
+        
+        # Create success and cancel URLs
+        success_url = request.build_absolute_uri(
+            reverse('booking_confirmation', kwargs={'booking_id': booking_id})
+        ) + '?payment=success&type=' + payment_type
+        
+        cancel_url = request.build_absolute_uri(
+            reverse('office_cleaning_booking') if 'office' in request.path else reverse('cleaning_booking')
+        ) + '?payment=cancelled'
+        
+        # Create Stripe Checkout Session
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': settings.STRIPE_CURRENCY,
+                    'product_data': {
+                        'name': f'Office Cleaning Service - {payment_type.title()} Payment',
+                        'description': f'Booking ID: {booking_id} - {payment_type.title()} Payment',
+                    },
+                    'unit_amount': int(amount * 100),  # Convert to cents
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={
+                'booking_id': booking_id,
+                'payment_type': payment_type,
+                'customer_name': booking.name,
+                'customer_email': booking.email,
+            },
+            customer_email=booking.email,
+            billing_address_collection='required',
+        )
+        
+        # Store checkout session ID in payment split for reference
+        if payment_type == 'deposit':
+            split.deposit_payment_intent_id = checkout_session.id
+        elif payment_type == 'final':
+            split.final_payment_intent_id = checkout_session.id
+        elif payment_type == 'full':
+            split.deposit_payment_intent_id = checkout_session.id
+        split.save()
+        
+        # Create Payment record
+        Payment.objects.create(
+            booking=booking,
+            stripe_payment_intent_id=checkout_session.id,
+            amount=amount,
+            currency=settings.STRIPE_CURRENCY,
+            payment_type=payment_type,
+            status='pending'
+        )
+        
+        return JsonResponse({
+            'checkout_url': checkout_session.url,
+            'session_id': checkout_session.id,
+            'amount': amount,
+            'payment_type': payment_type,
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except stripe.error.StripeError as e:
+        return JsonResponse({'error': str(e)}, status=400)
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in create_checkout_session: {str(e)}")
+        print(f"Traceback: {error_trace}")
+        return JsonResponse({'error': str(e), 'traceback': error_trace}, status=500)
+
+
 @csrf_exempt
 @require_POST
 def stripe_webhook(request):
@@ -170,7 +317,10 @@ def stripe_webhook(request):
         return HttpResponse(status=400)
     
     # Handle the event
-    if event['type'] == 'payment_intent.succeeded':
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        handle_checkout_success(session)
+    elif event['type'] == 'payment_intent.succeeded':
         payment_intent = event['data']['object']
         handle_payment_success(payment_intent)
     elif event['type'] == 'payment_intent.payment_failed':
@@ -181,6 +331,56 @@ def stripe_webhook(request):
         handle_payment_cancellation(payment_intent)
     
     return HttpResponse(status=200)
+
+
+def handle_checkout_success(session):
+    """Handle successful checkout session completion"""
+    try:
+        session_id = session['id']
+        booking_id = session['metadata'].get('booking_id')
+        payment_type = session['metadata'].get('payment_type')
+        
+        if not booking_id or not payment_type:
+            print(f"Missing metadata in checkout session {session_id}")
+            return
+        
+        # Update Payment record
+        try:
+            payment = Payment.objects.get(stripe_payment_intent_id=session_id)
+            payment.status = 'succeeded'
+            payment.paid_at = timezone.now()
+            payment.stripe_charge_id = session.get('payment_intent')
+            payment.save()
+        except Payment.DoesNotExist:
+            print(f"Payment record not found for session {session_id}")
+            return
+        
+        # Update PaymentSplit
+        try:
+            booking = Booking.objects.get(id=booking_id)
+            split = booking.get_payment_split()
+            
+            if payment_type == 'deposit':
+                split.deposit_paid = True
+            elif payment_type == 'final':
+                split.final_paid = True
+            elif payment_type == 'full':
+                split.deposit_paid = True
+                split.final_paid = True  # Full payment covers both
+            
+            split.save()
+            
+            # Update booking payment status
+            booking.payment_method = 'stripe'
+            booking.update_payment_status()
+            
+            print(f"Checkout payment {payment_type} succeeded for booking {booking_id}")
+            
+        except Booking.DoesNotExist:
+            print(f"Booking {booking_id} not found")
+            
+    except Exception as e:
+        print(f"Error handling checkout success: {e}")
 
 
 def handle_payment_success(payment_intent):
@@ -214,6 +414,9 @@ def handle_payment_success(payment_intent):
                 split.deposit_paid = True
             elif payment_type == 'final':
                 split.final_paid = True
+            elif payment_type == 'full':
+                split.deposit_paid = True
+                split.final_paid = True  # Full payment covers both
             
             split.save()
             

@@ -548,21 +548,29 @@ class Booking(models.Model):
     
     def get_payment_split(self, manual_total=None):
         """Get or create payment split for this booking"""
+        from .payment_models import PaymentSplit
+        
+        # Use manual total if provided (from frontend summary)
+        if manual_total:
+            manual_total_decimal = Decimal(str(manual_total))
+            print(f"🔍 Getting PaymentSplit for booking {self.id} with manual total: {manual_total_decimal}")
+            
+            try:
+                existing_split = self.payment_split
+                # If split exists, update it with new amount if different
+                if existing_split and existing_split.total_amount != manual_total_decimal:
+                    print(f"🔍 Updating existing PaymentSplit from {existing_split.total_amount} to {manual_total_decimal}")
+                    existing_split.create_split(manual_total_decimal)
+                return existing_split
+            except:
+                # No existing split, create new one
+                print(f"🔍 Creating new PaymentSplit for booking {self.id} with manual total: {manual_total_decimal}")
+                return PaymentSplit.create_split_with_amount(self, manual_total_decimal)
+        
+        # No manual total provided, use existing split or create with calculated total
         try:
             return self.payment_split
         except:
-            from .payment_models import PaymentSplit
-            
-            # Use manual total if provided (from frontend summary)
-            if manual_total:
-                print(f"🔍 Creating PaymentSplit for booking {self.id} with manual total: {manual_total}")
-                try:
-                    return PaymentSplit.create_split_with_amount(self, Decimal(str(manual_total)))
-                except Exception as e:
-                    print(f"❌ ERROR creating split with manual total: {e}")
-                    # Fallback to calculated total
-                    pass
-            
             # Fallback to calculated total
             try:
                 total = self.calculate_total_price()
