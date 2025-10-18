@@ -316,14 +316,33 @@ def stripe_webhook(request):
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
     
+    print(f"🔍 Webhook received - Event type: {request.META.get('HTTP_STRIPE_SIGNATURE', 'No signature')}")
+    print(f"🔍 Webhook secret configured: {bool(settings.STRIPE_WEBHOOK_SECRET)}")
+    print(f"🔍 Payload length: {len(payload)} bytes")
+    print(f"🔍 Content-Type: {request.META.get('CONTENT_TYPE', 'Not set')}")
+    
+    # Handle test requests (no signature or invalid signature)
+    if not sig_header:
+        print("⚠️ No Stripe signature header - treating as test request")
+        try:
+            test_data = json.loads(payload)
+            print(f"✅ Test webhook data received: {test_data}")
+            return HttpResponse("Test webhook received", status=200)
+        except json.JSONDecodeError:
+            print("❌ Invalid JSON in test request")
+            return HttpResponse("Invalid JSON", status=400)
+    
     try:
         event = stripe.Webhook.construct_event(
             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
         )
-    except ValueError:
-        return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError:
-        return HttpResponse(status=400)
+        print(f"✅ Webhook event verified: {event['type']}")
+    except ValueError as e:
+        print(f"❌ Webhook ValueError: {e}")
+        return HttpResponse(f"Invalid payload: {e}", status=400)
+    except stripe.error.SignatureVerificationError as e:
+        print(f"❌ Webhook SignatureVerificationError: {e}")
+        return HttpResponse(f"Invalid signature: {e}", status=400)
     
     # Handle the event
     if event['type'] == 'checkout.session.completed':
@@ -399,8 +418,12 @@ def handle_payment_success(payment_intent):
         booking_id = payment_intent['metadata'].get('booking_id')
         payment_type = payment_intent['metadata'].get('payment_type')
         
+        print(f"🔍 Processing payment success for intent {payment_intent_id}")
+        print(f"🔍 Booking ID: {booking_id}, Payment Type: {payment_type}")
+        print(f"🔍 Payment Intent metadata: {payment_intent.get('metadata', {})}")
+        
         if not booking_id or not payment_type:
-            print(f"Missing metadata in payment intent {payment_intent_id}")
+            print(f"❌ Missing metadata in payment intent {payment_intent_id}")
             return
         
         # Update Payment record
@@ -419,24 +442,32 @@ def handle_payment_success(payment_intent):
             booking = Booking.objects.get(id=booking_id)
             split = booking.get_payment_split()
             
+            print(f"🔍 Before update - Deposit paid: {split.deposit_paid}, Final paid: {split.final_paid}")
+            print(f"🔍 Booking payment status before: {booking.payment_status}")
+            
             if payment_type == 'deposit':
                 split.deposit_paid = True
+                print(f"✅ Set deposit_paid = True")
             elif payment_type == 'final':
                 split.final_paid = True
+                print(f"✅ Set final_paid = True")
             elif payment_type == 'full':
                 split.deposit_paid = True
                 split.final_paid = True  # Full payment covers both
+                print(f"✅ Set both deposit_paid and final_paid = True")
             
             split.save()
+            print(f"✅ PaymentSplit saved - Deposit: {split.deposit_paid}, Final: {split.final_paid}")
             
             # Update booking payment status
             booking.payment_method = 'stripe'
             booking.update_payment_status()
+            print(f"✅ Booking payment status updated to: {booking.payment_status}")
             
-            print(f"Payment {payment_type} succeeded for booking {booking_id}")
+            print(f"✅ Payment {payment_type} succeeded for booking {booking_id}")
             
         except Booking.DoesNotExist:
-            print(f"Booking {booking_id} not found")
+            print(f"❌ Booking {booking_id} not found")
             
     except Exception as e:
         print(f"Error handling payment success: {e}")
@@ -475,6 +506,23 @@ def handle_payment_cancellation(payment_intent):
             
     except Exception as e:
         print(f"Error handling payment cancellation: {e}")
+
+
+@csrf_exempt
+def webhook_test(request):
+    """Test endpoint for webhook debugging"""
+    if request.method == 'GET':
+        return JsonResponse({
+            'status': 'Webhook test endpoint is working',
+            'webhook_secret_configured': bool(settings.STRIPE_WEBHOOK_SECRET),
+            'webhook_url': '/quotes/api/webhook/stripe/',
+            'instructions': {
+                'test_without_signature': 'POST to /quotes/api/webhook/stripe/ with JSON data',
+                'test_with_signature': 'POST with Stripe-Signature header (will fail with invalid signature)',
+                'real_webhook': 'Configure in Stripe Dashboard with proper webhook secret'
+            }
+        })
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
 def get_payment_status(request, booking_id):
