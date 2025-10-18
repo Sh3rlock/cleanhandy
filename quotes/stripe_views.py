@@ -525,6 +525,68 @@ def webhook_test(request):
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
+@csrf_exempt
+def manual_webhook_trigger(request, booking_id):
+    """Manually trigger webhook processing for a booking (for testing)"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        payments = Payment.objects.filter(booking=booking, status='pending')
+        
+        if not payments.exists():
+            return JsonResponse({'error': 'No pending payments found for this booking'}, status=404)
+        
+        results = []
+        for payment in payments:
+            # Create mock payment intent data
+            mock_payment_intent = {
+                'id': payment.stripe_payment_intent_id,
+                'metadata': {
+                    'booking_id': str(booking.id),
+                    'payment_type': payment.payment_type
+                },
+                'latest_charge': f'ch_manual_{payment.id}'
+            }
+            
+            # Process the webhook
+            try:
+                handle_payment_success(mock_payment_intent)
+                results.append({
+                    'payment_id': payment.id,
+                    'payment_type': payment.payment_type,
+                    'status': 'success'
+                })
+            except Exception as e:
+                results.append({
+                    'payment_id': payment.id,
+                    'payment_type': payment.payment_type,
+                    'status': 'error',
+                    'error': str(e)
+                })
+        
+        # Refresh booking status
+        booking.refresh_from_db()
+        split = booking.get_payment_split()
+        
+        return JsonResponse({
+            'status': 'Webhook processing completed',
+            'booking_id': booking_id,
+            'booking_payment_status': booking.payment_status,
+            'payment_split': {
+                'deposit_paid': split.deposit_paid,
+                'final_paid': split.final_paid
+            },
+            'results': results
+        })
+        
+    except Booking.DoesNotExist:
+        return JsonResponse({'error': 'Booking not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
 def get_payment_status(request, booking_id):
     """Get payment status for a booking"""
     try:
