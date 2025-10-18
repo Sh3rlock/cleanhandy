@@ -1,9 +1,11 @@
+{% load form_tags %}
+
 <script>
   // Set hourly rate from Django backend
   window.officeCleaningHourlyRate = {{ hourly_rate|default:75 }};
 </script>
 
-<style>
+<style>  
   .summary-font {
     font-size: 20px !important;
   }
@@ -292,6 +294,39 @@
     font-weight: 600;
     color: #F15A29;
   }
+
+  /* Validation Styles */
+  .field-error {
+    display: block !important;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #dc3545;
+    animation: fadeIn 0.3s ease-in;
+    margin-top: -10px !important;
+  }
+
+  .is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+  }
+
+  .calendar-section.is-invalid {
+    border: 2px solid #dc3545 !important;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .form-check.is-invalid {
+    border: 1px solid #dc3545 !important;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: rgba(220, 53, 69, 0.1);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 
 <div class="row">
@@ -353,8 +388,8 @@
 
       <!-- Job Description -->
       <div class="form-group mb-4">
-        <label for="job_description" style="display: block; margin-bottom: 10px; font-weight: 500;">Job Description</label>
-        {{ form.job_description }}
+        <label for="{{ form.job_description.id_for_label }}" class="form-label">Job Description *</label>
+        {{ form.job_description|add_class:"cmn-input" }}
       </div>
     </div>
 
@@ -422,9 +457,24 @@
     <!-- Step 3: Contact Info -->
     <div class="step mb-4" id="step3">
       <h4>Contact Info</h4>
-      {{ form.name }}
-      {{ form.email }}
-      {{ form.phone }}
+      
+      <!-- Name Field -->
+      <div class="form-group mb-3">
+        <label for="{{ form.name.id_for_label }}" class="form-label">Name *</label>
+        {{ form.name|add_class:"cmn-input" }}
+      </div>
+      
+      <!-- Email Field -->
+      <div class="form-group mb-3">
+        <label for="{{ form.email.id_for_label }}" class="form-label">Email *</label>
+        {{ form.email|add_class:"cmn-input" }}
+      </div>
+      
+      <!-- Phone Field -->
+      <div class="form-group mb-3">
+        <label for="{{ form.phone.id_for_label }}" class="form-label">Phone *</label>
+        {{ form.phone|add_class:"cmn-input" }}
+      </div>
 
       <!-- Saved Address Select -->
       {% if saved_addresses %}
@@ -476,16 +526,22 @@
       <!-- Manual address fields -->
       <div class="row g-3">
         <div class="col-md-6">
-          <label for="{{ form.address.id_for_label }}" class="form-label">Street Address</label>
-          {{ form.address }}
+          <div class="form-group">
+            <label for="{{ form.address.id_for_label }}" class="form-label">Street Address *</label>
+            {{ form.address|add_class:"cmn-input" }}
+          </div>
         </div>
         <div class="col-md-3">
-          <label for="{{ form.apartment.id_for_label }}" class="form-label">Apt/Suite</label>
-          {{ form.apartment }}
+          <div class="form-group">
+            <label for="{{ form.apartment.id_for_label }}" class="form-label">Apt/Suite</label>
+            {{ form.apartment|add_class:"cmn-input" }}
+          </div>
         </div>
         <div class="col-md-3">
-          <label for="{{ form.zip_code.id_for_label }}" class="form-label">ZIP Code</label>
-          {{ form.zip_code }}
+          <div class="form-group">
+            <label for="{{ form.zip_code.id_for_label }}" class="form-label">ZIP Code *</label>
+            {{ form.zip_code|add_class:"cmn-input" }}
+          </div>
         </div>
       </div>
       <!-- Hidden city and state fields (default to New York) -->
@@ -1081,121 +1137,270 @@ document.addEventListener("DOMContentLoaded", function () {
   renderCalendar(); // Then render calendar with selected date
   updateSummary(); // Finally update the summary
   
-  // Live validation with visual feedback
-  function validateField(fieldId, fieldName, value, showVisualFeedback = true) {
-    const field = document.getElementById(fieldId);
-    if (!field) return { isValid: false, message: '' };
-    
-    // Clear previous feedback
-    if (showVisualFeedback) {
-      clearFieldFeedback(fieldId);
+  // ================================
+  // FORM VALIDATION SYSTEM
+  // ================================
+  
+  class FormValidator {
+    constructor() {
+      console.log('🔍 FormValidator constructor called');
+      this.form = document.getElementById('quoteForm');
+      console.log('🔍 Form element in constructor:', !!this.form);
+      this.validators = new Map();
+      this.errors = new Map();
+      this.initializeValidators();
+      this.attachEventListeners();
+      console.log('🔍 FormValidator constructor completed');
     }
-    
-    let isValid = true;
-    let message = '';
-    
-    // Required field check
-    if (!value || value.trim() === '') {
-      isValid = false;
-      message = `${fieldName} is required`;
-    } else {
-      // Field-specific validation
-      switch (fieldId) {
-        case 'id_email':
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          if (!emailRegex.test(value)) {
-            isValid = false;
-            message = 'Please enter a valid email address';
-          }
-          break;
-          
-        case 'id_phone':
-          const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-          if (!phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))) {
-            isValid = false;
-            message = 'Please enter a valid phone number';
-          }
-          break;
-          
-        case 'id_zip_code':
-          const zipRegex = /^\d{5}(-\d{4})?$/;
-          if (!zipRegex.test(value)) {
-            isValid = false;
-            message = 'Please enter a valid ZIP code';
-          }
-          break;
+
+    initializeValidators() {
+      // Contact fields
+      this.validators.set('id_name', {
+        required: true,
+        minLength: 2,
+        pattern: /^[a-zA-Z\s]+$/,
+        message: 'Please enter a valid name (letters and spaces only)'
+      });
+
+      this.validators.set('id_email', {
+        required: true,
+        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        message: 'Please enter a valid email address'
+      });
+
+      this.validators.set('id_phone', {
+        required: true,
+        pattern: /^[\+]?[1-9][\d]{0,15}$/,
+        transform: (value) => value.replace(/[\s\-\(\)]/g, ''),
+        message: 'Please enter a valid phone number'
+      });
+
+      // Address fields
+      this.validators.set('id_address', {
+        required: true,
+        minLength: 5,
+        message: 'Please enter a valid street address'
+      });
+
+      this.validators.set('id_zip_code', {
+        required: true,
+        pattern: /^\d{5}(-\d{4})?$/,
+        message: 'Please enter a valid ZIP code'
+      });
+
+      // Job description
+      this.validators.set('id_job_description', {
+        required: true,
+        minLength: 10,
+        message: 'Please provide a job description (at least 10 characters)'
+      });
+
+      // Service selection
+      this.validators.set('crew_size_hours', {
+        required: true,
+        message: 'Please select a crew size and hours option'
+      });
+
+      // Terms
+      this.validators.set('terms', {
+        required: true,
+        custom: (field) => field.checked,
+        message: 'Please accept the terms and conditions'
+      });
+    }
+
+    attachEventListeners() {
+      // Attach to all form fields
+      this.validators.forEach((validator, fieldId) => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          // Input event for real-time validation
+          field.addEventListener('input', () => {
+            this.validateField(fieldId);
+            this.updateSubmitButtonState();
+          });
+
+          // Blur event for validation on field exit
+          field.addEventListener('blur', () => {
+            this.validateField(fieldId);
+          });
+
+          // Change event for select fields
+          field.addEventListener('change', () => {
+            this.validateField(fieldId);
+            this.updateSubmitButtonState();
+          });
+        }
+      });
+
+      // Special handling for date and time selection
+      this.attachDateTimeListeners();
+      
+      // Ensure all important fields have validation
+      this.ensureAllFieldsHaveValidation();
+    }
+
+    attachDateTimeListeners() {
+      // Override the existing selectDate function to include validation
+      const originalSelectDate = window.selectDate;
+      window.selectDate = (date) => {
+        if (originalSelectDate) {
+          originalSelectDate(date);
+        }
+        this.validateDateAndTime();
+        this.updateSubmitButtonState();
+      };
+
+      // Override the existing selectTimeSlot function to include validation
+      const originalSelectTimeSlot = window.selectTimeSlot;
+      window.selectTimeSlot = (slot, hour, timeStr) => {
+        if (originalSelectTimeSlot) {
+          originalSelectTimeSlot(slot, hour, timeStr);
+        }
+        this.validateDateAndTime();
+        this.updateSubmitButtonState();
+      };
+    }
+
+    ensureAllFieldsHaveValidation() {
+      // Important fields that should always have validation
+      const importantFields = ['id_name', 'id_email', 'id_phone', 'id_address', 'id_zip_code', 'id_job_description'];
+      
+      importantFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field && !field.hasAttribute('data-validation-attached')) {
+          field.addEventListener('input', () => {
+            this.validateField(fieldId);
+            this.updateSubmitButtonState();
+          });
+          field.addEventListener('blur', () => {
+            this.validateField(fieldId);
+          });
+          field.setAttribute('data-validation-attached', 'true');
+        }
+      });
+    }
+
+    validateField(fieldId) {
+      const field = document.getElementById(fieldId);
+      if (!field) return false;
+
+      const validator = this.validators.get(fieldId);
+      if (!validator) return true;
+
+      let value = field.value;
+      if (validator.transform) {
+        value = validator.transform(value);
       }
-    }
-    
-    // Apply visual feedback
-    if (showVisualFeedback) {
+
+      let isValid = true;
+      let message = '';
+
+      // Required check
+      if (validator.required) {
+        if (validator.custom) {
+          if (!validator.custom(field)) {
+            isValid = false;
+            message = validator.message;
+          }
+        } else if (!value || value.trim() === '') {
+          isValid = false;
+          message = validator.message || `${this.getFieldName(fieldId)} is required`;
+        }
+      }
+
+      // Pattern check
+      if (isValid && value && validator.pattern) {
+        if (!validator.pattern.test(value)) {
+          isValid = false;
+          message = validator.message;
+        }
+      }
+
+      // Min length check
+      if (isValid && value && validator.minLength) {
+        if (value.length < validator.minLength) {
+          isValid = false;
+          message = validator.message;
+        }
+      }
+
+      // Show or clear error
       if (isValid) {
-        showFieldSuccess(fieldId, fieldName);
+        this.clearFieldError(field);
       } else {
-        showFieldError(fieldId, message);
+        this.showFieldError(field, message);
       }
+
+      return isValid;
     }
-    
-    return { isValid, message };
-  }
-  
-  // Clear previous validation feedback
-  function clearFieldFeedback(fieldId) {
-    const field = document.getElementById(fieldId);
-    if (!field) return;
-    
-    // Remove existing feedback elements
-    const existingError = field.parentNode.querySelector('.field-error');
-    const existingSuccess = field.parentNode.querySelector('.field-success');
-    
-    if (existingError) existingError.remove();
-    if (existingSuccess) existingSuccess.remove();
-    
-    // Reset field styling
-    field.classList.remove('is-valid', 'is-invalid');
-    field.style.borderColor = '';
-  }
-  
-  // Show field error
-  function showFieldError(fieldId, message) {
-    const field = document.getElementById(fieldId);
-    if (!field) return;
-    
-    field.classList.add('is-invalid');
-    field.style.borderColor = '#dc3545';
-    
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'field-error text-danger small mt-1';
-    errorDiv.innerHTML = `<i class="fa-solid fa-exclamation-circle me-1"></i>${message}`;
-    field.parentNode.appendChild(errorDiv);
-  }
-  
-  // Show field success
-  function showFieldSuccess(fieldId, fieldName) {
-    const field = document.getElementById(fieldId);
-    if (!field || !field.value || field.value.trim() === '') return;
-    
-    // Just clear any invalid styling, no positive styling
-    field.classList.remove('is-invalid');
-    field.style.borderColor = '';
-  }
-  
-  // Validate date and time selection
-  function validateDateAndTime(showVisualFeedback = true) {
-    const dateValid = selectedDate !== null;
-    const timeValid = selectedTime !== null;
-    
-    if (showVisualFeedback) {
+
+
+    validateAllFields() {
+      console.log('🔍 validateAllFields called');
+      let allValid = true;
+      
+      // Always validate important fields first
+      const importantFields = ['id_name', 'id_email', 'id_phone', 'id_job_description'];
+      importantFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          console.log(`🔍 Validating ${fieldId}:`, field.value);
+          if (!this.validateField(fieldId)) {
+            allValid = false;
+            console.log(`❌ ${fieldId} validation failed`);
+          }
+        } else {
+          console.log(`⚠️ Field ${fieldId} not found`);
+        }
+      });
+
+      // Validate other fields
+      this.validators.forEach((validator, fieldId) => {
+        if (!importantFields.includes(fieldId)) {
+          const field = document.getElementById(fieldId);
+          if (field) {
+            console.log(`🔍 Validating ${fieldId}:`, field.value);
+            if (!this.validateField(fieldId)) {
+              allValid = false;
+              console.log(`❌ ${fieldId} validation failed`);
+            }
+          }
+        }
+      });
+
+      // Validate date and time
+      if (!this.validateDateAndTime()) {
+        allValid = false;
+        console.log('❌ Date/time validation failed');
+      }
+
+      // Ensure contact section is visible if there are errors
+      this.ensureContactSectionVisible();
+
+      console.log('🔍 validateAllFields result:', allValid);
+      return allValid;
+    }
+
+
+    validateDateAndTime() {
+      const dateValid = selectedDate !== null;
+      const timeValid = selectedTime !== null;
+      
       // Clear previous calendar feedback
       document.querySelectorAll('.calendar-error, .calendar-success').forEach(el => el.remove());
       
       // Validate date
-      const calendarContainer = document.querySelector('.calendar-container');
+      const calendarContainer = document.querySelector('.calendar-section');
       if (calendarContainer) {
         if (dateValid) {
           calendarContainer.classList.remove('is-invalid');
         } else {
           calendarContainer.classList.add('is-invalid');
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'calendar-error field-error text-danger small mt-1';
+          errorDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle me-1"></i>Please select a date for your booking';
+          calendarContainer.appendChild(errorDiv);
         }
       }
       
@@ -1206,147 +1411,195 @@ document.addEventListener("DOMContentLoaded", function () {
           timeSlotsContainer.classList.remove('is-invalid');
         } else {
           timeSlotsContainer.classList.add('is-invalid');
-        }
-      }
-    }
-    
-    return dateValid && timeValid;
-  }
-  
-  // Validate terms acceptance
-  function validateTerms(showVisualFeedback = true) {
-    const termsCheckbox = document.getElementById('terms');
-    const isValid = termsCheckbox && termsCheckbox.checked;
-    
-    if (showVisualFeedback) {
-      const termsContainer = document.getElementById('terms').closest('.form-check');
-      if (termsContainer) {
-        // Clear previous feedback
-        const existingFeedback = termsContainer.querySelector('.terms-feedback');
-        if (existingFeedback) existingFeedback.remove();
-        
-        if (isValid) {
-          termsContainer.classList.remove('is-invalid');
-        } else {
-          termsContainer.classList.remove('is-valid');
-          termsContainer.classList.add('is-invalid');
           const errorDiv = document.createElement('div');
-          errorDiv.className = 'terms-feedback text-danger small mt-1';
-          errorDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle me-1"></i>Please accept the terms and conditions';
-          termsContainer.appendChild(errorDiv);
+          errorDiv.className = 'calendar-error field-error text-danger small mt-1';
+          errorDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle me-1"></i>Please select a time for your booking';
+          timeSlotsContainer.appendChild(errorDiv);
+        }
+      }
+      
+      return dateValid && timeValid;
+    }
+
+
+    ensureContactSectionVisible() {
+      // Check if there are important field errors (contact fields or job description)
+      const importantFields = ['id_name', 'id_email', 'id_phone', 'id_job_description'];
+      const hasImportantErrors = importantFields.some(fieldId => {
+        const field = document.getElementById(fieldId);
+        return field && (field.classList.contains('is-invalid') || field.style.borderColor === 'red');
+      });
+      
+      if (hasImportantErrors) {
+        // Make contact section visible
+        const contactSection = document.getElementById('step3');
+        if (contactSection) {
+          contactSection.classList.remove('hidden-step');
+          contactSection.style.display = 'block';
         }
       }
     }
-    
-    return isValid;
-  }
-  
-  // Real-time validation function
-  function validateFormRealTime(showVisualFeedback = true) {
-    const errors = [];
-    
-    // Validate all required fields
-    const requiredFields = [
-      { id: 'id_name', name: 'Name' },
-      { id: 'id_email', name: 'Email' },
-      { id: 'id_phone', name: 'Phone' },
-      { id: 'id_address', name: 'Street Address' },
-      { id: 'id_zip_code', name: 'ZIP Code' },
-      { id: 'crew_size_hours', name: 'Crew/Size/Hours' }
-    ];
-    
-    // Check each required field
-    requiredFields.forEach(field => {
-      const element = document.getElementById(field.id);
-      const value = element ? element.value : '';
-      const validation = validateField(field.id, field.name, value, showVisualFeedback);
-      if (!validation.isValid) {
-        errors.push(validation.message);
+
+    isContactSectionVisible() {
+      const contactSection = document.getElementById('step3');
+      return contactSection && contactSection.style.display !== 'none' && !contactSection.classList.contains('hidden-step');
+    }
+
+    showFieldError(field, message) {
+      this.clearFieldError(field);
+      
+      // Add error styling
+      field.style.borderColor = 'red';
+      field.classList.add('is-invalid');
+      
+      // Create error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'field-error text-danger small mt-1';
+      errorDiv.style.fontSize = '12px';
+      errorDiv.style.color = 'red';
+      errorDiv.textContent = message;
+      
+      // Find the appropriate container for the error message
+      let container = field.parentNode;
+      
+      // For important fields, ensure we're using the form-group container
+      if (field.id === 'id_name' || field.id === 'id_email' || field.id === 'id_phone' || field.id === 'id_job_description') {
+        // Look for the form-group container
+        const formGroup = field.closest('.form-group');
+        if (formGroup) {
+          container = formGroup;
+        }
       }
-    });
-    
-    // Validate date and time
-    if (!validateDateAndTime(showVisualFeedback)) {
-      if (!selectedDate) errors.push('Please select a date for your booking');
-      if (!selectedTime) errors.push('Please select a time for your booking');
+      
+      // Insert error message after the field or at the end of the container
+      if (field.parentNode === container) {
+        // Field is directly in the container, insert after field
+        field.parentNode.insertBefore(errorDiv, field.nextSibling);
+      } else {
+        // Field is nested, append to container
+        container.appendChild(errorDiv);
+      }
+      
+      // Store error for cleanup
+      this.errors.set(field, errorDiv);
     }
-    
-    // Validate terms
-    if (!validateTerms(showVisualFeedback)) {
-      errors.push('Please accept the terms and conditions');
+
+    clearFieldError(field) {
+      // Remove error styling
+      field.style.borderColor = '';
+      field.classList.remove('is-invalid');
+      
+      // Remove error message
+      const errorDiv = this.errors.get(field);
+      if (errorDiv) {
+        errorDiv.remove();
+        this.errors.delete(field);
+      }
+      
+      // Also remove any existing error messages in the form-group container
+      if (field.id === 'id_name' || field.id === 'id_email' || field.id === 'id_phone' || field.id === 'id_job_description') {
+        const formGroup = field.closest('.form-group');
+        if (formGroup) {
+          const existingError = formGroup.querySelector('.field-error');
+          if (existingError) {
+            existingError.remove();
+          }
+        }
+      }
     }
-    
-    // Check if total amount is valid
-    const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
-    if (!totalAmount || totalAmount <= 0) {
-      errors.push('Please complete all booking details to calculate the total amount');
+
+    getFieldName(fieldId) {
+      const fieldNames = {
+        'id_name': 'Name',
+        'id_email': 'Email',
+        'id_phone': 'Phone',
+        'id_address': 'Street Address',
+        'id_zip_code': 'ZIP Code',
+        'id_job_description': 'Job Description',
+        'crew_size_hours': 'Crew/Size/Hours',
+        'terms': 'Terms and Conditions'
+      };
+      return fieldNames[fieldId] || fieldId;
     }
-    
-    return errors.length === 0;
+
+    updateSubmitButtonState() {
+      const submitBtn = document.getElementById("submit-booking-btn");
+      if (!submitBtn) return;
+
+      const isValid = this.validateAllFields();
+      
+      if (isValid) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-secondary');
+        submitBtn.classList.add('btn-primary');
+      } else {
+        submitBtn.disabled = true;
+        submitBtn.classList.remove('btn-primary');
+        submitBtn.classList.add('btn-secondary');
+      }
+    }
+
+    validateAndSubmit() {
+      if (this.validateAllFields()) {
+        // All validation passed, proceed with form submission
+        this.submitForm();
+      } else {
+        // Make sure contact section is visible if there are contact field errors
+        this.ensureContactSectionVisible();
+        
+        // Scroll to first error - prioritize empty required fields
+        let firstError = null;
+        
+        // First, look for empty required fields (most important)
+        const requiredFields = ['id_name', 'id_email', 'id_phone', 'id_job_description', 'id_address', 'id_zip_code', 'crew_size_hours'];
+        for (const fieldId of requiredFields) {
+          const field = document.getElementById(fieldId);
+          if (field && (!field.value || field.value.trim() === '')) {
+            firstError = field;
+            break;
+          }
+        }
+        
+        // If no empty required fields found, look for any field with validation errors
+        if (!firstError) {
+          firstError = this.form.querySelector('.is-invalid, [style*="border: 1px solid red"]');
+        }
+        
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Focus the field for better UX
+          setTimeout(() => {
+            firstError.focus();
+          }, 500);
+        }
+        
+        // Show summary alert
+        const errorCount = this.errors.size;
+        alert(`❌ Please fix the ${errorCount} error${errorCount > 1 ? 's' : ''} before submitting the form.`);
+      }
+    }
+
+    submitForm() {
+      console.log('🔍 Validation passed, proceeding with submission');
+      
+      // Run all existing validation
+      syncHiddenFields();
+      
+      const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
+      if (totalAmount > 0) {
+        // Create booking first, then process payment
+        createBookingAndProcessStripePayment();
+      } else {
+        // No payment needed, submit normally
+        this.form.submit();
+      }
+    }
   }
 
-  // Update submit button state based on validation
-  function updateSubmitButtonState() {
-    const submitBtn = document.getElementById("submit-booking-btn");
-    const isValid = validateFormRealTime();
-    
-    if (isValid) {
-      submitBtn.disabled = false;
-      submitBtn.classList.remove('btn-secondary');
-      submitBtn.classList.add('btn-primary');
-    } else {
-      submitBtn.disabled = true;
-      submitBtn.classList.remove('btn-primary');
-      submitBtn.classList.add('btn-secondary');
-    }
-  }
-
-  // Initialize payment options when page loads
-  document.addEventListener('DOMContentLoaded', function() {
-    initializePaymentOptions();
-    
-    // Add live validation listeners
-    const formFields = [
-      { id: 'id_name', name: 'Name' },
-      { id: 'id_email', name: 'Email' },
-      { id: 'id_phone', name: 'Phone' },
-      { id: 'id_address', name: 'Street Address' },
-      { id: 'id_zip_code', name: 'ZIP Code' },
-      { id: 'crew_size_hours', name: 'Crew/Size/Hours' }
-    ];
-    
-    formFields.forEach(field => {
-      const element = document.getElementById(field.id);
-      if (element) {
-        // Live validation on input
-        element.addEventListener('input', function() {
-          validateField(field.id, field.name, this.value);
-          updateSubmitButtonState();
-        });
-        
-        // Live validation on blur
-        element.addEventListener('blur', function() {
-          validateField(field.id, field.name, this.value);
-        });
-        
-        // Update button state on change
-        element.addEventListener('change', updateSubmitButtonState);
-      }
-    });
-    
-    // Terms checkbox validation
-    const termsCheckbox = document.getElementById('terms');
-    if (termsCheckbox) {
-      termsCheckbox.addEventListener('change', function() {
-        validateTerms();
-        updateSubmitButtonState();
-      });
-    }
-    
-    // Initial validation check
-    updateSubmitButtonState();
-  });
+  // Initialize payment options
+  initializePaymentOptions();
   
+
   // ================================
   // STRIPE PAYMENT INTEGRATION
   // ================================
@@ -1370,44 +1623,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // No need for billing field auto-population since we're using Stripe Checkout
 
-  // Add CSS for live validation styling
-  const style = document.createElement('style');
-  style.textContent = `
-    .field-error, .field-success, .terms-feedback {
-      display: block !important;
-      margin-top: 5px;
-      font-size: 12px;
-      animation: fadeIn 0.3s ease-in;
-    }
-    
-    .is-invalid {
-      border-color: #dc3545 !important;
-      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
-    }
-    
-    .calendar-container.is-invalid {
-      border: 2px solid #dc3545 !important;
-      border-radius: 8px;
-    }
-    
-    #time_slots.is-invalid {
-      border: 2px solid #dc3545 !important;
-      border-radius: 8px;
-    }
-    
-    .form-check.is-invalid {
-      border: 1px solid #dc3545 !important;
-      border-radius: 8px;
-      padding: 10px;
-      background-color: rgba(220, 53, 69, 0.1);
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  `;
-  document.head.appendChild(style);
 
   // Initialize payment options when page loads
   function initializePaymentOptions() {
@@ -1444,125 +1659,30 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Override the existing form submission to handle Stripe payment
-  const originalFormSubmit = document.getElementById("quoteForm");
-  originalFormSubmit.addEventListener("submit", function(e) {
-    e.preventDefault();
-    
-    // Run all existing validation
-    syncHiddenFields();
-    
-    const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
-    if (totalAmount > 0) {
-      // Create booking first, then process payment
-      createBookingAndProcessStripePayment();
-    } else {
-      // No payment needed, submit normally
-      originalFormSubmit.submit();
-    }
-  });
+  // Initialize the form validator
+  console.log('🔍 Initializing FormValidator...');
+  const formValidator = new FormValidator();
+  console.log('🔍 FormValidator initialized:', !!formValidator);
 
-  // Validate form before processing payment
-  function validateBookingForm() {
-    const errors = [];
-    const invalidFields = [];
-    const form = document.getElementById("quoteForm");
-    
-    // Clear previous error styling
-    document.querySelectorAll('.form-error').forEach(el => el.remove());
-    document.querySelectorAll('.cmn-input, select').forEach(el => {
-      el.style.borderColor = '';
-      el.classList.remove('is-invalid');
+  // Override the existing form submission to handle validation and payment
+  const originalFormSubmit = document.getElementById("quoteForm");
+  if (originalFormSubmit) {
+    originalFormSubmit.addEventListener("submit", function(e) {
+      e.preventDefault();
+      
+      console.log('🔍 Form submission triggered');
+      
+      // Use the FormValidator's validateAndSubmit method for consistency
+      formValidator.validateAndSubmit();
     });
-    
-    // Required fields validation
-    const requiredFields = [
-      { id: 'id_name', name: 'Name' },
-      { id: 'id_email', name: 'Email' },
-      { id: 'id_phone', name: 'Phone' },
-      { id: 'id_address', name: 'Street Address' },
-      { id: 'id_zip_code', name: 'ZIP Code' },
-      { id: 'crew_size_hours', name: 'Crew/Size/Hours' },
-      { id: 'selected_date', name: 'Date' },
-      { id: 'selected_time', name: 'Time' }
-    ];
-    
-    // Check each required field
-    requiredFields.forEach(field => {
-      const element = document.getElementById(field.id);
-      if (!element || !element.value || element.value.trim() === '') {
-        errors.push(`${field.name} is required`);
-        invalidFields.push(field.id);
-      }
-    });
-    
-    // Validate email format
-    const emailField = document.getElementById('id_email');
-    if (emailField && emailField.value) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(emailField.value)) {
-        errors.push('Please enter a valid email address');
-        invalidFields.push('id_email');
-      }
-    }
-    
-    // Validate phone format (basic)
-    const phoneField = document.getElementById('id_phone');
-    if (phoneField && phoneField.value) {
-      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-      if (!phoneRegex.test(phoneField.value.replace(/[\s\-\(\)]/g, ''))) {
-        errors.push('Please enter a valid phone number');
-        invalidFields.push('id_phone');
-      }
-    }
-    
-    // Check if terms are accepted
-    const termsCheckbox = document.getElementById('terms');
-    if (!termsCheckbox || !termsCheckbox.checked) {
-      errors.push('Please accept the terms and conditions');
-      invalidFields.push('terms');
-    }
-    
-    // Check if date and time are selected
-    if (!selectedDate) {
-      errors.push('Please select a date for your booking');
-    }
-    
-    if (!selectedTime) {
-      errors.push('Please select a time for your booking');
-    }
-    
-    // Check if total amount is valid
-    const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
-    if (!totalAmount || totalAmount <= 0) {
-      errors.push('Please complete all booking details to calculate the total amount');
-    }
-    
-    // Highlight invalid fields
-    invalidFields.forEach(fieldId => {
-      const field = document.getElementById(fieldId);
-      if (field) {
-        field.style.borderColor = '#dc3545';
-        field.classList.add('is-invalid');
-        
-        // Add error message
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'form-error text-danger small mt-1';
-        errorDiv.textContent = 'This field is required';
-        field.parentNode.appendChild(errorDiv);
-      }
-    });
-    
-    return errors;
+    console.log('🔍 Submit event listener added successfully');
+  } else {
+    console.error('❌ Form element not found');
   }
 
+
   function createBookingAndProcessStripePayment() {
-    // Validate form first
-    const validationErrors = validateBookingForm();
-    if (validationErrors.length > 0) {
-      alert('Please fix the following errors:\n\n' + validationErrors.join('\n'));
-      return;
-    }
+    // Validation already done in form submission handler
     
     const formData = new FormData(document.getElementById("quoteForm"));
     

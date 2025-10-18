@@ -717,8 +717,8 @@
         const eventDateValue = document.getElementById('id_event_date').value;
         if (eventDateValue) {
           const eventDate = new Date(eventDateValue);
-          if (cleaningDate <= eventDate) {
-            showPostEventCleaningFieldError(field, 'Cleaning date must be after the event date');
+          if (cleaningDate < eventDate) {
+            showPostEventCleaningFieldError(field, 'Cleaning date cannot be before the event date');
             return false;
           }
         }

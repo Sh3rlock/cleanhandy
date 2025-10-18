@@ -1,3 +1,4 @@
+{% load quote_filters %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -58,6 +59,12 @@
       <p class="list-item">Subtotal: ${{ subtotal|floatformat:2 }}</p>
       <p class="list-item">Sales Tax (8.875%): ${{ tax|floatformat:2 }}</p>
       <p class="list-item bold">Total: ${{ booking.price|floatformat:2 }}</p>
+      {% if booking.get_paid_amount > 0 %}
+        <p class="list-item" style="color: #28a745; font-weight: bold;">Amount Paid: ${{ booking.get_paid_amount|floatformat:2 }}</p>
+        {% if booking.get_paid_amount < booking.price %}
+          <p class="list-item" style="color: #ffc107; font-weight: bold;">Remaining Balance: ${{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</p>
+        {% endif %}
+      {% endif %}
     </div>
   </div>
 

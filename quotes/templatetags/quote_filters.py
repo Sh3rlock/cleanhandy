@@ -42,3 +42,25 @@ def get_cleaning_type_name(value):
     Get a clean, user-friendly cleaning type name.
     """
     return clean_cleaning_type(value)
+
+@register.filter
+def sub(value, arg):
+    """
+    Subtract arg from value.
+    Usage: {{ value|sub:arg }}
+    """
+    try:
+        return float(value) - float(arg)
+    except (ValueError, TypeError):
+        return 0
+
+@register.filter
+def mul(value, arg):
+    """
+    Multiply value by arg.
+    Usage: {{ value|mul:arg }}
+    """
+    try:
+        return float(value) * float(arg)
+    except (ValueError, TypeError):
+        return 0

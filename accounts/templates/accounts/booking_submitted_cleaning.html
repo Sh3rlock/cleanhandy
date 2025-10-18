@@ -416,6 +416,19 @@
                                 <span class="label">Total:</span>
                                 <span class="value">${{ booking.price|floatformat:2 }}</span>
                             </div>
+                            {% if booking.get_paid_amount > 0 %}
+                            <hr>
+                            <div class="price-row">
+                                <span class="label text-success">Amount Paid:</span>
+                                <span class="value text-success">${{ booking.get_paid_amount|floatformat:2 }}</span>
+                            </div>
+                            {% if booking.get_paid_amount < booking.price %}
+                            <div class="price-row">
+                                <span class="label text-warning">Remaining Balance:</span>
+                                <span class="value text-warning">${{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
+                            {% endif %}
                         </div>
                     </div>
                 </div>

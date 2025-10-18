@@ -619,6 +619,102 @@ class Booking(models.Model):
         """Check if final payment can be made (deposit must be paid)"""
         split = self.get_payment_split()
         return split.is_deposit_paid and not split.final_paid
+    
+    def get_paid_amount(self):
+        """Get the total amount paid so far"""
+        try:
+            successful_payments = self.payments.filter(status='succeeded')
+            return sum(payment.amount for payment in successful_payments)
+        except:
+            return Decimal('0.00')
+    
+    def get_deposit_paid_amount(self):
+        """Get the amount paid for deposit"""
+        try:
+            deposit_payment = self.payments.filter(
+                payment_type='deposit', 
+                status='succeeded'
+            ).first()
+            return deposit_payment.amount if deposit_payment else Decimal('0.00')
+        except:
+            return Decimal('0.00')
+    
+    def get_final_paid_amount(self):
+        """Get the amount paid for final payment"""
+        try:
+            final_payment = self.payments.filter(
+                payment_type='final', 
+                status='succeeded'
+            ).first()
+            return final_payment.amount if final_payment else Decimal('0.00')
+        except:
+            return Decimal('0.00')
+    
+    def get_full_paid_amount(self):
+        """Get the amount paid for full payment"""
+        try:
+            full_payment = self.payments.filter(
+                payment_type='full', 
+                status='succeeded'
+            ).first()
+            return full_payment.amount if full_payment else Decimal('0.00')
+        except:
+            return Decimal('0.00')
+    
+    def get_payment_type_display(self):
+        """Get a human-readable description of payment status"""
+        try:
+            split = self.get_payment_split()
+            if split.is_fully_paid:
+                return "Fully Paid"
+            elif split.is_deposit_paid:
+                return f"Deposit Paid (${self.get_deposit_paid_amount()}) - ${self.get_final_amount()} remaining"
+            else:
+                return "Unpaid"
+        except:
+            return "Payment Status Unknown"
+    
+    def calculate_office_labor_cost(self):
+        """Calculate labor cost for office cleaning (before discount)"""
+        if not self.num_cleaners or not self.hours_requested:
+            return Decimal('0.00')
+        return Decimal(self.num_cleaners) * Decimal(self.hours_requested) * Decimal('75.00')
+    
+    def calculate_office_discount_amount(self):
+        """Calculate discount amount for office cleaning based on frequency"""
+        labor_cost = self.calculate_office_labor_cost()
+        if not self.cleaning_frequency or self.cleaning_frequency == "one_time":
+            return Decimal('0.00')
+        
+        discount_percent = 0
+        if self.cleaning_frequency == "daily":
+            discount_percent = 20
+        elif self.cleaning_frequency == "weekly":
+            discount_percent = 15
+        elif self.cleaning_frequency == "bi_weekly":
+            discount_percent = 10
+        elif self.cleaning_frequency == "monthly":
+            discount_percent = 5
+        
+        return labor_cost * (Decimal(discount_percent) / Decimal('100'))
+    
+    def calculate_office_subtotal(self):
+        """Calculate subtotal for office cleaning (labor + extras - discount)"""
+        labor_cost = self.calculate_office_labor_cost()
+        discount_amount = self.calculate_office_discount_amount()
+        
+        # Add extras
+        extras_total = Decimal('0.00')
+        for extra in self.extras.all():
+            extras_total += Decimal(extra.price)
+        
+        return labor_cost - discount_amount + extras_total
+    
+    def calculate_office_tax(self):
+        """Calculate tax for office cleaning"""
+        subtotal = self.calculate_office_subtotal()
+        tax_rate = Decimal('0.08875')
+        return (subtotal * tax_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
 

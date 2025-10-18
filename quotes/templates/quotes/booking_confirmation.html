@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load quote_filters %}
 
 {% block content %}
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -316,20 +317,82 @@
                     <div class="detail-section">
                         <h6><i class="fas fa-dollar-sign text-success me-2"></i>Pricing</h6>
                         <div class="pricing-details">
+                            <!-- Labor Cost Calculation -->
                             <div class="price-row">
                                 <span class="label">Labor Cost:</span>
-                                <span class="value">${{ booking.price|floatformat:2 }}</span>
+                                <span class="value">${{ booking.num_cleaners }} × {{ booking.hours_requested }}h × $75/h = ${{ booking.calculate_office_labor_cost|floatformat:2 }}</span>
                             </div>
+                            
+                            <!-- Frequency Discount -->
+                            {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+                            <div class="price-row discount">
+                                <span class="label">Frequency Discount ({{ booking.get_cleaning_frequency_display }}):</span>
+                                <span class="value">-${{ booking.calculate_office_discount_amount|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Extras -->
+                            {% if booking.extras.all %}
+                            <div class="price-row">
+                                <span class="label">Additional Services:</span>
+                                <span class="value">
+                                    {% for extra in booking.extras.all %}
+                                        {{ extra.name }} (+${{ extra.price }}){% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </span>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Subtotal -->
+                            <div class="price-row">
+                                <span class="label">Subtotal:</span>
+                                <span class="value">${{ booking.calculate_office_subtotal|floatformat:2 }}</span>
+                            </div>
+                            
+                            <!-- Tax -->
+                            <div class="price-row">
+                                <span class="label">Sales Tax (8.875%):</span>
+                                <span class="value">${{ booking.calculate_office_tax|floatformat:2 }}</span>
+                            </div>
+                            
+                            <!-- Gift Card Discount -->
                             {% if booking.gift_card_discount and booking.gift_card_discount > 0 %}
                             <div class="price-row discount">
                                 <span class="label">Gift Card Discount:</span>
                                 <span class="value">-${{ booking.gift_card_discount|floatformat:2 }}</span>
                             </div>
                             {% endif %}
+                            
+                            <!-- Total -->
                             <div class="price-row total">
                                 <span class="label">Total:</span>
                                 <span class="value">${{ booking.price|floatformat:2 }}</span>
                             </div>
+                            
+                            <!-- Payment Information -->
+                            {% if booking.get_paid_amount > 0 %}
+                            <hr>
+                            <div class="price-row">
+                                <span class="label text-success">Amount Paid:</span>
+                                <span class="value text-success">${{ booking.get_paid_amount|floatformat:2 }}</span>
+                            </div>
+                            {% if booking.get_paid_amount < booking.price %}
+                            <div class="price-row">
+                                <span class="label text-warning">Remaining Balance:</span>
+                                <span class="value text-warning">${{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
+                            {% else %}
+                            <hr>
+                            <div class="price-row">
+                                <span class="label text-info">Deposit Required (50%):</span>
+                                <span class="value text-info">${{ booking.get_deposit_amount|floatformat:2 }}</span>
+                            </div>
+                            <div class="price-row">
+                                <span class="label text-muted">Final Payment (50%):</span>
+                                <span class="value text-muted">${{ booking.get_final_amount|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

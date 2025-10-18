@@ -1,3 +1,4 @@
+{% load quote_filters %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -64,6 +65,15 @@
       <p><strong>Subtotal:</strong> ${{ subtotal|floatformat:2 }}</p>
       <p><strong>Sales Tax (8.875%):</strong> ${{ tax|floatformat:2 }}</p>
       <p><strong>Total Price:</strong> ${{ booking.price|floatformat:2 }}</p>
+      {% if booking.get_paid_amount > 0 %}
+        <p><strong style="color: #28a745;">Amount Paid:</strong> <span style="color: #28a745; font-weight: bold;">${{ booking.get_paid_amount|floatformat:2 }}</span></p>
+        {% if booking.get_paid_amount < booking.price %}
+          <p><strong style="color: #ffc107;">Remaining Balance:</strong> <span style="color: #ffc107; font-weight: bold;">${{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</span></p>
+        {% endif %}
+        <p><strong>Payment Status:</strong> {{ booking.get_payment_type_display }}</p>
+      {% else %}
+        <p><strong style="color: #dc3545;">Payment Status:</strong> <span style="color: #dc3545; font-weight: bold;">Unpaid</span></p>
+      {% endif %}
     </div>
   </div>
 
