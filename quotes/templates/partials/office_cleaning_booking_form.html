@@ -782,7 +782,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  function loadTimeSlots(date) {
+  function loadTimeSlots(date, retryCount = 0) {
     const timeSlots = document.getElementById('time_slots');
     timeSlots.innerHTML = '';
     
@@ -802,12 +802,17 @@ document.addEventListener("DOMContentLoaded", function () {
     // Fetch available hours from API
     const selectedDate = date.toISOString().split('T')[0];
     
-    console.log('🔍 Loading time slots for:', { selectedDate, hoursRequested, crewSelection });
+    console.log('🔍 Loading time slots for:', { selectedDate, hoursRequested, crewSelection, retryCount });
     
     timeSlots.innerHTML = '<div class="text-center text-muted">Loading available times...</div>';
     
     fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${hoursRequested}`)
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
       .then(data => {
         console.log('🔍 Available hours API response:', data);
         timeSlots.innerHTML = '';
@@ -842,7 +847,15 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .catch(error => {
         console.error('❌ Failed to fetch available hours:', error);
-        timeSlots.innerHTML = '<div class="text-center text-muted p-3" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; color: #6c757d;"><i class="fa-solid fa-exclamation-triangle me-2"></i>No available times for this date. Please try selecting a different date.</div>';
+        
+        // Retry up to 2 times for network errors
+        if (retryCount < 2 && (error.message.includes('Failed to fetch') || error.message.includes('HTTP'))) {
+          console.log(`🔄 Retrying time slot fetch (attempt ${retryCount + 1})`);
+          setTimeout(() => loadTimeSlots(date, retryCount + 1), 1000);
+          return;
+        }
+        
+        timeSlots.innerHTML = '<div class="text-center text-muted p-3" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; color: #6c757d;"><i class="fa-solid fa-exclamation-triangle me-2"></i>Unable to load available times. Please try refreshing the page.</div>';
       });
   }
 
@@ -1112,25 +1125,52 @@ document.addEventListener("DOMContentLoaded", function () {
         'X-Requested-With': 'XMLHttpRequest',
       },
     })
-    .then(response => response.json())
+    .then(response => {
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return response.json();
+      } else {
+        // If not JSON, it's likely an HTML error page
+        throw new Error(`Server returned ${response.status}: ${response.statusText}. This usually indicates a server error.`);
+      }
+    })
     .then(data => {
       if (data.success && data.booking_id) {
-        // Booking created successfully, now process payment
+        stripeCurrentBookingId = data.booking_id;
         const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
-        if (typeof window.processStripePayment === 'function') {
-          window.processStripePayment(data.booking_id, totalAmount);
-        } else {
-          alert('Payment system not ready. Please try again.');
-          submitBtn.innerHTML = originalText;
-          submitBtn.disabled = false;
-        }
+        
+        // Create checkout session and redirect to payment
+        createStripeCheckoutSessionAndRedirect(data.booking_id, totalAmount, submitBtn, originalText);
       } else {
         throw new Error(data.error || 'Failed to create booking');
       }
     })
     .catch(error => {
       console.error('Error creating booking:', error);
-      alert('Error creating booking: ' + error.message);
+      
+      // Check if it's a JSON parsing error
+      if (error.message && error.message.includes('JSON.parse')) {
+        alert('Server error: Unable to process the response. Please check your internet connection and try again.');
+      }
+      // Check if it's a time slot conflict error
+      else if (error.message && error.message.includes('time slot is already booked')) {
+        // Show user-friendly error and refresh available time slots
+        alert('This time slot is no longer available. Please select a different time.');
+        
+        // Refresh the time slots for the selected date
+        if (selectedDate) {
+          loadTimeSlots(selectedDate);
+        }
+      }
+      // Check if it's a server error
+      else if (error.message && error.message.includes('Server returned')) {
+        alert('Server error: ' + error.message + ' Please try again in a few moments.');
+      }
+      else {
+        alert('Error creating booking: ' + error.message);
+      }
+      
       submitBtn.innerHTML = originalText;
       submitBtn.disabled = false;
     });
@@ -1425,6 +1465,80 @@ document.addEventListener("DOMContentLoaded", function () {
       return dateValid && timeValid;
     }
 
+    async validateTimeSlotAvailability() {
+      if (!selectedDate || !selectedTime) {
+        return true; // Let basic validation handle this
+      }
+
+      try {
+        // Get the hours requested from the crew selection
+        const crewSelection = document.getElementById('crew_size_hours').value;
+        let hoursRequested = 2; // default fallback
+        
+        if (crewSelection) {
+          const parts = crewSelection.split('_');
+          let hoursStr = parts[2] || "2";
+          if (hoursStr.includes('hours')) {
+            hoursStr = hoursStr.replace('hours', '').replace('hour', '');
+          }
+          hoursRequested = parseFloat(hoursStr) || 2;
+        }
+
+        const selectedDateStr = selectedDate.toISOString().split('T')[0];
+        console.log('🔍 Validating time slot availability:', { selectedDateStr, selectedTime, hoursRequested });
+
+        const response = await fetch(`/quotes/api/available-hours/?date=${selectedDateStr}&hours=${hoursRequested}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        const availableHours = data.available_hours || [];
+        
+        console.log('🔍 Available hours from API:', availableHours);
+        console.log('🔍 Selected time:', selectedTime);
+        
+        // Check if selected time is still available
+        const isAvailable = availableHours.includes(selectedTime);
+        
+        if (!isAvailable) {
+          console.log('❌ Selected time slot is no longer available');
+          
+          // Clear the time selection
+          selectedTime = null;
+          document.getElementById('selected_time').value = '';
+          
+          // Remove selection from UI
+          document.querySelectorAll('.time-slot').forEach(slot => {
+            slot.classList.remove('selected');
+          });
+          
+          // Show error message
+          const timeSlotsContainer = document.getElementById('time_slots');
+          if (timeSlotsContainer) {
+            timeSlotsContainer.classList.add('is-invalid');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'calendar-error field-error text-danger small mt-1';
+            errorDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle me-1"></i>This time slot is no longer available. Please select a different time.';
+            timeSlotsContainer.appendChild(errorDiv);
+          }
+          
+          // Reload available time slots
+          loadTimeSlots(selectedDate);
+          
+          return false;
+        }
+        
+        console.log('✅ Selected time slot is still available');
+        return true;
+        
+      } catch (error) {
+        console.error('❌ Error validating time slot availability:', error);
+        // Don't block submission on API errors, let server handle it
+        return true;
+      }
+    }
+
 
     ensureContactSectionVisible() {
       // Check if there are important field errors (contact fields or job description)
@@ -1543,10 +1657,19 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    validateAndSubmit() {
+    async validateAndSubmit() {
       if (this.validateAllFields()) {
-        // All validation passed, proceed with form submission
-        this.submitForm();
+        // All basic validation passed, now check time slot availability
+        console.log('🔍 Basic validation passed, checking time slot availability...');
+        
+        const timeSlotValid = await this.validateTimeSlotAvailability();
+        if (timeSlotValid) {
+          // All validations passed, proceed with form submission
+          this.submitForm();
+        } else {
+          // Time slot validation failed, ensure contact section is visible
+          this.ensureContactSectionVisible();
+        }
       } else {
         // Make sure contact section is visible if there are contact field errors
         this.ensureContactSectionVisible();
@@ -1592,7 +1715,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
       if (totalAmount > 0) {
         // Create booking first, then process payment
-        createBookingAndProcessStripePayment();
+        createBookingAndProcessPayment();
       } else {
         // No payment needed, submit normally
         this.form.submit();
@@ -1671,13 +1794,13 @@ document.addEventListener("DOMContentLoaded", function () {
   // Override the existing form submission to handle validation and payment
   const originalFormSubmit = document.getElementById("quoteForm");
   if (originalFormSubmit) {
-    originalFormSubmit.addEventListener("submit", function(e) {
+    originalFormSubmit.addEventListener("submit", async function(e) {
       e.preventDefault();
       
       console.log('🔍 Form submission triggered');
       
       // Use the FormValidator's validateAndSubmit method for consistency
-      formValidator.validateAndSubmit();
+      await formValidator.validateAndSubmit();
     });
     console.log('🔍 Submit event listener added successfully');
   } else {
@@ -1685,43 +1808,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
 
-  function createBookingAndProcessStripePayment() {
-    // Validation already done in form submission handler
-    
-    const formData = new FormData(document.getElementById("quoteForm"));
-    
-    // Show loading state
-    const submitBtn = document.getElementById("submit-booking-btn");
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Creating Booking...';
-    submitBtn.disabled = true;
-    
-    fetch(window.location.href, {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success && data.booking_id) {
-        stripeCurrentBookingId = data.booking_id;
-        const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
-        
-        // Create checkout session and redirect to payment
-        createStripeCheckoutSessionAndRedirect(data.booking_id, totalAmount, submitBtn, originalText);
-      } else {
-        throw new Error(data.error || 'Failed to create booking');
-      }
-    })
-    .catch(error => {
-      console.error('Error creating booking:', error);
-      alert('Error creating booking: ' + error.message);
-      submitBtn.innerHTML = originalText;
-      submitBtn.disabled = false;
-    });
-  }
 
     function createStripeCheckoutSessionAndRedirect(bookingId, totalAmount, submitBtn, originalText) {
       submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Redirecting to Payment...';

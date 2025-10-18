@@ -11,6 +11,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
 from decimal import Decimal
+from django.core.exceptions import ValidationError
 import os
 
 from django.http import HttpResponseBadRequest
@@ -676,7 +677,12 @@ def office_cleaning_booking(request):
             booking.business_type = form.cleaned_data.get('business_type') or request.POST.get('business_type', 'office')
             booking.crew_size_hours = form.cleaned_data.get('crew_size_hours') or request.POST.get('crew_size_hours', '')
             booking.hear_about_us = form.cleaned_data.get('hear_about_us') or request.POST.get('hear_about_us', '')
-            booking.cleaning_frequency = form.cleaned_data.get('cleaning_frequency') or request.POST.get('cleaning_frequency', 'one_time')
+            cleaning_frequency_from_form = form.cleaned_data.get('cleaning_frequency')
+            cleaning_frequency_from_post = request.POST.get('cleaning_frequency', 'one_time')
+            print(f"🔍 Cleaning frequency from form: {cleaning_frequency_from_form}")
+            print(f"🔍 Cleaning frequency from POST: {cleaning_frequency_from_post}")
+            booking.cleaning_frequency = cleaning_frequency_from_form or cleaning_frequency_from_post
+            print(f"🔍 Initial cleaning frequency set to: {booking.cleaning_frequency}")
             
             # Extract hours and cleaners from crew_size_hours if available
             if booking.crew_size_hours:
@@ -688,6 +694,7 @@ def office_cleaning_booking(request):
                         booking.num_cleaners = int(cleaners_str)
                         
                         # Extract hours from the format like "2_hours" or "2.5_hours"
+                        # The format is: {cleaners}_cleaner_{hours}_hours_{sqft}
                         hours_str = parts[2]
                         if 'hours' in hours_str:
                             hours_str = hours_str.replace('hours', '').replace('hour', '')
@@ -703,13 +710,49 @@ def office_cleaning_booking(request):
                         
                 except (ValueError, IndexError) as e:
                     print(f"❌ Error parsing crew_size_hours: {e}")
-                    # Set defaults if parsing fails
-                    booking.num_cleaners = 1
-                    booking.hours_requested = 2
+                    # Try to get values from hidden fields as fallback
+                    hidden_cleaners = request.POST.get('num_cleaners')
+                    hidden_hours = request.POST.get('hours_requested')
+                    
+                    if hidden_cleaners:
+                        try:
+                            booking.num_cleaners = int(hidden_cleaners)
+                        except ValueError:
+                            booking.num_cleaners = 1
+                    else:
+                        booking.num_cleaners = 1
+                        
+                    if hidden_hours:
+                        try:
+                            booking.hours_requested = float(hidden_hours)
+                        except ValueError:
+                            booking.hours_requested = 2
+                    else:
+                        booking.hours_requested = 2
+                        
+                    print(f"✅ Using hidden field values: cleaners={booking.num_cleaners}, hours={booking.hours_requested}")
             else:
-                # Set defaults if crew_size_hours is not provided
-                booking.num_cleaners = 1
-                booking.hours_requested = 2
+                # Try to get values from hidden fields first
+                hidden_cleaners = request.POST.get('num_cleaners')
+                hidden_hours = request.POST.get('hours_requested')
+                
+                if hidden_cleaners:
+                    try:
+                        booking.num_cleaners = int(hidden_cleaners)
+                    except ValueError:
+                        booking.num_cleaners = 1
+                else:
+                    booking.num_cleaners = 1
+                    
+                if hidden_hours:
+                    try:
+                        booking.hours_requested = float(hidden_hours)
+                    except ValueError:
+                        booking.hours_requested = 2
+                else:
+                    booking.hours_requested = 2
+                    
+                print(f"✅ Using hidden field values: cleaners={booking.num_cleaners}, hours={booking.hours_requested}")
 
             # Set date and time
             selected_date = request.POST.get('selected_date')
@@ -742,23 +785,15 @@ def office_cleaning_booking(request):
                 booking.hour = time(9, 0)  # Default to 9:00 AM
 
             # Set the cleaning frequency from the form
-            booking.cleaning_frequency = request.POST.get('cleaning_frequency', 'one_time')
+            cleaning_frequency_from_post = request.POST.get('cleaning_frequency', 'one_time')
+            print(f"🔍 Cleaning frequency from POST: {cleaning_frequency_from_post}")
+            booking.cleaning_frequency = cleaning_frequency_from_post
+            print(f"🔍 Final cleaning frequency set to: {booking.cleaning_frequency}")
             
-            # Add extras if any
-            if request.POST.get('extras'):
-                extra_ids = request.POST.getlist('extras')
-                for extra_id in extra_ids:
-                    try:
-                        extra = CleaningExtra.objects.get(id=extra_id)
-                        booking.extras.add(extra)
-                    except (CleaningExtra.DoesNotExist, ValueError):
-                        pass
-            
-            # Additional time slot conflict check at view level
+            # Additional time slot conflict check at view level (same as home cleaning)
             from .utils import check_time_slot_conflict
             if check_time_slot_conflict(booking.date, booking.hour, booking.hours_requested):
-                print("❌ Time slot conflict detected at view level for office cleaning")
-                # Check if this is an AJAX request
+                print("❌ Time slot conflict detected at view level")
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({
                         'success': False,
@@ -777,9 +812,56 @@ def office_cleaning_booking(request):
                         "STRIPE_PUBLISHABLE_KEY": settings.STRIPE_PUBLISHABLE_KEY,
                     })
 
-            # Use the model's calculation method which includes frequency discount
-            booking.price = booking.calculate_total_price()
-            booking.save()
+            try:
+                # Save the booking first to get an ID
+                booking.save()
+                print(f"✅ Booking saved with ID: {booking.id}")
+                
+                # Add extras after booking is saved
+                if request.POST.get('extras'):
+                    extra_ids = request.POST.getlist('extras')
+                    for extra_id in extra_ids:
+                        try:
+                            extra = CleaningExtra.objects.get(id=extra_id)
+                            booking.extras.add(extra)
+                            print(f"✅ Added extra: {extra.name}")
+                        except (CleaningExtra.DoesNotExist, ValueError):
+                            pass
+                
+                # Calculate price after booking is saved and extras are added
+                booking.price = booking.calculate_total_price()
+                print(f"✅ Calculated final price: {booking.price}")
+                
+                # Save again to store the calculated price
+                booking.save()
+            except ValidationError as e:
+                print(f"❌ Validation error saving booking: {str(e)}")
+                # Check if this is a time slot conflict (race condition)
+                if "This time slot is already booked" in str(e):
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'This time slot is already booked. Please select a different time.'
+                        })
+                    else:
+                        # Return form with error message
+                        form = OfficeCleaningBookingForm(request.POST)
+                        form.add_error('hour', 'This time slot is already booked. Please select a different time.')
+                        return render(request, "booking/office_cleaning_booking.html", {
+                            "form": form,
+                            "extras": extras,
+                            "related_services": related_services,
+                            "hourly_rate": hourly_rate,
+                            "saved_addresses": saved_addresses,
+                            "STRIPE_PUBLISHABLE_KEY": settings.STRIPE_PUBLISHABLE_KEY,
+                        })
+                else:
+                    # Re-raise other validation errors
+                    raise
+            except Exception as e:
+                print(f"❌ Error saving booking: {str(e)}")
+                # Re-raise other errors
+                raise
             
             # Calculate individual components for email reporting
             labor_cost = float(hourly_rate) * booking.num_cleaners * booking.hours_requested

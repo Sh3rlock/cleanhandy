@@ -573,13 +573,39 @@ class Booking(models.Model):
             # Ensure we never return None or 0
             if not final_total or final_total <= 0:
                 print(f"🔍 WARNING: Final total is {final_total}, using fallback")
-                final_total = Decimal("100.00")  # Fallback amount
+                # Use a more reasonable fallback based on service type
+                if self.service_cat.name.lower() == 'commercial':
+                    # For office cleaning, use a reasonable fallback based on cleaners and hours
+                    if self.num_cleaners and self.hours_requested:
+                        fallback_total = Decimal(str(self.num_cleaners)) * Decimal(str(self.hours_requested)) * Decimal("75.00")
+                        print(f"🔍 Using office cleaning fallback: {fallback_total}")
+                    else:
+                        fallback_total = Decimal("200.00")  # Reasonable fallback for office cleaning
+                        print(f"🔍 Using default office cleaning fallback: {fallback_total}")
+                else:
+                    fallback_total = Decimal("100.00")  # Fallback amount for home cleaning
+                    print(f"🔍 Using home cleaning fallback: {fallback_total}")
+                
+                final_total = fallback_total
             
             return final_total
             
         except Exception as e:
             print(f"🔍 ERROR in calculate_total_price: {e}")
-            return Decimal("100.00")  # Fallback amount
+            # Use a more reasonable fallback based on service type
+            if self.service_cat.name.lower() == 'commercial':
+                # For office cleaning, use a reasonable fallback based on cleaners and hours
+                if self.num_cleaners and self.hours_requested:
+                    fallback_total = Decimal(str(self.num_cleaners)) * Decimal(str(self.hours_requested)) * Decimal("75.00")
+                    print(f"🔍 Using office cleaning error fallback: {fallback_total}")
+                else:
+                    fallback_total = Decimal("200.00")  # Reasonable fallback for office cleaning
+                    print(f"🔍 Using default office cleaning error fallback: {fallback_total}")
+            else:
+                fallback_total = Decimal("100.00")  # Fallback amount for home cleaning
+                print(f"🔍 Using home cleaning error fallback: {fallback_total}")
+            
+            return fallback_total
     
     def get_payment_split(self, manual_total=None):
         """Get or create payment split for this booking"""
@@ -817,9 +843,17 @@ class Booking(models.Model):
     
     def calculate_office_labor_cost(self):
         """Calculate labor cost for office cleaning (before discount)"""
+        print(f"🔍 calculate_office_labor_cost called for booking {self.id}")
+        print(f"   - num_cleaners: {self.num_cleaners}")
+        print(f"   - hours_requested: {self.hours_requested}")
+        
         if not self.num_cleaners or not self.hours_requested:
+            print(f"   - Missing values, returning 0.00")
             return Decimal('0.00')
-        return Decimal(self.num_cleaners) * Decimal(self.hours_requested) * Decimal('75.00')
+        
+        labor_cost = Decimal(self.num_cleaners) * Decimal(self.hours_requested) * Decimal('75.00')
+        print(f"   - Calculated labor cost: {labor_cost}")
+        return labor_cost
     
     def calculate_office_discount_amount(self):
         """Calculate discount amount for office cleaning based on frequency"""
@@ -899,6 +933,8 @@ class Booking(models.Model):
     
     def calculate_office_subtotal(self):
         """Calculate subtotal for office cleaning (labor + extras - discount)"""
+        print(f"🔍 calculate_office_subtotal called for booking {self.id}")
+        
         labor_cost = self.calculate_office_labor_cost()
         discount_amount = self.calculate_office_discount_amount()
         
@@ -907,7 +943,13 @@ class Booking(models.Model):
         for extra in self.extras.all():
             extras_total += Decimal(extra.price)
         
-        return labor_cost - discount_amount + extras_total
+        subtotal = labor_cost - discount_amount + extras_total
+        print(f"   - labor_cost: {labor_cost}")
+        print(f"   - discount_amount: {discount_amount}")
+        print(f"   - extras_total: {extras_total}")
+        print(f"   - subtotal: {subtotal}")
+        
+        return subtotal
     
     def calculate_office_tax(self):
         """Calculate tax for office cleaning"""
