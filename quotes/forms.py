@@ -428,6 +428,28 @@ class CleaningBookingForm(forms.ModelForm):
 
         self.fields["hour"].choices = time_slots
 
+    def clean(self):
+        cleaned_data = super().clean()
+        date = cleaned_data.get('date')
+        hour = cleaned_data.get('hour')
+        hours_requested = cleaned_data.get('hours_requested', 2)
+        
+        if date and hour and hours_requested:
+            # Check for time slot conflicts
+            from .utils import check_time_slot_conflict
+            # Convert hour string to time object
+            try:
+                hour_time = datetime.strptime(hour, "%H:%M").time()
+                if check_time_slot_conflict(date, hour_time, hours_requested):
+                    raise forms.ValidationError(
+                        "This time slot is already booked. Please select a different time."
+                    )
+            except ValueError:
+                # If hour format is invalid, let the clean_hour method handle it
+                pass
+        
+        return cleaned_data
+
     def clean_gift_card_code(self):
         code = self.cleaned_data.get("gift_card_code", "").strip()
         print(f"🔍 Cleaning gift_card_code: '{code}'")
@@ -724,6 +746,28 @@ class OfficeCleaningBookingForm(CleaningBookingForm):
         self.fields['num_cleaners'].required = False
         self.fields['square_feet_options'].required = False
         self.fields['home_types'].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        date = cleaned_data.get('date')
+        hour = cleaned_data.get('hour')
+        hours_requested = cleaned_data.get('hours_requested', 2)
+        
+        if date and hour and hours_requested:
+            # Check for time slot conflicts
+            from .utils import check_time_slot_conflict
+            # Convert hour string to time object
+            try:
+                hour_time = datetime.strptime(hour, "%H:%M").time()
+                if check_time_slot_conflict(date, hour_time, hours_requested):
+                    raise forms.ValidationError(
+                        "This time slot is already booked. Please select a different time."
+                    )
+            except ValueError:
+                # If hour format is invalid, let the clean_hour method handle it
+                pass
+        
+        return cleaned_data
 
 
 class HandymanQuoteForm(forms.ModelForm):

@@ -114,8 +114,26 @@
           ${{ booking.calculate_subtotal|floatformat:2 }}
         </p>
       {% endif %}
-      <p><strong>Subtotal:</strong> ${{ booking.calculate_subtotal|floatformat:2 }}</p>
-      <p><strong>Sales Tax (8.875%):</strong> ${{ booking.calculate_tax|floatformat:2 }}</p>
+      
+      <!-- Frequency Discount for Home Cleaning -->
+      {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+        <p><strong style="color: #28a745;">Frequency Discount ({{ booking.get_cleaning_frequency_display }}):</strong> <span style="color: #28a745; font-weight: bold;">-${{ booking.calculate_frequency_discount_amount|floatformat:2 }}</span></p>
+      {% endif %}
+      
+      <p><strong>Subtotal:</strong> 
+        {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+          ${{ booking.calculate_subtotal|sub:booking.calculate_frequency_discount_amount|floatformat:2 }}
+        {% else %}
+          ${{ booking.calculate_subtotal|floatformat:2 }}
+        {% endif %}
+      </p>
+      <p><strong>Sales Tax (8.875%):</strong> 
+        {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+          ${{ booking.calculate_subtotal|sub:booking.calculate_frequency_discount_amount|mul:0.08875|floatformat:2 }}
+        {% else %}
+          ${{ booking.calculate_tax|floatformat:2 }}
+        {% endif %}
+      </p>
       {% if booking.gift_card_discount > 0 %}
         <p><strong>Gift Card/Discount:</strong> -${{ booking.gift_card_discount|floatformat:2 }}</p>
       {% endif %}

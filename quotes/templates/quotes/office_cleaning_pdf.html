@@ -209,19 +209,9 @@
             </div>
 
             {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
-            <div class="price-item">
-                <span class="label">Frequency Discount:</span>
-                <span class="value">
-                    {% if booking.cleaning_frequency == "daily" %}
-                        20% off (Daily Service)
-                    {% elif booking.cleaning_frequency == "weekly" %}
-                        15% off (Weekly Service)
-                    {% elif booking.cleaning_frequency == "bi_weekly" %}
-                        10% off (Bi-Weekly Service)
-                    {% elif booking.cleaning_frequency == "monthly" %}
-                        5% off (Monthly Service)
-                    {% endif %}
-                </span>
+            <div class="price-item" style="color: #28a745; font-weight: bold;">
+                <span class="label">Frequency Discount ({{ booking.get_cleaning_frequency_display }}):</span>
+                <span class="value">-${{ booking.calculate_office_discount_amount|floatformat:2 }}</span>
             </div>
             {% endif %}
 
@@ -238,12 +228,12 @@
 
             <div class="price-item">
                 <span class="label">Subtotal:</span>
-                <span class="value">${{ booking.price|floatformat:2 }}</span>
+                <span class="value">${{ booking.calculate_office_subtotal|floatformat:2 }}</span>
             </div>
 
             <div class="price-item">
                 <span class="label">Sales Tax (8.875%):</span>
-                <span class="value">Calculated on final price</span>
+                <span class="value">${{ booking.calculate_office_tax|floatformat:2 }}</span>
             </div>
 
             {% if booking.gift_card_discount %}
@@ -257,20 +247,35 @@
                 <span class="label">Total Price:</span>
                 <span class="value">${{ booking.price|floatformat:2 }}</span>
             </div>
-            {% if booking.get_paid_amount > 0 %}
-            <div class="price-item" style="border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
-                <span class="label" style="color: #28a745; font-weight: bold;">Amount Paid:</span>
-                <span class="value" style="color: #28a745; font-weight: bold;">${{ booking.get_paid_amount|floatformat:2 }}</span>
+        </div>
+    </div>
+
+    {% if booking.get_paid_amount > 0 %}
+    <div class="section">
+        <div class="section-title">💳 Payment Summary</div>
+        <div class="price-breakdown" style="background-color: #e8f5e8; border-left: 4px solid #28a745;">
+            <div class="price-item">
+                <span class="label">Type:</span>
+                <span class="value">{{ booking.get_payment_type_for_display }}</span>
+            </div>
+            <div class="price-item">
+                <span class="label">Paid:</span>
+                <span class="value">€{{ booking.get_paid_amount|floatformat:2 }}</span>
             </div>
             {% if booking.get_paid_amount < booking.price %}
             <div class="price-item">
-                <span class="label" style="color: #ffc107; font-weight: bold;">Remaining Balance:</span>
-                <span class="value" style="color: #ffc107; font-weight: bold;">${{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</span>
+                <span class="label">Remaining:</span>
+                <span class="value">€{{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</span>
             </div>
-            {% endif %}
+            {% else %}
+            <div class="price-item">
+                <span class="label">Status:</span>
+                <span class="value" style="color: #28a745; font-weight: bold;">Fully Paid</span>
+            </div>
             {% endif %}
         </div>
     </div>
+    {% endif %}
 
     <div class="section">
         <div class="section-title">Next Steps</div>

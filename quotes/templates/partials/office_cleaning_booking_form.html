@@ -302,7 +302,7 @@
     font-size: 12px;
     color: #dc3545;
     animation: fadeIn 0.3s ease-in;
-    margin-top: -10px !important;
+    margin-top: -5px !important;
   }
 
   .is-invalid {
@@ -774,7 +774,9 @@ document.addEventListener("DOMContentLoaded", function () {
     updateSummary();
     
     // Trigger validation update
-    validateDateAndTime();
+    if (typeof formValidator !== 'undefined' && formValidator.validateDateAndTime) {
+      formValidator.validateDateAndTime();
+    }
     if (typeof updateSubmitButtonState === 'function') {
       updateSubmitButtonState();
     }
@@ -856,7 +858,9 @@ document.addEventListener("DOMContentLoaded", function () {
     updateSummary();
     
     // Trigger validation update
-    validateDateAndTime();
+    if (typeof formValidator !== 'undefined' && formValidator.validateDateAndTime) {
+      formValidator.validateDateAndTime();
+    }
     if (typeof updateSubmitButtonState === 'function') {
       updateSubmitButtonState();
     }

@@ -229,19 +229,114 @@
           {% endif %}
         </div>
 
-        <!-- Price Highlight -->
-        <div class="price-highlight">
-          <h3 class="mb-1">${{ booking.price|floatformat:2 }}</h3>
-          <p class="mb-0 opacity-90">Total Amount</p>
-          {% if booking.get_paid_amount > 0 %}
-            <div class="mt-2">
-              <h4 class="mb-1 text-success">${{ booking.get_paid_amount|floatformat:2 }}</h4>
-              <p class="mb-0 opacity-90">Amount Paid</p>
-              {% if booking.get_paid_amount < booking.price %}
-                <p class="mb-0 opacity-75">${{ booking.price|sub:booking.get_paid_amount|floatformat:2 }} remaining</p>
-              {% endif %}
+        <!-- Payment Details Section -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="mb-4">💳 Payment Details</h5>
+            
+            <!-- Total Price -->
+            <div class="price-highlight mb-4">
+              <h3 class="mb-1">${{ booking.price|floatformat:2 }}</h3>
+              <p class="mb-0 opacity-90">Total Amount</p>
             </div>
-          {% endif %}
+            
+            <!-- Payment Information Grid -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <div class="info-card">
+                  <h6><i class="fas fa-credit-card"></i> Payment Type</h6>
+                  <div class="detail-row">
+                    <span class="detail-label">Payment Type</span>
+                    <span class="detail-value">{{ booking.get_payment_type }}</span>
+                  </div>
+                  {% if booking.payment_method %}
+                  <div class="detail-row">
+                    <span class="detail-label">Payment Method</span>
+                    <span class="detail-value">{{ booking.get_payment_method_display }}</span>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <div class="info-card">
+                  <h6><i class="fas fa-info-circle"></i> Payment Status</h6>
+                  <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value">
+                      <span class="badge 
+                        {% if booking.payment_status == 'paid' %}bg-success
+                        {% elif booking.payment_status == 'partial' %}bg-warning text-dark
+                        {% elif booking.payment_status == 'unpaid' %}bg-danger
+                        {% elif booking.payment_status == 'refunded' %}bg-secondary
+                        {% else %}bg-light text-dark
+                        {% endif %}">
+                        {{ booking.get_payment_status_display }}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Payment Amounts -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <div class="info-card">
+                  <h6><i class="fas fa-dollar-sign"></i> Amount Paid</h6>
+                  <div class="detail-row">
+                    <span class="detail-label">Total Paid</span>
+                    <span class="detail-value text-success fw-bold">${{ booking.get_paid_amount|floatformat:2 }}</span>
+                  </div>
+                  {% if booking.get_deposit_paid_amount > 0 %}
+                  <div class="detail-row">
+                    <span class="detail-label">Deposit (50%)</span>
+                    <span class="detail-value">${{ booking.get_deposit_paid_amount|floatformat:2 }}</span>
+                  </div>
+                  {% endif %}
+                  {% if booking.get_final_paid_amount > 0 %}
+                  <div class="detail-row">
+                    <span class="detail-label">Final Payment (50%)</span>
+                    <span class="detail-value">${{ booking.get_final_paid_amount|floatformat:2 }}</span>
+                  </div>
+                  {% endif %}
+                  {% if booking.get_full_paid_amount > 0 %}
+                  <div class="detail-row">
+                    <span class="detail-label">Full Payment (100%)</span>
+                    <span class="detail-value">${{ booking.get_full_paid_amount|floatformat:2 }}</span>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <div class="info-card">
+                  <h6><i class="fas fa-calculator"></i> Balance</h6>
+                  {% if booking.get_paid_amount < booking.price %}
+                    <div class="detail-row">
+                      <span class="detail-label">Remaining Balance</span>
+                      <span class="detail-value text-warning fw-bold">${{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</span>
+                    </div>
+                    {% if booking.get_payment_type == "50%" %}
+                    <div class="detail-row">
+                      <span class="detail-label">Final Payment Due</span>
+                      <span class="detail-value">${{ booking.get_final_amount|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
+                  {% else %}
+                    <div class="detail-row">
+                      <span class="detail-label">Remaining Balance</span>
+                      <span class="detail-value text-success fw-bold">$0.00</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Status</span>
+                      <span class="detail-value text-success">Fully Paid</span>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Service Details -->
@@ -477,6 +572,15 @@
               <span class="detail-value">${{ booking.calculate_subtotal|floatformat:2 }}</span>
             </div>
             {% endif %}
+            
+            <!-- Frequency Discount for Home Cleaning -->
+            {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+            <div class="detail-row">
+              <span class="detail-label">Frequency Discount ({{ booking.get_cleaning_frequency_display }}):</span>
+              <span class="detail-value">-${{ booking.calculate_frequency_discount_amount|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+            
             {% if booking.gift_card_discount > 0 %}
             <div class="detail-row">
               <span class="detail-label">Gift Card/Discount</span>
@@ -491,7 +595,11 @@
               {% if booking.service_cat.name|lower == 'commercial' %}
                 ${{ booking.calculate_office_subtotal|floatformat:2 }}
               {% else %}
-                ${{ booking.calculate_subtotal|floatformat:2 }}
+                {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+                  ${{ booking.calculate_subtotal|sub:booking.calculate_frequency_discount_amount|floatformat:2 }}
+                {% else %}
+                  ${{ booking.calculate_subtotal|floatformat:2 }}
+                {% endif %}
               {% endif %}
             </span>
           </div>
@@ -501,7 +609,11 @@
               {% if booking.service_cat.name|lower == 'commercial' %}
                 ${{ booking.calculate_office_tax|floatformat:2 }}
               {% else %}
-                ${{ booking.calculate_tax|floatformat:2 }}
+                {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+                  ${{ booking.calculate_subtotal|sub:booking.calculate_frequency_discount_amount|mul:0.08875|floatformat:2 }}
+                {% else %}
+                  ${{ booking.calculate_tax|floatformat:2 }}
+                {% endif %}
               {% endif %}
             </span>
           </div>
@@ -510,19 +622,6 @@
             <span class="detail-label fw-bold fs-5">Total</span>
             <span class="detail-value fw-bold fs-5 text-primary">${{ booking.price|floatformat:2 }}</span>
           </div>
-          {% if booking.get_paid_amount > 0 %}
-          <hr>
-          <div class="detail-row">
-            <span class="detail-label fw-bold text-success">Amount Paid</span>
-            <span class="detail-value fw-bold text-success">${{ booking.get_paid_amount|floatformat:2 }}</span>
-          </div>
-          {% if booking.get_paid_amount < booking.price %}
-          <div class="detail-row">
-            <span class="detail-label fw-bold text-warning">Remaining Balance</span>
-            <span class="detail-value fw-bold text-warning">${{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</span>
-          </div>
-          {% endif %}
-          {% endif %}
         </div>
       </div>
     </div>

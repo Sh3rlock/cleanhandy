@@ -377,6 +377,24 @@ def cleaning_booking(request):
                 print("✅ Form is valid, processing booking...")
                 booking = form.save(commit=False)
                 booking.service_cat = service_cat
+                
+                # Set cleaning frequency from form data
+                booking.cleaning_frequency = request.POST.get('cleaning_frequency', 'one_time')
+                print(f"✅ Set cleaning frequency: {booking.cleaning_frequency}")
+
+                # Additional time slot conflict check at view level
+                from .utils import check_time_slot_conflict
+                if check_time_slot_conflict(booking.date, booking.hour, booking.hours_requested):
+                    form.add_error('hour', 'This time slot is already booked. Please select a different time.')
+                    print("❌ Time slot conflict detected at view level")
+                    return render(request, "booking/cleaning_booking.html", {
+                        "form": form,
+                        "cleaning_extras": extras,
+                        "service_cat": service_cat,
+                        "related_services": related_services,
+                        "saved_addresses": saved_addresses,
+                        "STRIPE_PUBLISHABLE_KEY": settings.STRIPE_PUBLISHABLE_KEY,
+                    })
 
                 # Save first to set M2M
                 booking.save()
@@ -723,37 +741,54 @@ def office_cleaning_booking(request):
             else:
                 booking.hour = time(9, 0)  # Default to 9:00 AM
 
-            # Calculate price based on hourly rate
-            labor_cost = float(hourly_rate) * booking.num_cleaners * booking.hours_requested
-            
-            # Apply frequency discount
-            frequency_discount = request.POST.get('frequency_discount', '0')
-            try:
-                discount_percent = float(frequency_discount)
-                discount_amount = labor_cost * (discount_percent / 100)
-                labor_cost -= discount_amount
-            except ValueError:
-                discount_amount = 0
+            # Set the cleaning frequency from the form
+            booking.cleaning_frequency = request.POST.get('cleaning_frequency', 'one_time')
             
             # Add extras if any
-            extra_cost = 0
             if request.POST.get('extras'):
                 extra_ids = request.POST.getlist('extras')
                 for extra_id in extra_ids:
                     try:
                         extra = CleaningExtra.objects.get(id=extra_id)
-                        extra_cost += float(extra.price)
+                        booking.extras.add(extra)
                     except (CleaningExtra.DoesNotExist, ValueError):
                         pass
             
-            # Calculate total
+            # Additional time slot conflict check at view level
+            from .utils import check_time_slot_conflict
+            if check_time_slot_conflict(booking.date, booking.hour, booking.hours_requested):
+                print("❌ Time slot conflict detected at view level for office cleaning")
+                # Check if this is an AJAX request
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'This time slot is already booked. Please select a different time.'
+                    })
+                else:
+                    # Return form with error message
+                    form = OfficeCleaningBookingForm(request.POST)
+                    form.add_error('hour', 'This time slot is already booked. Please select a different time.')
+                    return render(request, "booking/office_cleaning_booking.html", {
+                        "form": form,
+                        "extras": extras,
+                        "related_services": related_services,
+                        "hourly_rate": hourly_rate,
+                        "saved_addresses": saved_addresses,
+                        "STRIPE_PUBLISHABLE_KEY": settings.STRIPE_PUBLISHABLE_KEY,
+                    })
+
+            # Use the model's calculation method which includes frequency discount
+            booking.price = booking.calculate_total_price()
+            booking.save()
+            
+            # Calculate individual components for email reporting
+            labor_cost = float(hourly_rate) * booking.num_cleaners * booking.hours_requested
+            extra_cost = sum(float(extra.price) for extra in booking.extras.all())
             subtotal = labor_cost + extra_cost
+            frequency_discount_amount = booking.calculate_frequency_discount_amount()
             tax_rate = 0.08875  # 8.875%
             tax = subtotal * tax_rate
-            total = subtotal + tax
-            
-            booking.price = total
-            booking.save()
+            total = booking.price
             
             print(f"✅ Booking created successfully:")
             print(f"   - ID: {booking.id}")
@@ -769,7 +804,7 @@ def office_cleaning_booking(request):
                 email_timeout = getattr(settings, 'EMAIL_TIMEOUT', 10)
                 print(f"📧 Attempting to send emails with {email_timeout}s timeout...")
                 
-                email_success = send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, discount_amount, subtotal, tax)
+                email_success = send_office_cleaning_booking_emails(booking, hourly_rate, labor_cost, frequency_discount_amount, subtotal, tax)
                 if email_success:
                     print(f"✅ Office cleaning booking emails sent successfully for booking {booking.id}")
                 else:
@@ -971,11 +1006,20 @@ def office_cleaning_quote_submitted(request, booking_id):
 
 def booking_confirmation(request, booking_id):
     """
-    Display the booking confirmation page for office cleaning bookings
+    Display the booking confirmation page for both home and office cleaning bookings
     """
     try:
         booking = get_object_or_404(Booking, id=booking_id)
-        return render(request, "quotes/booking_confirmation.html", {
+        
+        # Determine which template to use based on service type
+        if booking.service_cat.name.lower() == 'commercial' or booking.business_type:
+            # Office cleaning confirmation
+            template = "quotes/office_cleaning_booking_confirmation.html"
+        else:
+            # Home cleaning confirmation
+            template = "quotes/home_cleaning_booking_confirmation.html"
+        
+        return render(request, template, {
             "booking": booking
         })
     except Exception as e:

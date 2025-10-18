@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 from .models import Booking
 
 
@@ -120,12 +120,11 @@ class PaymentSplit(models.Model):
 
         print(f"🔍 Setting total_amount to: {total_amount}")
         self.total_amount = total_amount
-        self.deposit_amount = total_amount / 2
-        self.final_amount = total_amount / 2
-
-        # Handle odd cents by adding to deposit
-        if self.total_amount % 2 != 0:
-            self.deposit_amount += Decimal('0.01')
+        
+        # Calculate 50/50 split with proper rounding
+        half_amount = total_amount / 2
+        self.deposit_amount = half_amount.quantize(Decimal('0.01'), rounding=ROUND_DOWN)
+        self.final_amount = total_amount - self.deposit_amount
 
         print(f"🔍 Before save - total: {self.total_amount}, deposit: {self.deposit_amount}, final: {self.final_amount}")
         

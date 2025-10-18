@@ -288,7 +288,6 @@ class Booking(models.Model):
             ("school", "School"),
             ("other", "Other")
         ],
-        default="office",
         null=True,
         blank=True
     )
@@ -463,6 +462,23 @@ class Booking(models.Model):
     
     def __str__(self):
         return f"Booking {self.id} - {self.name if self.name else 'No Name'} ({self.status})"
+    
+    def clean(self):
+        """Validate booking data including time slot conflicts"""
+        from django.core.exceptions import ValidationError
+        from .utils import check_time_slot_conflict
+        
+        if self.date and self.hour and self.hours_requested:
+            # Check for time slot conflicts, excluding current booking if updating
+            if check_time_slot_conflict(self.date, self.hour, self.hours_requested, self.id):
+                raise ValidationError({
+                    'hour': 'This time slot is already booked. Please select a different time.',
+                })
+    
+    def save(self, *args, **kwargs):
+        """Override save to run validation"""
+        self.clean()
+        super().save(*args, **kwargs)
      
     def get_time_slots(self):
         """
@@ -520,11 +536,30 @@ class Booking(models.Model):
         print(f"🔍 calculate_total_price called for booking {self.id}")
         
         try:
-            subtotal = self.calculate_subtotal()
-            tax = self.calculate_tax()
+            # Determine service type and use appropriate calculation methods
+            # Prioritize service category over business type
+            if self.service_cat.name.lower() == 'commercial':
+                # Office cleaning pricing
+                subtotal = self.calculate_office_subtotal()
+                tax = self.calculate_office_tax()
+                print(f"🔍 Office cleaning - subtotal: {subtotal}, tax: {tax}")
+            else:
+                # Home cleaning pricing (regardless of business_type)
+                subtotal = self.calculate_subtotal()
+                # Apply frequency discount to subtotal for home cleaning
+                frequency_discount = self.calculate_frequency_discount_amount()
+                if frequency_discount > 0:
+                    subtotal -= frequency_discount
+                    if subtotal < 0:
+                        subtotal = Decimal("0.00")
+                tax = subtotal * Decimal("0.08875")
+                tax = tax.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                print(f"🔍 Home cleaning - subtotal: {subtotal}, tax: {tax}")
+            
             total = subtotal + tax
-            print(f"🔍 Calculated subtotal: {subtotal}, tax: {tax}, total before discount: {total}")
+            print(f"🔍 Total before gift card discount: {total}")
 
+            # Apply gift card discount
             if self.gift_card_discount:
                 print(f"🔍 Applying gift card discount: {self.gift_card_discount}")
                 total -= self.gift_card_discount
@@ -581,17 +616,39 @@ class Booking(models.Model):
                 if not total or total <= 0:
                     print(f"❌ ERROR: Invalid calculated total amount {total} for booking {self.id}")
                     print(f"🔍 Booking details: square_feet={self.square_feet_options}, home_types={self.home_types}, extras={list(self.extras.all())}")
-                    # Use a minimum fallback amount to prevent NULL constraint error
-                    total = Decimal("100.00")  # Higher fallback amount
-                    print(f"🔍 Using fallback total: {total}")
+                    print(f"🔍 Service category: {self.service_cat.name}")
+                    print(f"🔍 Business type: {self.business_type}")
+                    print(f"🔍 Cleaning frequency: {self.cleaning_frequency}")
+                    print(f"🔍 Num cleaners: {self.num_cleaners}")
+                    print(f"🔍 Hours requested: {self.hours_requested}")
+                    
+                    # Try to calculate a more reasonable fallback based on service type
+                    if self.service_cat.name.lower() == 'commercial':
+                        # For office cleaning, use a reasonable fallback based on cleaners and hours
+                        if self.num_cleaners and self.hours_requested:
+                            fallback_total = Decimal(str(self.num_cleaners)) * Decimal(str(self.hours_requested)) * Decimal("75.00")
+                            print(f"🔍 Using office cleaning fallback: {fallback_total}")
+                        else:
+                            fallback_total = Decimal("200.00")  # Reasonable fallback for office cleaning
+                            print(f"🔍 Using default office cleaning fallback: {fallback_total}")
+                    else:
+                        # For home cleaning, use a reasonable fallback
+                        fallback_total = Decimal("150.00")  # Reasonable fallback for home cleaning
+                        print(f"🔍 Using home cleaning fallback: {fallback_total}")
+                    
+                    total = fallback_total
 
-                return PaymentSplit.objects.create(booking=self).create_split(total)
+                return PaymentSplit.create_split_with_amount(self, total)
                 
             except Exception as e:
                 print(f"❌ ERROR in get_payment_split: {e}")
-                # Ultimate fallback
-                payment_split = PaymentSplit.objects.create(booking=self)
-                return payment_split.create_split(Decimal("100.00"))
+                # Ultimate fallback - use a reasonable amount based on service type
+                if self.service_cat.name.lower() == 'commercial':
+                    fallback_amount = Decimal("200.00")  # Reasonable fallback for office cleaning
+                else:
+                    fallback_amount = Decimal("150.00")  # Reasonable fallback for home cleaning
+                
+                return PaymentSplit.create_split_with_amount(self, fallback_amount)
     
     def update_payment_status(self):
         """Update payment status based on individual payments"""
@@ -674,6 +731,90 @@ class Booking(models.Model):
         except:
             return "Payment Status Unknown"
     
+    def get_payment_type(self):
+        """Get the payment type (50% or 100%)"""
+        try:
+            # Check if there's a full payment
+            full_payment = self.payments.filter(payment_type='full', status='succeeded').first()
+            if full_payment:
+                return "100%"
+            
+            # Check if there's a deposit payment
+            deposit_payment = self.payments.filter(payment_type='deposit', status='succeeded').first()
+            if deposit_payment:
+                return "50%"
+            
+            # Check if there's a final payment (implies 50% was already paid)
+            final_payment = self.payments.filter(payment_type='final', status='succeeded').first()
+            if final_payment:
+                return "50%"
+            
+            return "0%"
+        except:
+            return "Unknown"
+    
+    def get_payment_status_display(self):
+        """Get a user-friendly payment status"""
+        if self.payment_status == 'paid':
+            return "Paid"
+        elif self.payment_status == 'partial':
+            return "Pending"
+        elif self.payment_status == 'unpaid':
+            return "Pending"
+        elif self.payment_status == 'refunded':
+            return "Refunded"
+        else:
+            return "Pending"
+    
+    def get_current_payment_intent_id(self):
+        """Get the current payment intent ID for display in admin emails"""
+        try:
+            split = self.get_payment_split()
+            
+            # Check for successful payments first
+            successful_payments = self.payments.filter(status='succeeded').order_by('-created_at')
+            if successful_payments.exists():
+                return successful_payments.first().stripe_payment_intent_id
+            
+            # If no successful payments, check pending ones
+            pending_payments = self.payments.filter(status__in=['pending', 'processing']).order_by('-created_at')
+            if pending_payments.exists():
+                return pending_payments.first().stripe_payment_intent_id
+            
+            # If no payments yet, return the most recent intent ID from split
+            if split.deposit_payment_intent_id:
+                return split.deposit_payment_intent_id
+            elif split.final_payment_intent_id:
+                return split.final_payment_intent_id
+            
+            return None
+        except:
+            return None
+    
+    def get_payment_type_for_display(self):
+        """Get payment type for display in templates (50% or 100%)"""
+        try:
+            split = self.get_payment_split()
+            
+            # Check for full payment
+            full_payment = self.payments.filter(payment_type='full', status='succeeded').first()
+            if full_payment:
+                return "100% upfront"
+            
+            # Check for deposit payment
+            deposit_payment = self.payments.filter(payment_type='deposit', status='succeeded').first()
+            if deposit_payment:
+                return "50% upfront"
+            
+            # Check for final payment (implies 50% was already paid)
+            final_payment = self.payments.filter(payment_type='final', status='succeeded').first()
+            if final_payment:
+                return "50% upfront"
+            
+            return "Unpaid"
+        except:
+            return "Unpaid"
+    
     def calculate_office_labor_cost(self):
         """Calculate labor cost for office cleaning (before discount)"""
         if not self.num_cleaners or not self.hours_requested:
@@ -697,6 +838,64 @@ class Booking(models.Model):
             discount_percent = 5
         
         return labor_cost * (Decimal(discount_percent) / Decimal('100'))
+    
+    def calculate_frequency_discount_amount(self):
+        """Calculate frequency discount amount for both home and office cleaning"""
+        if not self.cleaning_frequency or self.cleaning_frequency == "one_time":
+            return Decimal('0.00')
+        
+        # Get the base amount before any discounts based on service type
+        # Prioritize service category over business type
+        if self.service_cat.name.lower() == 'commercial':
+            # For office cleaning, use labor cost only for frequency discount
+            subtotal = self.calculate_office_labor_cost()
+        else:
+            # For home cleaning, use the full subtotal (regardless of business_type)
+            subtotal = self.calculate_subtotal()
+        
+        # Determine discount percentage based on frequency
+        discount_percent = 0
+        if self.cleaning_frequency == "daily":
+            discount_percent = 20
+        elif self.cleaning_frequency == "weekly":
+            discount_percent = 15
+        elif self.cleaning_frequency == "bi_weekly":
+            discount_percent = 10
+        elif self.cleaning_frequency == "monthly":
+            discount_percent = 5
+        
+        return subtotal * (Decimal(discount_percent) / Decimal('100'))
+    
+    def get_hourly_rate(self):
+        """Get the hourly rate for this booking's service type"""
+        from .utils import get_hourly_rate
+        
+        # Determine service type based on booking details
+        if self.service_cat.name.lower() == 'home':
+            if self.cleaning_type and ("post" in self.cleaning_type.lower() or "renovation" in self.cleaning_type.lower()):
+                return get_hourly_rate('post_renovation')
+            else:
+                return get_hourly_rate('home_cleaning')
+        else:
+            return get_hourly_rate('office_cleaning')
+    
+    def calculate_labor_cost(self):
+        """Calculate labor cost for this booking"""
+        from .utils import calculate_labor_cost
+        
+        if not self.num_cleaners or not self.hours_requested:
+            return Decimal('0.00')
+        
+        # Determine service type
+        if self.service_cat.name.lower() == 'home':
+            if self.cleaning_type and ("post" in self.cleaning_type.lower() or "renovation" in self.cleaning_type.lower()):
+                service_type = 'post_renovation'
+            else:
+                service_type = 'home_cleaning'
+        else:
+            service_type = 'office_cleaning'
+        
+        return calculate_labor_cost(service_type, self.num_cleaners, float(self.hours_requested))
     
     def calculate_office_subtotal(self):
         """Calculate subtotal for office cleaning (labor + extras - discount)"""

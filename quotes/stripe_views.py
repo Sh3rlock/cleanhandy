@@ -63,9 +63,18 @@ def create_payment_intent(request):
             print(f"❌ ERROR: PaymentSplit amounts are None, recreating with fallback")
             # Delete the invalid split and recreate
             split.delete()
-            fallback_total = Decimal("100.00")
+            
+            # Use a reasonable fallback based on service type
+            if booking.service_cat.name.lower() == 'commercial':
+                if booking.num_cleaners and booking.hours_requested:
+                    fallback_total = Decimal(str(booking.num_cleaners)) * Decimal(str(booking.hours_requested)) * Decimal("75.00")
+                else:
+                    fallback_total = Decimal("200.00")
+            else:
+                fallback_total = Decimal("150.00")
+            
             split = booking.get_payment_split(manual_total=fallback_total)
-            print(f"✅ Recreated PaymentSplit with fallback amounts")
+            print(f"✅ Recreated PaymentSplit with fallback amounts: {fallback_total}")
             print(f"New PaymentSplit total_amount: {split.total_amount}")
             print(f"New PaymentSplit deposit_amount: {split.deposit_amount}")
             print(f"New PaymentSplit final_amount: {split.final_amount}")

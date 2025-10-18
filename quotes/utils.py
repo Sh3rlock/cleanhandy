@@ -52,6 +52,75 @@ def send_email_with_timeout(email_message, timeout=10):
         print(f"❌ Email sending failed: {str(e)}")
         return False
 
+def check_time_slot_conflict(date, hour, hours_requested, exclude_booking_id=None):
+    """
+    Check if a time slot conflicts with existing bookings.
+    
+    Args:
+        date: Date of the booking
+        hour: Start time of the booking
+        hours_requested: Duration of the booking in hours
+        exclude_booking_id: ID of booking to exclude from conflict check (for updates)
+    
+    Returns:
+        bool: True if there's a conflict, False otherwise
+    """
+    try:
+        print(f"🔍 Checking time slot conflict: date={date}, hour={hour}, hours={hours_requested}")
+        
+        # Calculate booking end time
+        start_datetime = datetime.combine(date, hour)
+        # Convert Decimal to float for timedelta
+        hours_float = float(hours_requested) if hasattr(hours_requested, '__float__') else hours_requested
+        end_datetime = start_datetime + timedelta(hours=hours_float)
+        
+        # Get existing bookings for the same date
+        existing_bookings = Booking.objects.filter(date=date)
+        
+        # Exclude the current booking if updating
+        if exclude_booking_id:
+            existing_bookings = existing_bookings.exclude(id=exclude_booking_id)
+        
+        print(f"📋 Found {existing_bookings.count()} existing bookings for {date}")
+        
+        # Check for overlaps with existing bookings
+        for booking in existing_bookings:
+            booking_duration = max(booking.hours_requested or 2, 2)
+            # Convert Decimal to float for timedelta
+            booking_duration_float = float(booking_duration) if hasattr(booking_duration, '__float__') else booking_duration
+            booking_start = datetime.combine(date, booking.hour)
+            booking_end = booking_start + timedelta(hours=booking_duration_float)
+            
+            # Check if time ranges overlap
+            if (start_datetime < booking_end and end_datetime > booking_start):
+                print(f"❌ Conflict found with booking {booking.id}: {booking.hour} - {booking_end.time()}")
+                return True
+        
+        # Check for conflicts with admin-blocked slots
+        try:
+            blocked_slots = BlockedTimeSlot.objects.filter(date=date)
+            for block in blocked_slots:
+                if block.all_day:
+                    print(f"❌ All day blocked on {date}")
+                    return True
+                elif block.start_time and block.end_time:
+                    block_start = datetime.combine(date, block.start_time)
+                    block_end = datetime.combine(date, block.end_time)
+                    if (start_datetime < block_end and end_datetime > block_start):
+                        print(f"❌ Conflict with blocked slot: {block.start_time} - {block.end_time}")
+                        return True
+        except Exception as e:
+            print(f"⚠️ Warning: Could not check blocked time slots: {str(e)}")
+        
+        print(f"✅ No conflicts found for {hour} - {end_datetime.time()}")
+        return False
+        
+    except Exception as e:
+        print(f"❌ Error checking time slot conflict: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return True  # Return True to be safe and prevent booking
+
 def get_available_hours_for_date(date, hours_requested=2):
     try:
         print(f"🕐 get_available_hours_for_date called: date={date}, hours_requested={hours_requested}")
@@ -97,8 +166,10 @@ def get_available_hours_for_date(date, hours_requested=2):
         
         for quote in existing_bookings:
             duration = max(quote.hours_requested or 2, 2)
+            # Convert Decimal to float for timedelta
+            duration_float = float(duration) if hasattr(duration, '__float__') else duration
             start = datetime.combine(date, quote.hour)
-            end = start + timedelta(hours=duration)
+            end = start + timedelta(hours=duration_float)
             unavailable_ranges.append((start.time(), end.time()))
             print(f"🚫 Blocked: {quote.hour} - {end.time()}")
     except Exception as e:

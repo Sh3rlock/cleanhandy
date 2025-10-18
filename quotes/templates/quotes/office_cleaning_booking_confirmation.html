@@ -221,7 +221,7 @@
         <div class="col-12">
             <div class="confirmation-card">
                 <div class="confirmation-header">
-                    <h4><i class="fas fa-receipt text-white me-2"></i>Booking Details</h4>
+                    <h4><i class="fas fa-building text-white me-2"></i>Booking Details</h4>
                     <div class="booking-id">Booking #{{ booking.id }}</div>
                 </div>
                 
@@ -234,7 +234,7 @@
                                     <span class="label">Service Type:</span>
                                     <span class="value">{{ booking.service_cat.name }}</span>
                                 </div>
-                                {% if booking.service_cat.name|lower == 'commercial' or booking.business_type %}
+                                {% if booking.business_type %}
                                 <div class="detail-item">
                                     <span class="label">Business Type:</span>
                                     <span class="value">{{ booking.get_business_type_display|default:"Office" }}</span>
@@ -332,104 +332,45 @@
                     <div class="detail-section">
                         <h6><i class="fas fa-dollar-sign text-success me-2"></i>Pricing & Payment</h6>
                         <div class="pricing-details">
-                            {% if booking.service_cat.name|lower == 'commercial' or booking.business_type %}
-                                <!-- Office Cleaning Pricing -->
-                                <!-- Labor Cost Calculation -->
-                                <div class="price-row">
-                                    <span class="label">Labor Cost:</span>
-                                    <span class="value">${{ booking.num_cleaners }} × {{ booking.hours_requested }}h × $75/h = ${{ booking.calculate_office_labor_cost|floatformat:2 }}</span>
-                                </div>
-                                
-                                <!-- Frequency Discount -->
-                                {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
-                                <div class="price-row discount">
-                                    <span class="label">Frequency Discount ({{ booking.get_cleaning_frequency_display }}):</span>
-                                    <span class="value">-${{ booking.calculate_office_discount_amount|floatformat:2 }}</span>
-                                </div>
-                                {% endif %}
-                                
-                                <!-- Extras -->
-                                {% if booking.extras.all %}
-                                <div class="price-row">
-                                    <span class="label">Additional Services:</span>
-                                    <span class="value">
-                                        {% for extra in booking.extras.all %}
-                                            {{ extra.name }} (+${{ extra.price }}){% if not forloop.last %}, {% endif %}
-                                        {% endfor %}
-                                    </span>
-                                </div>
-                                {% endif %}
-                                
-                                <!-- Subtotal -->
-                                <div class="price-row">
-                                    <span class="label">Subtotal:</span>
-                                    <span class="value">${{ booking.calculate_office_subtotal|floatformat:2 }}</span>
-                                </div>
-                                
-                                <!-- Tax -->
-                                <div class="price-row">
-                                    <span class="label">Sales Tax (8.875%):</span>
-                                    <span class="value">${{ booking.calculate_office_tax|floatformat:2 }}</span>
-                                </div>
-                            {% else %}
-                                <!-- Home Cleaning Pricing -->
-                                <!-- Service Details -->
-                                {% if booking.square_feet_options %}
-                                <div class="price-row">
-                                    <span class="label">Square Footage:</span>
-                                    <span class="value">{{ booking.square_feet_options.name }} - ${{ booking.square_feet_options.price }}</span>
-                                </div>
-                                {% endif %}
-                                
-                                {% if booking.home_types and not booking.is_large_home %}
-                                <div class="price-row">
-                                    <span class="label">Home Type:</span>
-                                    <span class="value">{{ booking.home_types.name }} - ${{ booking.home_types.price }}</span>
-                                </div>
-                                {% endif %}
-                                
-                                <!-- Labor Cost for Large Homes -->
-                                {% if booking.is_large_home and booking.num_cleaners and booking.hours_requested %}
-                                <div class="price-row">
-                                    <span class="label">Labor Cost:</span>
-                                    <span class="value">${{ booking.num_cleaners }} × {{ booking.hours_requested }}h × ${{ booking.get_hourly_rate|floatformat:0 }}/h = ${{ booking.calculate_labor_cost|floatformat:2 }}</span>
-                                </div>
-                                {% endif %}
-                                
-                                <!-- Frequency Discount -->
-                                {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
-                                <div class="price-row discount">
-                                    <span class="label">Frequency Discount ({{ booking.get_cleaning_frequency_display }}):</span>
-                                    <span class="value">-${{ booking.calculate_frequency_discount_amount|floatformat:2 }}</span>
-                                </div>
-                                {% endif %}
-                                
-                                <!-- Extras -->
-                                {% if booking.extras.all %}
-                                <div class="price-row">
-                                    <span class="label">Additional Services:</span>
-                                    <span class="value">
-                                        {% for extra in booking.extras.all %}
-                                            {{ extra.name }} (+${{ extra.price }}){% if not forloop.last %}, {% endif %}
-                                        {% endfor %}
-                                    </span>
-                                </div>
-                                {% endif %}
-                                
-                                <!-- Subtotal -->
-                                <div class="price-row">
-                                    <span class="label">Subtotal:</span>
-                                    <span class="value">${{ booking.calculate_subtotal|floatformat:2 }}</span>
-                                </div>
-                                
-                                <!-- Tax -->
-                                <div class="price-row">
-                                    <span class="label">Sales Tax (8.875%):</span>
-                                    <span class="value">${{ booking.calculate_tax|floatformat:2 }}</span>
-                                </div>
+                            <!-- Office Cleaning Pricing -->
+                            <!-- Labor Cost Calculation -->
+                            <div class="price-row">
+                                <span class="label">Labor Cost:</span>
+                                <span class="value">${{ booking.num_cleaners }} × {{ booking.hours_requested }}h × $75/h = ${{ booking.calculate_office_labor_cost|floatformat:2 }}</span>
+                            </div>
+                            
+                            <!-- Frequency Discount -->
+                            {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+                            <div class="price-row discount">
+                                <span class="label">Frequency Discount ({{ booking.get_cleaning_frequency_display }}):</span>
+                                <span class="value">-${{ booking.calculate_office_discount_amount|floatformat:2 }}</span>
+                            </div>
                             {% endif %}
                             
-                            <!-- Gift Card Discount -->
+                            <!-- Extras -->
+                            {% if booking.extras.all %}
+                            <div class="price-row">
+                                <span class="label">Additional Services:</span>
+                                <span class="value">
+                                    {% for extra in booking.extras.all %}
+                                        {{ extra.name }} (+${{ extra.price }}){% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </span>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Subtotal -->
+                            <div class="price-row">
+                                <span class="label">Subtotal:</span>
+                                <span class="value">${{ booking.calculate_office_subtotal|floatformat:2 }}</span>
+                            </div>
+                            
+                            <!-- Tax -->
+                            <div class="price-row">
+                                <span class="label">Sales Tax (8.875%):</span>
+                                <span class="value">${{ booking.calculate_office_tax|floatformat:2 }}</span>
+                            </div>
+                            
                             {% if booking.gift_card_discount and booking.gift_card_discount > 0 %}
                             <div class="price-row discount">
                                 <span class="label">Gift Card Discount:</span>

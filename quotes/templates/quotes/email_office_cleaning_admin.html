@@ -77,6 +77,24 @@
     </div>
   </div>
 
+  {% if booking.get_paid_amount > 0 %}
+  <div class="section">
+    <h4>💳 Payment Summary</h4>
+    <div class="highlight" style="background-color: #e8f5e8; border-left: 4px solid #28a745;">
+      <p><strong>Type:</strong> {{ booking.get_payment_type_for_display }}</p>
+      <p><strong>Paid:</strong> €{{ booking.get_paid_amount|floatformat:2 }}</p>
+      {% if booking.get_paid_amount < booking.price %}
+        <p><strong>Remaining:</strong> €{{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</p>
+      {% else %}
+        <p><strong>Status:</strong> <span style="color: #28a745; font-weight: bold;">Fully Paid</span></p>
+      {% endif %}
+      {% if booking.get_current_payment_intent_id %}
+        <p><strong>Stripe Payment Intent ID:</strong> {{ booking.get_current_payment_intent_id }}</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
   {% if booking.job_description %}
   <div class="section">
     <h4>📝 Special Instructions</h4>
