@@ -30,6 +30,7 @@ urlpatterns = [
     path('debug-form/', views.debug_form_validation, name='debug_form_validation'),
 
     path("activate/<uidb64>/<token>/", account_views.activate, name="activate"),
+    path("activation-pending/", account_views.activation_pending, name="activation_pending"),
     path("login/", views.login_view, name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("password-reset/", auth_views.PasswordResetView.as_view(

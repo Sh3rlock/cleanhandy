@@ -69,8 +69,7 @@ def register(request):
                     })
                     user.email_user(subject, message)
 
-                    messages.success(request, "Check your email to activate your account.")
-                    return redirect("login")
+                    return redirect("activation_pending")
             except IntegrityError:
                 messages.error(request, "Something went wrong. Please try again.")
         else:
@@ -81,6 +80,10 @@ def register(request):
     return render(request, "accounts/register.html", {"form": form})
 
 
+
+def activation_pending(request):
+    """Display activation pending page after registration"""
+    return render(request, "accounts/activation_pending.html")
 
 def activate(request, uidb64, token):
     try:
