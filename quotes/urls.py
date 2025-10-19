@@ -1,7 +1,7 @@
 from django.urls import path
 from django.views.generic import TemplateView
 from .views import about, contact, blog, blog_detail, quote_submitted, request_cleaning_quote, request_handyman_quote, available_hours_api, quote_submitted_handyman, subscribe_newsletter, request_cleaning_booking, request_handyman_booking, cleaning_booking, handyman_booking, office_cleaning_booking, office_quote_submit, terms, privacy, faq, download_office_cleaning_pdf, office_cleaning_quote_submitted, cleaning_services, commercial_services, handyman_quote_submit, booking_confirmation, request_post_event_cleaning_quote, post_event_cleaning_quote_submit, quote_submitted_post_event_cleaning
-from .stripe_views import create_payment_intent, stripe_webhook, webhook_test, manual_webhook_trigger, get_payment_status, create_checkout_session
+from .stripe_views import create_payment_intent, stripe_webhook, webhook_test, manual_webhook_trigger, get_payment_status, create_checkout_session, check_and_fix_payment_status, fix_payment_intent_metadata
 from .debug_views import debug_booking_calculation
 
 
@@ -45,6 +45,8 @@ urlpatterns = [
     path("api/webhook/test/", webhook_test, name="webhook_test"),
     path("api/webhook/trigger/<int:booking_id>/", manual_webhook_trigger, name="manual_webhook_trigger"),
     path("api/payment-status/<int:booking_id>/", get_payment_status, name="get_payment_status"),
+    path("api/check-payment-status/", check_and_fix_payment_status, name="check_payment_status"),
+    path("api/fix-payment-intent/", fix_payment_intent_metadata, name="fix_payment_intent"),
     
     # Debug URLs
     path("debug/booking/<int:booking_id>/", debug_booking_calculation, name="debug_booking_calculation"),

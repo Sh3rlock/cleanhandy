@@ -318,8 +318,12 @@ def stripe_webhook(request):
     
     print(f"🔍 Webhook received - Event type: {request.META.get('HTTP_STRIPE_SIGNATURE', 'No signature')}")
     print(f"🔍 Webhook secret configured: {bool(settings.STRIPE_WEBHOOK_SECRET)}")
+    print(f"🔍 Webhook secret length: {len(settings.STRIPE_WEBHOOK_SECRET) if settings.STRIPE_WEBHOOK_SECRET else 0}")
+    print(f"🔍 Webhook secret starts with whsec_: {settings.STRIPE_WEBHOOK_SECRET.startswith('whsec_') if settings.STRIPE_WEBHOOK_SECRET else False}")
     print(f"🔍 Payload length: {len(payload)} bytes")
     print(f"🔍 Content-Type: {request.META.get('CONTENT_TYPE', 'Not set')}")
+    print(f"🔍 User-Agent: {request.META.get('HTTP_USER_AGENT', 'Not set')}")
+    print(f"🔍 Remote IP: {request.META.get('REMOTE_ADDR', 'Not set')}")
     
     # Handle test requests (no signature or invalid signature)
     if not sig_header:
@@ -337,11 +341,17 @@ def stripe_webhook(request):
             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
         )
         print(f"✅ Webhook event verified: {event['type']}")
+        print(f"✅ Event ID: {event.get('id', 'No ID')}")
+        print(f"✅ Event created: {event.get('created', 'No timestamp')}")
     except ValueError as e:
         print(f"❌ Webhook ValueError: {e}")
+        print(f"❌ This usually means the payload is not valid JSON")
         return HttpResponse(f"Invalid payload: {e}", status=400)
     except stripe.error.SignatureVerificationError as e:
         print(f"❌ Webhook SignatureVerificationError: {e}")
+        print(f"❌ This means the webhook secret is wrong or the signature is invalid")
+        print(f"❌ Expected webhook secret to start with 'whsec_'")
+        print(f"❌ Current webhook secret: {settings.STRIPE_WEBHOOK_SECRET[:10] if settings.STRIPE_WEBHOOK_SECRET else 'None'}...")
         return HttpResponse(f"Invalid signature: {e}", status=400)
     
     # Handle the event
@@ -415,16 +425,31 @@ def handle_payment_success(payment_intent):
     """Handle successful payment"""
     try:
         payment_intent_id = payment_intent['id']
-        booking_id = payment_intent['metadata'].get('booking_id')
-        payment_type = payment_intent['metadata'].get('payment_type')
+        metadata = payment_intent.get('metadata', {})
+        booking_id = metadata.get('booking_id')
+        payment_type = metadata.get('payment_type')
         
         print(f"🔍 Processing payment success for intent {payment_intent_id}")
         print(f"🔍 Booking ID: {booking_id}, Payment Type: {payment_type}")
-        print(f"🔍 Payment Intent metadata: {payment_intent.get('metadata', {})}")
+        print(f"🔍 Payment Intent metadata: {metadata}")
+        print(f"🔍 All metadata keys: {list(metadata.keys())}")
         
         if not booking_id or not payment_type:
             print(f"❌ Missing metadata in payment intent {payment_intent_id}")
-            return
+            print(f"❌ Available metadata: {metadata}")
+            
+            # Try to find the booking by payment intent ID in our database
+            try:
+                payment = Payment.objects.get(stripe_payment_intent_id=payment_intent_id)
+                booking_id = payment.booking.id
+                payment_type = payment.payment_type
+                print(f"✅ Found booking {booking_id} and payment_type {payment_type} from Payment record")
+            except Payment.DoesNotExist:
+                print(f"❌ No Payment record found for intent {payment_intent_id}")
+                return
+            except Exception as e:
+                print(f"❌ Error finding Payment record: {e}")
+                return
         
         # Update Payment record
         try:
@@ -506,6 +531,148 @@ def handle_payment_cancellation(payment_intent):
             
     except Exception as e:
         print(f"Error handling payment cancellation: {e}")
+
+
+def check_and_fix_payment_status(request):
+    """Debug endpoint to check and fix payment status for a booking"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        booking_id = data.get('booking_id')
+        
+        if not booking_id:
+            return JsonResponse({'error': 'Missing booking_id'}, status=400)
+        
+        try:
+            booking = Booking.objects.get(id=booking_id)
+        except Booking.DoesNotExist:
+            return JsonResponse({'error': 'Booking not found'}, status=404)
+        
+        # Get current status
+        current_status = booking.payment_status
+        split = booking.get_payment_split()
+        
+        # Check Stripe payment status
+        stripe_status = {}
+        if split.deposit_payment_intent_id:
+            try:
+                intent = stripe.PaymentIntent.retrieve(split.deposit_payment_intent_id)
+                stripe_status['deposit'] = {
+                    'status': intent.status,
+                    'amount': intent.amount / 100,
+                    'paid': intent.status == 'succeeded'
+                }
+            except stripe.error.StripeError as e:
+                stripe_status['deposit'] = {'error': str(e)}
+        
+        if split.final_payment_intent_id:
+            try:
+                intent = stripe.PaymentIntent.retrieve(split.final_payment_intent_id)
+                stripe_status['final'] = {
+                    'status': intent.status,
+                    'amount': intent.amount / 100,
+                    'paid': intent.status == 'succeeded'
+                }
+            except stripe.error.StripeError as e:
+                stripe_status['final'] = {'error': str(e)}
+        
+        # Fix payment status if needed
+        fixed = False
+        if stripe_status.get('deposit', {}).get('paid') and not split.deposit_paid:
+            split.deposit_paid = True
+            fixed = True
+        
+        if stripe_status.get('final', {}).get('paid') and not split.final_paid:
+            split.final_paid = True
+            fixed = True
+        
+        if fixed:
+            split.save()
+            booking.update_payment_status()
+        
+        return JsonResponse({
+            'booking_id': booking_id,
+            'current_status': current_status,
+            'new_status': booking.payment_status,
+            'stripe_status': stripe_status,
+            'split_status': {
+                'deposit_paid': split.deposit_paid,
+                'final_paid': split.final_paid,
+                'is_fully_paid': split.is_fully_paid
+            },
+            'fixed': fixed
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def fix_payment_intent_metadata(request):
+    """Fix a specific payment intent that's missing metadata"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        payment_intent_id = data.get('payment_intent_id')
+        
+        if not payment_intent_id:
+            return JsonResponse({'error': 'Missing payment_intent_id'}, status=400)
+        
+        # Try to find the payment in our database
+        try:
+            payment = Payment.objects.get(stripe_payment_intent_id=payment_intent_id)
+            booking = payment.booking
+            payment_type = payment.payment_type
+            
+            print(f"🔍 Found payment record for intent {payment_intent_id}")
+            print(f"🔍 Booking ID: {booking.id}, Payment Type: {payment_type}")
+            
+            # Update the Stripe payment intent with metadata
+            stripe.PaymentIntent.modify(
+                payment_intent_id,
+                metadata={
+                    'booking_id': str(booking.id),
+                    'payment_type': payment_type,
+                    'customer_name': booking.name,
+                    'customer_email': booking.email,
+                }
+            )
+            
+            print(f"✅ Updated payment intent {payment_intent_id} with metadata")
+            
+            # Now trigger the payment success handler
+            try:
+                intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+                if intent.status == 'succeeded':
+                    handle_payment_success(intent)
+                    print(f"✅ Triggered payment success handler for {payment_intent_id}")
+                else:
+                    print(f"⚠️ Payment intent {payment_intent_id} status is {intent.status}, not succeeded")
+            except Exception as e:
+                print(f"❌ Error triggering payment success handler: {e}")
+            
+            return JsonResponse({
+                'success': True,
+                'payment_intent_id': payment_intent_id,
+                'booking_id': booking.id,
+                'payment_type': payment_type,
+                'message': 'Payment intent metadata updated and handler triggered'
+            })
+            
+        except Payment.DoesNotExist:
+            return JsonResponse({'error': f'No payment record found for intent {payment_intent_id}'}, status=404)
+        except stripe.error.StripeError as e:
+            return JsonResponse({'error': f'Stripe error: {str(e)}'}, status=400)
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @csrf_exempt
