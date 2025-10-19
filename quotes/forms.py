@@ -554,8 +554,8 @@ class PostEventCleaningQuoteForm(forms.ModelForm):
         event_date = self.cleaned_data.get('event_date')
         
         if cleaning_date and event_date:
-            if cleaning_date <= event_date:
-                raise forms.ValidationError("Cleaning date must be after the event date.")
+            if cleaning_date < event_date:
+                raise forms.ValidationError("Cleaning date cannot be before the event date.")
         
         return cleaning_date
 

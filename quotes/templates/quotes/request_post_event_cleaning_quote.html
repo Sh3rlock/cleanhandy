@@ -186,9 +186,57 @@
         background: #fff;
     }
 
-    .form-group input:focus,
-    .form-group textarea:focus,
+    /* Safari-specific select styling fixes */
+    .form-group select {
+        -webkit-appearance: none; /* Removes default Safari styling */
+        -moz-appearance: none;
+        appearance: none;
+        
+        /* Ensure proper box model */
+        box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        
+        /* Custom dropdown arrow for Safari */
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 1rem;
+        padding-right: 2.5rem; /* Add right padding so text doesn't overlap arrow */
+        
+        /* Safari-specific fixes for better rendering */
+        -webkit-border-radius: 8px;
+        border-radius: 8px;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+    }
+
+    /* Hide native arrow in IE */
+    .form-group select::-ms-expand {
+        display: none;
+    }
+
+    /* Safari-specific focus styling */
     .form-group select:focus {
+        outline: none;
+        border-color: #F15A29;
+        box-shadow: 0 0 0 3px rgba(241, 90, 41, 0.1);
+        transform: translateY(-1px);
+        -webkit-transform: translateY(-1px);
+    }
+
+    /* Safari-specific error styling */
+    .form-group select.error {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    }
+
+    .form-group select.error:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
         outline: none;
         border-color: #F15A29;
         box-shadow: 0 0 0 3px rgba(241, 90, 41, 0.1);
@@ -309,6 +357,17 @@
         border-left-color: #dc3545;
     }
 
+    /* Safari-specific mobile fixes */
+    @media screen and (-webkit-min-device-pixel-ratio: 0) {
+        .form-group select {
+            /* Additional Safari mobile fixes */
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
         .simple-modal-content {
@@ -342,6 +401,14 @@
             right: 10px;
             left: 10px;
             min-width: auto;
+        }
+
+        /* Mobile Safari specific select fixes */
+        .form-group select {
+            font-size: 16px; /* Prevents zoom on iOS Safari */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
     }
 </style>
@@ -578,8 +645,9 @@
             </form>
         </div>
         <div class="simple-modal-footer">
-            <button type="button" class="btn-secondary" onclick="closePostEventCleaningQuoteModal()">Cancel</button>
+            
             <button type="button" class="btn-1" onclick="submitPostEventCleaningQuote()">Submit Quote Request</button>
+            <button type="button" class="btn-secondary" onclick="closePostEventCleaningQuoteModal()">Cancel</button>
         </div>
     </div>
 </div>
@@ -646,18 +714,37 @@
     const value = field.value.trim();
     const fieldName = field.name;
     
+    console.log(`Validating field: ${fieldName} with value: "${value}"`);
+    
     // Remove any existing error
     removePostEventCleaningFieldError(field);
     
     // Skip validation for optional fields (fields without 'required' attribute)
     if (!field.hasAttribute('required')) {
+      console.log(`Skipping validation for optional field: ${fieldName}`);
       return true;
     }
     
     // Required field validation
     if (!value) {
+      console.log(`Required field ${fieldName} is empty`);
       showPostEventCleaningFieldError(field, `${getPostEventCleaningFieldLabel(fieldName)} is required`);
       return false;
+    }
+    
+    // Additional validation for date fields
+    if (fieldName === 'event_date' || fieldName === 'cleaning_date') {
+      if (!value || value.trim() === '') {
+        showPostEventCleaningFieldError(field, `${getPostEventCleaningFieldLabel(fieldName)} is required`);
+        return false;
+      }
+      
+      // Check if the date format is valid (YYYY-MM-DD)
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(value)) {
+        showPostEventCleaningFieldError(field, 'Please enter a valid date in YYYY-MM-DD format');
+        return false;
+      }
     }
     
     // Specific field validations
@@ -704,8 +791,16 @@
         break;
         
       case 'event_date':
-        const eventDate = new Date(value);
+        const eventDate = new Date(value + 'T00:00:00');
         const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to start of day
+        
+        // Check if date is valid
+        if (isNaN(eventDate.getTime())) {
+          showPostEventCleaningFieldError(field, 'Please enter a valid event date');
+          return false;
+        }
+        
         if (eventDate < today) {
           showPostEventCleaningFieldError(field, 'Event date cannot be in the past');
           return false;
@@ -713,14 +808,49 @@
         break;
         
       case 'cleaning_date':
-        const cleaningDate = new Date(value);
+        const cleaningDate = new Date(value + 'T00:00:00');
+        
+        // Check if date is valid
+        if (isNaN(cleaningDate.getTime())) {
+          showPostEventCleaningFieldError(field, 'Please enter a valid cleaning date');
+          return false;
+        }
+        
+        // Check if cleaning date is not in the past
+        const todayForCleaning = new Date();
+        todayForCleaning.setHours(0, 0, 0, 0);
+        if (cleaningDate < todayForCleaning) {
+          showPostEventCleaningFieldError(field, 'Cleaning date cannot be in the past');
+          return false;
+        }
+        
         const eventDateValue = document.getElementById('id_event_date').value;
         if (eventDateValue) {
-          const eventDate = new Date(eventDateValue);
+          const eventDate = new Date(eventDateValue + 'T00:00:00');
+          
+          // Debug logging
+          console.log('Date comparison:', {
+            cleaningDate: cleaningDate.toISOString(),
+            eventDate: eventDate.toISOString(),
+            cleaningTime: cleaningDate.getTime(),
+            eventTime: eventDate.getTime(),
+            isBefore: cleaningDate < eventDate,
+            isSame: cleaningDate.getTime() === eventDate.getTime()
+          });
+          
+          // Only show error if cleaning date is BEFORE event date (not same day)
           if (cleaningDate < eventDate) {
+            console.log('Cleaning date is before event date - validation failed');
             showPostEventCleaningFieldError(field, 'Cleaning date cannot be before the event date');
             return false;
+          } else {
+            console.log('Cleaning date is on or after event date - validation passed');
           }
+          // Allow cleaning date to be on the same day as event date (cleaningDate >= eventDate)
+        } else {
+          // If event date is not filled, show error
+          showPostEventCleaningFieldError(field, 'Please select an event date first');
+          return false;
         }
         break;
     }
@@ -748,14 +878,47 @@
     const form = document.getElementById('postEventCleaningQuoteForm');
     const inputs = form.querySelectorAll('input, textarea, select');
     let isValid = true;
+    let errorCount = 0;
+    
+    console.log('Validating form with', inputs.length, 'fields');
     
     // Validate each field
-    inputs.forEach(input => {
+    inputs.forEach((input, index) => {
+      console.log(`Validating field ${index + 1}:`, input.name, '=', input.value);
       if (!validatePostEventCleaningField(input)) {
         isValid = false;
+        errorCount++;
+        console.log(`Field ${input.name} failed validation`);
       }
     });
     
+    // Additional check for date validation after all fields are validated
+    if (isValid) {
+      const eventDateField = document.getElementById('id_event_date');
+      const cleaningDateField = document.getElementById('id_cleaning_date');
+      
+      if (eventDateField && cleaningDateField && eventDateField.value && cleaningDateField.value) {
+        const eventDate = new Date(eventDateField.value + 'T00:00:00');
+        const cleaningDate = new Date(cleaningDateField.value + 'T00:00:00');
+        
+        console.log('Final date validation check:', {
+          eventDate: eventDate.toISOString(),
+          cleaningDate: cleaningDate.toISOString(),
+          isBefore: cleaningDate < eventDate,
+          isSame: cleaningDate.getTime() === eventDate.getTime()
+        });
+        
+        if (cleaningDate < eventDate) {
+          console.log('Final validation: Cleaning date is before event date');
+          showPostEventCleaningFieldError(cleaningDateField, 'Cleaning date cannot be before the event date');
+          isValid = false;
+        } else {
+          console.log('Final validation: Date validation passed');
+        }
+      }
+    }
+    
+    console.log(`Form validation result: ${isValid ? 'PASSED' : 'FAILED'} (${errorCount} errors)`);
     return isValid;
   }
 
@@ -763,11 +926,37 @@
     // Clear any existing validation errors
     clearPostEventCleaningValidationErrors();
     
+    // Debug: Log form data before validation
+    console.log('Form validation starting...');
+    const debugFormData = new FormData(document.getElementById('postEventCleaningQuoteForm'));
+    for (let [key, value] of debugFormData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
+    
     // Validate form before submission
-    if (!validatePostEventCleaningForm()) {
-      showPostEventCleaningAlert('danger', 'Please fix the errors in the form before submitting.');
+    console.log('Starting form validation...');
+    const validationResult = validatePostEventCleaningForm();
+    console.log('Validation result:', validationResult);
+    
+    if (!validationResult) {
+      console.log('Form validation failed - checking for visible errors...');
+      
+      // Check for any visible error messages
+      const errorMessages = document.querySelectorAll('.error-message');
+      if (errorMessages.length > 0) {
+        console.log('Found error messages:');
+        errorMessages.forEach((error, index) => {
+          console.log(`Error ${index + 1}:`, error.textContent);
+        });
+        showPostEventCleaningAlert('danger', 'Please fix the errors in the form before submitting.');
+      } else {
+        console.log('No visible error messages found, but validation failed');
+        showPostEventCleaningAlert('danger', 'Please check all required fields are filled correctly.');
+      }
       return;
     }
+    
+    console.log('Form validation passed, submitting...');
     
     // Disable submit button to prevent double submission
     const submitBtn = document.querySelector('#postEventCleaningQuoteModal .btn-1');
@@ -785,8 +974,15 @@
         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
       }
     })
-    .then(response => response.json())
+    .then(response => {
+      console.log('Response status:', response.status);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(data => {
+      console.log('Response data:', data);
       if (data.success) {
         // Show success message
         showPostEventCleaningAlert('success', data.message);
@@ -804,7 +1000,8 @@
           window.location.href = '{% url "quote_submitted_post_event_cleaning" 0 %}'.replace('0', data.quote_id);
         }, 2000);
       } else {
-        // Show error message
+        // Show error message with more details
+        console.error('Server error:', data);
         showPostEventCleaningAlert('danger', data.message || 'An error occurred. Please try again.');
         
         // Reset submit button
@@ -813,8 +1010,8 @@
       }
     })
     .catch(error => {
-      console.error('Error:', error);
-      showPostEventCleaningAlert('danger', 'An error occurred. Please try again.');
+      console.error('Fetch error:', error);
+      showPostEventCleaningAlert('danger', 'Network error occurred. Please check your connection and try again.');
       
       // Reset submit button
       submitBtn.disabled = false;
@@ -854,6 +1051,19 @@
         }
       });
     });
+    
+    // Add event listeners for date fields to validate cleaning date when event date changes
+    const eventDateField = document.getElementById('id_event_date');
+    const cleaningDateField = document.getElementById('id_cleaning_date');
+    
+    if (eventDateField && cleaningDateField) {
+      eventDateField.addEventListener('change', function() {
+        // Re-validate cleaning date when event date changes
+        if (cleaningDateField.value) {
+          validatePostEventCleaningField(cleaningDateField);
+        }
+      });
+    }
   });
 
   // Close modal when clicking outside it
@@ -863,6 +1073,79 @@
       closePostEventCleaningQuoteModal();
     }
   }
+
+  // Debug function to test date validation (can be called from browser console)
+  window.testDateValidation = function(eventDate, cleaningDate) {
+    console.log('Testing date validation with:', { eventDate, cleaningDate });
+    
+    const event = new Date(eventDate + 'T00:00:00');
+    const cleaning = new Date(cleaningDate + 'T00:00:00');
+    
+    console.log('Parsed dates:', {
+      event: event.toISOString(),
+      cleaning: cleaning.toISOString(),
+      eventTime: event.getTime(),
+      cleaningTime: cleaning.getTime(),
+      isBefore: cleaning < event,
+      isSame: cleaning.getTime() === event.getTime(),
+      isValid: cleaning >= event
+    });
+    
+    return cleaning >= event;
+  };
+
+  // Debug function to check all form fields (can be called from browser console)
+  window.debugFormValidation = function() {
+    console.log('=== FORM VALIDATION DEBUG ===');
+    const form = document.getElementById('postEventCleaningQuoteForm');
+    const inputs = form.querySelectorAll('input, textarea, select');
+    
+    let allValid = true;
+    
+    inputs.forEach((input, index) => {
+      const isValid = validatePostEventCleaningField(input);
+      console.log(`Field ${index + 1}: ${input.name} = "${input.value}" - ${isValid ? 'VALID' : 'INVALID'}`);
+      if (!isValid) {
+        allValid = false;
+        // Show which field failed
+        const errorDiv = input.parentNode.querySelector('.error-message');
+        if (errorDiv) {
+          console.log(`  Error message: ${errorDiv.textContent}`);
+        }
+      }
+    });
+    
+    console.log(`Overall validation result: ${allValid ? 'PASSED' : 'FAILED'}`);
+    return allValid;
+  };
+
+  // Simple test function to check if form can be submitted
+  window.testFormSubmission = function() {
+    console.log('=== TESTING FORM SUBMISSION ===');
+    const form = document.getElementById('postEventCleaningQuoteForm');
+    
+    // Check if form exists
+    if (!form) {
+      console.error('Form not found!');
+      return false;
+    }
+    
+    // Check all required fields
+    const requiredFields = form.querySelectorAll('[required]');
+    console.log(`Found ${requiredFields.length} required fields`);
+    
+    let allFilled = true;
+    requiredFields.forEach((field, index) => {
+      const value = field.value.trim();
+      console.log(`Required field ${index + 1}: ${field.name} = "${value}" - ${value ? 'FILLED' : 'EMPTY'}`);
+      if (!value) {
+        allFilled = false;
+      }
+    });
+    
+    console.log(`All required fields filled: ${allFilled}`);
+    return allFilled;
+  };
 </script>
 
 {% endblock %}

@@ -1252,6 +1252,11 @@ def post_event_cleaning_quote_submit(request):
             for field, field_errors in form.errors.items():
                 errors[field] = [str(error) for error in field_errors]
             
+            # Debug logging
+            print(f"❌ Post Event Cleaning form validation failed:")
+            print(f"Form data: {request.POST}")
+            print(f"Form errors: {form.errors}")
+            
             return JsonResponse({
                 'success': False,
                 'message': 'Please correct the errors in the form.',
