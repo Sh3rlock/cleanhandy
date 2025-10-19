@@ -2022,13 +2022,19 @@
     const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
     const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
     const homeTypeGroup = document.getElementById("id_home_types")?.closest(".form-group");
+    const bathCountGroup = document.getElementById("id_bath_count")?.closest(".form-group");
     const extrasContainer = document.getElementById("cleaningExtrasContainer");
     const largeHomeOptions = document.getElementById("largeHomeOptions");
   
     function isSmallHomeSelected() {
       const selectedOption = sqftSelect?.selectedOptions[0];
-      if (!selectedOption) return false;
-      return selectedOption.textContent.toLowerCase().includes("under 1000");
+      if (!selectedOption) {
+        console.log('🔍 No selected option in sqftSelect');
+        return false;
+      }
+      const isSmall = selectedOption.textContent.toLowerCase().includes("under 1000");
+      console.log('🔍 isSmallHomeSelected:', isSmall, 'for option:', selectedOption.textContent);
+      return isSmall;
     }
   
     // === Load available hours dynamically ===
@@ -2089,25 +2095,59 @@
   
     // === UI Defaults ===
     function setDefaultSquareFeet() {
+      console.log('🔍 setDefaultSquareFeet called, sqftSelect:', sqftSelect);
+      if (!sqftSelect) {
+        console.log('🔍 sqftSelect is null, cannot set default');
+        return;
+      }
       for (let i = 0; i < sqftSelect.options.length; i++) {
+        console.log('🔍 Checking option', i, ':', sqftSelect.options[i].textContent);
         if (sqftSelect.options[i].textContent.toLowerCase().includes("under 1000")) {
           sqftSelect.selectedIndex = i;
+          console.log('🔍 Set default square feet to index', i);
           break;
         }
       }
     }
   
     function toggleHomeAndExtras() {
+      console.log('🔍 toggleHomeAndExtras function called');
       const selectedOption = sqftSelect?.selectedOptions[0];
-      if (!selectedOption) return;
-  
+      if (!selectedOption) {
+        console.log('🔍 No selected option in toggleHomeAndExtras');
+        return;
+      }
+
       const selectedName = selectedOption.textContent.trim().toLowerCase();
       const isUnder1000 = selectedName.includes("under 1000");
       
       console.log('🔍 toggleHomeAndExtras called:', { selectedName, isUnder1000 });
+      console.log('🔍 DOM elements:', { 
+        homeTypeGroup: !!homeTypeGroup, 
+        bathCountGroup: !!bathCountGroup, 
+        extrasContainer: !!extrasContainer, 
+        largeHomeOptions: !!largeHomeOptions,
+        sqftSelect: !!sqftSelect
+      });
+      
+      // Ensure elements exist before trying to manipulate them
+      if (!homeTypeGroup) {
+        console.error('🔍 homeTypeGroup not found!');
+        return;
+      }
+      if (!extrasContainer) {
+        console.error('🔍 extrasContainer not found!');
+        return;
+      }
+      if (!largeHomeOptions) {
+        console.error('🔍 largeHomeOptions not found!');
+        return;
+      }
   
       if (isUnder1000) {
+        console.log('🔍 Showing small home options');
         homeTypeGroup.style.display = "";
+        if (bathCountGroup) bathCountGroup.style.display = "";
         extrasContainer.style.display = "";
         largeHomeOptions.style.display = "none";
 
@@ -2117,7 +2157,9 @@
           cleanerSelect.value = "1";
         }
       } else {
+        console.log('🔍 Showing large home options');
         homeTypeGroup.style.display = "none";
+        if (bathCountGroup) bathCountGroup.style.display = "none";
         extrasContainer.style.display = "none";
         largeHomeOptions.style.display = "";
 
@@ -2167,6 +2209,7 @@
     }
   
     cleaningTypeSelect?.addEventListener("change", function () {
+      console.log('🔍 Cleaning type changed to:', this.value);
       const value = this.value.toLowerCase();
   
       if (value.includes("regular")) {
@@ -2298,6 +2341,7 @@
     }
 
     // Run initializers
+    console.log('🔍 Starting initialization sequence');
     setDefaultSquareFeet();
     toggleHomeAndExtras();
     
@@ -2309,9 +2353,11 @@
       }
     }
     
+    console.log('🔍 Running final initialization steps');
     setDefaultValues(); // Set default values first
     setDefaultLocation(); // Set default city and state
     renderCalendar(); // Then render calendar with selected date
+    console.log('🔍 Calling updatePrice from initialization');
     updatePrice(); // Finally update the summary
     
     // Initialize real-time validation
@@ -2319,10 +2365,21 @@
     
     // Initialize form progress tracking
     setupFormProgressTracking();
+    
+    // Debug function for testing
+    window.debugCleaningBooking = function() {
+      console.log('🔍 Debug info:');
+      console.log('sqftSelect:', sqftSelect);
+      console.log('homeTypeGroup:', homeTypeGroup);
+      console.log('extrasContainer:', extrasContainer);
+      console.log('largeHomeOptions:', largeHomeOptions);
+      console.log('isSmallHomeSelected():', isSmallHomeSelected());
+      console.log('Current square feet selection:', sqftSelect?.selectedOptions[0]?.textContent);
+      updatePrice();
+    };
   
     // === Event Bindings ===
-    sqftSelect?.addEventListener("change", toggleHomeAndExtras);
-    sqftSelect?.addEventListener("change", fetchAvailableHours);
+    // Square feet functionality is now handled in a separate DOMContentLoaded script
     cleaningTypeSelect?.addEventListener("change", fetchAvailableHours);
     cleanerSelect?.addEventListener("change", fetchAvailableHours);
     hoursField?.addEventListener("change", fetchAvailableHours);
@@ -2330,7 +2387,19 @@
     // Add event listener for home type changes
     const homeTypeSelect = document.getElementById("id_home_types");
     if (homeTypeSelect) {
-      homeTypeSelect.addEventListener("change", updatePrice);
+      homeTypeSelect.addEventListener("change", function() {
+        console.log('🔍 Home type changed to:', this.value, this.selectedOptions[0]?.textContent);
+        updatePrice();
+      });
+    }
+
+    // Add event listener for bathroom count changes
+    const bathCountSelect = document.getElementById("id_bath_count");
+    if (bathCountSelect) {
+      bathCountSelect.addEventListener("change", function() {
+        console.log('🔍 Bathroom count changed to:', this.value);
+        updatePrice();
+      });
     }
   
     // Refresh on blur (when user clicks out of the input)
@@ -2370,9 +2439,18 @@
         }
       });
     });
-    cleanerSelect?.addEventListener("change", updatePrice);
-    hoursField?.addEventListener("change", updatePrice);
-    cleaningTypeSelect?.addEventListener("change", updatePrice);
+    cleanerSelect?.addEventListener("change", function() {
+      console.log('🔍 Number of cleaners changed to:', this.value);
+      updatePrice();
+    });
+    hoursField?.addEventListener("change", function() {
+      console.log('🔍 Hours changed to:', this.value);
+      updatePrice();
+    });
+    cleaningTypeSelect?.addEventListener("change", function() {
+      console.log('🔍 Cleaning type changed (second listener):', this.value);
+      updatePrice();
+    });
   
      // ================================
     // PRICE & SUMMARY CALCULATOR
@@ -2381,12 +2459,16 @@
       console.log('🔍 updatePrice called');
       let subtotal = 0;
       const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
+      console.log('🔍 Square feet price:', sqftPrice);
       subtotal += sqftPrice;
   
       // Home Type (only if visible)
-      if (isSmallHomeSelected()) {
+      const isSmallHome = isSmallHomeSelected();
+      console.log('🔍 Is small home selected:', isSmallHome);
+      if (isSmallHome) {
         const homeSelect = document.getElementById("id_home_types");
         const homePrice = parseFloat(homeSelect?.selectedOptions[0]?.dataset.price || 0);
+        console.log('🔍 Home type price:', homePrice, 'from option:', homeSelect?.selectedOptions[0]?.textContent);
         subtotal += homePrice;
       }
   
@@ -2400,16 +2482,20 @@
       });
   
       // Labor cost for large homes
-  let laborCost = 0;
-  if (largeHomeOptions?.offsetParent !== null) {
-    const numCleaners = parseInt(cleanerSelect?.value || 0);
+      let laborCost = 0;
+      const isLargeHomeVisible = largeHomeOptions && largeHomeOptions.style.display !== "none";
+      console.log('🔍 Is large home visible:', isLargeHomeVisible);
+      if (isLargeHomeVisible) {
+        const numCleaners = parseInt(cleanerSelect?.value || 0);
         const estimatedHours = parseFloat(hoursField?.value || 0);
-    const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
-    let hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
-  
-    laborCost = numCleaners * estimatedHours * hourlyRate;
-    subtotal += laborCost;
-  }
+        const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
+        let hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
+        console.log('🔍 Large home details:', { numCleaners, estimatedHours, cleaningType, hourlyRate });
+      
+        laborCost = numCleaners * estimatedHours * hourlyRate;
+        console.log('🔍 Labor cost:', laborCost);
+        subtotal += laborCost;
+      }
       
       // Apply frequency discount
       const frequencyDiscount = parseInt(document.getElementById('frequency_discount')?.value || 0);
@@ -2471,20 +2557,23 @@ updatePaymentAmounts();
       const summaryContainer = document.getElementById("summary-items");
       console.log('🔍 Summary container found:', !!summaryContainer);
       if (summaryContainer) {
-      summaryContainer.innerHTML = "";
-  
+        console.log('🔍 Updating summary with subtotal:', subtotal);
+        summaryContainer.innerHTML = "";
+
+      // Square Feet Selection
       if (sqftSelect) {
         const sqftLabel = sqftSelect.selectedOptions[0]?.textContent.trim();
         if (sqftPrice > 0) {
           summaryContainer.innerHTML += `
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <div><i class="fa-solid fa-house me-2"></i>${sqftLabel}</div>
-              <div>$${sqftPrice.toFixed(2)}</div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div><i class="fa-solid fa-house me-2 text-primary"></i><strong>${sqftLabel}</strong></div>
+              <div><strong>$${sqftPrice.toFixed(2)}</strong></div>
             </div>`;
         }
       }
-  
-      if (isSmallHomeSelected()) {
+
+      // Home Type (only for small homes)
+      if (isSmallHome) {
           console.log('🔍 Small home selected, adding home type to summary');
         const homeSelect = document.getElementById("id_home_types");
         const homeOption = homeSelect?.selectedOptions[0];
@@ -2495,38 +2584,57 @@ updatePaymentAmounts();
       
         if (homeLabel && homePrice > 0) {
           summaryContainer.innerHTML += `
-            <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
-              <div>• ${homeLabel}</div>
+            <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
+              <div><i class="fa-solid fa-building me-2"></i>${homeLabel}</div>
               <div>$${homePrice.toFixed(2)}</div>
             </div>`;
         }
         } else {
           console.log('🔍 Large home selected, skipping home type');
       }
-  
+
+      // Number of Bathrooms
+      const bathCountSelect = document.getElementById("id_bath_count");
+      if (bathCountSelect && bathCountSelect.value) {
+        const bathCount = bathCountSelect.value;
+        const bathLabel = bathCount === "1" ? "1 Bathroom" : `${bathCount} Bathrooms`;
+        summaryContainer.innerHTML += `
+          <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
+            <div><i class="fa-solid fa-bath me-2"></i>${bathLabel}</div>
+            <div>Included</div>
+          </div>`;
+      }
+
+      // Cleaning Extras
         const checkedExtras = document.querySelectorAll(".extra-checkbox:checked");
         console.log('🔍 Found checked extras:', checkedExtras.length);
+        if (checkedExtras.length > 0) {
+          summaryContainer.innerHTML += `
+            <div class="mt-2 mb-1">
+              <small class="text-muted fw-semibold"><i class="fa-solid fa-plus me-1"></i>Extras:</small>
+            </div>`;
+        }
         checkedExtras.forEach(cb => {
         const label = cb.nextElementSibling?.textContent?.trim() || "Extra";
         const price = parseFloat(cb.dataset.price || 0).toFixed(2);
           console.log('🔍 Adding extra to summary:', { label, price });
         summaryContainer.innerHTML += `
-          <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
+          <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
             <div>• ${label}</div>
             <div>$${price}</div>
           </div>`;
       });
   
-      if (largeHomeOptions?.offsetParent !== null && laborCost > 0) {
+      if (isLargeHomeVisible && laborCost > 0) {
         const numCleaners = parseInt(cleanerSelect?.value || "0");
         const hours = parseFloat(hoursField?.value || "0");
         const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
         const hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
       
         summaryContainer.innerHTML += `
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <div><i class="fa-solid fa-broom me-2"></i>${numCleaners} Cleaners × ${hours} Hours × $${hourlyRate}/hour</div>
-            <div>$${laborCost.toFixed(2)}</div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div><i class="fa-solid fa-broom me-2 text-primary"></i><strong>${numCleaners} Cleaners × ${hours} Hours × $${hourlyRate}/hour</strong></div>
+            <div><strong>$${laborCost.toFixed(2)}</strong></div>
           </div>`;
       }
   
@@ -2603,6 +2711,9 @@ updatePaymentAmounts();
         updateSubmitButtonState();
       }
     }
+    
+    // Make updatePrice globally accessible
+    window.updatePrice = updatePrice;
   
     function resetSummary() {
       // 1. Reset home type to "Studio"
@@ -2802,6 +2913,340 @@ updatePaymentAmounts();
         updatePaymentAmounts();
       };
     }
+  });
+  </script>
+  
+  <!-- Square Feet Functionality - Runs after DOM is loaded -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 Square Feet functionality loaded, DOM is ready');
+    
+    // Wait a bit longer to ensure the main script has completed
+    setTimeout(function() {
+      console.log('🔍 Starting square feet functionality after delay');
+      
+      // Get DOM elements
+    const sqftSelect = document.getElementById("id_square_feet_options");
+    const homeTypeGroup = document.getElementById("id_home_types")?.closest(".form-group");
+    const bathCountGroup = document.getElementById("id_bath_count")?.closest(".form-group");
+    const extrasContainer = document.getElementById("cleaningExtrasContainer");
+    const largeHomeOptions = document.getElementById("largeHomeOptions");
+    
+    console.log('🔍 DOM elements found:', {
+      sqftSelect: !!sqftSelect,
+      homeTypeGroup: !!homeTypeGroup,
+      bathCountGroup: !!bathCountGroup,
+      extrasContainer: !!extrasContainer,
+      largeHomeOptions: !!largeHomeOptions
+    });
+    
+    // Simple price update function for our square feet functionality
+    function updatePriceSimple() {
+      console.log('🔍 updatePriceSimple called');
+      
+      // Try to call the main updatePrice function first
+      if (typeof window.updatePrice === 'function') {
+        console.log('🔍 Calling main updatePrice function');
+        window.updatePrice();
+        return;
+      }
+      
+      // If main function not available, do a basic price update
+      console.log('🔍 Main updatePrice not available, doing basic price update');
+      
+      // Get the current square feet price
+      const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
+      console.log('🔍 Square feet price:', sqftPrice);
+      
+      // Get home type price (if visible)
+      let homePrice = 0;
+      if (homeTypeGroup && homeTypeGroup.style.display !== 'none') {
+        const homeSelect = document.getElementById("id_home_types");
+        homePrice = parseFloat(homeSelect?.selectedOptions[0]?.dataset.price || 0);
+        console.log('🔍 Home type price:', homePrice);
+      }
+      
+      // Get extras price
+      let extrasPrice = 0;
+      document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+        extrasPrice += parseFloat(cb.dataset.price || 0);
+      });
+      console.log('🔍 Extras price:', extrasPrice);
+      
+      // Calculate total
+      const subtotal = sqftPrice + homePrice + extrasPrice;
+      console.log('🔍 Total price:', subtotal);
+      
+      // Update the summary display
+      const subtotalElement = document.getElementById("subtotalPrice");
+      const totalElement = document.getElementById("totalPrice");
+      const summaryContainer = document.getElementById("summary-items");
+      
+      console.log('🔍 Summary elements found:', {
+        subtotalElement: !!subtotalElement,
+        totalElement: !!totalElement,
+        summaryContainer: !!summaryContainer
+      });
+      
+      if (subtotalElement) {
+        subtotalElement.textContent = subtotal.toFixed(2);
+        console.log('🔍 Updated subtotal to:', subtotal.toFixed(2));
+      } else {
+        console.log('🔍 subtotalPrice element not found');
+      }
+      
+      if (totalElement) {
+        totalElement.textContent = subtotal.toFixed(2);
+        console.log('🔍 Updated total to:', subtotal.toFixed(2));
+      } else {
+        console.log('🔍 totalPrice element not found');
+      }
+      
+      // Update summary details
+      if (summaryContainer) {
+        console.log('🔍 Updating summary details');
+        summaryContainer.innerHTML = "";
+        
+        // Square Feet Selection
+        if (sqftSelect) {
+          const sqftLabel = sqftSelect.selectedOptions[0]?.textContent.trim();
+          if (sqftPrice > 0) {
+            summaryContainer.innerHTML += `
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div><i class="fa-solid fa-house me-2 text-primary"></i><strong>${sqftLabel}</strong></div>
+                <div><strong>$${sqftPrice.toFixed(2)}</strong></div>
+              </div>`;
+          }
+        }
+        
+        // Home Type (only for small homes)
+        if (homeTypeGroup && homeTypeGroup.style.display !== 'none') {
+          const homeSelect = document.getElementById("id_home_types");
+          const homeOption = homeSelect?.selectedOptions[0];
+          if (homeOption && homePrice > 0) {
+            summaryContainer.innerHTML += `
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div><i class="fa-solid fa-home me-2 text-primary"></i><strong>${homeOption.textContent.trim()}</strong></div>
+                <div><strong>$${homePrice.toFixed(2)}</strong></div>
+              </div>`;
+          }
+        }
+        
+        // Number of Bathrooms (only for small homes)
+        if (bathCountGroup && bathCountGroup.style.display !== 'none') {
+          const bathSelect = document.getElementById("id_bath_count");
+          const bathCount = bathSelect?.value;
+          if (bathCount && bathCount !== '') {
+            const bathLabel = bathCount === "1" ? "1 Bathroom" : `${bathCount} Bathrooms`;
+            summaryContainer.innerHTML += `
+              <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
+                <div><i class="fa-solid fa-bath me-2"></i>${bathLabel}</div>
+                <div>Included</div>
+              </div>`;
+          }
+        }
+        
+        // Cleaning Extras
+        const checkedExtras = document.querySelectorAll(".extra-checkbox:checked");
+        console.log('🔍 Found checked extras:', checkedExtras.length);
+        if (checkedExtras.length > 0) {
+          summaryContainer.innerHTML += `
+            <div class="mt-2 mb-1">
+              <small class="text-muted fw-semibold"><i class="fa-solid fa-plus me-1"></i>Extras:</small>
+            </div>`;
+        }
+        checkedExtras.forEach(cb => {
+          const label = cb.nextElementSibling?.textContent?.trim() || "Extra";
+          const price = parseFloat(cb.dataset.price || 0).toFixed(2);
+          console.log('🔍 Adding extra to summary:', { label, price });
+          summaryContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
+              <div>• ${label}</div>
+              <div>$${price}</div>
+            </div>`;
+        });
+        
+        // Large Home Options (if visible)
+        if (largeHomeOptions && largeHomeOptions.style.display !== 'none') {
+          const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
+          const hoursField = document.querySelector('select[name="est_hours"]');
+          const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
+          
+          if (cleanerSelect && cleanerSelect.value) {
+            const cleanerCount = cleanerSelect.value;
+            const cleanerLabel = cleanerCount === "1" ? "1 Cleaner" : `${cleanerCount} Cleaners`;
+            summaryContainer.innerHTML += `
+              <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
+                <div><i class="fa-solid fa-users me-2"></i>${cleanerLabel}</div>
+                <div>Included</div>
+              </div>`;
+          }
+          
+          if (hoursField && hoursField.value) {
+            const hours = hoursField.value;
+            const hourLabel = hours === "1" ? "1 Hour" : `${hours} Hours`;
+            summaryContainer.innerHTML += `
+              <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
+                <div><i class="fa-solid fa-clock me-2"></i>${hourLabel}</div>
+                <div>Included</div>
+              </div>`;
+          }
+          
+          if (cleaningTypeSelect && cleaningTypeSelect.value) {
+            const cleaningType = cleaningTypeSelect.selectedOptions[0]?.textContent.trim();
+            if (cleaningType) {
+              summaryContainer.innerHTML += `
+                <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
+                  <div><i class="fa-solid fa-broom me-2"></i>${cleaningType}</div>
+                  <div>Included</div>
+                </div>`;
+            }
+          }
+        }
+        
+        console.log('🔍 Summary details updated successfully');
+      } else {
+        console.log('🔍 summary-items container not found');
+      }
+      
+      console.log('🔍 Price updated successfully');
+    }
+    
+    // Helper function to safely call updatePrice
+    function safeUpdatePrice() {
+      updatePriceSimple();
+    }
+    
+    // Function to toggle between small and large home options
+    function toggleHomeAndExtras() {
+      console.log('🔍 toggleHomeAndExtras function called');
+      const selectedOption = sqftSelect?.selectedOptions[0];
+      if (!selectedOption) {
+        console.log('🔍 No selected option in toggleHomeAndExtras');
+        return;
+      }
+
+      const selectedName = selectedOption.textContent.trim().toLowerCase();
+      const isUnder1000 = selectedName.includes("under 1000");
+      
+      console.log('🔍 toggleHomeAndExtras called:', { selectedName, isUnder1000 });
+      
+      // Ensure elements exist before trying to manipulate them
+      if (!homeTypeGroup) {
+        console.error('🔍 homeTypeGroup not found!');
+        return;
+      }
+      if (!extrasContainer) {
+        console.error('🔍 extrasContainer not found!');
+        return;
+      }
+      if (!largeHomeOptions) {
+        console.error('🔍 largeHomeOptions not found!');
+        return;
+      }
+
+      if (isUnder1000) {
+        console.log('🔍 Showing small home options');
+        homeTypeGroup.style.display = "";
+        if (bathCountGroup) bathCountGroup.style.display = "";
+        extrasContainer.style.display = "";
+        largeHomeOptions.style.display = "none";
+      } else {
+        console.log('🔍 Showing large home options');
+        homeTypeGroup.style.display = "none";
+        if (bathCountGroup) bathCountGroup.style.display = "none";
+        extrasContainer.style.display = "none";
+        largeHomeOptions.style.display = "";
+
+        // Clear extras for large homes since they're not available
+        document.querySelectorAll(".extra-checkbox").forEach(cb => {
+          cb.checked = false;
+        });
+      }
+      
+      // Update price after toggling
+      safeUpdatePrice();
+    }
+    
+    // Attach event listeners to all dropdowns that should update price
+    if (sqftSelect) {
+      sqftSelect.addEventListener("change", function() {
+        console.log('🔍 Square feet changed to:', this.value, this.selectedOptions[0]?.textContent);
+        toggleHomeAndExtras();
+        safeUpdatePrice();
+      });
+      console.log('🔍 Square feet event listener attached successfully');
+      
+      // Call toggleHomeAndExtras initially to set the correct state
+      toggleHomeAndExtras();
+    } else {
+      console.error('🔍 sqftSelect element not found, cannot attach event listener');
+    }
+    
+    // Home Type dropdown
+    if (homeTypeGroup) {
+      const homeTypeSelect = document.getElementById("id_home_types");
+      if (homeTypeSelect) {
+        homeTypeSelect.addEventListener("change", function() {
+          console.log('🔍 Home type changed to:', this.value, this.selectedOptions[0]?.textContent);
+          safeUpdatePrice();
+        });
+        console.log('🔍 Home type event listener attached successfully');
+      }
+    }
+    
+    // Number of Bathrooms dropdown
+    if (bathCountGroup) {
+      const bathCountSelect = document.getElementById("id_bath_count");
+      if (bathCountSelect) {
+        bathCountSelect.addEventListener("change", function() {
+          console.log('🔍 Bath count changed to:', this.value, this.selectedOptions[0]?.textContent);
+          safeUpdatePrice();
+        });
+        console.log('🔍 Bath count event listener attached successfully');
+      }
+    }
+    
+    // Large Home Options - Cleaners dropdown
+    const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
+    if (cleanerSelect) {
+      cleanerSelect.addEventListener("change", function() {
+        console.log('🔍 Number of cleaners changed to:', this.value);
+        safeUpdatePrice();
+      });
+      console.log('🔍 Cleaners event listener attached successfully');
+    }
+    
+    // Large Home Options - Hours dropdown
+    const hoursField = document.querySelector('select[name="est_hours"]');
+    if (hoursField) {
+      hoursField.addEventListener("change", function() {
+        console.log('🔍 Hours changed to:', this.value);
+        safeUpdatePrice();
+      });
+      console.log('🔍 Hours event listener attached successfully');
+    }
+    
+    // Large Home Options - Cleaning Type dropdown
+    const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
+    if (cleaningTypeSelect) {
+      cleaningTypeSelect.addEventListener("change", function() {
+        console.log('🔍 Cleaning type changed to:', this.value);
+        safeUpdatePrice();
+      });
+      console.log('🔍 Cleaning type event listener attached successfully');
+    }
+    
+    // Optional Extras checkboxes
+    document.querySelectorAll(".extra-checkbox").forEach(checkbox => {
+      checkbox.addEventListener("change", function() {
+        console.log('🔍 Extra changed:', this.name, this.value, this.checked);
+        safeUpdatePrice();
+      });
+    });
+    console.log('🔍 Extra checkboxes event listeners attached successfully');
+    
+    }, 500); // End of setTimeout - wait 500ms for main script to complete
   });
   </script>
   
