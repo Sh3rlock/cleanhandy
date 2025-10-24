@@ -29,12 +29,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the entire project
 COPY . .
 
-# Run migrations and collect static files now that code is present
-RUN python manage.py migrate
+# Collect static files (migrations will run at runtime)
 RUN python manage.py collectstatic --noinput
 
 # Expose the default port (optional, doesn't affect Railway)
 EXPOSE 8000
 
-# Start Gunicorn, using dynamic $PORT from Railway
-CMD sh -c "gunicorn cleanhandy.wsgi:application --bind 0.0.0.0:${PORT:-8000}"
+# Make startup script executable
+RUN chmod +x docker_start.sh
+
+# Start the application
+CMD ["./docker_start.sh"]
