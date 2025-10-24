@@ -168,7 +168,7 @@ WSGI_APPLICATION = 'cleanhandy.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# Check if we're on Railway with PostgreSQL
+# Database configuration
 if os.getenv('DATABASE_URL'):
     # Railway PostgreSQL configuration
     import dj_database_url
@@ -177,32 +177,14 @@ if os.getenv('DATABASE_URL'):
     }
     print("🐘 Using PostgreSQL database (Railway)")
 else:
-    # Local PostgreSQL configuration (fallback to SQLite if not available)
-    try:
-        # Try to use local PostgreSQL first
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': os.getenv('DB_NAME', 'cleanhandy'),
-                'USER': os.getenv('DB_USER', 'postgres'),
-                'PASSWORD': os.getenv('DB_PASSWORD', 'password'),
-                'HOST': os.getenv('DB_HOST', 'localhost'),
-                'PORT': os.getenv('DB_PORT', '5432'),
-                'OPTIONS': {
-                    'connect_timeout': 10,
-                }
-            }
+    # Local SQLite configuration for development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
-        print("🐘 Using local PostgreSQL database")
-    except Exception as e:
-        # Fallback to SQLite for development
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
-        print("📁 Using SQLite database (fallback)")
+    }
+    print("📁 Using SQLite database (Local Development)")
 
 
 # Password validation
