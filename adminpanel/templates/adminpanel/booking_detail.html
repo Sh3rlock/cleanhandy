@@ -442,26 +442,27 @@ function showPaymentLink(url) {
           
           <!-- Amount Paid Details -->
           <div class="mb-3">
-            <h6 class="text-success">Amount Paid: ${{ booking.get_paid_amount|floatformat:2 }}</h6>
+            <h6 class="text-success">Total Paid: ${{ booking.get_paid_amount|floatformat:2 }}</h6>
             
+            <!-- Payment Breakdown -->
             {% if booking.get_deposit_paid_amount > 0 %}
             <div class="d-flex justify-content-between">
-              <small>Deposit (50%):</small>
-              <small>${{ booking.get_deposit_paid_amount|floatformat:2 }}</small>
+              <small>✓ Deposit (50%):</small>
+              <small class="text-success">${{ booking.get_deposit_paid_amount|floatformat:2 }}</small>
             </div>
             {% endif %}
             
             {% if booking.get_final_paid_amount > 0 %}
             <div class="d-flex justify-content-between">
-              <small>Final Payment (50%):</small>
-              <small>${{ booking.get_final_paid_amount|floatformat:2 }}</small>
+              <small>✓ Final Payment (50%):</small>
+              <small class="text-success">${{ booking.get_final_paid_amount|floatformat:2 }}</small>
             </div>
             {% endif %}
             
             {% if booking.get_full_paid_amount > 0 %}
             <div class="d-flex justify-content-between">
-              <small>Full Payment (100%):</small>
-              <small>${{ booking.get_full_paid_amount|floatformat:2 }}</small>
+              <small>✓ Full Payment (100%):</small>
+              <small class="text-success">${{ booking.get_full_paid_amount|floatformat:2 }}</small>
             </div>
             {% endif %}
           </div>
@@ -476,11 +477,23 @@ function showPaymentLink(url) {
                 <small>${{ booking.get_final_amount|floatformat:2 }}</small>
               </div>
               {% endif %}
+              
+              <!-- Payment Required Alert -->
+              <div class="alert alert-warning mt-2 mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Payment Required:</strong> Customer needs to complete payment.
+              </div>
             {% else %}
-              <h6 class="text-success">Status: Fully Paid</h6>
+              <h6 class="text-success">Status: ✅ Fully Paid</h6>
               <div class="d-flex justify-content-between">
                 <small>Remaining Balance:</small>
-                <small class="text-success">$0.00</small>
+                <small class="text-success fw-bold">$0.00</small>
+              </div>
+              
+              <!-- Payment Complete Alert -->
+              <div class="alert alert-success mt-2 mb-0">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Payment Complete!</strong> Booking is fully paid and confirmed.
               </div>
             {% endif %}
           </div>

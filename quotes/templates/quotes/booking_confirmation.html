@@ -448,25 +448,45 @@
                             <div class="payment-status-section">
                                 <h6 class="text-primary mb-3"><i class="fas fa-credit-card me-2"></i>Payment Status</h6>
                                 
-                                <!-- Payment Type Display -->
+                                <!-- Payment Status Display -->
                                 <div class="price-row">
-                                    <span class="label">Payment Type:</span>
+                                    <span class="label">Payment Status:</span>
                                     <span class="value">
                                         {% if booking.payment_status == "paid" %}
-                                            <span class="badge bg-success">Fully Paid</span>
+                                            <span class="badge bg-success fs-6">✅ Fully Paid</span>
                                         {% elif booking.payment_status == "partial" %}
-                                            <span class="badge bg-warning">Partial Payment (50%)</span>
+                                            <span class="badge bg-warning text-dark fs-6">⚠️ Partial Payment (50%)</span>
                                         {% else %}
-                                            <span class="badge bg-secondary">Unpaid</span>
+                                            <span class="badge bg-danger fs-6">❌ Unpaid</span>
                                         {% endif %}
                                     </span>
                                 </div>
                                 
                                 <!-- Amount Paid -->
-                                {% if booking.get_paid_amount > 0 %}
                                 <div class="price-row">
-                                    <span class="label text-success">Amount Paid:</span>
-                                    <span class="value text-success">${{ booking.get_paid_amount|floatformat:2 }}</span>
+                                    <span class="label text-success">Total Paid:</span>
+                                    <span class="value text-success fw-bold fs-5">${{ booking.get_paid_amount|floatformat:2 }}</span>
+                                </div>
+                                
+                                <!-- Payment Breakdown -->
+                                {% if booking.get_deposit_paid_amount > 0 %}
+                                <div class="price-row">
+                                    <span class="label text-success">✓ Deposit (50%):</span>
+                                    <span class="value text-success">${{ booking.get_deposit_paid_amount|floatformat:2 }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if booking.get_final_paid_amount > 0 %}
+                                <div class="price-row">
+                                    <span class="label text-success">✓ Final Payment (50%):</span>
+                                    <span class="value text-success">${{ booking.get_final_paid_amount|floatformat:2 }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if booking.get_full_paid_amount > 0 %}
+                                <div class="price-row">
+                                    <span class="label text-success">✓ Full Payment (100%):</span>
+                                    <span class="value text-success">${{ booking.get_full_paid_amount|floatformat:2 }}</span>
                                 </div>
                                 {% endif %}
                                 
@@ -474,21 +494,33 @@
                                 {% if booking.get_paid_amount < booking.price %}
                                 <div class="price-row">
                                     <span class="label text-warning">Remaining Balance:</span>
-                                    <span class="value text-warning">${{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</span>
+                                    <span class="value text-warning fw-bold">${{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</span>
                                 </div>
-                                {% endif %}
                                 
                                 <!-- Payment Breakdown for Unpaid/Partial -->
-                                {% if booking.payment_status != "paid" %}
-                                <div class="mt-3">
+                                <div class="mt-3 p-3 bg-light rounded">
+                                    <h6 class="text-info mb-2">Payment Breakdown:</h6>
+                                    {% if not booking.get_deposit_paid_amount %}
                                     <div class="price-row">
                                         <span class="label text-info">Deposit Required (50%):</span>
                                         <span class="value text-info">${{ booking.get_deposit_amount|floatformat:2 }}</span>
                                     </div>
+                                    {% endif %}
+                                    {% if not booking.get_final_paid_amount and booking.payment_status != "paid" %}
                                     <div class="price-row">
                                         <span class="label text-muted">Final Payment (50%):</span>
                                         <span class="value text-muted">${{ booking.get_final_amount|floatformat:2 }}</span>
                                     </div>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <div class="price-row">
+                                    <span class="label text-success">Remaining Balance:</span>
+                                    <span class="value text-success fw-bold">$0.00</span>
+                                </div>
+                                <div class="alert alert-success mt-3">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong>Payment Complete!</strong> Your booking is fully paid and confirmed.
                                 </div>
                                 {% endif %}
                             </div>

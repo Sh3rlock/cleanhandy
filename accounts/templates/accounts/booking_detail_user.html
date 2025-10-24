@@ -283,27 +283,31 @@
             <div class="row">
               <div class="col-md-6 mb-3">
                 <div class="info-card">
-                  <h6><i class="fas fa-dollar-sign"></i> Amount Paid</h6>
+                  <h6><i class="fas fa-dollar-sign"></i> Payment Details</h6>
                   <div class="detail-row">
                     <span class="detail-label">Total Paid</span>
-                    <span class="detail-value text-success fw-bold">${{ booking.get_paid_amount|floatformat:2 }}</span>
+                    <span class="detail-value text-success fw-bold fs-5">${{ booking.get_paid_amount|floatformat:2 }}</span>
                   </div>
+                  
+                  <!-- Payment Breakdown -->
                   {% if booking.get_deposit_paid_amount > 0 %}
                   <div class="detail-row">
-                    <span class="detail-label">Deposit (50%)</span>
-                    <span class="detail-value">${{ booking.get_deposit_paid_amount|floatformat:2 }}</span>
+                    <span class="detail-label">✓ Deposit (50%)</span>
+                    <span class="detail-value text-success">${{ booking.get_deposit_paid_amount|floatformat:2 }}</span>
                   </div>
                   {% endif %}
+                  
                   {% if booking.get_final_paid_amount > 0 %}
                   <div class="detail-row">
-                    <span class="detail-label">Final Payment (50%)</span>
-                    <span class="detail-value">${{ booking.get_final_paid_amount|floatformat:2 }}</span>
+                    <span class="detail-label">✓ Final Payment (50%)</span>
+                    <span class="detail-value text-success">${{ booking.get_final_paid_amount|floatformat:2 }}</span>
                   </div>
                   {% endif %}
+                  
                   {% if booking.get_full_paid_amount > 0 %}
                   <div class="detail-row">
-                    <span class="detail-label">Full Payment (100%)</span>
-                    <span class="detail-value">${{ booking.get_full_paid_amount|floatformat:2 }}</span>
+                    <span class="detail-label">✓ Full Payment (100%)</span>
+                    <span class="detail-value text-success">${{ booking.get_full_paid_amount|floatformat:2 }}</span>
                   </div>
                   {% endif %}
                 </div>
@@ -311,7 +315,7 @@
               
               <div class="col-md-6 mb-3">
                 <div class="info-card">
-                  <h6><i class="fas fa-calculator"></i> Balance</h6>
+                  <h6><i class="fas fa-calculator"></i> Balance Status</h6>
                   {% if booking.get_paid_amount < booking.price %}
                     <div class="detail-row">
                       <span class="detail-label">Remaining Balance</span>
@@ -323,6 +327,12 @@
                       <span class="detail-value">${{ booking.get_final_amount|floatformat:2 }}</span>
                     </div>
                     {% endif %}
+                    
+                    <!-- Payment Status Alert -->
+                    <div class="alert alert-warning mt-3 mb-0">
+                      <i class="fas fa-exclamation-triangle me-2"></i>
+                      <strong>Payment Required:</strong> Complete your payment to confirm your booking.
+                    </div>
                   {% else %}
                     <div class="detail-row">
                       <span class="detail-label">Remaining Balance</span>
@@ -330,7 +340,13 @@
                     </div>
                     <div class="detail-row">
                       <span class="detail-label">Status</span>
-                      <span class="detail-value text-success">Fully Paid</span>
+                      <span class="detail-value text-success fw-bold">✅ Fully Paid</span>
+                    </div>
+                    
+                    <!-- Payment Complete Alert -->
+                    <div class="alert alert-success mt-3 mb-0">
+                      <i class="fas fa-check-circle me-2"></i>
+                      <strong>Payment Complete!</strong> Your booking is fully paid and confirmed.
                     </div>
                   {% endif %}
                 </div>

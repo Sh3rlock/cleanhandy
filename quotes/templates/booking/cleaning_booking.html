@@ -2530,7 +2530,7 @@ else if (discountCode) {
 }
 
 // ✅ Apply the discount to total
-total = total - discount;
+total = Math.max(0, total - discount);
 
 // ✅ Update the summary UI
 const giftEl = document.getElementById("giftCardApplied");
@@ -2775,9 +2775,9 @@ updatePaymentAmounts();
       const total = price + tax;
     
       document.getElementById("summary-items").innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
-          <div>• Studio ($130.00)</div>
-          <div>$${price.toFixed(2)}</div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div><i class="fa-solid fa-house me-2 text-primary"></i><strong>Studio ($130.00)</strong></div>
+          <div><strong>$${price.toFixed(2)}</strong></div>
         </div>`;
     
       document.getElementById("summary-date").textContent = `${formattedDateText} @ 9:00 AM`;
@@ -2973,17 +2973,22 @@ updatePaymentAmounts();
       });
       console.log('🔍 Extras price:', extrasPrice);
       
-      // Calculate total
+      // Calculate total with tax
       const subtotal = sqftPrice + homePrice + extrasPrice;
-      console.log('🔍 Total price:', subtotal);
+      const taxRate = 0.08875;
+      const tax = subtotal * taxRate;
+      const total = subtotal + tax;
+      console.log('🔍 Total price:', { subtotal, tax, total });
       
       // Update the summary display
       const subtotalElement = document.getElementById("subtotalPrice");
+      const taxElement = document.getElementById("salesTax");
       const totalElement = document.getElementById("totalPrice");
       const summaryContainer = document.getElementById("summary-items");
       
       console.log('🔍 Summary elements found:', {
         subtotalElement: !!subtotalElement,
+        taxElement: !!taxElement,
         totalElement: !!totalElement,
         summaryContainer: !!summaryContainer
       });
@@ -2995,9 +3000,16 @@ updatePaymentAmounts();
         console.log('🔍 subtotalPrice element not found');
       }
       
+      if (taxElement) {
+        taxElement.textContent = tax.toFixed(2);
+        console.log('🔍 Updated tax to:', tax.toFixed(2));
+      } else {
+        console.log('🔍 salesTax element not found');
+      }
+      
       if (totalElement) {
-        totalElement.textContent = subtotal.toFixed(2);
-        console.log('🔍 Updated total to:', subtotal.toFixed(2));
+        totalElement.textContent = total.toFixed(2);
+        console.log('🔍 Updated total to:', total.toFixed(2));
       } else {
         console.log('🔍 totalPrice element not found');
       }
