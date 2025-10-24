@@ -7,7 +7,17 @@ from .debug_views import debug_booking_calculation
 
 def healthcheck(request):
     """Simple healthcheck endpoint that doesn't require database access"""
-    return JsonResponse({"status": "healthy", "message": "CleanHandy API is running"})
+    try:
+        return JsonResponse({
+            "status": "healthy", 
+            "message": "CleanHandy API is running",
+            "timestamp": "2025-10-24T13:00:00Z"
+        })
+    except Exception as e:
+        return JsonResponse({
+            "status": "error", 
+            "message": str(e)
+        }, status=500)
 
 
 urlpatterns = [
