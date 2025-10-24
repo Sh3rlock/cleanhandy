@@ -54,6 +54,38 @@ else
     echo "⚠️  Migrations failed, but continuing..."
 fi
 
+# Create superuser if it doesn't exist
+echo "👤 Checking for superuser..."
+python -c "
+import os
+import django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cleanhandy.settings')
+django.setup()
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+# Get superuser credentials from environment variables
+username = os.getenv('DJANGO_SUPERUSER_USERNAME', 'admin')
+email = os.getenv('DJANGO_SUPERUSER_EMAIL', 'admin@thecleanhandy.com')
+password = os.getenv('DJANGO_SUPERUSER_PASSWORD', 'admin123')
+
+# Check if superuser already exists
+if not User.objects.filter(is_superuser=True).exists():
+    print(f'👤 Creating superuser: {username}')
+    try:
+        User.objects.create_superuser(username=username, email=email, password=password)
+        print(f'✅ Superuser created successfully!')
+        print(f'   Username: {username}')
+        print(f'   Email: {email}')
+        print(f'   Password: {password}')
+        print('🌐 Access admin at: /admin/')
+    except Exception as e:
+        print(f'❌ Failed to create superuser: {e}')
+else:
+    print('✅ Superuser already exists')
+" 2>/dev/null
+
 # Start the application
 echo "🌐 Starting Gunicorn server on port ${PORT:-8000}..."
 exec gunicorn cleanhandy.wsgi:application \
