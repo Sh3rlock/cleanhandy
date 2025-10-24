@@ -4,10 +4,10 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "bash start.sh",
-    "healthcheckPath": "/health/",
-    "healthcheckTimeout": 600,
+    "startCommand": "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn cleanhandy.wsgi:application --bind 0.0.0.0:$PORT --timeout 300",
+    "healthcheckPath": "/static/health.json",
+    "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 5
+    "restartPolicyMaxRetries": 3
   }
 }
