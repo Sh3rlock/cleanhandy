@@ -357,7 +357,14 @@ def stripe_webhook(request):
     # Handle the event
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
-        handle_checkout_success(session)
+        # Check if this is a payment link completion
+        metadata = session.get('metadata', {})
+        if metadata.get('payment_type') in ['final', 'full']:
+            # This is a payment link completion
+            handle_payment_link_success(session)
+        else:
+            # This is a regular checkout session
+            handle_checkout_success(session)
     elif event['type'] == 'payment_intent.succeeded':
         payment_intent = event['data']['object']
         handle_payment_success(payment_intent)
@@ -586,6 +593,10 @@ def handle_payment_link_success(session):
             if payment_type == 'final':
                 split.final_paid = True
                 print(f"✅ Set final_paid = True for booking {booking_id}")
+            elif payment_type == 'full':
+                split.deposit_paid = True
+                split.final_paid = True  # Full payment covers both
+                print(f"✅ Set both deposit_paid and final_paid = True for booking {booking_id}")
             
             split.save()
             print(f"✅ PaymentSplit updated for booking {booking_id}")
@@ -1099,3 +1110,44 @@ def get_payment_status(request, booking_id):
         return JsonResponse({'error': 'Booking not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def test_payment_link_webhook(request):
+    """Test endpoint to simulate payment link webhook processing"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            booking_id = data.get('booking_id')
+            payment_type = data.get('payment_type', 'final')
+            
+            if not booking_id:
+                return JsonResponse({'error': 'booking_id required'}, status=400)
+            
+            # Simulate a payment link session
+            session_data = {
+                'id': f'test_session_{booking_id}',
+                'payment_intent': f'test_pi_{booking_id}',
+                'metadata': {
+                    'booking_id': str(booking_id),
+                    'payment_type': payment_type,
+                    'customer_name': 'Test Customer',
+                    'customer_email': 'test@example.com'
+                }
+            }
+            
+            # Call the payment link success handler
+            handle_payment_link_success(session_data)
+            
+            return JsonResponse({
+                'status': 'success', 
+                'message': f'Payment link webhook processed for booking {booking_id}',
+                'payment_type': payment_type
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'message': 'Payment link webhook test endpoint'})
