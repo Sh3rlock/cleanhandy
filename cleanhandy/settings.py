@@ -175,14 +175,34 @@ if os.getenv('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.parse(os.getenv('DATABASE_URL'))
     }
+    print("🐘 Using PostgreSQL database (Railway)")
 else:
-    # Local SQLite configuration
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+    # Local PostgreSQL configuration (fallback to SQLite if not available)
+    try:
+        # Try to use local PostgreSQL first
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.getenv('DB_NAME', 'cleanhandy'),
+                'USER': os.getenv('DB_USER', 'postgres'),
+                'PASSWORD': os.getenv('DB_PASSWORD', 'password'),
+                'HOST': os.getenv('DB_HOST', 'localhost'),
+                'PORT': os.getenv('DB_PORT', '5432'),
+                'OPTIONS': {
+                    'connect_timeout': 10,
+                }
+            }
         }
-    }
+        print("🐘 Using local PostgreSQL database")
+    except Exception as e:
+        # Fallback to SQLite for development
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+        print("📁 Using SQLite database (fallback)")
 
 
 # Password validation
