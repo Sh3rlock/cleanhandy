@@ -1,11 +1,17 @@
 from django.urls import path
 from django.views.generic import TemplateView
+from django.http import JsonResponse
 from .views import about, contact, blog, blog_detail, quote_submitted, request_cleaning_quote, request_handyman_quote, available_hours_api, quote_submitted_handyman, subscribe_newsletter, request_cleaning_booking, request_handyman_booking, cleaning_booking, handyman_booking, office_cleaning_booking, office_quote_submit, terms, privacy, faq, download_office_cleaning_pdf, office_cleaning_quote_submitted, cleaning_services, commercial_services, handyman_quote_submit, booking_confirmation, request_post_event_cleaning_quote, post_event_cleaning_quote_submit, quote_submitted_post_event_cleaning
 from .stripe_views import create_payment_intent, stripe_webhook, webhook_test, manual_webhook_trigger, get_payment_status, create_checkout_session, check_and_fix_payment_status, fix_payment_intent_metadata, test_payment_link_webhook
 from .debug_views import debug_booking_calculation
 
+def healthcheck(request):
+    """Simple healthcheck endpoint that doesn't require database access"""
+    return JsonResponse({"status": "healthy", "message": "CleanHandy API is running"})
+
 
 urlpatterns = [
+    path("health/", healthcheck, name="healthcheck"),
     path("about", about, name="about"),
     path("contact", contact, name="contact"),
     path("blog", blog, name="blog"),
