@@ -41,7 +41,106 @@ select {
   .flatpickr-current-month {
     font-size: 130% !important;
   }
+  
+  .loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
 </style>
+
+<script>
+function sendPaymentLink(bookingId, paymentType) {
+  const button = event.target;
+  const originalText = button.innerHTML;
+  
+  // Show loading state
+  button.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Sending...';
+  button.disabled = true;
+  button.classList.add('loading');
+  
+  // Get CSRF token
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  
+  fetch('/adminpanel/send-payment-link/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrfToken,
+    },
+    body: JSON.stringify({
+      booking_id: bookingId,
+      payment_type: paymentType
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Show success message
+      showAlert('success', data.message);
+      
+      // If a new payment link was created, show it
+      if (data.payment_link_url) {
+        showPaymentLink(data.payment_link_url);
+      }
+      
+      // Reload page to update payment status
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      showAlert('error', data.error || 'Failed to send payment link');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    showAlert('error', 'An error occurred while sending the payment link');
+  })
+  .finally(() => {
+    // Restore button state
+    button.innerHTML = originalText;
+    button.disabled = false;
+    button.classList.remove('loading');
+  });
+}
+
+function showAlert(type, message) {
+  const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+  const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+  
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+  alertDiv.innerHTML = `
+    <i class="fa-solid ${icon} me-2"></i>${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  
+  // Insert at the top of the form
+  const form = document.querySelector('form');
+  form.insertBefore(alertDiv, form.firstChild);
+  
+  // Auto-dismiss after 5 seconds
+  setTimeout(() => {
+    if (alertDiv.parentNode) {
+      alertDiv.remove();
+    }
+  }, 5000);
+}
+
+function showPaymentLink(url) {
+  const linkDiv = document.createElement('div');
+  linkDiv.className = 'alert alert-info mt-2';
+  linkDiv.innerHTML = `
+    <strong>Payment Link Created:</strong><br>
+    <a href="${url}" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
+      <i class="fa-solid fa-external-link-alt me-1"></i>Open Payment Link
+    </a>
+  `;
+  
+  // Insert after the payment actions section
+  const paymentActions = document.querySelector('.mt-3:last-of-type');
+  paymentActions.appendChild(linkDiv);
+}
+</script>
 
 <div class="container py-4">
   <a href="{% url 'booking_list' %}" class="text-primary mb-4"><i class="fa fa-arrow-left" aria-hidden="true"></i>
@@ -425,6 +524,39 @@ select {
             </div>
           </div>
           {% endif %}
+          
+          <!-- Payment Link Actions -->
+          <div class="mt-3">
+            <h6>Payment Actions</h6>
+            <div class="d-grid gap-2">
+              {% if booking.payment_status == 'unpaid' %}
+                <button type="button" class="btn btn-primary" onclick="sendPaymentLink({{ booking.id }}, 'full')">
+                  <i class="fa-solid fa-credit-card me-2"></i>Send Full Payment Link (100%)
+                </button>
+              {% elif booking.payment_status == 'partial' %}
+                <button type="button" class="btn btn-warning" onclick="sendPaymentLink({{ booking.id }}, 'final')">
+                  <i class="fa-solid fa-credit-card me-2"></i>Send Final Payment Link (50%)
+                </button>
+                <button type="button" class="btn btn-info" onclick="sendPaymentLink({{ booking.id }}, 'full')">
+                  <i class="fa-solid fa-credit-card me-2"></i>Send Full Payment Link (100%)
+                </button>
+              {% elif booking.payment_status == 'paid' %}
+                <div class="alert alert-success">
+                  <i class="fa-solid fa-check-circle me-2"></i>Payment Complete
+                </div>
+              {% endif %}
+              
+              <!-- Show existing payment link if available -->
+              {% if booking.get_final_payment_link_info %}
+                <div class="mt-2">
+                  <small class="text-muted">Existing Payment Link:</small>
+                  <a href="{{ booking.get_final_payment_link_info.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="fa-solid fa-external-link-alt me-1"></i>View Link
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+          </div>
         </div>
       </div>
       

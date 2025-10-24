@@ -204,11 +204,13 @@ class NewsletterSubscriberAdmin(admin.ModelAdmin):
 class BookingAdmin(admin.ModelAdmin):
     list_display = [
         "id", "get_name_display", "get_service_display", "get_business_type_display", 
-        "get_frequency_display", "get_home_cleaning_details", "date", "get_price_formatted", "get_status_badge", "pdf_link"
+        "get_frequency_display", "get_home_cleaning_details", "date", "get_price_formatted", 
+        "get_payment_status_badge", "get_status_badge", "pdf_link"
     ]
-    list_filter = ["status", "service_cat", "business_type", "cleaning_frequency", "created_at"]
+    list_filter = ["status", "payment_status", "service_cat", "business_type", "cleaning_frequency", "created_at"]
     search_fields = ["name", "email", "phone", "address", "business_type"]
-    readonly_fields = ["pdf_preview", "pdf_file", "created_at", "get_is_large_home_display"]
+    readonly_fields = ["pdf_preview", "pdf_file", "created_at", "get_is_large_home_display", 
+                      "get_payment_breakdown", "get_final_payment_link_info"]
     list_per_page = 25
     ordering = ['-created_at']
     
@@ -246,6 +248,10 @@ class BookingAdmin(admin.ModelAdmin):
         ('Pricing', {
             'fields': ('price', 'gift_card', 'gift_card_discount'),
             'description': 'Pricing and payment information'
+        }),
+        ('Payment Information', {
+            'fields': ('payment_status', 'payment_method', 'get_payment_breakdown', 'get_final_payment_link_info'),
+            'description': 'Payment status and breakdown'
         }),
         ('Documents', {
             'fields': ('pdf_preview', 'pdf_file'),
@@ -306,9 +312,11 @@ class BookingAdmin(admin.ModelAdmin):
         status_colors = {
             'pending': '#FFC107',
             'confirmed': '#28A745',
-            'cancelled': '#DC3545',
-            'completed': '#17A2B8',
-            'in_progress': '#6F42C1'
+            'declined': '#DC3545',
+            'accepted': '#28A745',
+            'booked': '#6F42C1',
+            'completed': '#20C997',
+            'expired': '#6C757D'
         }
         color = status_colors.get(obj.status, '#6C757D')
         return format_html(
@@ -316,6 +324,95 @@ class BookingAdmin(admin.ModelAdmin):
             color, obj.status.replace('_', ' ').title()
         )
     get_status_badge.short_description = 'Status'
+    
+    def get_payment_status_badge(self, obj):
+        """Format payment status with colored badge"""
+        status_colors = {
+            'unpaid': '#DC3545',
+            'partial': '#FFC107',
+            'paid': '#28A745',
+            'refunded': '#6C757D'
+        }
+        
+        color = status_colors.get(obj.payment_status, '#6C757D')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">{}</span>',
+            color,
+            obj.payment_status.upper()
+        )
+    get_payment_status_badge.short_description = 'Payment'
+    
+    def get_payment_breakdown(self, obj):
+        """Display detailed payment breakdown"""
+        try:
+            breakdown = obj.get_payment_breakdown()
+            if not breakdown:
+                return "No payment information available"
+            
+            html = f"""
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                <h4 style="margin-top: 0; color: #495057;">Payment Breakdown</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <div><strong>Total Amount:</strong> ${breakdown['total_amount']}</div>
+                    <div><strong>Total Paid:</strong> ${breakdown['total_paid']}</div>
+                    <div><strong>Deposit (50%):</strong> ${breakdown['deposit_amount']} {'✅' if breakdown['deposit_paid'] else '❌'}</div>
+                    <div><strong>Final (50%):</strong> ${breakdown['final_amount']} {'✅' if breakdown['final_paid'] else '❌'}</div>
+                </div>
+                <div><strong>Remaining:</strong> ${breakdown['remaining_amount']}</div>
+                <div><strong>Status:</strong> {breakdown['payment_status'].upper()}</div>
+            """
+            
+            if breakdown['payments']:
+                html += "<h5 style='margin: 15px 0 5px 0; color: #495057;'>Payment History:</h5><ul style='margin: 0; padding-left: 20px;'>"
+                for payment in breakdown['payments']:
+                    html += f"<li>{payment['type'].title()}: ${payment['amount']} - {payment['paid_at'].strftime('%Y-%m-%d %H:%M') if payment['paid_at'] else 'Unknown'}</li>"
+                html += "</ul>"
+            
+            html += "</div>"
+            return format_html(html)
+        except Exception as e:
+            return f"Error loading payment breakdown: {e}"
+    get_payment_breakdown.short_description = 'Payment Breakdown'
+    
+    def get_final_payment_link_info(self, obj):
+        """Display final payment link information"""
+        try:
+            link_info = obj.get_final_payment_link_info()
+            if not link_info:
+                return "No payment link available"
+            
+            if link_info['is_expired']:
+                status_color = '#DC3545'
+                status_text = 'EXPIRED'
+            else:
+                status_color = '#28A745'
+                status_text = 'ACTIVE'
+            
+            html = f"""
+            <div style="background-color: #e8f5e8; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                <h4 style="margin-top: 0; color: #495057;">Final Payment Link</h4>
+                <div style="margin-bottom: 10px;">
+                    <strong>Status:</strong> 
+                    <span style="background-color: {status_color}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold;">{status_text}</span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>Created:</strong> {link_info['created_at'].strftime('%Y-%m-%d %H:%M') if link_info['created_at'] else 'Unknown'}
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>Expires:</strong> {link_info['expires_at'].strftime('%Y-%m-%d %H:%M') if link_info['expires_at'] else 'Unknown'}
+                </div>
+                <div>
+                    <strong>Link:</strong> 
+                    <a href="{link_info['url']}" target="_blank" style="color: #007bff; text-decoration: none;">
+                        {link_info['url'][:50]}...
+                    </a>
+                </div>
+            </div>
+            """
+            return format_html(html)
+        except Exception as e:
+            return f"Error loading payment link info: {e}"
+    get_final_payment_link_info.short_description = 'Payment Link'
     
     def pdf_link(self, obj):
         if obj.pdf_file:

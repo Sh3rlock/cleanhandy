@@ -76,6 +76,12 @@ class PaymentSplit(models.Model):
     deposit_payment_intent_id = models.CharField(max_length=255, blank=True, null=True)
     final_payment_intent_id = models.CharField(max_length=255, blank=True, null=True)
     
+    # Payment Link for final payment
+    final_payment_link_id = models.CharField(max_length=255, blank=True, null=True, help_text="Stripe Payment Link ID for final payment")
+    final_payment_link_url = models.URLField(blank=True, null=True, help_text="Stripe Payment Link URL for final payment")
+    final_payment_link_created_at = models.DateTimeField(null=True, blank=True, help_text="When the payment link was created")
+    final_payment_link_expires_at = models.DateTimeField(null=True, blank=True, help_text="When the payment link expires")
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

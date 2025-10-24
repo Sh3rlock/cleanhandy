@@ -340,6 +340,7 @@ class Booking(models.Model):
             ("declined", "Declined"),
             ("accepted", "Accepted"),
             ("booked", "Booked"),
+            ("completed", "Completed"),
             ("expired", "Expired"),
         ],
         default="pending",
@@ -468,6 +469,11 @@ class Booking(models.Model):
         from django.core.exceptions import ValidationError
         from .utils import check_time_slot_conflict
         
+        # Skip time slot validation for completed or cancelled bookings
+        # as they don't need to check for conflicts
+        if self.status in ['completed', 'cancelled']:
+            return
+            
         if self.date and self.hour and self.hours_requested:
             # Check for time slot conflicts, excluding current booking if updating
             if check_time_slot_conflict(self.date, self.hour, self.hours_requested, self.id):
@@ -791,6 +797,64 @@ class Booking(models.Model):
             return "Refunded"
         else:
             return "Pending"
+    
+    def get_total_paid_amount(self):
+        """Get the total amount paid across all payments"""
+        try:
+            successful_payments = self.payments.filter(status='succeeded')
+            return sum(payment.amount for payment in successful_payments)
+        except:
+            return Decimal('0.00')
+    
+    def get_payment_breakdown(self):
+        """Get detailed payment breakdown"""
+        try:
+            split = self.get_payment_split()
+            successful_payments = self.payments.filter(status='succeeded')
+            
+            breakdown = {
+                'total_amount': split.total_amount,
+                'deposit_amount': split.deposit_amount,
+                'final_amount': split.final_amount,
+                'total_paid': self.get_total_paid_amount(),
+                'remaining_amount': split.remaining_amount,
+                'deposit_paid': split.deposit_paid,
+                'final_paid': split.final_paid,
+                'is_fully_paid': split.is_fully_paid,
+                'payment_method': self.payment_method,
+                'payment_status': self.payment_status,
+                'payments': []
+            }
+            
+            # Add individual payment details
+            for payment in successful_payments:
+                breakdown['payments'].append({
+                    'id': payment.id,
+                    'type': payment.payment_type,
+                    'amount': payment.amount,
+                    'paid_at': payment.paid_at,
+                    'stripe_payment_intent_id': payment.stripe_payment_intent_id,
+                })
+            
+            return breakdown
+        except Exception as e:
+            print(f"Error getting payment breakdown for booking {self.id}: {e}")
+            return None
+    
+    def get_final_payment_link_info(self):
+        """Get final payment link information if available"""
+        try:
+            split = self.get_payment_split()
+            if split.final_payment_link_url and not split.final_paid:
+                return {
+                    'url': split.final_payment_link_url,
+                    'created_at': split.final_payment_link_created_at,
+                    'expires_at': split.final_payment_link_expires_at,
+                    'is_expired': split.final_payment_link_expires_at and timezone.now() > split.final_payment_link_expires_at,
+                }
+            return None
+        except:
+            return None
     
     def get_current_payment_intent_id(self):
         """Get the current payment intent ID for display in admin emails"""

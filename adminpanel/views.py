@@ -28,6 +28,9 @@ from django.urls import reverse
 from .forms import AdminQuoteForm
 from django.utils.timezone import localtime
 
+# Import payment link functions
+from quotes.stripe_views import create_final_payment_link, send_final_payment_email
+
 from django.core.mail import send_mail
 from django.contrib import messages
 from django.shortcuts import redirect
@@ -276,8 +279,16 @@ def booking_list(request):
     if selected_categories:
         bookings = bookings.filter(service_cat_id__in=selected_categories)
 
+    # Get outstanding payments (completed bookings that are not fully paid)
+    outstanding_payments = Booking.objects.filter(
+        status='completed'
+    ).exclude(
+        payment_status='paid'
+    ).order_by('-created_at')
+
     return render(request, 'adminpanel/booking_list.html', {
         'bookings': bookings,
+        'outstanding_payments': outstanding_payments,
         'status_list': ['pending', 'confirmed', 'completed', 'cancelled'],
         'service_categories': ServiceCategory.objects.filter(name__in=['Home', 'Commercial']),
         'selected_statuses': selected_statuses,
@@ -1556,6 +1567,86 @@ def delete_post_event_cleaning_quote(request, quote_id):
     quote.delete()
     messages.success(request, "Post event cleaning quote deleted successfully.")
     return redirect("post_event_cleaning_quote_list")
+
+
+@login_required
+@require_POST
+@csrf_exempt
+def send_payment_link(request):
+    """Send payment link email to customer"""
+    try:
+        data = json.loads(request.body)
+        booking_id = data.get('booking_id')
+        payment_type = data.get('payment_type')  # 'final' or 'full'
+        
+        if not booking_id or not payment_type:
+            return JsonResponse({'success': False, 'error': 'Missing booking_id or payment_type'}, status=400)
+        
+        # Get the booking
+        try:
+            booking = Booking.objects.get(id=booking_id)
+        except Booking.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Booking not found'}, status=404)
+        
+        # Check if booking has payment split
+        try:
+            split = booking.get_payment_split()
+        except:
+            return JsonResponse({'success': False, 'error': 'No payment split found for this booking'}, status=400)
+        
+        payment_link_url = None
+        email_sent = False
+        
+        if payment_type == 'final':
+            # Send final payment link (50%)
+            if not split.deposit_paid:
+                return JsonResponse({'success': False, 'error': 'Deposit must be paid before sending final payment link'}, status=400)
+            
+            if split.final_paid:
+                return JsonResponse({'success': False, 'error': 'Final payment already completed'}, status=400)
+            
+            # Create or get existing payment link
+            payment_link_result = create_final_payment_link(booking)
+            if payment_link_result and payment_link_result.get('payment_link_url'):
+                payment_link_url = payment_link_result['payment_link_url']
+                email_sent = send_final_payment_email(booking, payment_link_url)
+            else:
+                return JsonResponse({'success': False, 'error': 'Failed to create payment link'}, status=500)
+                
+        elif payment_type == 'full':
+            # Send full payment link (100%)
+            if split.deposit_paid or split.final_paid:
+                return JsonResponse({'success': False, 'error': 'Partial payments already made. Cannot send full payment link.'}, status=400)
+            
+            # Create full payment link
+            payment_link_result = create_full_payment_link(booking)
+            if payment_link_result and payment_link_result.get('payment_link_url'):
+                payment_link_url = payment_link_result['payment_link_url']
+                email_sent = send_full_payment_email(booking, payment_link_url)
+            else:
+                return JsonResponse({'success': False, 'error': 'Failed to create payment link'}, status=500)
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid payment type'}, status=400)
+        
+        if email_sent:
+            message = f'Payment link sent successfully to {booking.email}'
+            if payment_type == 'final':
+                message += ' (Final 50% payment)'
+            else:
+                message += ' (Full 100% payment)'
+            
+            return JsonResponse({
+                'success': True, 
+                'message': message,
+                'payment_link_url': payment_link_url
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Payment link created but email failed to send'}, status=500)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'An error occurred: {str(e)}'}, status=500)
 
 
 

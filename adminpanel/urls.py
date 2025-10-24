@@ -6,7 +6,8 @@ from .views import (
     get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv, delete_quote, send_quote_email_view, get_booking_detail,
     giftcard_discount, subscriber_list, add_subscriber, export_subscribers_csv, office_quote_list, office_quote_detail, export_office_quotes_csv, send_office_quote_email, generate_office_quote_pdf,
     handyman_quote_list, handyman_quote_detail, update_handyman_quote_status, export_handyman_quotes_csv, send_handyman_quote_email, generate_handyman_quote_pdf, delete_handyman_quote,
-    post_event_cleaning_quote_list, post_event_cleaning_quote_detail, update_post_event_cleaning_quote_status, export_post_event_cleaning_quotes_csv, send_post_event_cleaning_quote_email, generate_post_event_cleaning_quote_pdf, delete_post_event_cleaning_quote
+    post_event_cleaning_quote_list, post_event_cleaning_quote_detail, update_post_event_cleaning_quote_status, export_post_event_cleaning_quotes_csv, send_post_event_cleaning_quote_email, generate_post_event_cleaning_quote_pdf, delete_post_event_cleaning_quote,
+    send_payment_link
 )
 
 urlpatterns = [
@@ -103,5 +104,8 @@ urlpatterns = [
     path("post-event-cleaning-quotes/export-csv/", export_post_event_cleaning_quotes_csv, name="export_post_event_cleaning_quotes_csv"),
     path("post-event-cleaning-quotes/<int:quote_id>/send-email/", send_post_event_cleaning_quote_email, name="send_post_event_cleaning_quote_email"),
     path("post-event-cleaning-quotes/<int:quote_id>/generate-pdf/", generate_post_event_cleaning_quote_pdf, name="generate_post_event_cleaning_quote_pdf"),
+
+    # Payment Link Management
+    path("send-payment-link/", send_payment_link, name="send_payment_link"),
 
 ]   

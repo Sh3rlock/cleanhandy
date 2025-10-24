@@ -533,6 +533,77 @@ def handle_payment_cancellation(payment_intent):
         print(f"Error handling payment cancellation: {e}")
 
 
+def handle_payment_link_success(session):
+    """Handle successful payment link completion (for final payments)"""
+    try:
+        session_id = session['id']
+        payment_intent_id = session.get('payment_intent')
+        metadata = session.get('metadata', {})
+        
+        booking_id = metadata.get('booking_id')
+        payment_type = metadata.get('payment_type')
+        
+        print(f"🔍 Processing payment link success for session {session_id}")
+        print(f"🔍 Booking ID: {booking_id}, Payment Type: {payment_type}")
+        
+        if not booking_id or not payment_type:
+            print(f"❌ Missing metadata in payment link session {session_id}")
+            return
+        
+        # Get the payment intent to get the amount
+        try:
+            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+            amount = Decimal(payment_intent['amount']) / 100  # Convert from cents
+        except stripe.error.StripeError as e:
+            print(f"❌ Error retrieving payment intent {payment_intent_id}: {e}")
+            return
+        
+        # Create Payment record
+        try:
+            booking = Booking.objects.get(id=booking_id)
+            payment = Payment.objects.create(
+                booking=booking,
+                stripe_payment_intent_id=payment_intent_id,
+                amount=amount,
+                currency=settings.STRIPE_CURRENCY,
+                payment_type=payment_type,
+                status='succeeded',
+                paid_at=timezone.now(),
+                stripe_charge_id=payment_intent.get('latest_charge')
+            )
+            print(f"✅ Created Payment record for payment link session {session_id}")
+        except Booking.DoesNotExist:
+            print(f"❌ Booking {booking_id} not found")
+            return
+        except Exception as e:
+            print(f"❌ Error creating Payment record: {e}")
+            return
+        
+        # Update PaymentSplit
+        try:
+            split = booking.get_payment_split()
+            
+            if payment_type == 'final':
+                split.final_paid = True
+                print(f"✅ Set final_paid = True for booking {booking_id}")
+            
+            split.save()
+            print(f"✅ PaymentSplit updated for booking {booking_id}")
+            
+            # Update booking payment status
+            booking.payment_method = 'stripe'
+            booking.update_payment_status()
+            print(f"✅ Booking payment status updated to: {booking.payment_status}")
+            
+            print(f"✅ Payment link {payment_type} succeeded for booking {booking_id}")
+            
+        except Exception as e:
+            print(f"❌ Error updating PaymentSplit for booking {booking_id}: {e}")
+            
+    except Exception as e:
+        print(f"❌ Error handling payment link success: {e}")
+
+
 def check_and_fix_payment_status(request):
     """Debug endpoint to check and fix payment status for a booking"""
     if request.method != 'POST':
@@ -673,6 +744,259 @@ def fix_payment_intent_metadata(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+def create_final_payment_link(booking):
+    """Create a Stripe Payment Link for the final 50% payment"""
+    try:
+        print(f"🔍 Creating final payment link for booking {booking.id}")
+        
+        # Get payment split
+        split = booking.get_payment_split()
+        
+        # Check if deposit is paid
+        if not split.deposit_paid:
+            print(f"❌ Cannot create final payment link - deposit not paid for booking {booking.id}")
+            return None
+        
+        # Check if final payment is already paid
+        if split.final_paid:
+            print(f"❌ Final payment already paid for booking {booking.id}")
+            return None
+        
+        # Check if payment link already exists and is still valid
+        if split.final_payment_link_id and split.final_payment_link_url:
+            try:
+                # Check if the payment link is still active
+                payment_link = stripe.PaymentLink.retrieve(split.final_payment_link_id)
+                if payment_link.active:
+                    print(f"✅ Payment link already exists and is active for booking {booking.id}")
+                    return {
+                        'payment_link_id': split.final_payment_link_id,
+                        'payment_link_url': split.final_payment_link_url,
+                        'already_exists': True
+                    }
+            except stripe.error.InvalidRequestError:
+                # Payment link doesn't exist or is inactive, create a new one
+                pass
+        
+        # Create Stripe Payment Link
+        payment_link = stripe.PaymentLink.create(
+            line_items=[{
+                'price_data': {
+                    'currency': settings.STRIPE_CURRENCY,
+                    'product_data': {
+                        'name': f'Final Payment - Booking #{booking.id}',
+                        'description': f'Final 50% payment for {booking.service_cat.name} service',
+                    },
+                    'unit_amount': int(split.final_amount * 100),  # Convert to cents
+                },
+                'quantity': 1,
+            }],
+            metadata={
+                'booking_id': str(booking.id),
+                'payment_type': 'final',
+                'customer_name': booking.name,
+                'customer_email': booking.email,
+            },
+            after_completion={
+                'type': 'redirect',
+                'redirect': {
+                    'url': f'{settings.SITE_URL}/quotes/booking/confirmation/{booking.id}/',
+                },
+            },
+            allow_promotion_codes=True,
+            billing_address_collection='required',
+            phone_number_collection={
+                'enabled': True,
+            },
+        )
+        
+        # Save payment link details
+        split.final_payment_link_id = payment_link.id
+        split.final_payment_link_url = payment_link.url
+        split.final_payment_link_created_at = timezone.now()
+        # Set expiration to 30 days from now
+        split.final_payment_link_expires_at = timezone.now() + timezone.timedelta(days=30)
+        split.save()
+        
+        print(f"✅ Created payment link for booking {booking.id}: {payment_link.url}")
+        
+        return {
+            'payment_link_id': payment_link.id,
+            'payment_link_url': payment_link.url,
+            'already_exists': False
+        }
+        
+    except stripe.error.StripeError as e:
+        print(f"❌ Stripe error creating payment link for booking {booking.id}: {e}")
+        return None
+    except Exception as e:
+        print(f"❌ Error creating payment link for booking {booking.id}: {e}")
+        return None
+
+
+def send_final_payment_email(booking, payment_link_url):
+    """Send email with final payment link to customer"""
+    try:
+        from django.core.mail import send_mail
+        from django.template.loader import render_to_string
+        from django.conf import settings
+        
+        subject = f'Final Payment Required - Booking #{booking.id}'
+        
+        # Create email context
+        context = {
+            'booking': booking,
+            'payment_link_url': payment_link_url,
+            'final_amount': booking.get_payment_split().final_amount,
+            'site_url': settings.SITE_URL,
+        }
+        
+        # Render email template
+        html_message = render_to_string('emails/final_payment_required.html', context)
+        plain_message = render_to_string('emails/final_payment_required.txt', context)
+        
+        # Send email
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            html_message=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[booking.email],
+            fail_silently=False,
+        )
+        
+        print(f"✅ Sent final payment email to {booking.email} for booking {booking.id}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error sending final payment email for booking {booking.id}: {e}")
+        return False
+
+
+def create_full_payment_link(booking):
+    """Create a Stripe Payment Link for the full 100% payment"""
+    try:
+        print(f"🔍 Creating full payment link for booking {booking.id}")
+        
+        # Get payment split
+        split = booking.get_payment_split()
+        
+        # Check if any payment has been made
+        if split.deposit_paid or split.final_paid:
+            print(f"❌ Cannot create full payment link - partial payments already made for booking {booking.id}")
+            return None
+        
+        # Check if payment link already exists and is still valid
+        if split.final_payment_link_id and split.final_payment_link_url:
+            try:
+                # Check if the payment link is still active
+                payment_link = stripe.PaymentLink.retrieve(split.final_payment_link_id)
+                if payment_link.active:
+                    print(f"✅ Payment link already exists and is active for booking {booking.id}")
+                    return {
+                        'payment_link_id': split.final_payment_link_id,
+                        'payment_link_url': split.final_payment_link_url,
+                        'already_exists': True
+                    }
+            except stripe.error.InvalidRequestError:
+                # Payment link doesn't exist or is inactive, create a new one
+                pass
+        
+        # Create Stripe Payment Link
+        payment_link = stripe.PaymentLink.create(
+            line_items=[{
+                'price_data': {
+                    'currency': settings.STRIPE_CURRENCY,
+                    'product_data': {
+                        'name': f'Full Payment - Booking #{booking.id}',
+                        'description': f'Full 100% payment for {booking.service_cat.name} service',
+                    },
+                    'unit_amount': int(split.total_amount * 100),  # Convert to cents
+                },
+                'quantity': 1,
+            }],
+            metadata={
+                'booking_id': str(booking.id),
+                'payment_type': 'full',
+                'customer_name': booking.name,
+                'customer_email': booking.email,
+            },
+            after_completion={
+                'type': 'redirect',
+                'redirect': {
+                    'url': f'{settings.SITE_URL}/quotes/booking/confirmation/{booking.id}/',
+                },
+            },
+            allow_promotion_codes=True,
+            billing_address_collection='required',
+            phone_number_collection={
+                'enabled': True,
+            },
+        )
+        
+        # Save payment link details
+        split.final_payment_link_id = payment_link.id
+        split.final_payment_link_url = payment_link.url
+        split.final_payment_link_created_at = timezone.now()
+        # Set expiration to 30 days from now
+        split.final_payment_link_expires_at = timezone.now() + timezone.timedelta(days=30)
+        split.save()
+        
+        print(f"✅ Created full payment link for booking {booking.id}: {payment_link.url}")
+        
+        return {
+            'payment_link_id': payment_link.id,
+            'payment_link_url': payment_link.url,
+            'already_exists': False
+        }
+        
+    except stripe.error.StripeError as e:
+        print(f"❌ Stripe error creating full payment link for booking {booking.id}: {e}")
+        return None
+    except Exception as e:
+        print(f"❌ Error creating full payment link for booking {booking.id}: {e}")
+        return None
+
+
+def send_full_payment_email(booking, payment_link_url):
+    """Send email with full payment link to customer"""
+    try:
+        from django.core.mail import send_mail
+        from django.template.loader import render_to_string
+        from django.conf import settings
+        
+        subject = f'Payment Required - Booking #{booking.id}'
+        
+        # Create email context
+        context = {
+            'booking': booking,
+            'payment_link_url': payment_link_url,
+            'total_amount': booking.get_payment_split().total_amount,
+            'site_url': settings.SITE_URL,
+        }
+        
+        # Render email template
+        html_message = render_to_string('emails/full_payment_required.html', context)
+        plain_message = render_to_string('emails/full_payment_required.txt', context)
+        
+        # Send email
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            html_message=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[booking.email],
+            fail_silently=False,
+        )
+        
+        print(f"✅ Sent full payment email to {booking.email} for booking {booking.id}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error sending full payment email for booking {booking.id}: {e}")
+        return False
 
 
 @csrf_exempt
