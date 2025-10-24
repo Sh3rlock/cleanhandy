@@ -7,13 +7,9 @@ echo "🚀 Starting CleanHandy in Docker container..."
 export PYTHONUNBUFFERED=1
 export DJANGO_SETTINGS_MODULE=cleanhandy.settings
 
-# Wait for database to be ready
-echo "⏳ Waiting for database connection..."
-max_attempts=30
-attempt=0
-
-while [ $attempt -lt $max_attempts ]; do
-    if python -c "
+# Function to test database connection
+test_db_connection() {
+    python -c "
 import os
 import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cleanhandy.settings')
@@ -26,14 +22,23 @@ try:
 except Exception as e:
     print(f'Database connection failed: {e}')
     exit(1)
-" 2>/dev/null; then
+" 2>/dev/null
+}
+
+# Wait for database to be ready
+echo "⏳ Waiting for database connection..."
+max_attempts=60
+attempt=0
+
+while [ $attempt -lt $max_attempts ]; do
+    if test_db_connection; then
         echo "✅ Database is ready!"
         break
     fi
     
     attempt=$((attempt + 1))
-    echo "⏳ Database attempt $attempt/$max_attempts - waiting 5 seconds..."
-    sleep 5
+    echo "⏳ Database attempt $attempt/$max_attempts - waiting 3 seconds..."
+    sleep 3
 done
 
 if [ $attempt -eq $max_attempts ]; then
@@ -41,16 +46,22 @@ if [ $attempt -eq $max_attempts ]; then
     echo "🚀 Starting app anyway (migrations will run on first request)..."
 fi
 
-# Run migrations
+# Run migrations (with error handling)
 echo "📊 Running database migrations..."
-python manage.py migrate --noinput
+if python manage.py migrate --noinput; then
+    echo "✅ Migrations completed successfully!"
+else
+    echo "⚠️  Migrations failed, but continuing..."
+fi
 
 # Start the application
 echo "🌐 Starting Gunicorn server on port ${PORT:-8000}..."
 exec gunicorn cleanhandy.wsgi:application \
     --bind 0.0.0.0:${PORT:-8000} \
-    --workers 2 \
-    --timeout 120 \
+    --workers 1 \
+    --timeout 300 \
     --keep-alive 2 \
     --max-requests 1000 \
-    --max-requests-jitter 100
+    --max-requests-jitter 100 \
+    --access-logfile - \
+    --error-logfile -
