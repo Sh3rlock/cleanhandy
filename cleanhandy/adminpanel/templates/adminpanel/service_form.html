@@ -1,0 +1,13 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block content %}
+<h2>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Sub-Service</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>
+
+<a href="{% url 'service_list' %}" class="btn btn-secondary mt-3">Back to Services</a>
+{% endblock %}

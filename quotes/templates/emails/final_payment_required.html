@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Payment Required - Booking #{{ booking.id }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #F15A29;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+        }
+        .payment-button {
+            display: inline-block;
+            background-color: #F15A29;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .payment-button:hover {
+            background-color: #d14a1f;
+        }
+        .booking-details {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #F15A29;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Final Payment Required</h1>
+        <p>Booking #{{ booking.id }}</p>
+    </div>
+    
+    <div class="content">
+        <h2>Hello {{ booking.name }},</h2>
+        
+        <p>Great news! Your {{ booking.service_cat.name }} service has been completed successfully. Now it's time to complete your payment.</p>
+        
+        <div class="booking-details">
+            <h3>Booking Details:</h3>
+            <p><strong>Service:</strong> {{ booking.service_cat.name }}</p>
+            <p><strong>Date:</strong> {{ booking.date|date:"F j, Y" }}</p>
+            <p><strong>Time:</strong> {{ booking.hour|time:"g:i A" }}</p>
+            {% if booking.address %}
+            <p><strong>Address:</strong> {{ booking.address }}</p>
+            {% endif %}
+        </div>
+        
+        <div style="text-align: center;">
+            <p><strong>Final Payment Amount:</strong></p>
+            <div class="amount">${{ final_amount|floatformat:2 }}</div>
+            
+            <a href="{{ payment_link_url }}" class="payment-button">
+                Complete Final Payment
+            </a>
+        </div>
+        
+        <p><strong>Important:</strong></p>
+        <ul>
+            <li>This payment link will expire in 30 days</li>
+            <li>You can pay using any major credit card</li>
+            <li>You'll receive a receipt via email after payment</li>
+        </ul>
+        
+        <p>If you have any questions or need assistance, please don't hesitate to contact us.</p>
+        
+        <p>Thank you for choosing our services!</p>
+    </div>
+    
+    <div class="footer">
+        <p>This is an automated message. Please do not reply to this email.</p>
+        <p>If you need assistance, contact us at <a href="mailto:support@thecleanhandy.com">support@thecleanhandy.com</a></p>
+    </div>
+</body>
+</html>

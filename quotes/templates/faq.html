@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+  <meta charset="utf-8">
+  <title>Frequently Asked Questions | CleanHandy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;line-height:1.6;margin:20px;color:#222;}
+    h1,h2,h3{margin-top:1.4em;line-height:1.2;}
+    h1{font-size:2rem;}
+    h2{font-size:1.4rem;border-bottom:2px solid #ddd;padding-bottom:4px;}
+    .faq-list{margin:2em 0;}
+    .faq-q{font-weight:bold;margin-top:1.2em;}
+    .faq-a{margin-bottom:1em;}
+  </style>
+  <section>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12">
+<article>
+  <h1>Frequently Asked Questions</h1>
+  <div class="faq-list">
+    <div class="faq-q">Q: How do I book a cleaning or handyman service?</div>
+    <div class="faq-a">A: Simply select your desired service from the homepage or services menu, fill out the booking form, and follow the prompts to confirm your appointment.</div>
+    <div class="faq-q">Q: Can I reschedule or cancel my booking?</div>
+    <div class="faq-a">A: Yes, you can reschedule or cancel your booking from your profile page, subject to our cancellation policy.</div>
+    <div class="faq-q">Q: How do I contact customer support?</div>
+    <div class="faq-a">A: You can reach us at <a href="mailto:support@cleanhandy.com">support@cleanhandy.com</a> or via the contact form on our website.</div>
+    <div class="faq-q">Q: What areas do you serve?</div>
+    <div class="faq-a">A: We currently serve all five boroughs of New York City.</div>
+    <div class="faq-q">Q: What payment methods are accepted?</div>
+    <div class="faq-a">A: We accept all major credit and debit cards through our secure online payment system.</div>
+    <div class="faq-q">Q: What is included in a standard cleaning or handyman service?</div>
+    <div class="faq-a">A: Each service includes the tasks listed in the service description. For cleaning, this typically covers dusting, vacuuming, mopping, and bathroom/kitchen cleaning. Handyman services include basic repairs, installations, and maintenance. For specific requests, please mention them when booking.</div>
+
+    <div class="faq-q">Q: How do I pay for my booking?</div>
+    <div class="faq-a">A: All payments are processed securely online via Stripe. We accept all major credit and debit cards. Your card will be pre-authorized at booking and charged after the service is completed or in accordance with our cancellation policy.</div>
+
+    <div class="faq-q">Q: When is my card charged?</div>
+    <div class="faq-a">A: Your card is pre-authorized when you book. The actual charge occurs after the service is completed, or if you cancel within the non-refundable window, as outlined in our cancellation policy.</div>
+
+    <div class="faq-q">Q: What is your cancellation and refund policy?</div>
+    <div class="faq-a">A: You can cancel for a full refund if you do so at least 24 hours before the scheduled start. Cancellations less than 24 hours but more than 3 hours before start receive a 50% refund. Cancellations within 3 hours or no-shows are non-refundable. You may reschedule once for free if requested at least 24 hours in advance.</div>
+
+    <div class="faq-q">Q: How do I report a problem with my service?</div>
+    <div class="faq-a">A: Please email support@cleanhandy.com within 24 hours of your service, providing details and photos if possible. We will investigate and may offer a re-service, partial, or full refund depending on the situation.</div>
+
+    <div class="faq-q">Q: Are your Pros background checked and insured?</div>
+    <div class="faq-a">A: Yes, all Pros are required to pass background checks and provide proof of required licenses and insurance before joining our platform.</div>
+
+    <div class="faq-q">Q: How is my personal information used?</div>
+    <div class="faq-a">A: We use your information to process bookings, payments, and provide customer support. We do not sell your personal data. For more details, see our <a href="{% url 'privacy' %}">Privacy Policy</a>.</div>
+
+    <div class="faq-q">Q: Can I delete my account and data?</div>
+    <div class="faq-a">A: Yes, you can request account deletion at any time from your dashboard or by contacting privacy@cleanhandy.com. Some data may be retained for legal or regulatory reasons.</div>
+
+    <div class="faq-q">Q: What if I need to change my booking details?</div>
+    <div class="faq-a">A: You can update your booking details or reschedule from your profile page, subject to our reschedule policy. Contact support if you need assistance.</div>
+
+    <div class="faq-q">Q: What happens if a Pro cancels my booking?</div>
+    <div class="faq-a">A: If a Pro cancels, we will notify you as soon as possible and help you rebook with another available Pro or issue a full refund if preferred.</div>
+
+    <div class="faq-q">Q: Is my payment information secure?</div>
+    <div class="faq-a">A: Yes, all payment processing is handled by Stripe, a PCI-DSS compliant provider. We do not store your full card details on our servers.</div>
+
+    <div class="faq-q">Q: Can I leave a review for my Pro?</div>
+    <div class="faq-a">A: Absolutely! After your service is completed, you can leave a star rating and written review from your profile page.</div>
+
+    <div class="faq-q">Q: What should I do to prepare for my service?</div>
+    <div class="faq-a">A: Please ensure safe and sanitary access to your location, secure valuables, and provide any necessary instructions or access codes in advance.</div>
+
+    <!-- Add more FAQs as needed -->
+  </div>
+</article>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %} 

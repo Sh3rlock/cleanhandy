@@ -1,0 +1,2 @@
+web: gunicorn quotes.wsgi --log-file
+web: python manage.py migrate && gunicorn quotes.wsg

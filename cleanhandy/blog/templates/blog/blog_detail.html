@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<!-- blog-details -->
+<div id="comment-message" class="mt-2 text-sm"></div>
+</form>
+<section class="blog-details">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="blog-details-wrapper">
+                    <div class="meta-pill">
+                        {% for tag in post.tags.all %}
+                            <span class="tag">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="blog-details-top-title">
+                        <h3>{{ post.title }}</h3>
+                    </div>
+                    <div class="blog-meta-list">
+                        <ul>
+                            <li><i class="fa-light fa-clock"></i> {{ post.created_at|date:"F j, Y H:i" }}</li>
+                            
+                            <li><div class="border"></div></li>
+                            <li><i class="fa-light fa-eye"></i> 5 Min Read</li>
+                        </ul>
+                    </div>
+                    <div class="blog-thumbnail">
+                        <img src="{{ post.featured_image.url }}" alt="image">
+                    </div>
+
+                    <div class="blog-post-wrapper">
+                        <div class="blog-post-title">
+                            <p>In today's fast-paced world, on-demand services have become an integral part of our lives, offering convenience, efficiency, and flexibility. In this blog post, we'll delve into the latest trends and innovations on-demand services, technologies to evolving consumer Mamnun Khan.</p>
+                            <p>Explore how artificial intelligence and automation are revolutionizing the on-demand industry, streamlining processes, and enhancing user experiences. Explore the expanding range of services available on-demand.</p>
+                        </div>
+                    </div>
+
+                    <div class="blog-post-wrapper">
+                        
+
+                        <div class="comments">
+                            <div class="comments-title">
+                                <h4>Comments</h4>
+                            </div>
+                            <div class="row">
+                                <div class="col-xl-9">
+                                    <ul>
+                                        {% for comment in comments %}
+                                        <li>
+                                            <div class="comment-wrapper">
+                                                <div class="comments-image">
+                                                    <img src="{% static 'images/default-user.png' %}" alt="image">
+                                                </div>
+                                                <div class="comments-content">
+                                                    <div class="comments-content-info">
+                                                        <div class="comments-content-info-inner">
+                                                            <h6>{{ comment.name }}</h6>
+                                                            <span class="comments-time">{{ comment.created_at|date:"F j, Y H:i" }}</span>
+                                                        </div>
+                                                        <div class="reply">
+                                                            <a href="#0"class="btn-1">Reply</a>
+                                                        </div>
+                                                    </div>
+                                                    <p>{{ comment.content }}</p>
+                                                </div>
+                                            </div>
+                                            <ul>
+                                                <li>
+                                                    <div class="comment-wrapper">
+                                                        <div class="comments-image">
+                                                            <img src="{% static 'assets/images/team/comments-2.png' %}" alt="image">
+                                                        </div>
+                                                        <div class="comments-content">
+                                                            <div class="comments-content-info">
+                                                                <div class="comments-content-info-inner">
+                                                                    <h6>Michael jordan</h6>
+                                                                    <span class="comments-time">20 August, 2024</span>
+                                                                </div>
+                                                                <div class="reply">
+                                                                    <a href="#0" class="btn-1">Reply</a>
+                                                                </div>
+                                                            </div>
+                                                            <p>Globally syndicate economically sound core competencies luctus Interactively synthesize intuitive niches technology.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        {% empty %}
+                                            <p>No comments yet.</p>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="leave-comments">
+                            <h5>Write a Comment</h5>
+                            <div class="leave-comments-form">
+                                <form id="comment-form" method="post">
+                                    {% csrf_token %}
+                                    {{ form.as_p }}
+                                <div class="form">
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="leave-comments-input">
+                                                <input type="text" name="name" class="cmn-input" placeholder="Enter Name">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="leave-comments-input">
+                                                <input type="email" name="email" class="cmn-input" placeholder="Enter Email">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="leave-comments-input">
+                                                <input type="text" name="subject" class="cmn-input" placeholder="Subject">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <div class="textarea-box">
+                                                <textarea name="message" class="cmn-input" >Write Message</textarea>
+                                                <i class="fa-thin fa-pen-nib"></i>
+                                            </div>
+                                            <div class="checkbox-input">
+                                                <input type="checkbox" class="form-check-input">
+                                                <label>I agree with all the terms & conditions</label>
+                                            </div> 
+                                            <button type="submit" class="btn-1"> Post Commnet <i class="icon-arrow-1"></i></button>
+                                        </div> 
+                                    </div>
+                                </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="blog-sidebar">
+
+                    
+
+                    <div class="sidebar-content">
+                        <div class="recent-post">
+
+                            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                  <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">Popular</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                  <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Recent</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                  <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill" data-bs-target="#pills-contact" type="button" role="tab" aria-controls="pills-contact" aria-selected="false">Trendy</button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content" id="pills-tabContent">
+                                <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/recent-post-1.png' %}" alt="image">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
+                                            <a href="#0">Clean and well-maintained spaces provide... </a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/recent-post-2.png' %}" alt="image">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <span><i class="fa-light fa-clock"></i> Oct 22, 2024</span>
+                                            <a href="#0">Creative plan to build better world for upcoming.. </a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/recent-post-3.png' %}" alt="image">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
+                                            <a href="#0">Explain to the public what you do want to create...  </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/recent-post-2.png' %}" alt="image">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <span><i class="fa-light fa-clock"></i> Oct 22, 2024</span>
+                                            <a href="#0">Creative plan to build better world for upcoming.. </a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/recent-post-1.png' %}" alt="image">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
+                                            <a href="#0">Clean and well-maintained spaces provide... </a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/recent-post-3.png' %}" alt="image">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
+                                            <a href="#0">Explain to the public what you do want to create...  </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="pills-contact" role="tabpanel" aria-labelledby="pills-contact-tab">
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/recent-post-3.png' %}" alt="image">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
+                                            <a href="#0">Explain to the public what you do want to create...  </a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/recent-post-1.png' %}" alt="image">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <span><i class="fa-light fa-clock"></i> Dec 22, 2024</span>
+                                            <a href="#0">Clean and well-maintained spaces provide... </a>
+                                        </div>
+                                    </div>
+                                    <div class="recent-post-list">
+                                        <div class="recent-post-image">
+                                            <img src="{% static 'assets/images/blog/recent-post-2.png' %}" alt="image">
+                                        </div>
+                                        <div class="recent-post-info">
+                                            <span><i class="fa-light fa-clock"></i> Oct 22, 2024</span>
+                                            <a href="#0">Creative plan to build better world for upcoming.. </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-content pb_50">
+                        <div class="tag-cloud">
+                            <h5>Tag Cloud</h5>
+                            <div class="tag-cloud-list">
+                                {% for tag in post.tags.all %}
+                                <a href="#0" class="btn-1">{{ tag.name }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- blog-details -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const commentForm = document.getElementById("comment-form");
+      const messageBox = document.getElementById("comment-message");
+    
+      commentForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+    
+        const formData = new FormData(commentForm);
+    
+        fetch(window.location.pathname + 'comment/', {
+          method: "POST",
+          headers: {
+            'X-CSRFToken': commentForm.querySelector('[name=csrfmiddlewaretoken]').value,
+          },
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          messageBox.innerText = data.message;
+          messageBox.className = "mt-2 text-sm";
+          if (data.status === "success") {
+            messageBox.classList.add("text-green-600");
+            commentForm.reset();
+          } else {
+            messageBox.classList.add("text-red-600");
+          }
+        })
+        .catch(() => {
+          messageBox.innerText = "Something went wrong. Please try again.";
+          messageBox.classList.add("text-red-600");
+        });
+      });
+    });
+    </script>
+    
+
+{% endblock %}

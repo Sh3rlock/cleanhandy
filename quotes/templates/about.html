@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+    .service-tow-single-img {
+        height: auto !important;
+        }
+
+    .service-tow-single-img img {
+        width: 100%;
+        height: 180px !important;
+        border-radius: 8px;
+        transition: 0.5s;
+    }
+
+    .about-page {
+        padding: 10px 0 0px !important;
+    }
+
+    .featured {
+        padding: 20px 0 100px;
+    }
+
+    .featured-single-info a {
+        padding: 8px 35px !important;
+    }
+</style>
+
+<!-- common banner -->
+<section class="common-banner" style="position: relative;">
+    <div class="bg-layer" style="background: url({% static '/assets/images/background/common-banner-bg.jpg' %});"></div>
+    <div class="common-banner-content">
+        <h3>About Us</h3>
+        <div class="breadcrumb">
+            <ul>
+              <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+              <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> About Us</li>
+            </ul>
+        </div>
+              {% if user.is_authenticated %}
+        <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+      {% else %}
+        <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+      {% endif %}
+        <!-- {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
+        {% endif %} -->
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+        {% endif %}
+        {% for service in all_services %}
+          {% if service.category.name|lower == 'post event cleaning' %}
+            {% if user.is_authenticated %}
+              <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+            {% else %}
+              <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+    </div>
+  </section>
+  <!-- common banner -->
+
+<!-- about page -->
+<section class="about-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-5">
+                <div class="about-page-left">
+                    <div class="yellow-shape"></div>
+                    <div class="pink-shape"></div>
+                    
+                    <div class="about-page-left-image">
+                        <img src="{% static 'assets/images/resource/aboutus.png' %}" alt="CleanHandy team at work">
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="rewards-left-container">
+                    <div class="rewards-left-container-inner">
+                        <div class="common-title mb_30">
+                            {% if about_content %}
+                                <h6><i class="fa-solid fa-angles-right"></i> {{ about_content.subtitle }}</h6>
+                                <h3><strong>{{ about_content.title }}</strong></h3>
+                                {{ about_content.content|safe }}
+                            {% else %}
+                                <h6><i class="fa-solid fa-angles-right"></i> ABOUT COMPANY</h6>
+                                <h3><strong>About Us</strong></h3>
+                                <p><strong>The CleanHandy</strong> was founded in 2025 with a clear mission: to make everyday life easier through dependable, professional, and high-quality cleaning and handyman services. Although the brand is young, our team brings over a decade of hands-on industry experience to every job we take on.</p>
+
+                                <p>We pride ourselves on combining modern tools and eco-friendly products with a passion for precision and reliability. Whether you need help transforming your space, maintaining it, or preparing it for something new — CleanHandy is the name you can trust.</p>
+
+                                <p><strong>Why choose CleanHandy?</strong></p>
+                                <div class="rewards-left-list">
+                                <ul>
+                                    <li><i class="fa-sharp fa-light fa-circle-check"></i> Founded in 2025 with a professional team behind it</li>
+                                    <li><i class="fa-sharp fa-light fa-circle-check"></i> Over 12 years of combined industry experience</li>
+                                    <li><i class="fa-sharp fa-light fa-circle-check"></i> Fully insured, trained, and background-checked professionals</li>
+                                    <li><i class="fa-sharp fa-light fa-circle-check"></i> Safe, sustainable, and effective cleaning solutions</li>
+                                    <li><i class="fa-sharp fa-light fa-circle-check"></i> Honest pricing and customizable service plans</li>
+                                    <li><i class="fa-sharp fa-light fa-circle-check"></i> Responsive support and 100% satisfaction guarantee</li>
+                                </ul>
+                                </div>
+
+                                <p>Whether you're managing a home, a rental property, or a business, our skilled technicians are ready to help. At CleanHandy, we take care of the chores and fixes — so you can enjoy peace of mind and more free time.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- about page -->
+
+<!-- featured -->
+<section class="featured">
+    <div class="container">
+      <div class="common-title">
+        <img src="{% static '/assets/images/shape/title-shape-1.png' %}" alt="shape" />
+        <h6>Our Services</h6>
+      </div>
+      <div class="row">
+        {% for service in services %}
+        <div class="col-lg-3 col-md-6" style="padding-bottom: 20px;">
+          <div class="service-tow-single">
+              <div class="service-tow-single-img">
+                  <img src="{{ service.service_detail_image.url }}" alt="image">
+              </div>
+              <div class="service-tow-single-content">
+                    {% if service.category.name|lower == "cleaning" %}
+                        <a href="{% url 'request_cleaning_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
+                        <div class="service-tow-single-rating">
+                            <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
+                        </div>
+                        <div class="featured-single-info">
+                            {% if user.is_authenticated %}
+                                <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Now</a>
+                            {% else %}
+                                <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Now</a>
+                            {% endif %}
+                            <div class="featured-single-info-left">
+                            </div>
+                        </div>
+                    {% elif service.category.name|lower == "post event cleaning" %}
+                        <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
+                        <div class="service-tow-single-rating">
+                            <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
+                        </div>
+                        <div class="featured-single-info">
+                            <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Get Quote</a>
+                            <div class="featured-single-info-left">
+                            </div>
+                        </div>
+                    {% elif service.category.name|lower == "handyman" %}
+                        <a href="{% url 'request_handyman_quote' service.id %}" class="service-tow-single-title">{{ service.name }}</a>
+                        <div class="service-tow-single-rating">
+                            <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
+                        </div>
+                        <div class="featured-single-info">
+                            <a class="btn-1" href="{% url 'request_handyman_quote' service.id %}">Get a Quote</a>
+                            <div class="featured-single-info-left">
+                            </div>
+                        </div>
+                    {% endif %}
+                  
+              </div>
+          </div>
+        </div>
+        {% endfor %}
+        
+      </div>
+    </div>
+  </section>
+  <!-- featured -->
+
+{% endblock %}

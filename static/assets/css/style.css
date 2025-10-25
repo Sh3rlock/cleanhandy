@@ -1,0 +1,61 @@
+/* ----------------------------------------------------------
+TABLE OF CONTENT         
+-------------------------------------------------------------
+* 1. imported styles 
+* 2. preloader styles 
+* 3. header styles
+* 4. banner styles 
+* 5. footer styles 
+* 6. categories styles 
+* 7. services styles 
+* 8. featured styles
+* 9. reward styles 
+* 10. pricing styles 
+* 11. counter styles 
+* 12. blog styles 
+* 13. testimonial styles 
+* 14. app styles 
+* 15. search bar styles  
+* 16. choose styles  
+* 17. contact styles   
+-------------------------------------------------------------
+TABLE OF CONTENT         
+------------------------------------------------------------ */
+
+
+/* module css */
+@import url('module-css/01-header.css');
+@import url('module-css/02-mobile-menu.css');
+@import url('module-css/03-banner.css');
+@import url('module-css/04-footer.css');
+@import url('module-css/05-categories.css');
+@import url('module-css/06-services.css');
+@import url('module-css/07-featured.css');
+@import url('module-css/08-rewards.css');
+@import url('module-css/09-pricing.css');
+@import url('module-css/10-counter.css');
+@import url('module-css/11-blog.css');
+@import url('module-css/12-testimonial.css');
+@import url('module-css/13-app.css');
+@import url('module-css/14-search-bar.css');
+@import url('module-css/15-choose.css');
+@import url('module-css/16-contact.css');
+
+
+/* css plugings */
+@import url('01-global.css');
+@import url('bootstrap.css');
+@import url('color.css');
+@import url('responsive.css');
+@import url('all.min.css');
+@import url('animate.css');
+@import url('search-popup.css');
+@import url('flatpickr-min.css');
+@import url('icomoon.css');
+@import url('swiper.min.css');
+@import url('elpath.css');
+@import url('select2.min.css');
+@import url('nice-select.css');
+@import url('odometer-theme-default.css');
+@import url('magnific-popup.css');
+@import url('nouislider.min.css');

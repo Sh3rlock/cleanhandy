@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+{% load static %}
+{% load form_tags %}
+{% block content %}
+
+<style>
+  .nav-link {
+    padding: 10px 18px;
+    font-weight: 500;
+    color: #000 !important;
+    border-radius: 10px;
+    transition: all 0.2s ease-in-out;
+    background-color: transparent;
+    border: 1px solid transparent;
+  }
+  
+  .nav-link:hover {
+    background-color: #f3f3f3;
+    text-decoration: none;
+  }
+  
+  .nav-link.active {
+    background-color: #F15A29 !important; /* Blue background */
+    color: #fff !important;
+    font-weight: 600;
+  }
+  
+  .custom-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+  }
+
+  .custom-modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 1rem;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  }
+
+  .custom-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .custom-modal-close {
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
+  .custom-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .list-group-item.active {
+    z-index: 2;
+    color: var(--bs-list-group-active-color);
+    background-color: #F15A29 !important;
+    border-color: #F15A29 !important;
+  }
+
+  .cmn-input {
+    border-radius: 8px;
+    border: 1px solid #F15A29;
+    background: var(--white-color);
+    padding: 10px 10px;
+    width: 100%;
+    margin-bottom: 5px !important;
+  }
+
+  .delete-address-btn {
+    font-size: 0.85rem;
+  }
+
+  .bg-layer {
+    height: 80% !important;
+  }
+
+  .common-banner {
+    padding: 30px 0 70px !important;
+    }
+
+  .service-details {
+    padding: 0px 0 !important;
+  }
+
+  .leave-comments-form textarea {
+    width: 100%;
+    height: 150px !important;
+  }
+
+</style>
+
+<!-- common banner -->
+<section class="common-banner" style="position: relative;">
+  <div class="bg-layer" style="background: url({% static '/assets/images/background/common-banner-bg.jpg' %});"></div>
+  <div class="common-banner-content">
+      <h3>Profile Page</h3>
+      <div class="breadcrumb">
+          <ul>
+            <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> My Profile</li>
+          </ul>
+      </div>
+      {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+        {% endif %}
+        <!-- {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
+        {% endif %} -->
+        {% if user.is_authenticated %}
+        <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+      {% else %}
+        <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+      {% endif %}
+      {% for service in all_services %}
+        {% if service.category.name|lower == 'post event cleaning' %}
+          {% if user.is_authenticated %}
+            <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+          {% else %}
+            <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+  </div>
+</section>
+<!-- common banner -->
+
+<section class="service-details mb-4" style="margin-top:-50px">
+  <div class="container">
+
+   <!-- Include Navigation Menu -->
+   {% include 'accounts/partials/navigation_menu.html' %}
+
+    
+<div class="row">
+  
+  <div class="col-lg-7">
+    <!-- Main content below -->
+    <div>
+      <h3>Hello, {{ request.user.username }}!</h3>
+      <p>Welcome to your profile page.</p>
+    </div>
+
+    <div class="row">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+          <fieldset>
+            <legend>Basic Info</legend>
+            {{ user_form.as_p }}
+            {{ profile_form.as_p }}
+          </fieldset>
+
+          <div class="card mb-4 shadow-sm" style="border: 1px solid #F15A29;">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Select Address</h5>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddAddressModal()">
+                  + Add New Address
+                </button>
+              </div>
+
+            <div id="address-container">
+              {% for address in profile.addresses.all %}
+              <div class="card mb-3 address-entry">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <strong>Address — {{ address.street_address }}</strong>
+                  <button type="button" class="btn btn-sm btn-danger" onclick="openCustomModal(this)">Remove</button>
+                </div>
+                <div class="card-body">
+                  <div class="row g-3">
+                    <div class="col-md-5">
+                      <label class="form-label">Street Address</label>
+                      <input type="text" name="addresses[][street_address]" value="{{ address.street_address }}" placeholder="Street Address" class="cmn-input" required>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Apt/Suite</label>
+                      <input type="text" name="addresses[][apt_suite]" value="{{ address.apt_suite }}" placeholder="Apt/Suite" class="cmn-input">
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label">ZIP Code</label>
+                      <input type="text" name="addresses[][zip_code]" value="{{ address.zip_code }}" placeholder="ZIP Code" class="cmn-input" required>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          </div>
+
+          <button type="submit" class="btn-1 w-100">Save Profile</button>
+        </form>
+      
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <!-- Booking options as big buttons -->
+    <div class="row mb-5">
+      <div class="col-md-12">
+        <div class="card h-100 shadow-sm border-0 text-center p-4">
+          <div class="card-body">
+            <h4 class="mb-3">🧼 Book Home Cleaning</h4>
+            <p class="mb-4">Schedule a professional cleaning with flexible extras and recurring options.</p>
+                          <a href="{% url 'cleaning_booking' %}" class="btn-1 w-100">Book Home Cleaning</a>
+          </div>
+        </div>
+      </div>
+      <!-- <div class="col-md-12 mt-4">
+        <div class="card h-100 shadow-sm border-0 text-center p-4">
+          <div class="card-body">
+            <h4 class="mb-3">🛠️ Book Handyman</h4>
+            <p class="mb-4">Need help with home repairs, installations, or improvements?</p>
+            <a href="{% url 'request_handyman_booking' %}" class="btn-1 w-100">Book Handyman</a>
+          </div>
+        </div>
+      </div> -->
+      <div class="col-md-12 mt-4">
+        <div class="card h-100 shadow-sm border-0 text-center p-4">
+          <div class="card-body">
+            <h4 class="mb-3">🏢 Book Office Cleaning</h4>
+            <p class="mb-4">Professional cleaning services for offices, retail spaces, and commercial properties.</p>
+                          <a href="{% url 'office_cleaning_booking' %}" class="btn-1 w-100">Book Office Cleaning</a>
+          </div>
+        </div>
+      </div>
+      {% for service in all_services %}
+        {% if service.category.name|lower == 'post event cleaning' %}
+          <div class="col-md-12 mt-4">
+            <div class="card h-100 shadow-sm border-0 text-center p-4">
+              <div class="card-body">
+                <h4 class="mb-3">🎉 Post Event Cleaning</h4>
+                <p class="mb-4">Professional post-event cleanup services for weddings, parties, and special occasions.</p>
+                <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="btn-1 w-100">Post Event Cleaning</a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+  </div>
+</section>
+
+
+{% block modals %}
+<div id="customConfirmModal" class="custom-modal">
+  <div class="custom-modal-content">
+    <div class="custom-modal-header">
+      <h5>Confirm Deletion</h5>
+      <span class="custom-modal-close" onclick="closeCustomModal()">&times;</span>
+    </div>
+    <div class="custom-modal-body">
+      Are you sure you want to remove this address?
+    </div>
+    <div class="custom-modal-footer">
+      <button onclick="closeCustomModal()" class="btn btn-secondary">Cancel</button>
+      <button id="customConfirmDeleteBtn" class="btn btn-danger">Delete</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+<!-- Custom Add Address Modal -->
+<div id="customAddAddressModal" class="custom-modal" style="margin-top:50px;">
+  <div class="custom-modal-content">
+    <div class="custom-modal-header">
+      <h5>Add New Address</h5>
+      <span class="custom-modal-close" onclick="closeAddAddressModal()">&times;</span>
+    </div>
+    <form method="post" action="{% url 'add_customer_address' %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div class="form-group mb-2">
+          <label>Street Address</label>
+          <input type="text" name="street_address" class="cmn-input" required>
+        </div>
+        <div class="form-group mb-2">
+          <label>Apt / Suite</label>
+          <input type="text" name="apt_suite" class="cmn-input">
+        </div>
+        <div class="form-group mb-2">
+          <label>ZIP Code</label>
+          <input type="text" name="zip_code" class="cmn-input" required>
+        </div>
+       
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddAddressModal()">Cancel</button>
+        <button type="submit" class="btn-1">Save Address</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  let addressToRemove = null;
+
+  function openCustomModal(button) {
+    // Save the address card element to remove later
+    addressToRemove = button.closest('.address-entry');
+    document.getElementById("customConfirmModal").style.display = "block";
+  }
+
+  function closeCustomModal() {
+    addressToRemove = null;
+    document.getElementById("customConfirmModal").style.display = "none";
+  }
+
+  document.getElementById("customConfirmDeleteBtn").addEventListener("click", function () {
+    if (addressToRemove) {
+      addressToRemove.remove();
+      addressToRemove = null;
+    }
+    closeCustomModal();
+  });
+
+  // Optional: Close modal when clicking outside it
+  window.onclick = function(event) {
+    const modal = document.getElementById("customConfirmModal");
+    if (event.target === modal) {
+      closeCustomModal();
+    }
+  }
+</script>
+
+<script>
+  function addAddress() {
+    const container = document.getElementById('address-container');
+    const div = document.createElement('div');
+    div.classList.add('address-entry');
+    div.innerHTML = `
+  <div class="card mb-3 address-entry">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <strong>Address — New Address</strong>
+      <button type="button" class="btn btn-sm btn-danger" onclick="openCustomModal(this)">Remove</button>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label">Street Address</label>
+          <input type="text" name="addresses[][street_address]" placeholder="Street Address" class="cmn-input" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Apt/Suite</label>
+          <input type="text" name="addresses[][apt_suite]" placeholder="Apt/Suite" class="cmn-input">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">ZIP Code</label>
+          <input type="text" name="addresses[][zip_code]" placeholder="ZIP Code" class="cmn-input" required>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+    container.appendChild(div);
+  }
+</script>
+
+<script>
+  function openAddAddressModal() {
+    document.getElementById("customAddAddressModal").style.display = "block";
+  }
+
+  function closeAddAddressModal() {
+    document.getElementById("customAddAddressModal").style.display = "none";
+  }
+
+  window.addEventListener("click", function (event) {
+    const modal = document.getElementById("customAddAddressModal");
+    if (event.target === modal) {
+      closeAddAddressModal();
+    }
+  });
+</script>
+
+  
+
+{% endblock %}

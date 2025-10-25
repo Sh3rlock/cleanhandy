@@ -1,0 +1,705 @@
+{% extends "accounts/partials/account_base.html" %}
+{% load static %}
+{% load quote_filters %}
+{% block account_content %}
+
+<style>
+  .text-primary {
+      color: #F15A29 !important;
+    }
+    
+  .bg-primary {
+      background-color: #F15A29 !important;
+    }
+       /* Basic reset and style to match input fields */
+select {
+    -webkit-appearance: none; /* Removes default Safari styling */
+    -moz-appearance: none;
+    appearance: none;
+  
+    background-color: white;
+    border: 2px solid #e74c3c; /* Match your input border color */
+    border-radius: 8px;         /* Rounded corners like your input */
+    padding: 10px;
+    font-size: 16px;
+    width: 100%;
+  }
+  
+  /* Optional: Add a custom dropdown arrow */
+  .form-style select {
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='5'%3E%3Cpath fill='%23333' d='M0 0l5 5 5-5z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 10px 5px !important;
+  }
+  
+  /* Optional: Hide native arrow in IE */
+  select::-ms-expand {
+    display: none;
+  }  
+  
+  .flatpickr-current-month {
+    font-size: 130% !important;
+  }
+  
+  .loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+function sendPaymentLink(bookingId, paymentType) {
+  const button = event.target;
+  const originalText = button.innerHTML;
+  
+  // Show loading state
+  button.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Sending...';
+  button.disabled = true;
+  button.classList.add('loading');
+  
+  // Get CSRF token
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  
+  fetch('/adminpanel/send-payment-link/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrfToken,
+    },
+    body: JSON.stringify({
+      booking_id: bookingId,
+      payment_type: paymentType
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Show success message
+      showAlert('success', data.message);
+      
+      // If a new payment link was created, show it
+      if (data.payment_link_url) {
+        showPaymentLink(data.payment_link_url);
+      }
+      
+      // Reload page to update payment status
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      showAlert('error', data.error || 'Failed to send payment link');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    showAlert('error', 'An error occurred while sending the payment link');
+  })
+  .finally(() => {
+    // Restore button state
+    button.innerHTML = originalText;
+    button.disabled = false;
+    button.classList.remove('loading');
+  });
+}
+
+function showAlert(type, message) {
+  const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+  const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+  
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+  alertDiv.innerHTML = `
+    <i class="fa-solid ${icon} me-2"></i>${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  
+  // Insert at the top of the form
+  const form = document.querySelector('form');
+  form.insertBefore(alertDiv, form.firstChild);
+  
+  // Auto-dismiss after 5 seconds
+  setTimeout(() => {
+    if (alertDiv.parentNode) {
+      alertDiv.remove();
+    }
+  }, 5000);
+}
+
+function showPaymentLink(url) {
+  const linkDiv = document.createElement('div');
+  linkDiv.className = 'alert alert-info mt-2';
+  linkDiv.innerHTML = `
+    <strong>Payment Link Created:</strong><br>
+    <a href="${url}" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
+      <i class="fa-solid fa-external-link-alt me-1"></i>Open Payment Link
+    </a>
+  `;
+  
+  // Insert after the payment actions section
+  const paymentActions = document.querySelector('.mt-3:last-of-type');
+  paymentActions.appendChild(linkDiv);
+}
+</script>
+
+<div class="container py-4">
+  <a href="{% url 'booking_list' %}" class="text-primary mb-4"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+    Back to bookings</a>
+  <h2><i class="fa-solid fa-calendar-plus me-2 text-primary"></i> Edit Booking</h2>
+  <p class="text-muted mb-4">Modify the allowed fields for <strong>{{ booking.name }}</strong>'s booking. Uneditable information is displayed below for reference.</p>
+
+  <form method="post" class="row g-4">
+    {% csrf_token %}
+
+    <!-- Editable Section -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="mb-3"><i class="fa-solid fa-pen-to-square me-2 text-primary"></i> Editable Fields</h5>
+      
+            <!-- Status (full width) -->
+            <div class="mb-3">
+              <label for="status" class="form-label">Status</label>
+              <select name="status" class="cmn-input" required>
+                <option value="pending" {% if booking.status == "pending" %}selected{% endif %}>Pending</option>
+                <option value="confirmed" {% if booking.status == "confirmed" %}selected{% endif %}>Confirmed</option>
+                <option value="completed" {% if booking.status == "completed" %}selected{% endif %}>Completed</option>
+                <option value="cancelled" {% if booking.status == "cancelled" %}selected{% endif %}>Cancelled</option>
+              </select>
+            </div>
+      
+            <!-- Date + Time -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" name="date" class="cmn-input" value="{{ booking.date|date:'Y-m-d' }}" required>
+              </div>
+              <div class="col-md-6">
+                <label for="hour" class="form-label">Time</label>
+                <input type="time" name="hour" class="cmn-input" value="{{ booking.hour|time:'H:i' }}" required>
+              </div>
+            </div>
+      
+            <!-- Service Type Specific Fields -->
+            {% if booking.service_cat.name == "Commercial" or "office" in booking.service_cat.name|lower or "commercial" in booking.service_cat.name|lower %}
+              <!-- Commercial/Office Cleaning Fields -->
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="num_cleaners" class="form-label">Cleaners</label>
+                  <input type="number" name="num_cleaners" class="cmn-input" min="1" value="{{ booking.num_cleaners|default:1 }}">
+                </div>
+                
+                <div class="col-md-4">
+                  <label for="hours_requested" class="form-label">Hours</label>
+                  <input type="number" step="0.5" name="hours_requested" class="cmn-input" value="{{ booking.hours_requested|default:2 }}">
+                </div>
+                
+                <div class="col-md-4">
+                  <label for="price" class="form-label">Price ($)</label>
+                  <input type="number" step="0.01" name="price" class="cmn-input" value="{{ booking.price|floatformat:2 }}">
+                </div>
+              </div>
+              
+              <!-- Commercial Specific Fields -->
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="business_type" class="form-label">Business Type</label>
+                  <input type="text" name="business_type" class="cmn-input" value="{{ booking.business_type|default:'' }}" placeholder="e.g., Office, Retail, Restaurant">
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="cleaning_frequency" class="form-label">Cleaning Frequency</label>
+                  <select name="cleaning_frequency" class="cmn-input">
+                    <option value="one_time" {% if booking.cleaning_frequency == "one_time" %}selected{% endif %}>One Time</option>
+                    <option value="weekly" {% if booking.cleaning_frequency == "weekly" %}selected{% endif %}>Weekly</option>
+                    <option value="biweekly" {% if booking.cleaning_frequency == "biweekly" %}selected{% endif %}>Bi-weekly</option>
+                    <option value="monthly" {% if booking.cleaning_frequency == "monthly" %}selected{% endif %}>Monthly</option>
+                  </select>
+                </div>
+              </div>
+              
+            {% else %}
+              <!-- Residential/Home Cleaning Fields -->
+              {% if booking.is_large_home %}
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="num_cleaners" class="form-label">Cleaners</label>
+                  <input type="number" name="num_cleaners" class="cmn-input" min="1" value="{{ booking.num_cleaners }}">
+                </div>
+                
+                <div class="col-md-4">
+                  <label for="hours_requested" class="form-label">Hours</label>
+                  <input type="number" step="0.5" name="hours_requested" class="cmn-input" value="{{ booking.hours_requested }}">
+                </div>
+                <div class="col-md-4">
+                  <label for="price" class="form-label">Price ($)</label>
+                  <input type="number" step="0.01" name="price" class="cmn-input" value="{{ booking.price|floatformat:2 }}">
+                </div>
+              </div>
+              {% else %}
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="hours_requested" class="form-label">Hours</label>
+                  <input type="number" step="0.5" name="hours_requested" class="cmn-input" value="{{ booking.hours_requested }}">
+                </div>
+                <div class="col-md-6">
+                  <label for="price" class="form-label">Price ($)</label>
+                  <input type="number" step="0.01" name="price" class="cmn-input" value="{{ booking.price|floatformat:2 }}">
+                </div>
+              </div>
+            {% endif %}
+          {% endif %}
+      
+            <!-- Address + Apt -->
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <label for="address" class="form-label">Street Address</label>
+                <input type="text" name="address" class="cmn-input" value="{{ booking.address }}">
+              </div>
+              <div class="col-md-4">
+                <label for="apartment" class="form-label">Apt/Suite</label>
+                <input type="text" name="apartment" class="cmn-input" value="{{ booking.apartment }}">
+              </div>
+            </div>
+      
+            <!-- ZIP Code (full width or alone) -->
+            <div class="mb-3">
+              <label for="zip_code" class="form-label">ZIP Code</label>
+              <input type="text" name="zip_code" class="cmn-input" value="{{ booking.zip_code }}">
+            </div>
+      
+            <!-- Submit -->
+            <div class="d-flex justify-content-between">
+              <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+
+    <!-- Read-only Summary Section -->
+    <div class="col-md-6">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="mb-3"><i class="fa-solid fa-list me-2 text-primary"></i> Booking Summary</h5>
+          
+          <!-- Service Type Header -->
+          <div class="alert {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}alert-info{% else %}alert-success{% endif %} mb-3">
+            <strong>Service Type:</strong> {{ booking.service_cat.name }}
+            {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
+              <i class="fa fa-building ms-2"></i>
+            {% else %}
+              <i class="fa fa-home ms-2"></i>
+            {% endif %}
+          </div>
+          
+          <!-- Commercial/Office Specific Details -->
+          {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
+            <p><strong>Business Type:</strong> {{ booking.business_type|default:"Not specified" }}</p>
+            <p><strong>Cleaning Frequency:</strong> 
+              {% if booking.cleaning_frequency != "one_time" %}
+                {{ booking.get_cleaning_frequency_display|default:booking.cleaning_frequency|title }}
+              {% else %}
+                One-time
+              {% endif %}
+            </p>
+            <p><strong>Number of Cleaners:</strong> {{ booking.num_cleaners|default:"Not specified" }}</p>
+            <p><strong>Hours Requested:</strong> {{ booking.hours_requested|default:"Not specified" }}</p>
+            
+            <!-- Office Cleaning Pricing Breakdown -->
+            <hr>
+            <h6 class="text-primary">Pricing Breakdown</h6>
+            <p><strong>Labor Cost:</strong> ${{ booking.num_cleaners }} × {{ booking.hours_requested }}h × $75/h = ${{ booking.calculate_office_labor_cost|floatformat:2 }}</p>
+            
+            {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+            <p><strong>Frequency Discount ({{ booking.get_cleaning_frequency_display }}):</strong> -${{ booking.calculate_office_discount_amount|floatformat:2 }}</p>
+            {% endif %}
+            
+            {% if booking.extras.all %}
+            <p><strong>Additional Services:</strong>
+              {% for extra in booking.extras.all %}
+                {{ extra.name }} (+${{ extra.price }}){% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </p>
+            {% endif %}
+            
+            <p><strong>Subtotal:</strong> ${{ booking.calculate_office_subtotal|floatformat:2 }}</p>
+            <p><strong>Sales Tax (8.875%):</strong> ${{ booking.calculate_office_tax|floatformat:2 }}</p>
+            
+            {% if booking.gift_card_discount and booking.gift_card_discount > 0 %}
+            <p><strong>Gift Card Discount:</strong> -${{ booking.gift_card_discount|floatformat:2 }}</p>
+            {% endif %}
+            
+            <p><strong>Total:</strong> ${{ booking.price|floatformat:2 }}</p>
+          {% else %}
+            <!-- Residential/Home Specific Details -->
+            <p><strong>Square Footage:</strong> {{ booking.square_feet_options.name|default:"Not specified" }}</p>
+            {% if not booking.is_large_home and booking.home_types %}
+              <p><strong>Home Type:</strong> {{ booking.home_types.name }} (${{ booking.home_types.price }})</p>
+            {% endif %}
+            {% if booking.bath_count %}
+              <p><strong>Number of Bathrooms:</strong> {{ booking.get_bath_count_display }}</p>
+            {% endif %}
+            <p><strong>Is Large Home:</strong> {{ booking.is_large_home|yesno:"Yes,No" }}</p>
+            <p><strong>Recurring:</strong> 
+              {% if booking.recurrence_pattern != "one_time" %}
+                {{ booking.get_recurrence_pattern_display }}
+              {% else %}
+                One-time
+              {% endif %}
+            </p>
+            
+            <!-- Frequency Discount for Home Cleaning -->
+            {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+            <p><strong>Frequency Discount ({{ booking.get_cleaning_frequency_display }}):</strong> -${{ booking.calculate_frequency_discount_amount|floatformat:2 }}</p>
+            {% endif %}
+          {% endif %}
+          
+          <!-- Extras (common to both) -->
+          {% if booking.extras.exists %}
+            <p><strong>Additional Services:</strong></p>
+            <ul class="mb-0">
+              {% for extra in booking.extras.all %}
+                <li>{{ extra.name }} – ${{ extra.price }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+          
+          <!-- Property Access and Conditions -->
+          {% if booking.parking or booking.get_in or booking.pet %}
+            <hr>
+            <h6 class="text-primary">Property Access & Conditions</h6>
+            {% if booking.parking %}
+              <p><strong>Parking:</strong> {{ booking.parking }}</p>
+            {% endif %}
+            {% if booking.get_in %}
+              <p><strong>Access Method:</strong> {{ booking.get_get_in_display }}</p>
+            {% endif %}
+            {% if booking.pet %}
+              <p><strong>Pets:</strong> {{ booking.get_pet_display }}</p>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="mb-3"><i class="fa-solid fa-user me-2 text-primary"></i> Customer Info</h5>
+          <p><strong>Name:</strong> {{ booking.name }}</p>
+          <p><strong>Email:</strong> {{ booking.email }}</p>
+          <p><strong>Phone:</strong> {{ booking.phone }}</p>
+          
+          <!-- Additional Commercial Info -->
+          {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
+             <!-- <p><strong>Company:</strong> {{ booking.company_name|default:"Not specified" }}</p> -->
+            <p><strong>Contact Person:</strong> {{ booking.contact_person|default:booking.name }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Enhanced Payment Information Card -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="mb-3"><i class="fa-solid fa-credit-card me-2 text-primary"></i> Payment Information</h5>
+          
+          <!-- Total Price -->
+          <div class="alert alert-primary mb-3">
+            <h6 class="mb-1">Total Amount</h6>
+            <h4 class="mb-0">${{ booking.price|floatformat:2 }}</h4>
+          </div>
+          
+          <!-- Payment Details Grid -->
+          <div class="row mb-3">
+            <div class="col-6">
+              <div class="border rounded p-2">
+                <small class="text-muted d-block">Payment Type</small>
+                <strong>{{ booking.get_payment_type }}</strong>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="border rounded p-2">
+                <small class="text-muted d-block">Payment Status</small>
+                <span class="badge 
+                  {% if booking.payment_status == 'paid' %}bg-success
+                  {% elif booking.payment_status == 'partial' %}bg-warning text-dark
+                  {% elif booking.payment_status == 'unpaid' %}bg-danger
+                  {% elif booking.payment_status == 'refunded' %}bg-secondary
+                  {% else %}bg-light text-dark
+                  {% endif %}">
+                  {{ booking.get_payment_status_display }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Payment Method -->
+          {% if booking.payment_method %}
+          <div class="mb-3">
+            <small class="text-muted d-block">Payment Method</small>
+            <strong>{{ booking.get_payment_method_display }}</strong>
+          </div>
+          {% endif %}
+          
+          <!-- Amount Paid Details -->
+          <div class="mb-3">
+            <h6 class="text-success">Total Paid: ${{ booking.get_paid_amount|floatformat:2 }}</h6>
+            
+            <!-- Payment Breakdown -->
+            {% if booking.get_deposit_paid_amount > 0 %}
+            <div class="d-flex justify-content-between">
+              <small>✓ Deposit (50%):</small>
+              <small class="text-success">${{ booking.get_deposit_paid_amount|floatformat:2 }}</small>
+            </div>
+            {% endif %}
+            
+            {% if booking.get_final_paid_amount > 0 %}
+            <div class="d-flex justify-content-between">
+              <small>✓ Final Payment (50%):</small>
+              <small class="text-success">${{ booking.get_final_paid_amount|floatformat:2 }}</small>
+            </div>
+            {% endif %}
+            
+            {% if booking.get_full_paid_amount > 0 %}
+            <div class="d-flex justify-content-between">
+              <small>✓ Full Payment (100%):</small>
+              <small class="text-success">${{ booking.get_full_paid_amount|floatformat:2 }}</small>
+            </div>
+            {% endif %}
+          </div>
+          
+          <!-- Balance Information -->
+          <div class="mb-3">
+            {% if booking.get_paid_amount < booking.price %}
+              <h6 class="text-warning">Remaining Balance: ${{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</h6>
+              {% if booking.get_payment_type == "50%" %}
+              <div class="d-flex justify-content-between">
+                <small>Final Payment Due:</small>
+                <small>${{ booking.get_final_amount|floatformat:2 }}</small>
+              </div>
+              {% endif %}
+              
+              <!-- Payment Required Alert -->
+              <div class="alert alert-warning mt-2 mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Payment Required:</strong> Customer needs to complete payment.
+              </div>
+            {% else %}
+              <h6 class="text-success">Status: ✅ Fully Paid</h6>
+              <div class="d-flex justify-content-between">
+                <small>Remaining Balance:</small>
+                <small class="text-success fw-bold">$0.00</small>
+              </div>
+              
+              <!-- Payment Complete Alert -->
+              <div class="alert alert-success mt-2 mb-0">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Payment Complete!</strong> Booking is fully paid and confirmed.
+              </div>
+            {% endif %}
+          </div>
+          
+          <!-- Payment History -->
+          {% if booking.payments.exists %}
+          <div class="mt-3">
+            <h6>Payment History</h6>
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for payment in booking.payments.all %}
+                  <tr>
+                    <td>{{ payment.get_payment_type_display }}</td>
+                    <td>${{ payment.amount|floatformat:2 }}</td>
+                    <td>
+                      <span class="badge 
+                        {% if payment.status == 'succeeded' %}bg-success
+                        {% elif payment.status == 'pending' %}bg-warning text-dark
+                        {% elif payment.status == 'processing' %}bg-info
+                        {% elif payment.status == 'failed' %}bg-danger
+                        {% elif payment.status == 'canceled' %}bg-secondary
+                        {% else %}bg-light text-dark
+                        {% endif %}">
+                        {{ payment.get_status_display }}
+                      </span>
+                    </td>
+                    <td>{{ payment.created_at|date:"M d, Y" }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {% endif %}
+          
+          <!-- Payment Link Actions -->
+          <div class="mt-3">
+            <h6>Payment Actions</h6>
+            <div class="d-grid gap-2">
+              {% if booking.payment_status == 'unpaid' %}
+                <button type="button" class="btn btn-primary" onclick="sendPaymentLink({{ booking.id }}, 'full')">
+                  <i class="fa-solid fa-credit-card me-2"></i>Send Full Payment Link (100%)
+                </button>
+              {% elif booking.payment_status == 'partial' %}
+                <button type="button" class="btn btn-warning" onclick="sendPaymentLink({{ booking.id }}, 'final')">
+                  <i class="fa-solid fa-credit-card me-2"></i>Send Final Payment Link (50%)
+                </button>
+                <button type="button" class="btn btn-info" onclick="sendPaymentLink({{ booking.id }}, 'full')">
+                  <i class="fa-solid fa-credit-card me-2"></i>Send Full Payment Link (100%)
+                </button>
+              {% elif booking.payment_status == 'paid' %}
+                <div class="alert alert-success">
+                  <i class="fa-solid fa-check-circle me-2"></i>Payment Complete
+                </div>
+              {% endif %}
+              
+              <!-- Show existing payment link if available -->
+              {% if booking.get_final_payment_link_info %}
+                <div class="mt-2">
+                  <small class="text-muted">Existing Payment Link:</small>
+                  <a href="{{ booking.get_final_payment_link_info.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="fa-solid fa-external-link-alt me-1"></i>View Link
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Detailed Pricing Breakdown -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="mb-3"><i class="fa-solid fa-calculator me-2 text-primary"></i> Detailed Pricing Breakdown</h5>
+          
+          {% if 'commercial' in booking.service_cat.name|lower or 'office' in booking.service_cat.name|lower %}
+            <!-- Office Cleaning Pricing Breakdown -->
+            <div class="row mb-2">
+              <div class="col-6"><strong>Labor Cost:</strong></div>
+              <div class="col-6 text-end">${{ booking.num_cleaners }} × {{ booking.hours_requested }}h × $75/h = ${{ booking.calculate_office_labor_cost|floatformat:2 }}</div>
+            </div>
+            
+            {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+            <div class="row mb-2">
+              <div class="col-6"><strong>Frequency Discount ({{ booking.get_cleaning_frequency_display }}):</strong></div>
+              <div class="col-6 text-end text-success">-${{ booking.calculate_office_discount_amount|floatformat:2 }}</div>
+            </div>
+            {% endif %}
+            
+            {% if booking.extras.all %}
+            <div class="row mb-2">
+              <div class="col-6"><strong>Additional Services:</strong></div>
+              <div class="col-6 text-end">
+                {% for extra in booking.extras.all %}
+                  {{ extra.name }} (+${{ extra.price }}){% if not forloop.last %}, {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+            
+            <hr>
+            <div class="row mb-2">
+              <div class="col-6"><strong>Subtotal:</strong></div>
+              <div class="col-6 text-end">${{ booking.calculate_office_subtotal|floatformat:2 }}</div>
+            </div>
+            
+            <div class="row mb-2">
+              <div class="col-6"><strong>Sales Tax (8.875%):</strong></div>
+              <div class="col-6 text-end">${{ booking.calculate_office_tax|floatformat:2 }}</div>
+            </div>
+            
+            {% if booking.gift_card_discount and booking.gift_card_discount > 0 %}
+            <div class="row mb-2">
+              <div class="col-6"><strong>Gift Card/Discount:</strong></div>
+              <div class="col-6 text-end text-success">-${{ booking.gift_card_discount|floatformat:2 }}</div>
+            </div>
+            {% endif %}
+            
+          {% else %}
+            <!-- Home Cleaning Pricing Breakdown -->
+            {% if booking.square_feet_options %}
+            <div class="row mb-2">
+              <div class="col-6"><strong>Square Footage:</strong></div>
+              <div class="col-6 text-end">{{ booking.square_feet_options.name }}</div>
+            </div>
+            {% endif %}
+            
+            {% if not booking.is_large_home and booking.home_types %}
+            <div class="row mb-2">
+              <div class="col-6"><strong>Home Type:</strong></div>
+              <div class="col-6 text-end">${{ booking.home_types.price|floatformat:2 }}</div>
+            </div>
+            {% endif %}
+            
+            {% for extra in booking.extras.all %}
+            <div class="row mb-2">
+              <div class="col-6"><strong>+ {{ extra.name }}:</strong></div>
+              <div class="col-6 text-end">${{ extra.price|floatformat:2 }}</div>
+            </div>
+            {% endfor %}
+            
+            {% if booking.is_large_home %}
+            <div class="row mb-2">
+              <div class="col-6"><strong>Labor Cost ({{ booking.num_cleaners }} cleaners):</strong></div>
+              <div class="col-6 text-end">${{ booking.calculate_subtotal|floatformat:2 }}</div>
+            </div>
+            {% endif %}
+            
+            <!-- Frequency Discount for Home Cleaning -->
+            {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+            <div class="row mb-2">
+              <div class="col-6"><strong>Frequency Discount ({{ booking.get_cleaning_frequency_display }}):</strong></div>
+              <div class="col-6 text-end text-success">-${{ booking.calculate_frequency_discount_amount|floatformat:2 }}</div>
+            </div>
+            {% endif %}
+            
+            {% if booking.gift_card_discount and booking.gift_card_discount > 0 %}
+            <div class="row mb-2">
+              <div class="col-6"><strong>Gift Card/Discount:</strong></div>
+              <div class="col-6 text-end text-success">-${{ booking.gift_card_discount|floatformat:2 }}</div>
+            </div>
+            {% endif %}
+            
+            <hr>
+            <div class="row mb-2">
+              <div class="col-6"><strong>Subtotal:</strong></div>
+              <div class="col-6 text-end">
+                {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+                  ${{ booking.calculate_subtotal|sub:booking.calculate_frequency_discount_amount|floatformat:2 }}
+                {% else %}
+                  ${{ booking.calculate_subtotal|floatformat:2 }}
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="row mb-2">
+              <div class="col-6"><strong>Sales Tax (8.875%):</strong></div>
+              <div class="col-6 text-end">
+                {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+                  ${{ booking.calculate_subtotal|sub:booking.calculate_frequency_discount_amount|mul:0.08875|floatformat:2 }}
+                {% else %}
+                  ${{ booking.calculate_tax|floatformat:2 }}
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+          
+          <hr>
+          <div class="row">
+            <div class="col-6"><strong class="fs-5">Total:</strong></div>
+            <div class="col-6 text-end"><strong class="fs-5 text-primary">${{ booking.price|floatformat:2 }}</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+  <a href="{% url 'booking_list' %}" class="text-primary mt-4"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+    Back to bookings</a>
+</div>
+{% endblock %}

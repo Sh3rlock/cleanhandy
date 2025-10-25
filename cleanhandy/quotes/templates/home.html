@@ -1,0 +1,673 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+  <style>
+    .categories-single-image {
+      width: 150px !important;
+      height: 150px !important;
+      margin: 0 auto;
+    }
+
+    .banner-section {
+        position: relative;
+        overflow:hidden;
+        padding: 0px !important;
+      }
+
+    .banner-content-box {
+      position: relative;
+      z-index: 10;
+      padding: 150px 0;
+      text-align: center;
+    }
+
+    .banner-content-box-inner {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+    }
+
+    .banner-content-box-inner h2 {
+      color: #fff;
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    .banner-content-box-inner p {
+      color: #fff;
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .banner-location a {
+      color: #fff;
+      font-size: 16px;
+      text-decoration: none;
+      margin-bottom: 30px;
+      display: inline-block;
+    }
+
+      .banner-form {
+        display: flex;
+        align-items: stretch; /* Makes children equal height */
+        gap: 10px; /* Optional: space between the two blocks */
+      }
+      
+      .banner-location a,
+      .banner-search a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%; /* Ensures full height inside the parent */
+        padding: 20px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+
+      .categories-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+      }
+
+      .categories-single-title {
+        color: var(--black-color);
+        font-size: 20px;
+        font-weight: 500;
+        line-height: 30px;
+        margin: 16px 0 4px;
+        }
+      
+      .categories-single {
+        transition: box-shadow 0.3s;
+      }
+      
+      .categories-link:hover .categories-single {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transform: scale(1.02);
+      }
+
+      .featured{
+        padding: 120px 0 0px !important;
+    }
+
+    .banner-section .banner-content-box {
+      margin-right: 0px !important;
+    }
+
+    .banner-section .banner-content-box h2 {
+        opacity: 1 !important;
+    }
+      
+    .banner-section .banner-content-box p {
+        opacity: 1 !important;
+    }
+    .rating .fa-solid.fa-star { color: #f6c200; }  /* filled */
+    .rating .fa-regular.fa-star { color: #c9ccd1; } /* empty */
+
+    .testimonial-slider-single {
+  background: #f4faff; /* light blue */
+  padding: 50px;
+  border-radius: 12px;
+  height: 100%; /* so it stretches if needed */
+  display: flex;
+  justify-content: space-between;
+}
+
+.testimonial-carousel .single-item-carousel {
+  padding: 0px !important;
+}
+
+  </style>
+
+  <!-- preloader -->
+  <div class="loader-wrap">
+    <div class="preloader">
+        <div class="preloader-close">x</div>
+        <div id="handle-preloader" class="handle-preloader">
+            <div class="animation-preloader">
+                <div class="loader-image">
+                    <img src="{% static 'assets/images/loader.gif' %}" alt="loader">
+                </div>
+                <div class="txt-loading">
+                    <span data-text-preloader="c" class="letters-loading">
+                    c
+                    </span>
+                    <span data-text-preloader="l" class="letters-loading">
+                    l
+                    </span>
+                    <span data-text-preloader="e" class="letters-loading">
+                    e
+                    </span>
+                    <span data-text-preloader="a" class="letters-loading">
+                    a
+                    </span>
+                    <span data-text-preloader="n" class="letters-loading">
+                    n
+                     </span>
+                    <span data-text-preloader="h" class="letters-loading">
+                    h
+                    </span>
+                    <span data-text-preloader="a" class="letters-loading">
+                    a
+                    </span>
+                    <span data-text-preloader="n" class="letters-loading">
+                    n
+                    </span>
+                    <span data-text-preloader="d" class="letters-loading">
+                    d
+                    </span>
+                    <span data-text-preloader="y" class="letters-loading">
+                    y
+                    </span>
+                </div>
+            </div>  
+        </div>
+    </div>
+</div>
+<!-- preloader end --> 
+  <!-- banner-section -->
+  <section class="banner-section-one banner-section">
+    <div class="bg-layer" style="margin-top: -100px; opacity: 0.5; background-image: url({% static '/assets/images/banner/banner.jpg' %});"></div>
+   
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+          <div class="banner-content-box text-center">
+            <div class="banner-content-box-inner">
+              <h2 style="margin-left: 100px;">Choose Experts to Complete Your <span>Job <img src="{% static '/assets/images/shape/banner-title-shape.png' %}" alt="shape" /></span> Done</h2>
+              <p style="margin-left: 100px;">Check availability, and book services with confidence.</p>
+              <div class="banner-location">
+                <h4><i class="fa-sharp fa-solid fa-location-dot"></i> New York </h4>
+              </div>
+              
+              <div class="banner-form justify-content-center">
+                <div class="banner-search">
+                  <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+                </div>
+                <div class="banner-search">
+                  <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+                </div>
+                {% for service in all_services %}
+                  {% if service.category.name|lower == 'post event cleaning' %}
+                    <div class="banner-search">
+                      <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              <div class="customer-box">
+                <div class="customer-list">
+                  <!--  <ul>
+                                              <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-1.png' %}" alt="image"></a></li>
+                                              <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-2.png' %}" alt="image"></a></li>
+                                              <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-3.png' %}" alt="image"></a></li>
+                                              <li><a href="javascript:void(0);"><img src="{% static '/assets/images/team/customer-4.png' %}" alt="image"></a></li>
+                                          </ul>  -->
+                </div>
+                <!--  <div class="customer-content">
+                                              <h6><span>2k+</span> Customers </h6>
+                                              <p>Satisfied with Servat services</p>
+                                          </div>  -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- banner-section -->
+
+  <!-- Categories -->
+  <section class="categories" id="categories">
+    <div class="container">
+      <div class="common-title-container">
+        <div class="common-title mb-0">
+          <img src="{% static '/assets/images/shape/title-shape-1.png' %}" alt="shape" />
+          <h6>Explore our professional services.</h6>
+          <!-- <h3>Popular Categories</h3> -->
+        </div>
+        <!-- <a href="service.html" class="btn-1">Explore More <i class="icon-arrow-1"></i></a> -->
+      </div>
+      <div class="row">
+        <!-- Column 1: Home Cleaning Services -->
+        <div class="col-lg-12">
+          <h4>Home Cleaning Services</h4>
+          <div class="row">
+            {% for c_service in services %}
+              <div class="col-lg-6 col-md-6">
+                <a href="{% url 'request_cleaning_quote' c_service.id %}" class="categories-link">
+                  <div class="categories-single">
+                    <div class="categories-single-image">
+                      {% if c_service.service_image %}
+                        <img src="{{ c_service.service_image.url }}" alt="{{ c_service.name }}" />
+                      {% else %}
+                        <img src="{% static 'assets/images/default_white.png' %}" alt="default image" />
+                      {% endif %}
+                    </div>
+                    <div class="categories-single-title">
+                      <span>{{ c_service.name }}</span>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        
+        <!-- Column 2: Commercial Cleaning Services 
+        <div class="col-lg-6">
+          <h4>Commercial Cleaning Services</h4>
+          <div class="row">
+            {% for c_service in commercial_services %}
+              <div class="col-lg-6 col-md-6">
+                <a href="{% url 'office_cleaning_booking' %}" class="categories-link">
+                  <div class="categories-single">
+                    <div class="categories-single-image">
+                      {% if c_service.service_image %}
+                        <img src="{{ c_service.service_image.url }}" alt="{{ c_service.name }}" />
+                      {% else %}
+                        <img src="{% static 'assets/images/default_white.png' %}" alt="default image" />
+                      {% endif %}
+                    </div>
+                    <div class="categories-single-title">
+                      <span>{{ c_service.name }}</span>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div> -->
+      </div>
+    </div>
+  </section>
+  <!-- Categories -->
+
+  <!-- services -->
+  <section class="services">
+    <div class="container">
+      <div class="services-container">
+        <div class="common-title text-center">
+          <h6><i class="fa-solid fa-angles-right"></i> HOW IT WORKS</h6>
+          <h3>Convenient Service Access</h3>
+          <p>Launch your online presence with ease! Our Professional Website Setup service offers a comprehensive.</p>
+        </div>
+        <div class="services-one-wrapper">
+          <div class="services-one-wrapper-shape">
+            <img src="{% static '/assets/images/shape/arrow-line.png' %}" alt="shape" />
+          </div>
+          <div class="row">
+            <div class="col-lg-4 col-md-6">
+              <div class="service-single">
+                <div class="service-number">
+                  <h3>01</h3>
+                </div>
+                <div class="service-icon">
+                  <img src="{% static '/assets/images/icons/service-01.png' %}" alt="icon" />
+                </div>
+                <div class="service-single-title">
+                  <a href="service-details.html">Choose Your Service</a>
+                  <p>Pick the service you are looking for- from the website .</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+              <div class="service-single">
+                <div class="service-number">
+                  <h3>02</h3>
+                </div>
+                <div class="service-icon">
+                  <img src="{% static '/assets/images/icons/service-02.png' %}" alt="icon" />
+                </div>
+                <div class="service-single-title">
+                  <a href="service-details.html">Pick Your Schedule</a>
+                  <p>Pick the service you are looking for- from the website.</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+              <div class="service-single">
+                <div class="service-number">
+                  <h3>03</h3>
+                </div>
+                <div class="service-icon">
+                  <img src="{% static '/assets/images/icons/service-03.png' %}" alt="icon" />
+                </div>
+                <div class="service-single-title">
+                  <a href="service-details.html">Place The Order</a>
+                  <p>Pick the service you are looking for- from the website.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- services -->
+
+  <!-- featured -->
+  <section class="featured">
+    <div class="container">
+      <div class="common-title">
+        <img src="{% static '/assets/images/shape/title-shape-1.png' %}" alt="shape" />
+        <h6>FEATURED SERVICES</h6>
+      </div>
+      <!-- Top row - first 3 services -->
+      <div class="row">
+        {% for service in top_services|slice:":3" %}
+        <div class="col-lg-4 col-md-6">
+          <div class="service-tow-single">
+              <div class="service-tow-single-img">
+                  <img src="{{ service.service_detail_image.url }}" alt="image">
+              </div>
+              <div class="service-tow-single-content">
+                    <div class="service-tow-single-title">
+                        <span>{{ service.name }}</span>
+                    </div>
+                  <div class="service-tow-single-rating">
+                      <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
+                  </div>
+                  <div class="featured-single-info">
+                      {% if service.category.name|lower == "cleaning" %}
+                          <a href="{% url 'cleaning_booking' %}" class="btn-1">Book Now</a>
+                      {% elif service.category.name|lower == "office cleaning" %}
+                          <a href="{% url 'office_cleaning_booking' %}" class="btn-1">Book Now</a>
+                      {% elif service.category.name|lower == "post event cleaning" %}
+                          <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="btn-1">Get a Quote</a>
+                      {% elif service.category.name|lower == "handyman" %}
+                          <a href="{% url 'request_handyman_quote' service.id %}" class="btn-1">Get a Quote</a>
+                      {% else %}
+                          <div class="featured-single-info-left">
+                              <p>Starting from:</p><h5>${{ service.base_price }}</h5>
+                          </div>
+                      {% endif %}
+                  </div>
+              </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      
+      <!-- Bottom row - last 3 services -->
+      <div class="row" style="margin-top: 30px;">
+        {% for service in top_services|slice:"3:6" %}
+        <div class="col-lg-4 col-md-6">
+          <div class="service-tow-single">
+              <div class="service-tow-single-img">
+                  <img src="{{ service.service_detail_image.url }}" alt="image">
+              </div>
+              <div class="service-tow-single-content">
+                    <div class="service-tow-single-title">
+                        <span>{{ service.name }}</span>
+                    </div>
+                  <div class="service-tow-single-rating">
+                      <p><i class="fa-light fa-location-dot"></i> New York, USA</p>
+                  </div>
+                  <div class="featured-single-info">
+                      {% if service.category.name|lower == "cleaning" %}
+                          <a href="{% url 'cleaning_booking' %}" class="btn-1">Book Now</a>
+                      {% elif service.category.name|lower == "office cleaning" %}
+                          <a href="{% url 'office_cleaning_booking' %}" class="btn-1">Book Now</a>
+                      {% elif service.category.name|lower == "post event cleaning" %}
+                          <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="btn-1">Get a Quote</a>
+                      {% elif service.category.name|lower == "handyman" %}
+                          <a href="{% url 'request_handyman_quote' service.id %}" class="btn-1">Get a Quote</a>
+                      {% else %}
+                          <div class="featured-single-info-left">
+                              <p>Starting from:</p><h5>${{ service.base_price }}</h5>
+                          </div>
+                      {% endif %}
+                  </div>
+              </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  <!-- featured -->
+
+  <!-- blog -->
+  <section class="blog">
+    <div class="container">
+      <div class="common-title-container">
+        <div class="common-title mb-0">
+          <img src="{% static '/assets/images/shape/title-shape-1.png' %}" alt="shape" />
+          <h6>BLOGS</h6>
+        </div>
+        <a href="{% url 'blog' %}" class="underline-link">Explore More <i class="fa-solid fa-arrow-up-right"></i></a>
+      </div>
+      <div class="row">
+        <div class="col-lg-4 col-md-6">
+          <div class="blog-single">
+            <div class="blog-single-title">
+              <a href="{% url 'blog_detail_1' %}">Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</a>
+            </div>
+            <div class="blog-single-info">
+              <p>Cleaning</p>
+              <span>March 10, 2025</span>
+            </div>
+            <div class="blog-single-image">
+              <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" alt="Cleaning Trends 2025" />
+            </div>
+            <div class="blog-single-content">
+              <p>Discover how green cleaning, smart devices, and personalized services are transforming NYC homes in 2025. Stay ahead with the latest eco-friendly and tech-driven cleaning trends.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+          <div class="blog-single">
+            <div class="blog-single-title">
+              <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
+            </div>
+             <div class="blog-single-info">
+              <p>Handyman</p>
+              <span>April 5, 2025</span>
+            </div>
+            <div class="blog-single-image">
+              <img src="{% static 'assets/images/blog/blog_handyman_1.png' %}" alt="Handyman Trends 2025" />
+            </div>
+            <div class="blog-single-content">
+              <p>Explore the latest handyman trends in NYC, from smart home installations to eco-friendly repairs and on-demand emergency services. See what’s new for 2025!</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+          <div class="blog-single">
+            <div class="blog-single-title">
+              <a href="{% url 'blog_detail_3' %}">Booking Systems in 2025: Trends, Simplicity, and Smarter Scheduling</a>
+            </div>
+            <div class="blog-single-info">
+              <p>Booking</p>
+              <span>May 20, 2025</span>
+            </div>
+            <div class="blog-single-image">
+              <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025" />
+            </div>
+            <div class="blog-single-content">
+              <p>Explore how AI, multi-channel booking, and user-friendly design are making booking systems easier and smarter in 2025. Learn how to get the most out of modern scheduling platforms.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- blog -->
+
+  <!-- testimonial -->
+  <section class="testimonial">
+    <div class="container">
+      <div class="testimonial-container">
+        <div class="testimonial-bg-shape">
+          <img src="{% static '/assets/images/shape/testimonial-bg-shape.png' %}" alt="shape" />
+        </div>
+        <div class="common-title text-center">
+          <img src="{% static '/assets/images/shape/title-shape-1.png' %}" alt="shape" />
+          <h6>TESTIMONIAL</h6>
+          <h3>Our Stories As Told By Customers</h3>
+        </div>
+
+        <div class="testimonial-carousel">
+          <div class="swiper-container">
+            <div class="swiper single-item-carousel">
+              <div class="swiper-wrapper">
+                <!-- Hardcoded positive reviews -->
+                <div class="swiper-slide testimonial-slider-item">
+                  <div class="testimonial-slider-single">
+                    <div class="testimonial-slider-content">
+                      <div class="rating">
+                        <ul>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li>5</li>
+                        </ul>
+                      </div>
+                      <div class="testimonial-comments">
+                        <p>TheCleanHandy's home cleaning service exceeded my expectations! The team was professional, thorough, and left my apartment spotless. They paid attention to every detail and used eco-friendly products. I've been using their service monthly for 6 months now and couldn't be happier!</p>
+                      </div>
+                      <div class="testimonial-info-box">
+                        <div class="testimonial-info">
+                          <h5>Sarah Johnson</h5>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="swiper-slide testimonial-slider-item">
+                  <div class="testimonial-slider-single">
+                    <div class="testimonial-slider-content">
+                      <div class="rating">
+                        <ul>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li>5</li>
+                        </ul>
+                      </div>
+                      <div class="testimonial-comments">
+                        <p>Outstanding office cleaning service! TheCleanHandy transformed our workspace into a pristine environment. Their team works efficiently around our schedule and maintains the highest standards. Our employees love coming to work in such a clean, fresh office. Highly recommend for any business!</p>
+                      </div>
+                      <div class="testimonial-info-box">
+                        <div class="testimonial-info">
+                          <h5>Michael Chen</h5>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="swiper-slide testimonial-slider-item">
+                  <div class="testimonial-slider-single">
+                    <div class="testimonial-slider-content">
+                      <div class="rating">
+                        <ul>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li>5</li>
+                        </ul>
+                      </div>
+                      <div class="testimonial-comments">
+                        <p>After hosting my daughter's wedding reception at home, I was overwhelmed by the cleanup needed. TheCleanHandy's post-event cleaning service was a lifesaver! They handled everything from deep cleaning carpets to restoring furniture. The team was incredibly thorough and respectful. Worth every penny!</p>
+                      </div>
+                      <div class="testimonial-info-box">
+                        <div class="testimonial-info">
+                          <h5>Linda Rodriguez</h5>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="swiper-slide testimonial-slider-item">
+                  <div class="testimonial-slider-single">
+                    <div class="testimonial-slider-content">
+                      <div class="rating">
+                        <ul>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li><i class="fa-solid fa-star"></i></li>
+                          <li>5</li>
+                        </ul>
+                      </div>
+                      <div class="testimonial-comments">
+                        <p>I've tried several cleaning services in NYC, but TheCleanHandy stands out! Their attention to detail is incredible - they clean areas I didn't even think needed cleaning. The team is always punctual, friendly, and respectful of my home. My place has never looked better!</p>
+                      </div>
+                      <div class="testimonial-info-box">
+                        <div class="testimonial-info">
+                          <h5>David Martinez</h5>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!--{% for review in reviews %}
+                <div class="swiper-slide testimonial-slider-item">
+                  <div class="testimonial-slider-single">
+        
+                    <div class="testimonial-slider-content">
+                      <div class="rating">
+                        <ul>
+                          <li><i class="{% if review.rating >= 1 %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i></li>
+                          <li><i class="{% if review.rating >= 2 %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i></li>
+                          <li><i class="{% if review.rating >= 3 %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i></li>
+                          <li><i class="{% if review.rating >= 4 %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i></li>
+                          <li><i class="{% if review.rating >= 5 %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i></li>
+                          <li>{{ review.rating }}</li>
+                        </ul>
+                      </div>
+                      
+        
+                      <div class="testimonial-comments">
+                        <p>{{ review.review }}</p>
+                      </div>
+        
+                      <div class="testimonial-info-box">
+                        <div class="testimonial-info">
+                          <h5>{{ review.booking.name }}</h5>
+                          {% if review.author_title %}
+                            <h6>{{ review.author_title }}</h6>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% empty %}
+                  <div class="swiper-slide">
+                    <p>No reviews yet.</p>
+                  </div>
+                {% endfor %} -->
+              </div>
+            </div>
+          </div>
+        
+          <div class="swiper-button-next">
+            <i class="fa-solid fa-angle-right"></i>
+          </div>
+          <div class="swiper-button-prev">
+            <i class="fa-solid fa-angle-left"></i>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+  <!-- testimonial -->
+{% endblock %}

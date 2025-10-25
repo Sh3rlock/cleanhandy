@@ -1,0 +1,12 @@
+<h2>Check Gift Card Balance</h2>
+<form method="post">
+  {% csrf_token %}
+  <input type="text" name="code" placeholder="Enter gift card code" required>
+  <button type="submit">Check</button>
+</form>
+
+{% if balance is not None %}
+  <p>💳 Gift card balance: <strong>{{ balance }}€</strong></p>
+{% elif error %}
+  <p style="color:red;">{{ error }}</p>
+{% endif %}

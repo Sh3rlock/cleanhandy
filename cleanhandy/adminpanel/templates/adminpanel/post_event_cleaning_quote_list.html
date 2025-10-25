@@ -1,0 +1,168 @@
+{% extends "accounts/partials/account_base.html" %}
+{% load static %}
+{% block account_content %}
+
+<style>
+     section {
+        z-index: unset !important;
+     }
+
+     .text-primary {
+        color: #F15A29 !important;
+      }
+
+      .custom-modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5);
+      }
+    
+      .custom-modal-content {
+        background-color: #fff;
+        margin: 10% auto;
+        padding: 1rem;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      }
+    
+      .custom-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+    
+      .custom-modal-close {
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+    
+      .custom-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+
+      .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+      }
+
+      .status-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+
+      .status-contacted {
+        background-color: #dbeafe;
+        color: #1e40af;
+      }
+
+      .status-quoted {
+        background-color: #d1fae5;
+        color: #065f46;
+      }
+
+      .status-completed {
+        background-color: #dcfce7;
+        color: #166534;
+      }
+
+      .status-cancelled {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+</style>
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css" />
+
+<div class="row">
+  <!-- Left Column: Post Event Cleaning Quotes Table -->
+  <div class="col-12 col-lg-12">
+    <a href="{% url 'admin_dashboard' %}" class="text-primary mb-4"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+        Back to dashboard</a>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">
+          <i class="fa-solid fa-broom me-2 text-primary"></i>Post Event Cleaning Quotes
+        </h2>
+        
+      </div>
+      
+
+    {% if page_obj %}
+    <div class="table-responsive">
+      <table id="postEventCleaningQuotesTable" class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Event Type</th>
+                <th>Venue Size</th>
+                <th>Event Date</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for quote in page_obj %}
+            <tr>
+                <td>{{ quote.id }}</td>
+                <td>{{ quote.name }}</td>
+                <td>{{ quote.email }}</td>
+                <td>{{ quote.phone_number }}</td>
+                <td>{{ quote.get_event_type_display }}</td>
+                <td>{{ quote.get_venue_size_display }}</td>
+                <td>{{ quote.event_date|date:"M d, Y" }}</td>
+                <td>
+                    <span class="status-badge status-{{ quote.status }}">
+                        {{ quote.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ quote.created_at|date:"M d, Y" }}</td>
+                <td>
+                    <a href="{% url 'post_event_cleaning_quote_detail' quote.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p>No post event cleaning quotes yet.</p>
+    {% endif %}
+
+    <a href="{% url 'admin_dashboard' %}" class="text-primary"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+        Back to dashboard</a>
+  </div>
+</div>
+
+<!-- DataTables JavaScript -->
+<script src="https://cdn.datatables.net/2.3.0/js/dataTables.js"></script>
+<script>
+$(document).ready(function() {
+    $('#postEventCleaningQuotesTable').DataTable({
+        "pageLength": 25,
+        "order": [[ 0, "desc" ]],
+        "columnDefs": [
+            { "orderable": false, "targets": 9 }
+        ]
+    });
+});
+</script>
+
+{% endblock %}

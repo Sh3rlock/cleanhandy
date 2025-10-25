@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handyman Quote #{{ handyman_quote.id }} - Clean & Handy Services</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #F15A29;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .company-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .quote-details {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .customer-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .job-description {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        .status-pending { background-color: #fef3c7; color: #92400e; }
+        .status-contacted { background-color: #dbeafe; color: #1e40af; }
+        .status-quoted { background-color: #d1fae5; color: #065f46; }
+        .status-completed { background-color: #dcfce7; color: #166534; }
+        .status-cancelled { background-color: #fee2e2; color: #991b1b; }
+        .highlight {
+            color: #F15A29;
+            font-weight: bold;
+        }
+        .section-title {
+            color: #F15A29;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #F15A29;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔨 Handyman Quote</h1>
+        <h2>Clean & Handy Services</h2>
+        <p>Professional Handyman Services</p>
+    </div>
+    
+    <div class="company-info">
+        <div class="row">
+            <div class="col-6">
+                <h3>Company Information</h3>
+                <p><strong>{{ company_info.name }}</strong></p>
+                <p>{{ company_info.address }}</p>
+                <p>Phone: {{ company_info.phone }}</p>
+                <p>Email: {{ company_info.email }}</p>
+                <p>Website: {{ company_info.website }}</p>
+            </div>
+            <div class="col-6">
+                <h3>Quote Details</h3>
+                <p><strong>Quote ID:</strong> #{{ handyman_quote.id }}</p>
+                <p><strong>Date:</strong> {{ handyman_quote.created_at|date:"F d, Y" }}</p>
+                <p><strong>Status:</strong> 
+                    {% if handyman_quote.status == 'pending' %}
+                        <span class="status-badge status-pending">⏳ Pending</span>
+                    {% elif handyman_quote.status == 'contacted' %}
+                        <span class="status-badge status-contacted">📞 Contacted</span>
+                    {% elif handyman_quote.status == 'quoted' %}
+                        <span class="status-badge status-quoted">💰 Quoted</span>
+                    {% elif handyman_quote.status == 'completed' %}
+                        <span class="status-badge status-completed">✅ Completed</span>
+                    {% elif handyman_quote.status == 'cancelled' %}
+                        <span class="status-badge status-cancelled">❌ Cancelled</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="customer-info">
+        <h3 class="section-title">Customer Information</h3>
+        <div class="row">
+            <div class="col-6">
+                <p><strong>Name:</strong> {{ handyman_quote.name }}</p>
+                <p><strong>Email:</strong> {{ handyman_quote.email }}</p>
+            </div>
+            <div class="col-6">
+                <p><strong>Phone:</strong> {{ handyman_quote.phone_number }}</p>
+                <p><strong>Address:</strong> {{ handyman_quote.address }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="job-description">
+        <h3 class="section-title">Project Details</h3>
+        <p><strong>Job Description:</strong></p>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px;">
+            {{ handyman_quote.job_description|linebreaks }}
+        </div>
+    </div>
+    
+    {% if handyman_quote.admin_notes %}
+    <div class="quote-details">
+        <h3 class="section-title">Admin Notes</h3>
+        <p>{{ handyman_quote.admin_notes|linebreaks }}</p>
+    </div>
+    {% endif %}
+    
+    <div class="quote-details">
+        <h3 class="section-title">Next Steps</h3>
+        <p>Our experienced handyman team will review your project requirements and provide you with:</p>
+        <ul>
+            <li>Detailed project timeline</li>
+            <li>Material requirements and costs</li>
+            <li>Labor estimates</li>
+            <li>Total project quote</li>
+            <li>Start date availability</li>
+        </ul>
+        
+        <p>We will contact you within 24-48 hours to discuss your project in detail and provide a comprehensive quote.</p>
+    </div>
+    
+    <div class="quote-details">
+        <h3 class="section-title">Our Handyman Services Include</h3>
+        <div class="row">
+            <div class="col-6">
+                <ul>
+                    <li>Furniture Assembly</li>
+                    <li>TV Mounting</li>
+                    <li>Picture Hanging</li>
+                    <li>Light Fixture Installation</li>
+                    <li>Cabinet Installation</li>
+                    <li>Door & Window Repairs</li>
+                </ul>
+            </div>
+            <div class="col-6">
+                <ul>
+                    <li>Painting & Touch-ups</li>
+                    <li>Drywall Repairs</li>
+                    <li>Plumbing Repairs</li>
+                    <li>Electrical Work</li>
+                    <li>General Maintenance</li>
+                    <li>And Much More!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p><strong>Contact Information:</strong></p>
+        <p>Phone: {{ company_info.phone }} | Email: {{ company_info.email }} | Website: {{ company_info.website }}</p>
+        <p>This quote is valid for 30 days from the date of issue.</p>
+        <p>© 2025 Clean & Handy Services. All rights reserved.</p>
+    </div>
+</body>
+</html>

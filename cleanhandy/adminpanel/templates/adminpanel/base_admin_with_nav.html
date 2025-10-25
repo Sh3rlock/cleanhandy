@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<style>
+  :root {
+    --bs-primary: #F15A29;
+  }
+  
+  .btn-primary {
+    background-color: #F15A29;
+    border-color: #F15A29;
+  }
+  
+  .btn-primary:hover,
+  .btn-primary:focus {
+    background-color: #d44f24;
+    border-color: #d44f24;
+  }
+
+  /* Modern Admin Navigation Styling */
+  .admin-navbar {
+    background: linear-gradient(135deg, #F15A29 0%, #e04a1f 100%);
+    border: none;
+    box-shadow: 0 2px 10px rgba(241, 90, 41, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .admin-navbar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
+    pointer-events: none;
+  }
+
+  .admin-navbar .nav-link.text-white {
+    color: #fff !important;
+    padding: 10px 18px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+    border: 1px solid transparent;
+  }
+
+  .admin-navbar .nav-link.text-white:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #fff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .admin-navbar .nav-link.text-white:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .admin-navbar .navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.4);
+    padding: 4px 8px;
+  }
+
+  .admin-navbar .navbar-toggler:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+  }
+
+  .admin-navbar .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  }
+
+  /* Admin menu label styling */
+  .admin-navbar .fw-semibold {
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  /* User Navigation Styling */
+  .user-navbar .nav-link {
+    padding: 10px 18px;
+    font-weight: 500;
+    color: #000 !important;
+    border-radius: 10px;
+    transition: all 0.2s ease-in-out;
+    background-color: transparent;
+    border: 1px solid transparent;
+  }
+  
+  .user-navbar .nav-link:hover {
+    background-color: #f3f3f3;
+    text-decoration: none;
+  }
+  
+  .user-navbar .nav-link.active {
+    background-color: #F15A29 !important;
+    color: #fff !important;
+    font-weight: 600;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .admin-navbar .nav-link.text-white {
+      padding: 8px 14px;
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
+<!-- common banner -->
+<section class="common-banner" style="position: relative;">
+  <div class="bg-layer" style="background: url({% static '/assets/images/background/common-banner-bg.jpg' %});"></div>
+  <div class="common-banner-content">
+      <h3>{% block page_title %}Admin Panel{% endblock %}</h3>
+      <div class="breadcrumb">
+          <ul>
+            <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> {% block breadcrumb %}{% endblock %}</li>
+          </ul>
+      </div>
+  </div>
+</section>
+<!-- common banner -->
+
+<section class="service-details mb-4" style="margin-top:-50px">
+  <div class="container">
+
+    <!-- Admin Navigation Bar -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <nav class="navbar navbar-expand-md admin-navbar text-white shadow-sm p-2 rounded">
+          <div class="container-fluid justify-content-center">
+            <!-- Toggler for mobile view -->
+            <button class="navbar-toggler d-flex align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavBar" aria-controls="adminNavBar" aria-expanded="false" aria-label="Toggle admin navigation">
+              <span class="fw-semibold text-white">Admin Menu:</span>
+              <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Collapsible admin content -->
+            <div class="collapse navbar-collapse justify-content-center" id="adminNavBar">
+              <ul class="navbar-nav gap-3 flex-nowrap align-items-center text-center">
+                <li class="nav-item">
+                  <a href="/django-admin/" class="nav-link text-white">Django Admin</a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'admin_dashboard' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">Admin Dashboard</a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'booking_calendar' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'booking_calendar' %}active{% endif %}">Booking Calendar</a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'booking_list' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'booking_list' %}active{% endif %}">Booking List</a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'quote_list' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'quote_list' %}active{% endif %}">Quote List</a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'customer_list' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'customer_list' %}active{% endif %}">Customers</a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'service_list' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'service_list' %}active{% endif %}">Service Management</a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'profile' %}" class="nav-link text-white">User Profile</a>
+                </li>
+                <li class="nav-item">
+                  <form action="{% url 'logout' %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link text-white bg-transparent border-0 p-0">Logout</button>
+                  </form>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+      <div class="col-12">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        {% block admin_content %}
+        {% endblock %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

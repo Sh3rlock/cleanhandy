@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Cleaning Quote - {{ office_quote.id }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #F15A29;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .company-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #F15A29;
+            margin: 0;
+        }
+        
+        .company-tagline {
+            font-size: 16px;
+            color: #666;
+            margin: 5px 0;
+        }
+        
+        .company-info {
+            font-size: 12px;
+            color: #666;
+            margin: 5px 0;
+        }
+        
+        .quote-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            margin: 30px 0;
+            text-transform: uppercase;
+        }
+        
+        .quote-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .customer-info, .quote-info {
+            flex: 1;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #F15A29;
+            border-bottom: 2px solid #F15A29;
+            padding-bottom: 5px;
+            margin: 20px 0 15px 0;
+        }
+        
+        .info-row {
+            margin: 8px 0;
+        }
+        
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .value {
+            color: #333;
+        }
+        
+        .job-description {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #F15A29;
+            margin: 20px 0;
+        }
+        
+        .services-section {
+            margin: 30px 0;
+        }
+        
+        .service-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .service-name {
+            font-weight: bold;
+        }
+        
+        .service-price {
+            color: #F15A29;
+            font-weight: bold;
+        }
+        
+        .total-section {
+            text-align: right;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #F15A29;
+        }
+        
+        .total-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #F15A29;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        
+        .terms {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-size: 12px;
+        }
+        
+        .contact-info {
+            background: #F15A29;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .contact-info h3 {
+            margin: 0 0 15px 0;
+            color: white;
+        }
+        
+        .contact-info p {
+            margin: 5px 0;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="company-name">{{ company_info.name }}</h1>
+        <p class="company-tagline">Professional Office Cleaning Services</p>
+        <p class="company-info">
+            {{ company_info.address }}<br>
+            Phone: {{ company_info.phone }} | Email: {{ company_info.email }}<br>
+            Website: {{ company_info.website }}
+        </p>
+    </div>
+    
+    <h2 class="quote-title">Office Cleaning Quote</h2>
+    
+    <div class="quote-details">
+        <div class="customer-info">
+            <h3 class="section-title">Customer Information</h3>
+            <div class="info-row">
+                <span class="label">Name:</span>
+                <span class="value">{{ office_quote.name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Email:</span>
+                <span class="value">{{ office_quote.email }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Phone:</span>
+                <span class="value">{{ office_quote.phone_number }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Business Address:</span>
+                <span class="value">{{ office_quote.business_address }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Square Footage:</span>
+                <span class="value">{{ office_quote.square_footage }}</span>
+            </div>
+        </div>
+        
+        <div class="quote-info">
+            <h3 class="section-title">Quote Information</h3>
+            <div class="info-row">
+                <span class="label">Quote ID:</span>
+                <span class="value">#{{ office_quote.id }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Date:</span>
+                <span class="value">{{ office_quote.created_at|date:"F d, Y" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Status:</span>
+                <span class="value">{{ office_quote.get_status_display }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Valid Until:</span>
+                <span class="value">{{ office_quote.created_at|date:"F d, Y" }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <h3 class="section-title">Job Description</h3>
+    <div class="job-description">
+        <p>{{ office_quote.job_description }}</p>
+    </div>
+    
+    <h3 class="section-title">Services Included</h3>
+    <div class="services-section">
+        <div class="service-item">
+            <span class="service-name">Office Space Cleaning</span>
+            <span class="service-price">Included</span>
+        </div>
+        <div class="service-item">
+            <span class="service-name">Floor Cleaning & Maintenance</span>
+            <span class="service-price">Included</span>
+        </div>
+        <div class="service-item">
+            <span class="service-name">Bathroom Sanitization</span>
+            <span class="service-price">Included</span>
+        </div>
+        <div class="service-item">
+            <span class="service-name">Kitchen/Break Room Cleaning</span>
+            <span class="service-price">Included</span>
+        </div>
+        <div class="service-item">
+            <span class="service-name">Trash Removal</span>
+            <span class="service-price">Included</span>
+        </div>
+        <div class="service-item">
+            <span class="service-name">Surface Disinfection</span>
+            <span class="service-price">Included</span>
+        </div>
+    </div>
+    
+    <div class="total-section">
+        <h3>Estimated Total: <span class="total-amount">${{ office_quote.square_footage|default:"0" }}</span></h3>
+        <p><em>*Final pricing will be determined based on specific requirements and scheduling</em></p>
+    </div>
+    
+    <div class="contact-info">
+        <h3>Ready to Get Started?</h3>
+        <p>Contact us today to schedule your office cleaning service!</p>
+        <p><strong>Phone:</strong> {{ company_info.phone }} | <strong>Email:</strong> {{ company_info.email }}</p>
+    </div>
+    
+    <div class="terms">
+        <h4>Terms & Conditions:</h4>
+        <ul>
+            <li>This quote is valid for 30 days from the date of issue</li>
+            <li>Final pricing may vary based on specific requirements and scheduling</li>
+            <li>Service scheduling is subject to availability</li>
+            <li>Payment terms: Net 30 days from service completion</li>
+            <li>All services include our satisfaction guarantee</li>
+        </ul>
+    </div>
+    
+    <div class="footer">
+        <p>Thank you for considering {{ company_info.name }} for your office cleaning needs!</p>
+        <p>This quote was generated on {{ office_quote.created_at|date:"F d, Y \a\t g:i A" }}</p>
+        <p>&copy; 2024 {{ company_info.name }}. All rights reserved.</p>
+    </div>
+</body>
+</html>

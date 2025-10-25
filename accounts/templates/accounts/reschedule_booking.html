@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+  <div class="card mx-auto" style="max-width: 500px;">
+    <div class="card-body">
+      <h3 class="card-title mb-4">📅 Reschedule Booking</h3>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+          <label>Date</label>
+          {{ form.date }}
+        </div>
+        <div class="mb-3">
+          <label>Time</label>
+          {{ form.hour }}
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Reschedule</button>
+        <a href="{% url 'booking_detail' booking.id %}" class="btn btn-outline-secondary w-100 mt-2">Cancel</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

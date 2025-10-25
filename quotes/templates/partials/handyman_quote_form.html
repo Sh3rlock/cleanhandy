@@ -1,0 +1,147 @@
+<form method="post">
+  {% csrf_token %}
+  
+  <input type="hidden" name="service_cat" value="{{ service_cat.id }}">
+
+  <!-- Job Description -->
+  <label for="{{ form.job_description.id_for_label }}">Tell us about the job</label>
+  {{ form.job_description }}
+
+  <!-- Step 3: Contact Info -->
+<div class="step hidden-step" id="step3">
+  <h4>Contact Info</h4>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      {{ form.name.label_tag }}
+      {{ form.name }}
+      {% if form.name.errors %}
+        <div class="text-danger small">{{ form.name.errors.0 }}</div>
+      {% endif %}
+    </div>
+  
+    <div class="col-md-4 mb-3">
+      {{ form.email.label_tag }}
+      {{ form.email }}
+      {% if form.email.errors %}
+        <div class="text-danger small">{{ form.email.errors.0 }}</div>
+      {% endif %}
+    </div>
+    <div class="col-md-4 mb-3">
+      {{ form.phone.label_tag }}
+      {{ form.phone }}
+      {% if form.email.errors %}
+        <div class="text-danger small">{{ form.phone.errors.0 }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {{ form.city }}
+  {{ form.state }}
+  
+  {% if saved_addresses %}
+  <div class="card mb-4 shadow-sm" style="border: 1px solid #F15A29;">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="card-title mb-0">Select Address</h5>
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddAddressModal()">
+          + Add New Address
+        </button>
+      </div>
+  
+      <div class="form-group mb-3">
+        <label for="addressSelect" class="form-label">Your Saved Addresses</label>
+        <select id="addressSelect" class="form-select">
+          <option value="">Select Address</option>
+          {% for addr in saved_addresses %}
+            <option 
+              data-street="{{ addr.street_address }}"
+              data-apt="{{ addr.apt_suite }}"
+              data-zip="{{ addr.zip_code }}"
+              data-city="{{ addr.city }}"
+              data-state="{{ addr.state }}"
+            >
+              {{ addr.street_address }}, Apt {{ addr.apt_suite }}, {{ addr.zip_code }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+  
+      <!-- Address details row (if dynamically shown) -->
+      <div id="selectedAddressDetails" class="row g-2 d-none">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Street</label>
+          <p class="form-control-plaintext" id="addressStreet">–</p>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Apt/Suite</label>
+          <p class="form-control-plaintext" id="addressApt">–</p>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">ZIP Code</label>
+          <p class="form-control-plaintext" id="addressZip">–</p>
+        </div>
+      </div>
+  
+  
+{% endif %}
+
+
+
+<div class="row g-3">
+<!-- Street Address -->
+<div class="col-md-6">
+  <label for="{{ form.address.id_for_label }}" class="form-label">Street Address</label>
+  {{ form.address }}
+  {% if form.address.errors %}
+    <div class="text-danger small">{{ form.address.errors.0 }}</div>
+  {% endif %}
+</div>
+
+<!-- Apartment / Suite -->
+<div class="col-md-3">
+  <label for="{{ form.apartment.id_for_label }}" class="form-label">Apt/Suite</label>
+  {{ form.apartment }}
+  {% if form.apartment.errors %}
+    <div class="text-danger small">{{ form.apartment.errors.0 }}</div>
+  {% endif %}
+</div>
+
+<!-- ZIP Code -->
+<div class="col-md-3">
+  <label for="{{ form.zip_code.id_for_label }}" class="form-label">ZIP Code</label>
+  {{ form.zip_code }}
+  {% if form.zip_code.errors %}
+    <div class="text-danger small">{{ form.zip_code.errors.0 }}</div>
+  {% endif %}
+</div>
+</div>
+</div>
+</div>
+
+  <!-- Grid Row: Hours / Date / Hour -->
+  <div class="form-row">
+    <div class="form-group">
+      <label for="{{ form.hours_requested.id_for_label }}">Hours</label>
+      {{ form.hours_requested }}
+    </div>
+    <div class="form-group">
+      <label for="{{ form.date.id_for_label }}">Date</label>
+      <div style="position: relative;">
+        {{ form.date }}
+        <i class="icon-calendar" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;"></i>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="{{ form.hour.id_for_label }}">Time</label>
+      {{ form.hour }}
+    </div>
+  </div>
+
+  <!-- Terms -->
+  <div class="checkbox-wrap mt-3">
+    <input type="checkbox" id="terms" required>
+    <label for="terms">I agree with all the terms & conditions</label>
+  </div>
+
+  <button type="submit" class="btn-1 w-100 mt-3">Get Price <i class="icon-arrow-1"></i></button>
+</form>

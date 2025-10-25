@@ -1,0 +1,38 @@
+Hi {{ quote.customer.name }},
+
+Thank you for requesting a cleaning quote! Here’s a breakdown of your quote:
+
+--- PRICE BREAKDOWN ---
+Base Price: $50.00
+Square Feet ({{ quote.square_feet }}): ${{ quote.square_feet|floatformat:2 }} × 0.15 = ${{ quote.square_feet|floatformat:2|add:"0"|floatformat:2|add:"0"|floatformat }}
+Bedrooms ({{ quote.num_bedrooms }}): ${{ quote.num_bedrooms }} × 10 = ${{ quote.num_bedrooms|add:"0"|floatformat:2 }}
+Bathrooms ({{ quote.num_bathrooms }}): ${{ quote.num_bathrooms }} × 12 = ${{ quote.num_bathrooms|add:"0"|floatformat:2 }}
+{% if quote.extras.all %}
+Extras:
+{% for extra in quote.extras.all %}
+- {{ extra.name }}: ${{ extra.price }}
+{% endfor %}
+{% endif %}
+
+Total Price: ${{ quote.price }}
+
+--- SCHEDULE ---
+Date: {{ quote.date }}
+Time: {{ quote.hour }}
+Duration: {{ quote.hours_requested }} hour(s)
+
+--- HOME INFO ---
+Type: {{ quote.get_home_type_display }}
+Square Feet: {{ quote.square_feet }}
+Bedrooms: {{ quote.num_bedrooms }}
+Bathrooms: {{ quote.num_bathrooms }}
+
+--- CONTACT INFO ---
+Name: {{ quote.customer.name }}
+Email: {{ quote.customer.email }}
+Phone: {{ quote.customer.phone }}
+
+We’ll be in touch shortly to confirm your booking!
+
+Best regards,  
+CleanPro Team

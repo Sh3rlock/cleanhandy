@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #333; }
+    h2 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+  </style>
+</head>
+<body>
+  <h2>New Cleaning booking Submitted</h2>
+
+  <p><strong>Customer:</strong> {{ booking.name }} ({{ booking.email }})</p>
+  <p><strong>Phone:</strong> {{ booking.phone }}</p>
+
+  <p><strong>Service Address:</strong> {{ booking.address }}, Apt {{ booking.apartment }}, {{ booking.city }} {{ booking.zip_code }}</p>
+  <p><strong>Date & Time:</strong> {{ booking.date }} at {{ booking.hour }}</p>
+
+  {% if booking.gift_card_discount > 0 %}
+      <p>Gift Card Discount: ${{ booking.gift_card_discount }}</p>
+  {% endif %}
+  <p><strong>Total Price:</strong> ${{ booking.price }}</p>
+
+  {% if booking.get_paid_amount > 0 %}
+  <hr>
+  <h3>💳 Payment Summary</h3>
+  <p><strong>Type:</strong> {{ booking.get_payment_type_for_display }}</p>
+  <p><strong>Paid:</strong> €{{ booking.get_paid_amount|floatformat:2 }}</p>
+  {% if booking.get_paid_amount < booking.price %}
+    <p><strong>Remaining:</strong> €{{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</p>
+  {% else %}
+    <p><strong>Status:</strong> <span style="color: #28a745; font-weight: bold;">Fully Paid</span></p>
+  {% endif %}
+  {% if booking.get_current_payment_intent_id %}
+    <p><strong>Stripe Payment Intent ID:</strong> {{ booking.get_current_payment_intent_id }}</p>
+  {% endif %}
+  {% endif %}
+
+  <p>See full details in the attached PDF.</p>
+</body>
+</html>

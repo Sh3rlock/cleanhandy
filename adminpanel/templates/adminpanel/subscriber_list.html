@@ -1,0 +1,164 @@
+{% extends "accounts/partials/account_base.html" %}
+{% load static %}
+{% block account_content %}
+
+<style>
+     section {
+        z-index: unset !important;
+     }
+
+     .text-primary {
+        color: #F15A29 !important;
+      }
+
+      .custom-modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5);
+      }
+    
+      .custom-modal-content {
+        background-color: #fff;
+        margin: 10% auto;
+        padding: 1rem;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      }
+    
+      .custom-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+    
+      .custom-modal-close {
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+    
+      .custom-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+</style>
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/2.3.0/css/dataTables.dataTables.css" />
+
+
+<div class="row">
+  <!-- Left Column: Bookings Table -->
+  <div class="col-12 col-lg-12">
+    <a href="{% url 'admin_dashboard' %}" class="text-primary mb-4"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+        Back to dashboard</a>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">
+          <i class="fa-solid fa-newspaper me-2 text-primary"></i> Subscribers
+        </h2>
+        <div class="d-flex gap-2">
+          <a href="{% url 'export_subscribers_csv' %}" class="btn btn-outline-success">
+            <i class="fa-solid fa-file-csv"></i> Export to CSV
+          </a>
+          <button type="button" class="btn btn-primary" onclick="openAddSubscriberModal()">
+            <i class="fa-solid fa-plus"></i> Add Subscriber
+          </button> 
+        </div>
+      </div>
+      
+
+    {% if subscribers %}
+    <div class="table-responsive">
+      <table id="subscribersTable" class="table table-hover align-middle">
+        <thead>
+            <tr>
+              <th>Email</th>
+              <th>Subscribed at</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for subrciber in subscribers %}
+              <tr>
+                <td>{{ subrciber.email }}</td>
+                <td>{{ subrciber.subscribed_at|date:"M d, Y" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="3" class="text-muted text-center">No subscribers.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p>You have no subscribers yet.</p>
+    {% endif %}
+
+    <a href="{% url 'admin_dashboard' %}" class="text-primary"><i class="fa fa-arrow-left" aria-hidden="true"></i>
+        Back to dashboard</a>
+  </div>
+</div>
+
+<!-- Custom Add Subscriber Modal -->
+<div id="customAddSubscriberModal" class="custom-modal">
+    <div class="custom-modal-content">
+      <div class="custom-modal-header">
+        <h5>Add New Subscriber</h5>
+        <span class="custom-modal-close" onclick="closeAddSubscriberModal()">&times;</span>
+      </div>
+      <form method="post" action="{% url 'add_subscriber' %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="form-group mb-2">
+            <label for="subscriber_email">Subscriber Email</label>
+            <input type="email" name="subscriber_email" id="subscriber_email" class="cmn-input" required>
+          </div>
+        </div>
+      
+        <div class="custom-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeAddSubscriberModal()">Cancel</button>
+          <button type="submit" class="btn-1"><i class="fa-solid fa-floppy-disk" style="font-size: 16px;"></i> Save Subscriber</button>
+        </div>
+      </form>
+      
+    </div>
+  </div>
+
+<script>
+    function openAddSubscriberModal() {
+      document.getElementById("customAddSubscriberModal").style.display = "block";
+    }
+  
+    function closeAddSubscriberModal() {
+      document.getElementById("customAddSubscriberModal").style.display = "none";
+    }
+  
+    window.addEventListener("click", function (event) {
+      const modal = document.getElementById("customAddSubscriberModal");
+      if (event.target === modal) {
+        closeAddSubscriberModal();
+      }
+    });
+  </script>
+  
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/2.3.0/js/dataTables.js"></script>
+
+<script>
+      $('#subscribersTable').DataTable();
+</script>
+  
+{% endblock %}

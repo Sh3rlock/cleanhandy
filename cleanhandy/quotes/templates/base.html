@@ -1,0 +1,819 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>TheCleanHandy</title>
+
+    <!-- Stylesheets -->
+    <link href="{% static 'assets/css/style.css' %}" rel="stylesheet" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link rel="shortcut icon" href="{% static '/assets/images/favicon.png' %}" type="image/x-icon" />
+    <link rel="icon" href="{% static '/assets/images/favicon.png' %}" type="image/x-icon" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+
+  <body>
+    <style>
+
+      .common-banner {
+        padding: 30px 0 70px !important;
+        margin-bottom: 20px !important;
+      }
+
+      .categories {
+        padding: 0px !important;
+      }
+
+      /* General placeholder style */
+      input::placeholder {
+        color: #999;  /* or any lighter grey */
+        opacity: 1;   /* Safari ignores opacity if not set */
+      }
+      .newsletter-input{
+        padding: 19px 5px 19px 16px !important;
+      }
+
+      :root {
+        --bs-primary: #F15A29;
+      }
+      
+      .btn-primary {
+        background-color: #F15A29;
+        border-color: #F15A29;
+      }
+      
+      .btn-primary:hover,
+      .btn-primary:focus {
+        background-color: #d44f24;
+        border-color: #d44f24;
+      }
+    
+      /* Outline primary button */
+    .btn-outline-primary {
+      color: #F15A29;
+      border-color: #F15A29;
+    }
+    
+    .btn-outline-primary:hover,
+    .btn-outline-primary:focus {
+      background-color: #F15A29;
+      color: #fff;
+      border-color: #F15A29;
+    }
+    
+    /* Modern booking buttons row styling */
+    .booking-buttons-row {
+      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+      border-top: 1px solid rgba(241, 90, 41, 0.1);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .booking-buttons-row::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, #F15A29, #ff6b3d, #F15A29);
+      background-size: 200% 100%;
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    .booking-buttons-row .btn {
+      margin: 4px 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.5rem 1.2rem;
+      border-radius: 25px;
+      border: 2px solid #F15A29;
+      background: transparent;
+      color: #F15A29;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      text-transform: none;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(241, 90, 41, 0.15);
+    }
+    
+    .booking-buttons-row .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .booking-buttons-row .btn:hover {
+      background: #F15A29;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(241, 90, 41, 0.3);
+      border-color: #F15A29;
+    }
+    
+    .booking-buttons-row .btn:hover::before {
+      left: 100%;
+    }
+    
+    .booking-buttons-row .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(241, 90, 41, 0.2);
+    }
+    
+    .booking-buttons-row .btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(241, 90, 41, 0.2);
+    }
+    
+    /* Container styling */
+    .booking-buttons-container {
+      padding: 1rem 0;
+      position: relative;
+    }
+    
+    .booking-buttons-container .d-flex {
+      gap: 0.5rem;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+      .booking-buttons-row .btn {
+        font-size: 0.85rem;
+        padding: 0.45rem 1rem;
+        margin: 3px 4px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .booking-buttons-container .d-flex {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      
+      .booking-buttons-row .btn {
+        width: 220px;
+        margin: 2px 0;
+        font-size: 0.9rem;
+        padding: 0.6rem 1.5rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .booking-buttons-row .btn {
+        width: 200px;
+        font-size: 0.85rem;
+        padding: 0.5rem 1.2rem;
+      }
+    }
+    
+    /* Mobile sticky header nav toggler fix */
+    .d-md-none .mobile-nav-toggler {
+      margin-left: 0 !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .d-md-none .mobile-nav-toggler img {
+      display: block !important;
+      visibility: visible !important;
+    }
+    </style>
+    <div class="page-wrapper">
+      
+      <!-- header -->
+      <header class="main-header header-style-one">
+        <!-- Header Lower -->
+        <div class="header-lower">
+          <div class="container">
+            <div class="inner-container d-flex align-items-center justify-content-between">
+              <div class="header-left-column">
+                <div class="logo-box">
+                  <div class="logo">
+                    <a href="{% url 'home' %}"><img src="{% static '/assets/images/logo_1.png' %}" alt="logo" style="width: 200px;" /></a>
+                  </div>
+                </div>
+              </div>
+              <div class="header-center-column">
+                <div class="nav-outer">
+                  <div class="mobile-nav-toggler">
+                    <img src="{% static '/assets/images/icons/icon-bar.png' %}" alt="icon" />
+                  </div>
+                  <nav class="main-menu navbar-expand-md navbar-light">
+                    <div class="collapse navbar-collapse show clearfix" id="navbarSupportedContent">
+                      <ul class="navigation">
+                        <li>
+                          <a href="{% url 'home' %}">Home</a>
+                        </li>
+
+                        <li class="dropdown">
+                          <a href="javascript:void(0);">All Services</a>
+                          <ul>
+                            <li style="margin-top: 0.5em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Cleaning</li>
+                            {% for service in all_services %}
+                              {% if service.category.name|lower == 'cleaning' %}
+                                <li>
+                                  <a href="{% url 'request_cleaning_quote' service.id %}">{{ service.name }}</a>
+                                </li>
+                              {% elif service.category.name|lower == 'post event cleaning' %}
+                                <li>
+                                  <a href="{% url 'request_post_event_cleaning_quote' service.id %}">{{ service.name }}</a>
+                                </li>
+                              {% endif %}
+                            {% endfor %}
+                            <li style="margin-top: 1em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Handyman</li>
+                            {% for service in all_services %}
+                              {% if service.category.name|lower == 'handyman' %}
+                                <li>
+                                  <a href="{% url 'request_handyman_quote' service.id %}">{{ service.name }}</a>
+                                </li>
+                              {% endif %}
+                            {% endfor %}
+                           
+                          </ul>
+                        </li>
+                        <li>
+                            <a href="{% url 'about' %}">About Us</a>
+                          </li>
+                        <li>
+                          <a href="{% url 'blog' %}">Blog</a>
+                        </li>
+                        <li>
+                          <a href="{% url 'contact' %}">Contact</a>
+                        </li>
+                      </ul>
+                    </div>
+                  </nav>
+                </div>
+              </div>
+              <div class="header-right-column d-flex align-items-center">
+                <div class="header-right-contact" style="display: flex; flex-direction: column; align-items: center;">
+                  {% if contact_info %}
+                    <a href="tel:{{ contact_info.phone }}" style="margin-bottom: 5px;"><i class="icon-call-2"></i> {{ contact_info.phone }}</a>
+                    <a href="mailto:support@thecleanhandy.com"><i class="fa-light fa-envelope"></i> support@thecleanhandy.com</a>
+                  {% else %}
+                    <a href="tel:3472861466" style="margin-bottom: 5px;"><i class="icon-call-2"></i> (347) 286-1466</a>
+                    <a href="mailto:support@thecleanhandy.com"><i class="fa-light fa-envelope"></i> support@thecleanhandy.com</a>
+                  {% endif %}
+                </div>
+                <div class="header-right-btn-area">
+                  {% if user.is_authenticated %}
+                      <a href="{% url 'profile' %}" class="btn-1">My Profile</a>
+                  {% else %}
+                    <a href="{% url 'login' %}" class="btn-1" >Sign In</a>
+                    <a href="{% url 'register' %}" class="btn-1" >Sign Up</a>
+                  {% endif %}
+                </div>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Header Lower -->
+
+        <!-- sticky header -->
+        <div class="sticky-header">
+          <div class="header-upper">
+            <div class="container">
+              <!-- Main navigation row -->
+              <div class="inner-container d-flex align-items-center justify-content-between d-none d-md-flex">
+                <div class="left-column d-flex align-items-center">
+                  <div class="logo-box">
+                    <div class="logo">
+                      <a href="{% url 'home' %}"><img src="{% static '/assets/images/logo_1.png' %}" alt="logo" style="width: 200px;" /></a>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="nav-outer gap-5 d-flex align-items-center">
+                  <div class="mobile-nav-toggler">
+                    <img src="{% static '/assets/images/icons/icon-bar.png' %}" alt="icon" />
+                  </div>
+                  <nav class="main-menu navbar-expand-md navbar-light"></nav>
+                </div>
+
+                <div class="header-right-column d-flex align-items-center">
+                  <div class="header-right-contact" style="display: flex; flex-direction: column; align-items: center;">
+                    {% if contact_info %}
+                      <a href="tel:{{ contact_info.phone }}" style="margin-bottom: 5px;"><i class="icon-call-2"></i> {{ contact_info.phone }}</a>
+                      <a href="mailto:support@thecleanhandy.com"><i class="fa-light fa-envelope"></i> support@thecleanhandy.com</a>
+                    {% else %}
+                      <a href="tel:3472861466" style="margin-bottom: 5px;"><i class="icon-call-2"></i> (347) 286-1466</a>
+                      <a href="mailto:support@thecleanhandy.com"><i class="fa-light fa-envelope"></i> support@thecleanhandy.com</a>
+                    {% endif %}
+                  </div>
+                  <div class="header-right-btn-area">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">My Profile</a>
+                    {% else %}
+                    <!-- Example buttons to trigger the modals -->
+                    <a href="{% url 'login' %}" class="btn btn-sm btn-outline-primary" >Sign In</a>
+                    <a href="{% url 'register' %}" class="btn btn-sm btn-outline-primary" >Sign Up</a>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Mobile sticky header with logo and contact info -->
+              <div class="d-md-none" style="padding: 12px 0;">
+                <div class="inner-container d-flex align-items-center justify-content-between">
+                  <div class="left-column d-flex align-items-center" style="flex: 1; min-width: 0;">
+                    <div class="logo-box">
+                      <div class="logo">
+                        <a href="{% url 'home' %}"><img src="{% static '/assets/images/logo_1.png' %}" alt="logo" style="width: 100px;" /></a>
+                      </div>
+                    </div>
+                    <div class="mobile-contact-info ms-2" style="display: flex; flex-direction: column; align-items: flex-start; flex: 1; min-width: 0;">
+                      {% if contact_info %}
+                        <a href="tel:{{ contact_info.phone }}" style="color: #333; text-decoration: none; font-size: 0.75rem; margin-bottom: 1px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                          <i class="icon-call-2" style="margin-right: 3px; color: #F15A29; font-size: 0.7rem;"></i> {{ contact_info.phone }}
+                        </a>
+                        <a href="mailto:support@thecleanhandy.com" style="color: #333; text-decoration: none; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                          <i class="fa-light fa-envelope" style="margin-right: 3px; color: #F15A29; font-size: 0.65rem;"></i> support@thecleanhandy.com
+                        </a>
+                      {% else %}
+                        <a href="tel:3472861466" style="color: #333; text-decoration: none; font-size: 0.75rem; margin-bottom: 1px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                          <i class="icon-call-2" style="margin-right: 3px; color: #F15A29; font-size: 0.7rem;"></i> (347) 286-1466
+                        </a>
+                        <a href="mailto:support@thecleanhandy.com" style="color: #333; text-decoration: none; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                          <i class="fa-light fa-envelope" style="margin-right: 3px; color: #F15A29; font-size: 0.65rem;"></i> support@thecleanhandy.com
+                        </a>
+                      {% endif %}
+                    </div>
+                    <div class="mobile-nav-toggler ms-2" style="cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center; background: rgba(241, 90, 41, 0.1); border-radius: 4px; border: 1px solid rgba(241, 90, 41, 0.3);">
+                      <img src="{% static '/assets/images/icons/icon-bar.png' %}" alt="menu" style="width: 24px; height: 24px; filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);" />
+                    </div>
+                  </div>
+
+                  <div class="header-right-column d-flex align-items-center" style="flex-shrink: 0;">
+                    <div class="header-right-btn-area d-flex gap-1">
+                      {% if user.is_authenticated %}
+                          <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Profile</a>
+                      {% else %}
+                      <a href="{% url 'login' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Sign In</a>
+                      <a href="{% url 'register' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Sign Up</a>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Booking buttons row -->
+              <div class="booking-buttons-row d-none d-md-block">
+                <div class="booking-buttons-container">
+                  <!-- Mobile contact info above buttons -->
+                  <div class="mobile-sticky-contact text-center mb-3 d-md-none">
+                    {% if contact_info %}
+                      <a href="tel:{{ contact_info.phone }}" style="color: #333; text-decoration: none; display: block; margin-bottom: 5px; font-size: 0.9rem;">
+                        <i class="icon-call-2" style="margin-right: 5px;"></i> {{ contact_info.phone }}
+                      </a>
+                      <a href="mailto:support@thecleanhandy.com" style="color: #333; text-decoration: none; display: block; font-size: 0.9rem;">
+                        <i class="fa-light fa-envelope" style="margin-right: 5px;"></i> support@thecleanhandy.com
+                      </a>
+                    {% else %}
+                      <a href="tel:3472861466" style="color: #333; text-decoration: none; display: block; margin-bottom: 5px; font-size: 0.9rem;">
+                        <i class="icon-call-2" style="margin-right: 5px;"></i> (347) 286-1466
+                      </a>
+                      <a href="mailto:support@thecleanhandy.com" style="color: #333; text-decoration: none; display: block; font-size: 0.9rem;">
+                        <i class="fa-light fa-envelope" style="margin-right: 5px;"></i> support@thecleanhandy.com
+                      </a>
+                    {% endif %}
+                  </div>
+                  
+                  <div class="d-flex flex-wrap justify-content-center">
+                  {% if user.is_authenticated %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+                  {% else %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+                  {% endif %}
+
+                  <!-- {% if user.is_authenticated %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+                  {% else %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'handyman_booking' %}">Book Handyman</a>
+                  {% endif %} -->
+
+                  {% if user.is_authenticated %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+                  {% else %}
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+                  {% endif %}
+
+                  {% for service in all_services %}
+                    {% if service.category.name|lower == 'post event cleaning' %}
+                      {% if user.is_authenticated %}
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+                      {% else %}
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- sticky header -->
+
+        <!-- mobile menu -->
+        <div class="mobile-menu">
+          <div class="menu-backdrop"></div>
+          <div class="close-btn">
+            <span class="fal fa-times"></span>
+          </div>
+
+          <nav class="menu-box">
+            <div class="nav-logo">
+              <a href="i{% url 'home' %}"><img src="{% static '/assets/images/logo_1.png' %}" alt="logo" style="width: 200px;" /></a>
+            </div>
+            <div class="menu-outer">
+              <!-- Here Menu Will Come Automatically Via Javascript / Same Menu as in Header -->
+            </div>
+
+            <!-- Mobile Contact Info -->
+            <div class="mobile-contact-info text-center mb-4" style="padding: 0 20px;">
+              <div style="margin-bottom: 15px;">
+                {% if contact_info %}
+                  <a href="tel:{{ contact_info.phone }}" style="color: #333; text-decoration: none; display: block; margin-bottom: 8px;">
+                    <i class="icon-call-2" style="margin-right: 8px;"></i> {{ contact_info.phone }}
+                  </a>
+                  <a href="mailto:support@thecleanhandy.com" style="color: #333; text-decoration: none; display: block;">
+                    <i class="fa-light fa-envelope" style="margin-right: 8px;"></i> support@thecleanhandy.com
+                  </a>
+                {% else %}
+                  <a href="tel:3472861466" style="color: #333; text-decoration: none; display: block; margin-bottom: 8px;">
+                    <i class="icon-call-2" style="margin-right: 8px;"></i> (347) 286-1466
+                  </a>
+                  <a href="mailto:support@thecleanhandy.com" style="color: #333; text-decoration: none; display: block;">
+                    <i class="fa-light fa-envelope" style="margin-right: 8px;"></i> support@thecleanhandy.com
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="mobile-menu-buttons mt-4 text-center">
+              {% if user.is_authenticated %}
+                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+                <!-- <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'request_handyman_booking' %}">Book Handyman</a> -->
+                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+                {% for service in all_services %}
+                  {% if service.category.name|lower == 'post event cleaning' %}
+                    <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+                  {% endif %}
+                {% endfor %}
+                <a class="btn btn-sm btn-outline-primary d-block" style="margin-left: 25px; margin-right: 25px;" href="{% url 'profile' %}">My Profile</a>
+              {% else %}
+                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+                <!-- <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'handyman_booking' %}">Book Handyman</a> -->
+                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+                {% for service in all_services %}
+                  {% if service.category.name|lower == 'post event cleaning' %}
+                    <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+                  {% endif %}
+                {% endfor %}
+                <a class="btn btn-1 d-block" href="{% url 'login' %}">Sign In</a>
+                <a class="btn btn-1 d-block" href="{% url 'register' %}">Sign Up</a>
+              {% endif %}
+            </div>
+            
+            <!-- Social Links -->
+            <div class="social-links">
+              <ul class="clearfix">
+                <li>
+                  <a href="#"><span class="fab fa-twitter"></span></a>
+                </li>
+                <li>
+                  <a href="#"><span class="fab fa-facebook-square"></span></a>
+                </li>
+                <li>
+                  <a href="#"><span class="fab fa-pinterest-p"></span></a>
+                </li>
+                <li>
+                  <a href="#"><span class="fab fa-instagram"></span></a>
+                </li>
+                <li>
+                  <a href="#"><span class="fab fa-youtube"></span></a>
+                </li>
+              </ul>
+            </div>
+          </nav>
+        </div>
+      </header>
+      <!-- header -->
+
+      {% block content %}
+      {% endblock %}
+
+      <!-- footer -->
+      <footer id="footer" class="main-footer footer-one">
+        <div class="container">
+          <div class="footer-top">
+            <div class="footer-top-logo">
+              <img src="{% static '/assets/images/logo_1.png' %}" alt="logo" style="width: 200px;" />
+            </div>
+            <div class="social-media">
+              <ul>
+                <li>
+                  <a href="#0"><i class="fa-brands fa-facebook-f"></i></a>
+                </li>
+                <li>
+                  <a href="#0"><i class="icon-twiter"></i></a>
+                </li>
+                <li>
+                  <a href="#0"><i class="fa-brands fa-linkedin-in"></i></a>
+                </li>
+                <li>
+                  <a href="#0"><i class="fa-brands fa-instagram"></i></a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="footer-widget-container">
+            <div class="row">
+              <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="footer-widget about-widget">
+                  <div class="about-widget-inner">
+                    <h6 class="footer-widget-title">About us</h6>
+                    <p><strong>TheCleanHandy</strong> was founded in 2025 with a clear mission: to make everyday life easier through dependable, professional, and high-quality cleaning and handyman services.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-lg-4 col-md-4">
+                <div class="footer-widget company-widget">
+                  <div class="company-widget-inner">
+                    <h6 class="footer-widget-title">Pages</h6>
+                    <ul class="footer-widget-list">
+                      <li>
+                        <a href="{% url 'home' %}">Home</a>
+                      </li>
+                      <li>
+                        <a href="{% url 'about' %}">About Us</a>
+                      </li>
+                      <li>
+                        <a href="blog.html">Servat Blog</a>
+                      </li>
+                      <li>
+                        <a href="blog.html">Engineering Blog</a>
+                      </li>
+                      <li>
+                        <a href="{% url 'contact' %}">Contact</a>
+                      </li>
+                      <li><a href="{% url 'terms' %}">Terms & Conditions</a></li>
+                      <li><a href="{% url 'privacy' %}">Privacy Policy</a></li>
+                      <li><a href="{% url 'faq' %}">FAQ</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-2 col-lg-4 col-md-2">
+                <div class="footer-widget support-widget">
+                  <div class="support-widget-inner">
+                    <h6 class="footer-widget-title">Services</h6>
+                    <ul class="footer-widget-list">
+                      {# Cleaning Services #}
+                      <li style="margin-top: 0.5em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Cleaning</li>
+                      {% for service in all_services %}
+                        {% if service.category.name|lower == 'cleaning' %}
+                          <li><a href="{% url 'request_cleaning_quote' service.id %}">{{ service.name }}</a></li>
+                        {% elif service.category.name|lower == 'post event cleaning' %}
+                        <li>
+                          <a href="{% url 'request_post_event_cleaning_quote' service.id %}">{{ service.name }}</a>
+                        </li>
+                        {% endif %}
+                      {% endfor %}
+                      <li style="margin-top: 1em; margin-bottom: 0.2em; font-weight: bold; color: #F15A29; font-size: 1.08em; letter-spacing: 0.5px; border-bottom: 1px solid #f3c6b1;">Handyman</li>
+                      {% for service in all_services %}
+                        {% if service.category.name|lower == 'handyman' %}
+                          <li><a href="{% url 'request_handyman_quote' service.id %}">{{ service.name }}</a></li>
+                        {% endif %}
+                      {% endfor %}
+                      
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-4 col-lg-6 col-md-8">
+                <div class="footer-widget newsletter-widget">
+                  <div class="newsletter-widget-inner">
+                    <h6 class="footer-widget-title">Join Our Newsletter</h6>
+                    <div class="footer-newsletter-info">
+                      <div class="footer-newsletter-form">
+                       
+                        <form id="newsletter-form" method="post">
+                          {% csrf_token %}
+                          {{ newsletter_form.email }}
+                        
+                          <div class="checkbox-input flex items-center mt-2">
+                            <input  type="checkbox" name="agree_terms" id="agree_terms" class="form-check-input" required />
+                            <label for="agree_terms" class="ml-2">
+                              I agree to the <a href="{% url 'terms' %}" class="text-blue-500 underline">Terms and Conditions</a>
+                            </label>
+                          </div>
+                        
+                          <button type="submit" class="btn-1">Subscribe <i class="icon-arrow-1"></i></button>
+                        </form>
+                        
+                        <div id="newsletter-message" class="mt-2 text-sm"></div>
+                    
+                      
+                      
+                      </div>
+                      <div class="footer-contact-info">
+                        {% if contact_info %}
+                          <a href="#0"><i class="fa-light fa-location-dot"></i>{{ contact_info.address }}</a>
+                          <a href="mailto:info@thecleanhandy.com"><i class="fa-light fa-envelope"></i> info@thecleanhandy.com</a>
+                          <a href="mailto:support@thecleanhandy.com"><i class="fa-light fa-envelope"></i> support@thecleanhandy.com</a>
+                        {% else %}
+                          <a href="#0"><i class="fa-light fa-location-dot"></i>31-85 Crescent St, Astoria, NY 11106</a>
+                          <a href="mailto:info@thecleanhandy.com"><i class="fa-light fa-envelope"></i> info@thecleanhandy.com</a>
+                          <a href="mailto:support@thecleanhandy.com"><i class="fa-light fa-envelope"></i> support@thecleanhandy.com</a>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-copyright">
+          <div class="container">
+            <div class="footer-copyright-content">
+              <p>
+                &copy; 2025 | Alrights reserved By <a href="#0">TheCleanHandy</a>
+              </p>
+              <div class="footer-terms">
+                <a href="{% url 'privacy' %}">Privacy Policy</a>
+                <a href="{% url 'terms' %}">Terms & Conditions</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+      <!-- footer -->
+    </div>
+
+    <!-- Scroll to top -->
+    <div class="scroll-to-top">
+      <div>
+        <div class="scroll-top-inner">
+          <div class="scroll-bar">
+            <div class="bar-inner"></div>
+          </div>
+          <div class="scroll-bar-text">Go To Top</div>
+        </div>
+      </div>
+    </div>
+    <!-- Scroll to top end -->
+
+
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("newsletter-form");
+        const messageBox = document.getElementById("newsletter-message");
+        const termsCheckbox = document.getElementById("agree_terms");
+      
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+      
+          // Clear old styles
+          messageBox.className = "mt-2 text-sm";
+          messageBox.innerText = "";
+      
+          // Check terms box
+          if (!termsCheckbox.checked) {
+            messageBox.innerText = "You must agree to the terms.";
+            messageBox.classList.add("text-red-600");
+            return;
+          }
+      
+          const formData = new FormData(form);
+      
+          fetch("{% url 'subscribe_newsletter' %}", {
+            method: "POST",
+            headers: {
+              'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+            messageBox.innerText = data.message;
+      
+            if (data.status === "success") {
+              messageBox.style.color = "#28a745"; // green
+              form.reset();
+            } else if (data.status === "info") {
+              messageBox.style.color = "#007bff"; // blue
+            } else {
+              messageBox.style.color = "#F15A29"; // orange
+            }
+
+            messageBox.style.fontSize = "1.1rem";
+            messageBox.style.fontWeight = "600";
+          })
+          .catch(() => {
+            messageBox.innerText = "Something went wrong. Please try again.";
+            messageBox.classList.add("text-red-600");
+          });
+        });
+      });
+      </script>
+
+    <script src="{% static '/assets/js/jquery.min.js' %}"></script>
+    <script src="{% static '/assets/js/bootstrap.min.js' %}"></script>
+    <script src="{% static '/assets/js/select2.min.js' %}"></script>
+    <script src="{% static '/assets/js/jquery.nice-select.min.js' %}"></script>
+    <script src="{% static '/assets/js/appear.js' %}"></script>
+    <script src="{% static '/assets/js/wow.js' %}"></script>
+    <script src="{% static '/assets/js/TweenMax.min.js' %}"></script>
+    <script src="{% static '/assets/js/odometer.min.js' %}"></script>
+    <script src="{% static '/assets/js/swiper.min.js' %}"></script>
+    <script src="{% static '/assets/js/parallax-scroll.js' %}"></script>
+    <script src="{% static '/assets/js/jarallax.min.js' %}"></script>
+    <script src="{% static '/assets/js/jquery.paroller.min.js' %}"></script>
+    <script src="{% static '/assets/js/jquery.magnific-popup.min.js' %}"></script>
+    <script src="{% static '/assets/js/isotope.js' %}"></script>
+    <script src="{% static '/assets/js/flatpickr-min.js' %}"></script>
+    <script src="{% static '/assets/js/socialSharing.js' %}"></script>
+    <script src="{% static '/assets/js/script.js' %}"></script>
+    
+    <!-- CSRF Token Utility -->
+    <script>
+      // Get CSRF token from cookies
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+      
+      // Set CSRF token for AJAX requests
+      const csrftoken = getCookie('csrftoken');
+      if (csrftoken) {
+        $.ajaxSetup({
+          beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+              xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+          }
+        });
+      }
+      
+      function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+      }
+      
+      // Refresh CSRF token if needed
+      function refreshCSRFToken() {
+        $.ajax({
+          url: '{% url "refresh_csrf_token" %}',
+          type: 'GET',
+          success: function() {
+            console.log('CSRF token refreshed');
+          },
+          error: function() {
+            console.log('Failed to refresh CSRF token');
+          }
+        });
+      }
+      
+      // Auto-refresh CSRF token every 30 minutes
+      setInterval(refreshCSRFToken, 30 * 60 * 1000);
+    </script>
+    
+    {% block modals %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,3409 @@
+{% extends "base.html" %}
+{% load static %}
+{% load form_tags %}
+{% block content %}
+<style>
+  .btn {
+    padding: 0.5rem 1rem !important; 
+  }
+
+  .nav-link {
+    padding: 10px 18px;
+    font-weight: 500;
+    color: #000 !important;
+    border-radius: 10px;
+    transition: all 0.2s ease-in-out;
+    background-color: transparent;
+    border: 1px solid transparent;
+  }
+  
+  .nav-link:hover {
+    background-color: #f3f3f3;
+    text-decoration: none;
+  }
+  
+  .nav-link.active {
+    background-color: #F15A29 !important; /* Blue background */
+    color: #fff !important;
+    font-weight: 600;
+  }
+
+  .cmn-input {
+    border-radius: 8px;
+    border: 1px solid #F15A29;
+    background: var(--white-color);
+    /* padding: 0.5rem 1rem; */
+    width: 100%;
+    margin-bottom: 15px !important;
+  }
+
+  /* Make form-check divs clickable */
+  .form-check.clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .form-check.clickable:hover {
+    background-color: #f8f9fa;
+    border-color: #F15A29;
+  }
+  
+  .form-check.clickable:has(input:checked) {
+    background-color: #e3f2fd;
+    border-color: #F15A29;
+  }
+
+  /* Frequency Section Styles */
+  .frequency-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .frequency-btn {
+    padding: 12px 20px;
+    border: 1px solid #F15A29;
+    background: white;
+    color: #666;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    min-width: 100px;
+  }
+
+  .frequency-btn.active {
+    background: #F15A29;
+    color: white;
+    border-color: #F15A29;
+  }
+
+  .frequency-btn:hover {
+    border-color: #F15A29;
+    color: #F15A29;
+  }
+
+  .frequency-btn.active:hover {
+    background: #F15A29;
+    color: white;
+  }
+
+  /* Calendar Navigation Styles */
+  .calendar-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .nav-arrow {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .nav-arrow:hover {
+    background: #f8f9fa;
+    border-color: #F15A29;
+  }
+
+  .calendar-dates {
+    display: flex;
+    gap: 15px;
+    flex-wrap: 1;
+    justify-content: center;
+  }
+
+  .date-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 60px;
+  }
+
+  .date-item:hover {
+    border-color: #F15A29;
+  }
+
+  .date-item.selected {
+    border-color: #F15A29;
+    background: #f8f8ff;
+  }
+
+  .date-icon {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 5px;
+  }
+
+  .date-day {
+    font-size: 12px;
+    color: #999;
+    font-weight: 500;
+  }
+
+  .date-number {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  /* Time Slots Styles */
+  .time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .time-slot {
+    padding: 10px 15px;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .time-slot:hover {
+    border-color: #F15A29;
+    color: #F15A29;
+  }
+
+  .time-slot.selected {
+    background: #F15A29;
+    color: white;
+    border-color: #F15A29;
+  }
+
+  .time-slot.unavailable {
+    background: #f8f9fa;
+    color: #999;
+    cursor: not-allowed;
+    border-color: #eee;
+  }
+
+  .time-slot.unavailable:hover {
+    border-color: #eee;
+    color: #999;
+  }
+
+  select.cmn-input {
+    appearance: none;         /* Remove native styling */
+    -webkit-appearance: none; /* Safari */
+    -moz-appearance: none;    /* Firefox */
+    background-color: #fff;
+    color: #333;
+    /* padding: 0.5rem 1rem; */
+    border: 1px solid #F15A29;
+    border-radius: 8px;
+    font-size: 1rem;
+  
+    /* Custom dropdown arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+  }
+  
+  /* Optional: add right padding so text doesn't overlap arrow */
+  select.cmn-input {
+    padding-right: 2.5rem;
+  }
+
+  
+    #stickySummary.fixed {
+      position: fixed;
+      top: 150px; /* Increased to account for sticky header */
+      z-index: 1000;
+    }
+    
+    #stickySummaryWrapper {
+      position: relative;
+    }
+    
+    @media (max-width: 991px) {
+      #stickySummary.fixed {
+        position: static;
+        width: 100%;
+      }
+    }
+
+    /* Custom Modal Styles */
+    .custom-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .custom-modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 0;
+      border: none;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #dee2e6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f8f9fa;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .custom-modal-header h5 {
+      margin: 0;
+      color: #333;
+    }
+
+    .custom-modal-close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .custom-modal-close:hover,
+    .custom-modal-close:focus {
+      color: #F15A29;
+      text-decoration: none;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .custom-modal-footer {
+      padding: 15px 20px;
+      border-top: 1px solid #dee2e6;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      background-color: #f8f9fa;
+      border-radius: 0 0 8px 8px;
+    }
+    
+    /* Form Validation Styles */
+    .is-invalid {
+      border-color: #dc3545 !important;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+    
+    .is-invalid:focus {
+      border-color: #dc3545 !important;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+    
+    .invalid-feedback {
+      display: block;
+      width: 100%;
+      margin-top: 0.25rem;
+      font-size: 0.875em;
+      color: #dc3545;
+      font-weight: 500;
+    }
+    
+    /* Validation styles for radio button groups */
+    .form-check.is-invalid {
+      border: 1px solid #dc3545;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .form-check.is-invalid .form-check-input {
+      border-color: #dc3545;
+    }
+    
+    /* Validation styles for select elements */
+    select.is-invalid {
+      border-color: #dc3545 !important;
+    }
+    
+    /* Validation styles for checkbox */
+    .checkbox-wrap.is-invalid {
+      border: 1px solid #dc3545;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    
+    /* Error message animation */
+    .invalid-feedback {
+      animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Success state for valid fields */
+    .is-valid {
+      border-color: #28a745 !important;
+      box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+    }
+    
+    /* Enhanced focus states */
+    .cmn-input:focus,
+    select.cmn-input:focus {
+      border-color: #F15A29 !important;
+      box-shadow: 0 0 0 0.2rem rgba(241, 90, 41, 0.25) !important;
+      outline: 0;
+    }
+    
+    /* Stripe Elements Styling */
+    #card-element {
+      border: 1px solid #ced4da;
+      border-radius: 0.375rem;
+      padding: 0.75rem;
+      background-color: #fff;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    #card-element:focus {
+      border-color: #F15A29;
+      box-shadow: 0 0 0 0.2rem rgba(241, 90, 41, 0.25);
+    }
+
+    .StripeElement {
+      background-color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      box-shadow: 0 1px 3px 0 #e6ebf1;
+      transition: box-shadow 150ms ease;
+    }
+
+    .StripeElement--focus {
+      box-shadow: 0 1px 3px 0 #cfd7df;
+    }
+
+    .StripeElement--invalid {
+      border-color: #fa755a;
+    }
+
+    .StripeElement--webkit-autofill {
+      background-color: #fefde5 !important;
+    }
+
+    .payment-option-info {
+      font-size: 0.9rem;
+      color: #6c757d;
+      margin-top: 0.5rem;
+    }
+
+    .payment-amount {
+      font-weight: 600;
+      color: #F15A29;
+    }
+    
+    /* Hide booking buttons on mobile when on booking pages */
+    @media (max-width: 768px) {
+      .booking-buttons-row {
+        display: none !important;
+      }
+      
+      .sticky-header {
+        height: auto !important;
+        min-height: auto !important;
+      }
+      
+      .header-upper {
+        padding-bottom: 0 !important;
+      }
+    }
+    
+    /* Form Validation Styles */
+    .field-error {
+      display: block !important;
+      margin-top: 5px;
+      font-size: 12px;
+      color: red;
+      animation: fadeIn 0.3s ease-in;
+      margin-top: -5px !important;
+    }
+    
+    .is-invalid {
+      border-color: red !important;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+    
+    .calendar-section.is-invalid {
+      border: 2px solid red !important;
+      border-radius: 8px;
+      padding: 10px;
+      background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    .form-check.is-invalid {
+      border: 1px solid red !important;
+      border-radius: 8px;
+      padding: 10px;
+      background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+  </style>
+
+<!-- common banner -->
+<section class="common-banner" style="position: relative;">
+    <div class="bg-layer" style="background-image: url('{% static 'assets/images/background/common-banner-bg.jpg' %}');"></div>
+    <div class="common-banner-content">
+        <h3>Cleaning Booking</h3>
+        <div class="breadcrumb">
+            <ul>
+              <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+              <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Cleaning Booking</li>
+            </ul>
+        </div>
+      {% if user.is_authenticated %}
+        <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+      {% else %}
+        <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+      {% endif %}
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+        {% endif %}
+        {% for service in all_services %}
+          {% if service.category.name|lower == 'post event cleaning' %}
+            {% if user.is_authenticated %}
+              <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+            {% else %}
+              <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        <!-- {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'request_handyman_booking' %}">Book Handyman</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
+        {% endif %} -->
+    </div>
+  </section>
+  <!-- common banner -->
+  
+
+
+<section class="mb-4">
+<div class="container">
+        {% if user.is_authenticated %}
+        <!-- Responsive Horizontal Navigation Bar -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <nav class="navbar navbar-expand-md bg-white shadow-sm p-3 rounded">
+              <div class="container-fluid justify-content-center">
+                <!-- Toggler for mobile view -->
+                <button class="navbar-toggler d-flex align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#userNavBar" aria-controls="userNavBar" aria-expanded="false" aria-label="Toggle navigation">
+                  <span class="fw-semibold">Menu:</span>
+                  <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Collapsible content -->
+                <div class="collapse navbar-collapse justify-content-center" id="userNavBar">
+                  <ul class="navbar-nav gap-3 flex-nowrap align-items-center text-center">
+                    {% if request.user.is_superuser %}
+                      <li class="nav-item">
+                        <a href="/admin/" class="nav-link">Admin</a>
+                      </li>
+                    {% endif %}
+                    <li class="nav-item">
+                      <a href="{% url 'profile' %}" class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">Profile Info</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="{% url 'my_bookings' %}" class="nav-link {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}">Booking History</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                      <a class="nav-link dropdown-toggle" href="#" id="bookNowDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Book Now
+                      </a>
+                      <ul class="dropdown-menu" aria-labelledby="bookNowDropdown">
+                        <li><a class="dropdown-item" href="{% url 'cleaning_booking' %}">Cleaning</a></li>
+                        <li><a class="dropdown-item" href="{% url 'office_cleaning_booking' %}">Office Cleaning</a></li>
+                      </ul>
+                    </li>
+                    <li class="nav-item">
+                      <a href="{% url 'purchase_gift_card' %}" class="nav-link {% if request.resolver_match.url_name == 'giftcard' %}active{% endif %}">Gift Card</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="{% url 'help' %}" class="nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}">Help</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#" class="nav-link">Billing Info</a>
+                    </li>
+                    <li class="nav-item">
+                      <form action="{% url 'logout' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link text-danger bg-transparent border-0 p-0" style="color: red !important;">Logout</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </nav>
+          </div>
+        </div>
+        {% endif %}
+
+<div class="row"> 
+            {% if not user.is_authenticated %}
+            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-4">
+                <p class="mb-2 mb-md-0 me-md-4" style="font-size:17px;">Manage existing bookings or re-book a clean.</p>
+                <div class="d-flex flex-row gap-2">
+                  <a href="{% url 'login' %}" class="btn btn-outline-primary">Sign In</a>
+                  <a href="{% url 'register' %}" class="btn btn-primary">Sign Up</a>
+                </div>
+              </div>
+            {% endif %}
+  <h3 class="mb-0">Book Home Cleaning</h3>
+    <p>Get professional cleaning services for your home.</p>
+    
+   
+  <h3>Recommended number of cleaners and time according to square footage and type of service.</h3>
+              <div class="table-responsive mt-4">
+                <table class="table table-clean text-center align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="text-start" style="min-width: 200px;">Type of Service</th>
+                      <th>1000–1500<br><small>SQ FT</small></th>
+                      <th>1500–2000<br><small>SQ FT</small></th>
+                      <th>2000–2500<br><small>SQ FT</small></th>
+                      <th>2500–3000<br><small>SQ FT</small></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th class="text-start">Post Renovation Cleaning</th>
+                      <td>3C × 6 hrs</td>
+                      <td>3C × 8 hrs</td>
+                      <td>4C × 8 hrs</td>
+                      <td>5C × 8 hrs</td>
+                    </tr>
+                    <tr>
+                      <th class="text-start">Deep Cleaning</th>
+                      <td>2C × 5 hrs</td>
+                      <td>3C × 5 hrs</td>
+                      <td>3C × 7 hrs</td>
+                      <td>3C × 8 hrs</td>
+                    </tr>
+                    <tr>
+                      <th class="text-start">Move In / Move Out</th>
+                      <td>2C × 5 hrs</td>
+                      <td>3C × 5 hrs</td>
+                      <td>3C × 7 hrs</td>
+                      <td>3C × 8 hrs</td>
+                    </tr>
+                    <tr>
+                      <th class="text-start">Regular Cleaning</th>
+                      <td>2C × 3 hrs</td>
+                      <td>2C × 5 hrs</td>
+                      <td>2C × 7 hrs</td>
+                      <td>2C × 8 hrs</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+    
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-4">
+      <h4 style="color: #666; padding-top: 20px;">Tell Us About Your Cleaning</h4>
+    </div>
+    
+
+    
+      
+  <form method="post" id="quoteForm">
+    {% csrf_token %}
+    <div class="row">
+      <div class="col-lg-8">
+        
+
+    <!-- Errors -->
+    {% if form.errors %}
+      <div class="alert alert-danger rounded shadow-sm">
+        <ul class="mb-0">
+          {% for field in form.visible_fields %}
+            {% for error in field.errors %}
+              <li>{{ field.label }}: {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+  
+          {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+  {% endif %}
+  
+    <input type="hidden" name="hours_requested" id="hidden_hours_requested">
+    <input type="hidden" name="num_cleaners" id="hidden_num_cleaners">
+    <input type="hidden" name="cleaning_type" id="hidden_cleaning_type">
+    <input type="hidden" name="service_cat" value="{{ service_cat.id }}">
+    
+    <!-- Django form fields for date and hour (hidden) -->
+    <div style="display: none;">
+      {{ form.date }}
+      {{ form.hour }}
+    </div>
+  
+    <!-- Step 1: Choose Service Type -->
+    <div class="step mb-4" id="step1">
+        <div class="col-12">
+          <div class="form-group">
+            <label for="id_square_feet_options">Square Feet</label>
+            <select name="square_feet_options" id="id_square_feet_options" class="cmn-input">
+              {% for option in form.fields.square_feet_options.queryset %}
+                <option value="{{ option.id }}" data-price="{{ option.price }}">{{ option.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+  
+        <div class="form-group">
+          <label for="id_home_types">Home Type</label>
+          <select name="home_types" id="id_home_types" class="cmn-input">
+            {% for option in form.fields.home_types.queryset %}
+              <option value="{{ option.id }}"
+                      data-price="{{ option.price }}"
+                      data-time="{{ option.extra_minutes }}">
+                {{ option.name }} (${{ option.price }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="id_bath_count">Number of Bathrooms</label>
+          {{ form.bath_count }}
+        </div>
+  
+        <div id="cleaningExtrasContainer" class="mb-4">
+          <h4 class="mt-4">Select Optional Extras</h4>
+          <div class="row">
+            {% for extra in cleaning_extras %}
+              <div class="col-12 col-md-6 mb-2">
+                <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('extra{{ extra.id }}').click()">
+                  <input 
+                    class="form-check-input extra-checkbox" 
+                    type="checkbox" 
+                    id="extra{{ extra.id }}" 
+                    name="extras" 
+                    value="{{ extra.id }}" 
+                    data-price="{{ extra.price }}" 
+                    data-time="{{ extra.extra_minutes }}"
+                  />
+                  <label class="form-check-label ms-2" for="extra{{ extra.id }}">
+                    {{ extra.name }} <small class="text-muted">(+${{ extra.price }})</small>
+                  </label>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Large Home Options -->
+    <div id="largeHomeOptions" class="mb-4" style="display: none;">
+      <h4>Large Home Cleaning Details</h4>
+      <div class="row">
+        <div class="col-12">
+          <select name="cleaning_type" class="cmn-input">
+            <option value="">Select Cleaning Type</option>
+            <option value="1000-1500 (Regular)" selected>Regular Cleaning</option>
+            <option value="1000-1500 (Deep)">Deep Cleaning</option>
+            <option value="1000-1500 (Move)">Move In/Out Cleaning</option>
+            <option value="1000-1500 (Post)">Post Renovation</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-6">
+          <select name="num_cleaners" class="cmn-input">
+            <option value="1">1 Cleaner</option>
+            <option value="2">2 Cleaners</option>
+            <option value="3">3 Cleaners</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <select name="est_hours" class="cmn-input">
+            <option value=""># of Hours</option>
+            <option value="2">2 Hours</option>
+            <option value="3" selected>3 Hours</option>
+            <option value="4">4 Hours</option>
+            <option value="5">5 Hours</option>
+            <option value="6">6 Hours</option>
+            <option value="7">7 Hours</option>
+            <option value="8">8 Hours</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Step 3: Contact Info -->
+    <div class="step hidden-step" id="step3">
+      <h4>Contact Info</h4>
+      
+      <!-- Name Field -->
+      <div class="form-group">
+        <label for="{{ form.name.id_for_label }}" class="form-label">Name *</label>
+        {{ form.name|add_class:"cmn-input" }}
+      </div>
+      
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="{{ form.email.id_for_label }}" class="form-label">Email *</label>
+        {{ form.email|add_class:"cmn-input" }}
+      </div>
+      
+      <!-- Phone Field -->
+      <div class="form-group">
+        <label for="{{ form.phone.id_for_label }}" class="form-label">Phone *</label>
+        {{ form.phone|add_class:"cmn-input" }}
+      </div>
+
+      <!-- Saved Address Select -->
+      {% if saved_addresses %}
+        <div class="card mb-4 shadow-sm" style="border: 1px solid #F15A29;">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title mb-0">Select Address</h5>
+              <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddAddressModal()">
+                + Add New Address
+              </button>
+            </div>
+            <div class="form-group mb-3">
+              <label for="addressSelect" class="form-label">Your Saved Addresses</label>
+              <select id="addressSelect" class="form-select">
+                <option value="">Select Address</option>
+                {% for addr in saved_addresses %}
+                  <option 
+                    data-street="{{ addr.street_address }}"
+                    data-apt="{{ addr.apt_suite }}"
+                    data-zip="{{ addr.zip_code }}"
+                    data-city="{{ addr.city }}"
+                    data-state="{{ addr.state }}"
+                  >
+                    {{ addr.street_address }}, Apt {{ addr.apt_suite }}, {{ addr.zip_code }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+           
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Manual address fields -->
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="{{ form.address.id_for_label }}" class="form-label">Street Address</label>
+          {{ form.address }}
+        </div>
+        <div class="col-md-3">
+          <label for="{{ form.apartment.id_for_label }}" class="form-label">Apt/Suite</label>
+          {{ form.apartment }}
+        </div>
+        <div class="col-md-3">
+          <label for="{{ form.zip_code.id_for_label }}" class="form-label">ZIP Code</label>
+          {{ form.zip_code }}
+        </div>
+      </div>
+      <!-- Hidden city and state fields (default to New York) -->
+      <div style="display: none;">
+        <input type="text" name="city" id="id_city" value="New York">
+        <input type="text" name="state" id="id_state" value="NY">
+      </div>
+  
+  <!-- Property Access and Conditions -->
+  <div class="row g-3 mt-3">
+ 
+    
+    <!-- How to get in -->
+    <div class="col-12">
+      <h4>{{ form.get_in.label }}</h4>
+      <div class="row">
+        {% for choice in form.get_in %}
+          <div class="col-12 col-md-6 mb-2">
+            <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('{{ choice.id_for_label }}').click()">
+              {{ choice.tag }}
+              <label class="form-check-label ms-2 get-in-radio" for="{{ choice.id_for_label }}">
+                {% if choice.choice_value == 'at_home' %}<i class="fa-solid fa-house me-2"></i>{% endif %}
+                {% if choice.choice_value == 'doorman' %}<i class="fa-solid fa-door-open me-2"></i>{% endif %}
+                {% if choice.choice_value == 'lockbox' %}<i class="fa-solid fa-lock me-2"></i>{% endif %}
+                {% if choice.choice_value == 'call_organize' %}<i class="fa-solid fa-phone me-2"></i>{% endif %}
+                {% if choice.choice_value == 'other' %}<i class="fa-solid fa-ellipsis me-2"></i>{% endif %}
+                {{ choice.choice_label }}
+              </label>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  
+    <!-- Parking instructions -->
+    <div class="col-12">
+      {{ form.parking.label_tag }}
+      {{ form.parking }}
+    </div>
+  
+    <!-- Pet information -->
+    <div class="col-12">
+      <h4 class="mt-4">{{ form.pet.label }}</h4>
+      <div class="row">
+        {% for choice in form.pet %}
+          <div class="col-12 col-md-6 mb-2">
+            <div class="form-check p-3 border rounded shadow-sm h-100 clickable" onclick="document.getElementById('{{ choice.id_for_label }}').click()">
+              {{ choice.tag }}
+              <label class="form-check-label ms-2 pet-radio" for="{{ choice.id_for_label }}">
+                {% if choice.choice_value == 'cat' %}<i class="fa-solid fa-cat me-2"></i>{% endif %}
+                {% if choice.choice_value == 'dog' %}<i class="fa-solid fa-dog me-2"></i>{% endif %}
+                {% if choice.choice_value == 'both' %}<i class="fa-solid fa-paw me-2"></i>{% endif %}
+                {% if choice.choice_value == 'other' %}<i class="fa-solid fa-ellipsis me-2"></i>{% endif %}
+                {{ choice.choice_label }}
+              </label>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  </div>
+
+  
+    <!-- Step 2: Schedule Info -->
+    <div class="step hidden-step" id="step2">
+      <h4 class="mt-4 mb-3">Schedule</h4>
+      
+      <!-- Cleaning Frequency Section -->
+      <div class="frequency-section mb-4">
+        <h5>How often would you like us to clean?</h5>
+        <p class="text-muted mb-3">Save With Our Cleany Loyalty Program! (Discount applied on 2nd cleaning and onward)</p>
+        
+        <div class="frequency-buttons">
+          <button type="button" class="frequency-btn active" data-frequency="one_time" data-discount="0">
+            One time
+          </button>
+          <button type="button" class="frequency-btn" data-frequency="daily" data-discount="20">
+            Daily - 20% Off
+          </button>
+          <button type="button" class="frequency-btn" data-frequency="weekly" data-discount="15">
+            Weekly 15% Off
+          </button>
+          <button type="button" class="frequency-btn" data-frequency="bi_weekly" data-discount="10">
+            Bi Weekly 10% Off
+          </button>
+          <button type="button" class="frequency-btn" data-frequency="monthly" data-discount="5">
+            Monthly 5% Off
+          </button>
+          </div>
+        <input type="hidden" name="cleaning_frequency" id="cleaning_frequency" value="one_time">
+        <input type="hidden" name="frequency_discount" id="frequency_discount" value="0">
+        </div>
+      
+      <!-- Date of Service Section -->
+      <div class="date-section mb-4">
+        <h5>Date of service</h5>
+        <p class="text-muted mb-3">For recurring services, each one will commence on the same day and time as selected for the first service.</p>
+        
+        <!-- Calendar and Time Selection -->
+        <div class="calendar-section">
+          <div class="calendar-navigation mb-3">
+            <button type="button" class="nav-arrow" id="prev_week">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="calendar-dates" id="calendar_dates">
+              <!-- Calendar dates will be populated by JavaScript -->
+          </div>
+            <button type="button" class="nav-arrow" id="next_week">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+      
+          <div class="time-slots" id="time_slots">
+            <!-- Time slots will be populated by JavaScript -->
+        </div>
+      </div>
+      
+        <!-- Hidden form fields for compatibility -->
+        <input type="hidden" name="selected_date" id="selected_date">
+        <input type="hidden" name="selected_time" id="selected_time">
+        <input type="hidden" name="recurrence_pattern" id="recurrence_pattern" value="one_time">
+      </div>
+  
+      <!-- Job Description Field -->
+      <div class="form-group">
+        <label for="{{ form.job_description.id_for_label }}" class="form-label">Tell us about the job *</label>
+        {{ form.job_description|add_class:"cmn-input" }}
+      </div>
+    
+
+    <!-- Payment Option Selection -->
+    <div class="card mt-4 border-0 shadow-sm">
+      <div class="card-header text-white" style="background-color: #F15A29;">
+        <h5 class="mb-0"><i class="fa-solid fa-credit-card me-2"></i>Payment Option</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <h6>Choose Payment Option:</h6>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="payment_option" id="payment_deposit" value="deposit" checked>
+            <label class="form-check-label" for="payment_deposit">
+              <strong>Pay 50% Deposit Now</strong> <span class="text-muted">($<span id="deposit-amount">0.00</span>)</span>
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="payment_option" id="payment_full" value="full">
+            <label class="form-check-label" for="payment_full">
+              <strong>Pay Full Amount Now</strong> <span class="text-muted">($<span id="full-amount">0.00</span>)</span>
+            </label>
+          </div>
+        </div>
+        <div class="alert alert-info">
+          <i class="fa-solid fa-info-circle me-2"></i>
+          You will be redirected to our secure payment page to complete your booking.
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- Terms -->
+  <div class="checkbox-wrap mt-4">
+   <input type="checkbox" id="terms" required>
+   <label for="terms">I agree with all the terms & conditions</label>
+  </div>
+    
+    <!-- Submit Button -->
+    <button type="submit" class="btn-1 w-100 mt-4" id="submit-booking-btn">Book Service & Pay</button>
+  </div>
+  <div class="col-lg-4">
+    <div id="stickySummaryWrapper">
+      <div id="stickySummary" class="service-summary mt-4 p-3 border rounded shadow-sm bg-white">
+        <div id="summary-items" class="mb-3"></div>
+  
+        <div class="d-flex align-items-center mb-1">
+          <i class="fa-solid fa-calendar-days me-2 text-muted"></i>
+          <span id="summary-date">–</span>
+        </div>
+        <div class="d-flex align-items-center mb-1">
+          <i class="fa-regular fa-clock me-2 text-muted"></i>
+          <span id="summary-duration">–</span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+          <i class="fa-solid fa-rotate me-2 text-muted"></i>
+          <span id="summary-recurrence">–</span>
+        </div>
+  
+        <hr>
+  
+        <div class="d-flex justify-content-between">
+          <strong>SUB-TOTAL</strong>
+          <strong>$<span id="subtotalPrice">0.00</span></strong>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span>SALES TAX</span>
+          <span>$<span id="salesTax">0.00</span></span>
+        </div>
+        <h5 class="mt-4">Discount Code</h5>
+          <div class="mb-3">
+            <input type="text" id="gift_card_code" name="gift_card_code" class="cmn-input w-100" placeholder="Enter Gift Card or Discount Code">
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" id="applyGiftCard" class="btn btn-primary w-100">Apply</button>
+            <button type="button" id="removeGiftCard" class="btn btn-outline-danger w-100">Remove</button>
+          </div>
+        <div id="giftCardApplied" style="display:none;" class="d-flex justify-content-between mt-2">
+          <strong>Discount:</strong>
+          <strong id="giftCardAmount" style="color: green;">0.00</strong>
+        </div>
+        
+        <div class="d-flex justify-content-between mt-2" style="font-size: 1.3rem;">
+          <strong>TOTAL</strong>
+          <strong style="color: orange;">$<span id="totalPrice">0.00</span></strong>
+        </div>
+  
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+    </div>
+  </form>
+</div>
+</div>
+</section>
+
+<!-- Custom Add Address Modal -->
+<div id="customAddAddressModal" class="custom-modal" style="margin-top:50px;">
+  <div class="custom-modal-content">
+    <div class="custom-modal-header">
+      <h5>Add New Address</h5>
+      <span class="custom-modal-close" onclick="closeAddAddressModal()">&times;</span>
+    </div>
+    <form method="post" action="{% url 'add_customer_address' %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div class="form-group mb-2">
+          <label>Street Address</label>
+          <input type="text" name="street_address" class="cmn-input" required>
+        </div>
+        <div class="form-group mb-2">
+          <label>Apt / Suite</label>
+          <input type="text" name="apt_suite" class="cmn-input">
+        </div>
+        <div class="form-group mb-2">
+          <label>ZIP Code</label>
+          <input type="text" name="zip_code" class="cmn-input" required>
+        </div>
+       
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddAddressModal()">Cancel</button>
+        <button type="submit" class="btn-1">Save Address</button>
+      </div>
+    </form>
+  </div>
+</div>
+  
+  
+  
+  <!-- Flatpickr JS -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="{% static 'assets/js/giftcard.js' %}"></script>
+  
+  <!-- Stripe JS -->
+  <script src="https://js.stripe.com/v3/"></script>
+  
+  <!-- Form Validation System -->
+  <script>
+  // ================================
+  // COMPREHENSIVE FORM VALIDATION SYSTEM
+  // ================================
+  
+  class FormValidator {
+    constructor() {
+      this.form = document.getElementById('quoteForm');
+      this.submitBtn = document.getElementById('submit-booking-btn');
+      this.errors = new Map();
+      this.validators = new Map();
+      
+      this.initializeValidators();
+      this.attachEventListeners();
+    }
+    
+    initializeValidators() {
+      // Define all field validators
+      this.validators.set('id_name', {
+        required: true,
+        minLength: 2,
+        pattern: /^[a-zA-Z\s\-']+$/,
+        message: 'Name must be at least 2 characters and contain only letters, spaces, hyphens, and apostrophes'
+      });
+      
+      this.validators.set('id_email', {
+        required: true,
+        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        message: 'Please enter a valid email address'
+      });
+      
+      this.validators.set('id_phone', {
+        required: true,
+        pattern: /^[\+]?[1-9][\d]{0,15}$/,
+        message: 'Please enter a valid phone number',
+        transform: (value) => value.replace(/[\s\-\(\)]/g, '')
+      });
+      
+      this.validators.set('id_address', {
+        required: true,
+        minLength: 5,
+        message: 'Please enter a complete street address'
+      });
+      
+      this.validators.set('id_zip_code', {
+        required: true,
+        pattern: /^\d{5}(-\d{4})?$/,
+        message: 'Please enter a valid ZIP code (5 digits or 5+4 format)'
+      });
+      
+      this.validators.set('id_square_feet_options', {
+        required: true,
+        message: 'Please select square footage'
+      });
+      
+      this.validators.set('id_home_types', {
+        required: true,
+        message: 'Please select home type',
+        conditional: () => this.isSmallHomeSelected()
+      });
+      
+      this.validators.set('id_bath_count', {
+        required: true,
+        message: 'Please select number of bathrooms'
+      });
+      
+      this.validators.set('cleaning_type', {
+        required: true,
+        message: 'Please select cleaning type',
+        conditional: () => this.isLargeHomeSelected()
+      });
+      
+      this.validators.set('num_cleaners', {
+        required: true,
+        message: 'Please select number of cleaners',
+        conditional: () => this.isLargeHomeSelected()
+      });
+      
+      this.validators.set('est_hours', {
+        required: true,
+        message: 'Please select number of hours',
+        conditional: () => this.isLargeHomeSelected()
+      });
+      
+      this.validators.set('get_in', {
+        required: true,
+        message: 'Please select how we\'ll get into your home',
+        type: 'radio'
+      });
+      
+      this.validators.set('parking', {
+        required: true,
+        message: 'Please select parking information'
+      });
+      
+      this.validators.set('pet', {
+        required: true,
+        message: 'Please select pet information',
+        type: 'radio'
+      });
+      
+      this.validators.set('terms', {
+        required: true,
+        message: 'You must agree to the terms and conditions',
+        type: 'checkbox'
+      });
+      
+      this.validators.set('id_job_description', {
+        required: true,
+        minLength: 10,
+        message: 'Please provide a job description (at least 10 characters)'
+      });
+      
+      this.validators.set('date_time', {
+        required: true,
+        message: 'Please select a date and time for your service',
+        custom: () => this.validateDateTime()
+      });
+    }
+    
+    attachEventListeners() {
+      // Add real-time validation to all form fields
+      this.form.addEventListener('input', (e) => {
+        if (e.target.matches('input, select, textarea')) {
+          this.clearFieldError(e.target);
+          this.validateField(e.target);
+        }
+      });
+      
+      this.form.addEventListener('change', (e) => {
+        if (e.target.matches('input, select, textarea')) {
+          this.clearFieldError(e.target);
+          this.validateField(e.target);
+        }
+      });
+      
+      // Handle radio button groups
+      this.form.addEventListener('change', (e) => {
+        if (e.target.matches('input[type="radio"]')) {
+          const groupName = e.target.name;
+          this.clearRadioGroupError(groupName);
+          this.validateRadioGroup(groupName);
+        }
+      });
+      
+      // Handle form submission
+      this.form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.validateAndSubmit();
+      });
+      
+      // Ensure validation works for all fields regardless of visibility
+      this.ensureAllFieldsHaveValidation();
+    }
+    
+    ensureAllFieldsHaveValidation() {
+      // Add validation to contact fields and job description even if they're not visible
+      const importantFields = ['id_name', 'id_email', 'id_phone', 'id_job_description'];
+      importantFields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+        if (field) {
+          // Add event listeners if they don't exist
+          if (!field.hasAttribute('data-validation-added')) {
+            field.addEventListener('input', () => {
+              this.clearFieldError(field);
+              this.validateField(field);
+            });
+            field.addEventListener('blur', () => {
+              this.validateField(field);
+            });
+            field.setAttribute('data-validation-added', 'true');
+          }
+        }
+      });
+    }
+    
+    isSmallHomeSelected() {
+      const sqftSelect = document.getElementById('id_square_feet_options');
+      const selectedOption = sqftSelect?.selectedOptions[0];
+      return selectedOption?.textContent.toLowerCase().includes('under 1000');
+    }
+    
+    isLargeHomeSelected() {
+      return document.getElementById('largeHomeOptions')?.offsetParent !== null;
+    }
+    
+    isContactSectionVisible() {
+      const contactSection = document.getElementById('step3');
+      return contactSection && contactSection.offsetParent !== null;
+    }
+    
+    validateDateTime() {
+      const selectedDate = document.getElementById('selected_date')?.value;
+      const selectedTime = document.getElementById('selected_time')?.value;
+      const djangoDate = document.getElementById('id_date')?.value;
+      const djangoHour = document.getElementById('id_hour')?.value;
+      
+      const hasCalendarSelection = selectedDate && selectedTime;
+      const hasDjangoSelection = djangoDate && djangoHour;
+      
+      return hasCalendarSelection || hasDjangoSelection;
+    }
+    
+    validateField(field) {
+      const fieldId = field.id || field.name;
+      const validator = this.validators.get(fieldId);
+      
+      if (!validator) return true;
+      
+      // Check if field is conditionally required
+      if (validator.conditional && !validator.conditional()) {
+        return true;
+      }
+      
+      let value = field.value;
+      
+      // Apply transformation if defined
+      if (validator.transform) {
+        value = validator.transform(value);
+      }
+      
+      // Check if field is empty and required
+      if (validator.required && (!value || value.trim() === '')) {
+        this.showFieldError(field, validator.message);
+        return false;
+      }
+      
+      // Check minimum length
+      if (validator.minLength && value.length < validator.minLength) {
+        this.showFieldError(field, validator.message);
+        return false;
+      }
+      
+      // Check pattern
+      if (validator.pattern && !validator.pattern.test(value)) {
+        this.showFieldError(field, validator.message);
+        return false;
+      }
+      
+      // Custom validation
+      if (validator.custom && !validator.custom()) {
+        this.showFieldError(field, validator.message);
+        return false;
+      }
+      
+      return true;
+    }
+    
+    validateRadioGroup(groupName) {
+      const validator = this.validators.get(groupName);
+      if (!validator) return true;
+      
+      const selected = document.querySelector(`input[name="${groupName}"]:checked`);
+      if (!selected) {
+        this.showRadioGroupError(groupName, validator.message);
+        return false;
+      }
+      
+      return true;
+    }
+    
+    validateCheckbox(field) {
+      const validator = this.validators.get(field.id);
+      if (!validator) return true;
+      
+      if (!field.checked) {
+        this.showFieldError(field, validator.message);
+        return false;
+      }
+      
+      return true;
+    }
+    
+    validateAllFields() {
+      let isValid = true;
+      this.clearAllErrors();
+      
+      // Always validate important fields first, regardless of visibility
+      const importantFields = ['id_name', 'id_email', 'id_phone', 'id_job_description'];
+      importantFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          if (!this.validateField(field)) {
+        isValid = false;
+          }
+        }
+      });
+      
+      // Validate all other form fields
+      const fields = this.form.querySelectorAll('input, select, textarea');
+      fields.forEach(field => {
+        // Skip important fields as they're already validated above
+        if (!importantFields.includes(field.id)) {
+          if (!this.validateField(field)) {
+              isValid = false;
+          }
+        }
+      });
+      
+      // Validate radio groups
+      const radioGroups = ['get_in', 'pet'];
+      radioGroups.forEach(groupName => {
+        if (!this.validateRadioGroup(groupName)) {
+              isValid = false;
+        }
+      });
+      
+      // Validate checkboxes
+      const checkboxes = this.form.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach(checkbox => {
+        if (!this.validateCheckbox(checkbox)) {
+              isValid = false;
+        }
+      });
+      
+      // Validate date/time selection
+      if (!this.validateDateTime()) {
+        this.showDateTimeError();
+        isValid = false;
+      }
+      
+      return isValid;
+    }
+    
+    showFieldError(field, message) {
+      this.clearFieldError(field);
+      
+      // Add error styling
+      field.style.borderColor = 'red';
+      field.classList.add('is-invalid');
+      
+      // Create error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'field-error text-danger small mt-1';
+      errorDiv.style.fontSize = '12px';
+      errorDiv.style.color = 'red';
+      errorDiv.textContent = message;
+      
+      // Find the appropriate container for the error message
+      let container = field.parentNode;
+      
+      // For important fields, ensure we're using the form-group container
+      if (field.id === 'id_name' || field.id === 'id_email' || field.id === 'id_phone' || field.id === 'id_job_description') {
+        // Look for the form-group container
+        const formGroup = field.closest('.form-group');
+        if (formGroup) {
+          container = formGroup;
+        }
+      }
+      
+      // Insert error message after the field or at the end of the container
+      if (field.parentNode === container) {
+        // Field is directly in the container, insert after field
+        field.parentNode.insertBefore(errorDiv, field.nextSibling);
+      } else {
+        // Field is nested, append to container
+        container.appendChild(errorDiv);
+      }
+      
+      // Store error for cleanup
+      this.errors.set(field, errorDiv);
+    }
+    
+    showRadioGroupError(groupName, message) {
+      const radios = document.querySelectorAll(`input[name="${groupName}"]`);
+      const firstRadio = radios[0];
+      
+      if (firstRadio) {
+        const container = firstRadio.closest('.row') || firstRadio.closest('.form-group');
+        if (container) {
+          this.clearRadioGroupError(groupName);
+          
+          // Add error styling to container
+          container.style.border = '1px solid red';
+          container.style.borderRadius = '8px';
+          container.style.padding = '10px';
+          container.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+          
+          // Create error message
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'field-error text-danger small mt-1';
+          errorDiv.style.fontSize = '12px';
+          errorDiv.style.color = 'red';
+          errorDiv.textContent = message;
+          
+          container.appendChild(errorDiv);
+          this.errors.set(groupName, { container, errorDiv });
+        }
+      }
+    }
+    
+    showDateTimeError() {
+      const calendarContainer = document.querySelector('.calendar-section');
+        const timeSlotsContainer = document.getElementById('time_slots');
+      
+      if (calendarContainer) {
+        calendarContainer.style.border = '2px solid red';
+        calendarContainer.style.borderRadius = '8px';
+        calendarContainer.style.padding = '10px';
+        calendarContainer.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+      
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'field-error text-danger small mt-1';
+        errorDiv.style.fontSize = '12px';
+        errorDiv.style.color = 'red';
+        errorDiv.textContent = 'Please select a date and time for your service';
+        
+        calendarContainer.appendChild(errorDiv);
+        this.errors.set('date_time', { container: calendarContainer, errorDiv });
+      }
+    }
+    
+    clearFieldError(field) {
+      // Remove error styling
+      field.style.borderColor = '';
+      field.classList.remove('is-invalid');
+      
+      // Remove error message
+      const errorDiv = this.errors.get(field);
+      if (errorDiv) {
+        errorDiv.remove();
+        this.errors.delete(field);
+      }
+      
+      // Also remove any existing error messages in the form-group container
+      if (field.id === 'id_name' || field.id === 'id_email' || field.id === 'id_phone' || field.id === 'id_job_description') {
+        const formGroup = field.closest('.form-group');
+        if (formGroup) {
+          const existingError = formGroup.querySelector('.field-error');
+          if (existingError) {
+            existingError.remove();
+          }
+        }
+      }
+    }
+    
+    clearRadioGroupError(groupName) {
+      const errorData = this.errors.get(groupName);
+      if (errorData) {
+        const { container, errorDiv } = errorData;
+        
+        // Remove error styling
+        container.style.border = '';
+        container.style.borderRadius = '';
+        container.style.padding = '';
+        container.style.backgroundColor = '';
+        
+        // Remove error message
+        errorDiv.remove();
+        this.errors.delete(groupName);
+      }
+    }
+    
+    clearAllErrors() {
+      // Clear field errors
+      this.errors.forEach((errorDiv, field) => {
+        if (typeof field === 'string') {
+          // Radio group error
+          const { container, errorDiv: error } = errorDiv;
+          container.style.border = '';
+          container.style.borderRadius = '';
+          container.style.padding = '';
+          container.style.backgroundColor = '';
+          error.remove();
+          } else {
+          // Field error
+          field.style.borderColor = '';
+          field.classList.remove('is-invalid');
+          errorDiv.remove();
+        }
+      });
+      
+      this.errors.clear();
+    }
+    
+    validateAndSubmit() {
+      if (this.validateAllFields()) {
+        // All validation passed, proceed with form submission
+        this.submitForm();
+          } else {
+        // Make sure contact section is visible if there are contact field errors
+        this.ensureContactSectionVisible();
+        
+        // Scroll to first error - prioritize empty required fields
+        let firstError = null;
+        
+        // First, look for empty required fields (most important)
+        const requiredFields = ['id_name', 'id_email', 'id_phone', 'id_job_description', 'id_address', 'id_zip_code'];
+        for (const fieldId of requiredFields) {
+          const field = document.getElementById(fieldId);
+          if (field && (!field.value || field.value.trim() === '')) {
+            firstError = field;
+            break;
+          }
+        }
+        
+        // If no empty required fields found, look for any field with validation errors
+        if (!firstError) {
+          firstError = this.form.querySelector('.is-invalid, [style*="border: 1px solid red"]');
+        }
+        
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Focus the field for better UX
+          setTimeout(() => {
+            firstError.focus();
+          }, 500);
+        }
+        
+        // Show summary alert
+        const errorCount = this.errors.size;
+        alert(`❌ Please fix the ${errorCount} error${errorCount > 1 ? 's' : ''} before submitting the form.`);
+      }
+    }
+    
+    ensureContactSectionVisible() {
+      // Check if there are important field errors (contact fields or job description)
+      const importantFields = ['id_name', 'id_email', 'id_phone', 'id_job_description'];
+      const hasImportantErrors = importantFields.some(fieldId => {
+        const field = document.getElementById(fieldId);
+        return field && (field.classList.contains('is-invalid') || field.style.borderColor === 'red');
+      });
+      
+      if (hasImportantErrors) {
+        // Make contact section visible
+        const contactSection = document.getElementById('step3');
+        if (contactSection) {
+          contactSection.classList.remove('hidden-step');
+          contactSection.style.display = 'block';
+        }
+      }
+    }
+    
+    submitForm() {
+      // Show loading state
+      const originalText = this.submitBtn.innerHTML;
+      this.submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Processing...';
+      this.submitBtn.disabled = true;
+      
+      // Sync hidden fields before submission
+      this.syncHiddenFields();
+      
+      // Create form data
+      const formData = new FormData(this.form);
+      
+      // Submit form
+      fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.booking_id) {
+          // Booking created successfully, redirect to payment
+          this.redirectToPayment(data.booking_id);
+        } else {
+          throw new Error(data.error || 'Failed to create booking');
+        }
+      })
+      .catch(error => {
+        console.error('Error creating booking:', error);
+        alert('Error creating booking: ' + error.message);
+        this.submitBtn.innerHTML = originalText;
+        this.submitBtn.disabled = false;
+      });
+    }
+    
+    syncHiddenFields() {
+      // Sync calendar fields with Django form fields
+      const selectedDate = document.getElementById('selected_date')?.value;
+      const selectedTime = document.getElementById('selected_time')?.value;
+      
+      const dateField = document.getElementById('id_date');
+      const hourField = document.getElementById('id_hour');
+      
+      if (dateField && selectedDate) {
+        dateField.value = selectedDate;
+      }
+      
+      if (hourField && selectedTime) {
+        hourField.value = selectedTime;
+      }
+      
+      // Ensure city and state are set
+      const cityField = document.getElementById('id_city');
+      const stateField = document.getElementById('id_state');
+      
+      if (cityField && !cityField.value) {
+        cityField.value = 'New York';
+      }
+      
+      if (stateField && !stateField.value) {
+        stateField.value = 'NY';
+      }
+      
+      // Sync large home options
+      if (this.isLargeHomeSelected()) {
+        const cleaners = document.querySelector('select[name="num_cleaners"]')?.value;
+        const hours = document.querySelector('select[name="est_hours"]')?.value;
+        const type = document.querySelector('select[name="cleaning_type"]')?.value;
+        
+        document.getElementById('hidden_hours_requested').value = hours;
+        document.getElementById('hidden_num_cleaners').value = cleaners;
+        document.getElementById('hidden_cleaning_type').value = type;
+      } else {
+        // For small homes: calculate time from home type + extras
+        const homeSelect = document.getElementById('id_home_types');
+        let totalMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || '0');
+        
+        document.querySelectorAll('.extra-checkbox:checked').forEach(cb => {
+          totalMinutes += parseInt(cb.dataset.time || '0') || 0;
+        });
+        
+        const roundedHours = Math.ceil(totalMinutes / 60);
+        
+        document.getElementById('hidden_hours_requested').value = roundedHours;
+        document.getElementById('hidden_num_cleaners').value = 1;
+        document.getElementById('hidden_cleaning_type').value = '';
+      }
+    }
+    
+    redirectToPayment(bookingId) {
+      const totalAmount = parseFloat(document.getElementById('totalPrice').textContent);
+      const paymentType = document.querySelector('input[name="payment_option"]:checked')?.value || 'deposit';
+      
+      fetch('/quotes/api/create-checkout-session/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({
+          booking_id: bookingId,
+          payment_type: paymentType,
+          frontend_total_amount: totalAmount,
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        // Redirect to Stripe Checkout
+        window.location.href = data.checkout_url;
+      })
+      .catch(error => {
+        console.error('Payment error:', error);
+        alert('Payment failed: ' + error.message);
+        this.submitBtn.innerHTML = 'Book Service & Pay';
+        this.submitBtn.disabled = false;
+      });
+    }
+  }
+  
+  // Initialize validation when DOM is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the form validator
+    window.formValidator = new FormValidator();
+    
+    // Initialize payment options when page loads
+    if (typeof initializePaymentOptions === 'function') {
+      initializePaymentOptions();
+    }
+
+    // Legacy validation functions removed - using new FormValidator class
+    
+    // === Calendar and Time Selection Logic ===
+    let currentWeekStart = new Date();
+    currentWeekStart.setDate(currentWeekStart.getDate() + 2);
+    let selectedDate = null;
+    let selectedTime = null;
+
+    function renderCalendar() {
+      console.log('🔍 renderCalendar called');
+      const calendarDates = document.getElementById('calendar_dates');
+      if (!calendarDates) {
+        console.log('❌ calendar_dates element not found');
+        return;
+      }
+      console.log('🔍 calendar_dates found, rendering...');
+      
+      calendarDates.innerHTML = '';
+      
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(currentWeekStart);
+        date.setDate(currentWeekStart.getDate() + i);
+        
+        const dayNames = ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa'];
+        const dayName = dayNames[date.getDay()];
+        const dateNumber = date.getDate();
+        const month = date.getMonth() + 1;
+        
+        const dateItem = document.createElement('div');
+        dateItem.className = 'date-item';
+        
+        // Check if this date is the selected date
+        if (selectedDate && date.toDateString() === selectedDate.toDateString()) {
+          dateItem.classList.add('selected');
+        }
+        
+        dateItem.innerHTML = `
+          <div class="date-icon">
+            <i class="fa-solid fa-calendar"></i>
+          </div>
+          <div class="date-day">${dayName}</div>
+          <div class="date-number">${month}/${dateNumber.toString().padStart(2, '0')}</div>
+        `;
+        
+        dateItem.addEventListener('click', () => selectDate(date));
+        calendarDates.appendChild(dateItem);
+      }
+      
+      // If no date is selected, select the first date by default
+      if (!selectedDate) {
+        selectDate(new Date(currentWeekStart));
+      }
+    }
+
+      function selectDate(date) {
+    selectedDate = date;
+    
+    document.querySelectorAll('.date-item').forEach(item => {
+      item.classList.remove('selected');
+    });
+    event.target.closest('.date-item').classList.add('selected');
+    
+    const dateValue = date.toISOString().split('T')[0];
+    document.getElementById('selected_date').value = dateValue;
+    
+    // Also update Django form field
+    const dateField = document.getElementById("id_date");
+    if (dateField) {
+      dateField.value = dateValue;
+      console.log('🔍 Updated Django date field to:', dateValue);
+    }
+    
+    loadTimeSlots(date);
+    updatePrice();
+    
+    // Trigger validation update
+    if (typeof formValidator !== 'undefined' && formValidator.validateDateAndTime) {
+      formValidator.validateDateAndTime();
+    }
+    if (typeof updateSubmitButtonState === 'function') {
+      updateSubmitButtonState();
+    }
+  }
+
+    function loadTimeSlots(date) {
+      const timeSlots = document.getElementById('time_slots');
+      if (!timeSlots) {
+        console.log('❌ Time slots container not found');
+        return;
+      }
+      
+      timeSlots.innerHTML = '';
+      
+      // Get the hours requested from the form
+      let hoursRequested = 3; // default fallback
+      
+      // Try to get hours from large home options
+      const hoursField = document.querySelector('select[name="est_hours"]');
+      if (hoursField && hoursField.value) {
+        hoursRequested = parseFloat(hoursField.value) || 3;
+      } else {
+        // For small homes, calculate from home type + extras
+        const homeSelect = document.getElementById("id_home_types");
+        let totalMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || "180");
+        
+        document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+          totalMinutes += parseInt(cb.dataset.time || "0") || 0;
+        });
+        
+        hoursRequested = Math.ceil(totalMinutes / 60);
+      }
+      
+      // Fetch available hours from API
+      const selectedDate = date.toISOString().split('T')[0];
+      
+      console.log('🔍 Loading time slots for:', { selectedDate, hoursRequested });
+      
+      timeSlots.innerHTML = '<div class="text-center text-muted">Loading available times...</div>';
+      
+      fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${hoursRequested}`)
+        .then(response => response.json())
+        .then(data => {
+          console.log('🔍 Available hours API response:', data);
+          timeSlots.innerHTML = '';
+          
+          if (!data.available_hours || data.available_hours.length === 0) {
+            timeSlots.innerHTML = '<div class="text-center text-muted">No available times for this date</div>';
+            return;
+          }
+          
+          // Create time slots from available hours
+          data.available_hours.forEach((timeStr, index) => {
+            const timeSlot = document.createElement('div');
+            timeSlot.className = 'time-slot';
+            
+            // Parse time string (e.g., "14:00" to "2:00 PM")
+            const [hour, minute] = timeStr.split(':').map(Number);
+            const ampm = hour < 12 ? 'am' : 'pm';
+            const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+            const displayTime = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+            
+            timeSlot.textContent = displayTime;
+            timeSlot.dataset.time = timeStr; // Store original time for form submission
+            
+            timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, hour, timeStr));
+            timeSlots.appendChild(timeSlot);
+          });
+          
+          // Select first available time slot by default
+          if (timeSlots.children.length > 0) {
+            selectTimeSlot(timeSlots.children[0], parseInt(data.available_hours[0].split(':')[0]), data.available_hours[0]);
+          }
+        })
+        .catch(error => {
+          console.error('❌ Failed to fetch available hours:', error);
+          timeSlots.innerHTML = '<div class="text-center text-muted p-3" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; color: #6c757d;"><i class="fa-solid fa-exclamation-triangle me-2"></i>No available times for this date. Please try selecting a different date.</div>';
+        });
+    }
+
+    function selectTimeSlot(slot, hour, timeStr) {
+      selectedTime = hour;
+      
+      document.querySelectorAll('.time-slot').forEach(s => {
+        s.classList.remove('selected');
+      });
+      slot.classList.add('selected');
+      
+      document.getElementById('selected_time').value = timeStr;
+      
+      // Also update Django form field
+      const hourField = document.getElementById("id_hour");
+      if (hourField) {
+        hourField.value = timeStr;
+        console.log('🔍 Updated Django hour field to:', timeStr);
+      }
+      
+      updatePrice();
+      
+      // Trigger validation update
+      if (typeof formValidator !== 'undefined' && formValidator.validateDateAndTime) {
+        formValidator.validateDateAndTime();
+      }
+      if (typeof updateSubmitButtonState === 'function') {
+        updateSubmitButtonState();
+      }
+    }
+
+    // Navigation arrows
+    const prevWeekBtn = document.getElementById('prev_week');
+    const nextWeekBtn = document.getElementById('next_week');
+    
+    if (prevWeekBtn) {
+      prevWeekBtn.addEventListener('click', () => {
+        currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+        renderCalendar();
+      });
+    }
+    
+    if (nextWeekBtn) {
+      nextWeekBtn.addEventListener('click', () => {
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+        renderCalendar();
+      });
+    }
+
+    // === Frequency Button Logic ===
+    const frequencyButtons = document.querySelectorAll('.frequency-section .frequency-btn');
+    const frequencyInput = document.getElementById('cleaning_frequency');
+    const discountInput = document.getElementById('frequency_discount');
+
+    frequencyButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        frequencyButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        frequencyInput.value = this.dataset.frequency;
+        discountInput.value = this.dataset.discount;
+        updatePrice();
+      });
+    });
+
+    // Calendar will be initialized later in the initialization sequence
+
+    // === Flatpickr Setup (keep for backward compatibility) ===
+    const dateField = document.getElementById("id_date");
+    if (dateField) {
+      flatpickr("#id_date", {
+        dateFormat: "Y-m-d",
+        minDate: new Date().fp_incr(2),
+        defaultDate: new Date().fp_incr(2),
+        disableMobile: true
+      });
+    }
+  
+    // === Shared DOM Elements ===
+    const hourSelect = document.getElementById("id_hour");
+    const hoursField = document.querySelector('select[name="est_hours"]');
+    const sqftSelect = document.getElementById("id_square_feet_options");
+    const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
+    const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
+    const homeTypeGroup = document.getElementById("id_home_types")?.closest(".form-group");
+    const bathCountGroup = document.getElementById("id_bath_count")?.closest(".form-group");
+    const extrasContainer = document.getElementById("cleaningExtrasContainer");
+    const largeHomeOptions = document.getElementById("largeHomeOptions");
+  
+    function isSmallHomeSelected() {
+      const selectedOption = sqftSelect?.selectedOptions[0];
+      if (!selectedOption) {
+        console.log('🔍 No selected option in sqftSelect');
+        return false;
+      }
+      const isSmall = selectedOption.textContent.toLowerCase().includes("under 1000");
+      console.log('🔍 isSmallHomeSelected:', isSmall, 'for option:', selectedOption.textContent);
+      return isSmall;
+    }
+  
+    // === Load available hours dynamically ===
+    function fetchAvailableHours() {
+      const selectedDate = dateField?.value;
+      let selectedHours = 3; // default fallback
+  
+      if (largeHomeOptions?.offsetParent !== null) {
+        // Use selected value for large homes
+        selectedHours = parseInt(hoursField?.value || "3");
+      } else {
+        // Use home type + extras for small homes
+        const homeSelect = document.getElementById("id_home_types");
+        let totalMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || "0");
+  
+    document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+      totalMinutes += parseInt(cb.dataset.time || "0") || 0;
+    });
+  
+    selectedHours = Math.ceil(totalMinutes / 60); // round up to next full hour
+  }
+  
+      if (!selectedDate || isNaN(selectedHours)) return;
+  
+      hourSelect.innerHTML = "<option>Loading...</option>";
+      hourSelect.disabled = true;
+  
+      fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${selectedHours}`)
+        .then(response => response.json())
+        .then(data => {
+          hourSelect.innerHTML = "";
+          hourSelect.disabled = false;
+  
+          if (!data.available_hours || data.available_hours.length === 0) {
+            hourSelect.innerHTML = "<option disabled selected>No available time</option>";
+          } else {
+            data.available_hours.forEach((hour, index) => {
+              const option = document.createElement("option");
+              option.value = hour;
+              option.textContent = hour;
+              if (index === 0) option.selected = true;
+              hourSelect.appendChild(option);
+            });
+  
+            if (data.available_hours.length === 1) {
+              hourSelect.value = data.available_hours[0];
+            }
+          }
+  
+          updatePrice();
+        })
+        .catch((err) => {
+          console.error("❌ Failed to fetch available hours:", err);
+          hourSelect.innerHTML = "<option value=''>Failed to load</option>";
+          hourSelect.disabled = false;
+        });
+    }
+  
+    // === UI Defaults ===
+    function setDefaultSquareFeet() {
+      console.log('🔍 setDefaultSquareFeet called, sqftSelect:', sqftSelect);
+      if (!sqftSelect) {
+        console.log('🔍 sqftSelect is null, cannot set default');
+        return;
+      }
+      for (let i = 0; i < sqftSelect.options.length; i++) {
+        console.log('🔍 Checking option', i, ':', sqftSelect.options[i].textContent);
+        if (sqftSelect.options[i].textContent.toLowerCase().includes("under 1000")) {
+          sqftSelect.selectedIndex = i;
+          console.log('🔍 Set default square feet to index', i);
+          break;
+        }
+      }
+    }
+  
+    function toggleHomeAndExtras() {
+      console.log('🔍 toggleHomeAndExtras function called');
+      const selectedOption = sqftSelect?.selectedOptions[0];
+      if (!selectedOption) {
+        console.log('🔍 No selected option in toggleHomeAndExtras');
+        return;
+      }
+
+      const selectedName = selectedOption.textContent.trim().toLowerCase();
+      const isUnder1000 = selectedName.includes("under 1000");
+      
+      console.log('🔍 toggleHomeAndExtras called:', { selectedName, isUnder1000 });
+      console.log('🔍 DOM elements:', { 
+        homeTypeGroup: !!homeTypeGroup, 
+        bathCountGroup: !!bathCountGroup, 
+        extrasContainer: !!extrasContainer, 
+        largeHomeOptions: !!largeHomeOptions,
+        sqftSelect: !!sqftSelect
+      });
+      
+      // Ensure elements exist before trying to manipulate them
+      if (!homeTypeGroup) {
+        console.error('🔍 homeTypeGroup not found!');
+        return;
+      }
+      if (!extrasContainer) {
+        console.error('🔍 extrasContainer not found!');
+        return;
+      }
+      if (!largeHomeOptions) {
+        console.error('🔍 largeHomeOptions not found!');
+        return;
+      }
+  
+      if (isUnder1000) {
+        console.log('🔍 Showing small home options');
+        homeTypeGroup.style.display = "";
+        if (bathCountGroup) bathCountGroup.style.display = "";
+        extrasContainer.style.display = "";
+        largeHomeOptions.style.display = "none";
+
+        // For under 1000 sq ft homes, always set cleaner count to 1
+        const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
+        if (cleanerSelect) {
+          cleanerSelect.value = "1";
+        }
+      } else {
+        console.log('🔍 Showing large home options');
+        homeTypeGroup.style.display = "none";
+        if (bathCountGroup) bathCountGroup.style.display = "";
+        extrasContainer.style.display = "none";
+        largeHomeOptions.style.display = "";
+
+        // Clear extras for large homes since they're not available
+        document.querySelectorAll(".extra-checkbox").forEach(cb => {
+          cb.checked = false;
+        });
+
+        if (selectedName.includes("1500–2000") || selectedName.includes("1500-2000")) {
+          cleaningTypeSelect.innerHTML = `
+            <option value="">Select Cleaning Type</option>
+            <option value="1500-2000 (Regular)" selected>Regular Cleaning</option>
+            <option value="1500-2000 (Deep)">Deep Cleaning</option>
+            <option value="1500-2000 (Move)">Move In/Out Cleaning</option>
+            <option value="1500-2000 (Post)">Post Renovation</option>
+          `;
+          cleanerSelect.value = "2"; // 2 cleaners for 1500-2000 sq ft
+          hoursField.value = "5";
+        } else if (selectedName.includes("custom")) {
+          cleaningTypeSelect.innerHTML = `
+            <option value="custom_cleaning" selected>Hourly Service 58$ per hour/per cleaner</option>
+          `;
+          cleanerSelect.value = "2";
+          hoursField.value = "5";
+        } else if (selectedName.includes("renovation")) {
+          cleaningTypeSelect.innerHTML = `
+            <option value="post_renovation" selected>Hourly Service 63$ per hour/per cleaner</option>
+          `;
+          cleanerSelect.value = "2";
+          hoursField.value = "5";
+        } else {
+          cleaningTypeSelect.innerHTML = `
+            <option value="">Select Cleaning Type</option>
+            <option value="1000-1500 (Regular)" selected>Regular Cleaning</option>
+            <option value="1000-1500 (Deep)">Deep Cleaning</option>
+            <option value="1000-1500 (Move)">Move In/Out Cleaning</option>
+            <option value="1000-1500 (Post)">Post Renovation</option>
+          `;
+          cleanerSelect.value = "2"; // 2 cleaners for other large homes
+          hoursField.value = "3";
+        }
+  
+        cleaningTypeSelect?.dispatchEvent(new Event("change"));
+      }
+  
+      updatePrice();
+    }
+  
+    cleaningTypeSelect?.addEventListener("change", function () {
+      console.log('🔍 Cleaning type changed to:', this.value);
+      const value = this.value.toLowerCase();
+  
+      if (value.includes("regular")) {
+        // For under 1000 sq ft homes, always use 1 cleaner
+        cleanerSelect.value = isSmallHomeSelected() ? "1" : (value.includes("1500-2000") ? "2" : "2");
+        hoursField.value = value.includes("1500-2000") ? "5" : "3";
+      } else if (value.includes("deep")) {
+        // For under 1000 sq ft homes, always use 1 cleaner
+        cleanerSelect.value = isSmallHomeSelected() ? "1" : (value.includes("1500-2000") ? "3" : "2");
+        hoursField.value = "5";
+      } else if (value.includes("move")) {
+        // For under 1000 sq ft homes, always use 1 cleaner
+        cleanerSelect.value = isSmallHomeSelected() ? "1" : (value.includes("1500-2000") ? "3" : "2");
+        hoursField.value = "5";
+      } else if (value.includes("post")) {
+        // For under 1000 sq ft homes, always use 1 cleaner
+        cleanerSelect.value = isSmallHomeSelected() ? "1" : "3";
+        hoursField.value = value.includes("1500-2000") ? "8" : "6";
+      }
+  
+      updatePrice();
+    });
+
+    document.getElementById("applyGiftCard")?.addEventListener("click", () => {
+      const code = document.getElementById("gift_card_code")?.value.trim();
+      applyGiftCardOrDiscount(code, () => {
+        updatePrice();
+      });
+    });
+
+    document.getElementById("removeGiftCard")?.addEventListener("click", () => {
+      // Clear all discount/gift states
+      giftCardActive = false;
+      giftCardBalance = 0;
+      appliedGiftCardAmount = 0;
+      discountCode = null;
+      appliedDiscountAmount = 0;
+      
+      // Update pricing and payment amounts
+      updatePrice();
+    
+      // Clear input field
+      document.getElementById("gift_card_code").value = "";
+    
+      // Update price and UI
+      updatePrice();
+    
+      // Optional: hide applied discount line
+      const el = document.getElementById("giftCardApplied");
+      if (el) el.style.display = "none";
+    });
+  
+    // === Set Default Values ===
+    function setDefaultValues() {
+      console.log('🔍 setDefaultValues called');
+      
+      // Set default date (2 days from now)
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 2);
+      selectedDate = defaultDate;
+      console.log('🔍 Set selected date to:', selectedDate);
+      
+      // Set default time (9:00 AM)
+      selectedTime = 9;
+      console.log('🔍 Set selected time to:', selectedTime);
+      
+      // Update hidden fields with defaults
+      const dateValue = defaultDate.toISOString().split('T')[0];
+      const timeValue = '09:00';
+      
+      // Ensure hidden fields exist before setting values
+      const selectedDateField = document.getElementById('selected_date');
+      const selectedTimeField = document.getElementById('selected_time');
+      
+      if (selectedDateField) {
+        selectedDateField.value = dateValue;
+        console.log('🔍 Set selected_date field to:', dateValue);
+      } else {
+        console.warn('⚠️ selected_date field not found');
+      }
+      
+      if (selectedTimeField) {
+        selectedTimeField.value = timeValue;
+        console.log('🔍 Set selected_time field to:', timeValue);
+      } else {
+        console.warn('⚠️ selected_time field not found');
+      }
+      
+      // Also update Django form fields
+      const dateField = document.getElementById("id_date");
+      const hourField = document.getElementById("id_hour");
+      
+      if (dateField) {
+        dateField.value = dateValue;
+        console.log('🔍 Set Django date field to:', dateValue);
+      } else {
+        console.warn('⚠️ Django date field (id_date) not found');
+      }
+      
+      if (hourField) {
+        hourField.value = timeValue;
+        console.log('🔍 Set Django hour field to:', timeValue);
+      } else {
+        console.warn('⚠️ Django hour field (id_hour) not found');
+      }
+      
+      console.log('🔍 Set default values - date:', dateValue, 'time:', timeValue);
+    }
+    
+    // === Set Default Location ===
+    function setDefaultLocation() {
+      console.log('🔍 setDefaultLocation called');
+      
+      // Set default city and state to New York, NY
+      const cityField = document.getElementById("id_city");
+      const stateField = document.getElementById("id_state");
+      
+      if (cityField) {
+        cityField.value = "New York";
+        console.log('🔍 Set city field to: New York');
+      }
+      
+      if (stateField) {
+        stateField.value = "NY";
+        console.log('🔍 Set state field to: NY');
+      }
+      
+      console.log('🔍 Default location set to: New York, NY');
+    }
+
+    // Run initializers
+    console.log('🔍 Starting initialization sequence');
+    setDefaultSquareFeet();
+    toggleHomeAndExtras();
+    
+    // Ensure under 1000 sq ft homes always have 1 cleaner
+    if (isSmallHomeSelected()) {
+      const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
+      if (cleanerSelect) {
+        cleanerSelect.value = "1";
+      }
+    }
+    
+    console.log('🔍 Running final initialization steps');
+    setDefaultValues(); // Set default values first
+    setDefaultLocation(); // Set default city and state
+    renderCalendar(); // Then render calendar with selected date
+    console.log('🔍 Calling updatePrice from initialization');
+    updatePrice(); // Finally update the summary
+    
+    // Initialize real-time validation
+    setupRealTimeValidation();
+    
+    // Initialize form progress tracking
+    setupFormProgressTracking();
+    
+    // Debug function for testing
+    window.debugCleaningBooking = function() {
+      console.log('🔍 Debug info:');
+      console.log('sqftSelect:', sqftSelect);
+      console.log('homeTypeGroup:', homeTypeGroup);
+      console.log('extrasContainer:', extrasContainer);
+      console.log('largeHomeOptions:', largeHomeOptions);
+      console.log('isSmallHomeSelected():', isSmallHomeSelected());
+      console.log('Current square feet selection:', sqftSelect?.selectedOptions[0]?.textContent);
+      updatePrice();
+    };
+  
+    // === Event Bindings ===
+    // Square feet functionality is now handled in a separate DOMContentLoaded script
+    cleaningTypeSelect?.addEventListener("change", fetchAvailableHours);
+    cleanerSelect?.addEventListener("change", fetchAvailableHours);
+    hoursField?.addEventListener("change", fetchAvailableHours);
+    
+    // Add event listener for home type changes
+    const homeTypeSelect = document.getElementById("id_home_types");
+    if (homeTypeSelect) {
+      homeTypeSelect.addEventListener("change", function() {
+        console.log('🔍 Home type changed to:', this.value, this.selectedOptions[0]?.textContent);
+        updatePrice();
+      });
+    }
+
+    // Add event listener for bathroom count changes
+    const bathCountSelect = document.getElementById("id_bath_count");
+    if (bathCountSelect) {
+      bathCountSelect.addEventListener("change", function() {
+        console.log('🔍 Bathroom count changed to:', this.value);
+        updatePrice();
+      });
+    }
+  
+    // Refresh on blur (when user clicks out of the input)
+    if (dateField) {
+      dateField.addEventListener("change", fetchAvailableHours);
+    }
+    if (hoursField) {
+      hoursField.addEventListener("change", fetchAvailableHours);
+    }
+  
+    document.querySelectorAll(".extra-checkbox").forEach(cb => {
+      cb.addEventListener("change", function() {
+        console.log('🔍 Extra checkbox changed:', this.checked, this.value, this.dataset.price);
+        updatePrice();
+      });
+    });
+    
+    // Handle get_in radio buttons (only one can be selected)
+    document.querySelectorAll("input[name='get_in']").forEach(radio => {
+      radio.addEventListener("change", function() {
+        updatePrice();
+      });
+    });
+    
+    // Handle pet radio buttons (only one can be selected)
+    document.querySelectorAll("input[name='pet']").forEach(radio => {
+      radio.addEventListener("change", function() {
+        updatePrice();
+      });
+    });
+    
+    document.querySelectorAll("input, select").forEach(el => {
+      el.addEventListener("change", updatePrice);
+      el.addEventListener("input", () => {
+        if (el.classList.contains("is-invalid") && el.value) {
+          el.classList.remove("is-invalid");
+        }
+      });
+    });
+    cleanerSelect?.addEventListener("change", function() {
+      console.log('🔍 Number of cleaners changed to:', this.value);
+      updatePrice();
+    });
+    hoursField?.addEventListener("change", function() {
+      console.log('🔍 Hours changed to:', this.value);
+      updatePrice();
+    });
+    cleaningTypeSelect?.addEventListener("change", function() {
+      console.log('🔍 Cleaning type changed (second listener):', this.value);
+      updatePrice();
+    });
+  
+     // ================================
+    // PRICE & SUMMARY CALCULATOR
+    // ================================
+    function updatePrice() {
+      console.log('🔍 updatePrice called');
+      let subtotal = 0;
+      const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
+      console.log('🔍 Square feet price:', sqftPrice);
+      
+      // For large homes, don't add square feet price as it's included in hourly calculation
+      const isSmallHome = isSmallHomeSelected();
+      console.log('🔍 Is small home selected:', isSmallHome);
+      
+      if (isSmallHome) {
+        // For small homes, add square feet price
+        subtotal += sqftPrice;
+      }
+
+      // Home Type (only if visible and small home)
+      if (isSmallHome) {
+        const homeSelect = document.getElementById("id_home_types");
+        const homePrice = parseFloat(homeSelect?.selectedOptions[0]?.dataset.price || 0);
+        console.log('🔍 Home type price:', homePrice, 'from option:', homeSelect?.selectedOptions[0]?.textContent);
+        subtotal += homePrice;
+      }
+
+      // Extras (only for small homes)
+      if (isSmallHome) {
+        const checkedExtras = document.querySelectorAll(".extra-checkbox:checked");
+        console.log('🔍 Processing extras for pricing:', checkedExtras.length);
+        checkedExtras.forEach(cb => {
+          const price = parseFloat(cb.dataset.price || 0);
+          console.log('🔍 Adding extra price:', price);
+          subtotal += price;
+        });
+      }
+
+      // Labor cost for large homes
+      let laborCost = 0;
+      const isLargeHomeVisible = largeHomeOptions && largeHomeOptions.style.display !== "none";
+      console.log('🔍 Is large home visible:', isLargeHomeVisible);
+      if (isLargeHomeVisible) {
+        const numCleaners = parseInt(cleanerSelect?.value || 0);
+        const estimatedHours = parseFloat(hoursField?.value || 0);
+        const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
+        let hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
+        console.log('🔍 Large home details:', { numCleaners, estimatedHours, cleaningType, hourlyRate });
+      
+        laborCost = numCleaners * estimatedHours * hourlyRate;
+        console.log('🔍 Labor cost:', laborCost);
+        subtotal += laborCost;
+      }
+      
+      // Apply frequency discount
+      const frequencyDiscount = parseInt(document.getElementById('frequency_discount')?.value || 0);
+      const frequencyDiscountAmount = subtotal * (frequencyDiscount / 100);
+      subtotal -= frequencyDiscountAmount;
+  
+  const taxRate = 0.08875;
+const tax = subtotal * taxRate;
+let total = subtotal + tax;
+
+let discount = 0;
+let discountLabel = "";
+
+// ✅ Apply gift card if active
+if (giftCardActive && giftCardBalance > 0) {
+  discount = Math.min(giftCardBalance, total);
+  appliedGiftCardAmount = discount;
+  appliedDiscountAmount = 0;
+  discountLabel = "Gift Card";
+}
+
+// ✅ Otherwise, apply discount code
+else if (discountCode) {
+  if (discountCode.type === "fixed") {
+    discount = Math.min(discountCode.value, total);
+  } else if (discountCode.type === "percent") {
+    discount = total * (discountCode.value / 100);
+  }
+  appliedDiscountAmount = discount;
+  appliedGiftCardAmount = 0;
+  discountLabel = "Discount";
+}
+
+// ✅ Apply the discount to total
+total = Math.max(0, total - discount);
+
+// ✅ Update the summary UI
+const giftEl = document.getElementById("giftCardApplied");
+const giftAmtEl = document.getElementById("giftCardAmount");
+
+if (discount > 0 && giftEl && giftAmtEl) {
+  giftEl.style.display = "flex";
+  giftEl.querySelector("strong").innerText = `${discountLabel}: -$${discount.toFixed(2)}`;
+  giftAmtEl.innerText = discount.toFixed(2);
+} else if (giftEl) {
+  giftEl.style.display = "none";
+  giftAmtEl.innerText = "0.00";
+}
+
+// ✅ Update the total UI
+document.getElementById("subtotalPrice").innerText = subtotal.toFixed(2);
+document.getElementById("salesTax").innerText = tax.toFixed(2);
+document.getElementById("totalPrice").innerText = total.toFixed(2);
+
+// ✅ Update payment amounts to match the new total
+updatePaymentAmounts();
+  
+      // Update summary items list
+      const summaryContainer = document.getElementById("summary-items");
+      console.log('🔍 Summary container found:', !!summaryContainer);
+      if (summaryContainer) {
+        console.log('🔍 Updating summary with subtotal:', subtotal);
+        summaryContainer.innerHTML = "";
+
+      // Square Feet Selection (only for small homes)
+      if (sqftSelect && isSmallHome) {
+        const sqftLabel = sqftSelect.selectedOptions[0]?.textContent.trim();
+        if (sqftPrice > 0) {
+          summaryContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div><i class="fa-solid fa-house me-2 text-primary"></i><strong>${sqftLabel}</strong></div>
+              <div><strong>$${sqftPrice.toFixed(2)}</strong></div>
+            </div>`;
+        }
+      }
+
+      // Home Type (only for small homes)
+      if (isSmallHome) {
+          console.log('🔍 Small home selected, adding home type to summary');
+        const homeSelect = document.getElementById("id_home_types");
+        const homeOption = homeSelect?.selectedOptions[0];
+        const homeLabel = homeOption?.textContent.trim();
+        const homePrice = parseFloat(homeOption?.dataset.price || 0);
+          
+          console.log('🔍 Home type details:', { homeLabel, homePrice, homeOption });
+      
+        if (homeLabel && homePrice > 0) {
+          summaryContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
+              <div><i class="fa-solid fa-building me-2"></i>${homeLabel}</div>
+              <div>$${homePrice.toFixed(2)}</div>
+            </div>`;
+        }
+        } else {
+          console.log('🔍 Large home selected, skipping home type');
+      }
+
+      // Number of Bathrooms
+      const bathCountSelect = document.getElementById("id_bath_count");
+      if (bathCountSelect && bathCountSelect.value) {
+        const bathCount = bathCountSelect.value;
+        const bathLabel = bathCount === "1" ? "1 Bathroom" : `${bathCount} Bathrooms`;
+        summaryContainer.innerHTML += `
+          <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
+            <div><i class="fa-solid fa-bath me-2"></i>${bathLabel}</div>
+            <div>Included</div>
+          </div>`;
+      }
+
+      // Cleaning Extras
+        const checkedExtras = document.querySelectorAll(".extra-checkbox:checked");
+        console.log('🔍 Found checked extras:', checkedExtras.length);
+        if (checkedExtras.length > 0) {
+          summaryContainer.innerHTML += `
+            <div class="mt-2 mb-1">
+              <small class="text-muted fw-semibold"><i class="fa-solid fa-plus me-1"></i>Extras:</small>
+            </div>`;
+        }
+        checkedExtras.forEach(cb => {
+        const label = cb.nextElementSibling?.textContent?.trim() || "Extra";
+        const price = parseFloat(cb.dataset.price || 0).toFixed(2);
+          console.log('🔍 Adding extra to summary:', { label, price });
+        summaryContainer.innerHTML += `
+          <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
+            <div>• ${label}</div>
+            <div>$${price}</div>
+          </div>`;
+      });
+  
+      // Large Home Summary
+      if (isLargeHomeVisible) {
+        const sqftLabel = sqftSelect?.selectedOptions[0]?.textContent.trim();
+        const numCleaners = parseInt(cleanerSelect?.value || "0");
+        const hours = parseFloat(hoursField?.value || "0");
+        const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
+        const hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
+        
+        // Show square footage info
+        if (sqftLabel) {
+          summaryContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div><i class="fa-solid fa-house me-2 text-primary"></i><strong>${sqftLabel}</strong></div>
+              <div><strong>Included</strong></div>
+            </div>`;
+        }
+        
+        // Show labor cost breakdown
+        if (laborCost > 0) {
+          summaryContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div><i class="fa-solid fa-broom me-2 text-primary"></i><strong>${numCleaners} Cleaners × ${hours} Hours × $${hourlyRate}/hour</strong></div>
+              <div><strong>$${laborCost.toFixed(2)}</strong></div>
+            </div>`;
+        }
+      }
+  
+        // Show frequency discount if applicable
+        if (frequencyDiscount > 0) {
+          summaryContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-1 text-success">
+              <div><i class="fa-solid fa-tag me-2"></i>Frequency Discount (${frequencyDiscount}%)</div>
+              <div>-$${frequencyDiscountAmount.toFixed(2)}</div>
+            </div>`;
+        }
+      }
+  
+      // Update schedule info - use new calendar values if available
+      let dateVal = document.getElementById("selected_date")?.value || document.getElementById("id_date")?.value || "-";
+      let timeVal = document.getElementById("selected_time")?.value || document.getElementById("id_hour")?.value || "-";
+      let recurrenceText = document.getElementById("recurrence_pattern")?.value || document.getElementById("id_recurrence_pattern")?.selectedOptions?.[0]?.textContent || "-";
+
+      // Format time display
+      if (timeVal && timeVal !== "-") {
+        const [hour, minute] = timeVal.split(':').map(Number);
+        const ampm = hour < 12 ? 'am' : 'pm';
+        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        timeVal = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+      }
+
+      // Format date display
+      if (dateVal && dateVal !== "-") {
+        const date = new Date(dateVal);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        const year = date.getFullYear();
+        dateVal = `${month}/${day}/${year}`;
+      }
+
+      // Format recurrence text
+      const frequencyLabels = {
+        'one_time': 'One Time',
+        'daily': 'Daily',
+        'weekly': 'Weekly',
+        'bi_weekly': 'Bi-Weekly',
+        'monthly': 'Monthly'
+      };
+      if (frequencyLabels[recurrenceText]) {
+        recurrenceText = frequencyLabels[recurrenceText];
+      }
+  
+      document.getElementById("summary-date").textContent = `${dateVal} @ ${timeVal}`;
+      document.getElementById("summary-recurrence").textContent = recurrenceText;
+  
+      // Calculate and display total duration
+  let totalMinutes = 0;
+  if (largeHomeOptions?.offsetParent !== null) {
+    const estimatedHours = parseFloat(hoursField?.value || "0");
+    totalMinutes = estimatedHours * 60;
+  } else {
+    const homeSelect = document.getElementById("id_home_types");
+    const baseMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || "0");
+    totalMinutes += isNaN(baseMinutes) ? 0 : baseMinutes;
+  
+    document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+      totalMinutes += parseInt(cb.dataset.time || "0") || 0;
+    });
+  }
+  
+      const finalHours = Math.floor(totalMinutes / 60);
+      const finalMinutes = totalMinutes % 60;
+      const hourLabel = finalHours === 1 ? "Hour" : "Hours";
+      const minuteLabel = finalMinutes === 1 ? "Minute" : "Minutes";
+      document.getElementById("summary-duration").textContent = `${finalHours} ${hourLabel} ${finalMinutes} ${minuteLabel} (estimated time)`;
+      
+      // Trigger validation update
+      if (typeof updateSubmitButtonState === 'function') {
+        updateSubmitButtonState();
+      }
+    }
+    
+    // Make updatePrice globally accessible
+    window.updatePrice = updatePrice;
+  
+    function resetSummary() {
+      // 1. Reset home type to "Studio"
+      const homeTypeSelect = document.getElementById("id_home_types");
+      if (homeTypeSelect) {
+        for (let i = 0; i < homeTypeSelect.options.length; i++) {
+          if (homeTypeSelect.options[i].textContent.toLowerCase().includes("studio")) {
+            homeTypeSelect.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    
+      // 2. Uncheck all extras
+      document.querySelectorAll(".extra-checkbox").forEach(cb => {
+        cb.checked = false;
+      });
+    
+      // 3. Reset date and time
+      const today = new Date();
+      today.setDate(today.getDate() + 2); // ✅ Add 2 days
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const formattedDateInput = `${yyyy}-${mm}-${dd}`;
+      const formattedDateText = `${mm}/${dd}/${yyyy}`;
+      const time = "09:00"; // 9:00 AM
+    
+      const dateInput = document.getElementById("id_date");
+      if (dateInput) dateInput.value = formattedDateInput;
+    
+      const timeInput = document.getElementById("id_hour");
+      if (timeInput) timeInput.value = time;
+    
+      // 4. Reset recurrence to "One Time"
+      const recurrenceSelect = document.getElementById("id_recurrence_pattern");
+      if (recurrenceSelect) {
+        for (let i = 0; i < recurrenceSelect.options.length; i++) {
+          if (recurrenceSelect.options[i].textContent.toLowerCase().includes("one time")) {
+            recurrenceSelect.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    
+      // 5. Reset duration to base from selected Studio (data-time)
+      const selectedOption = homeTypeSelect?.selectedOptions[0];
+      let baseMinutes = parseInt(selectedOption?.dataset.time || "180"); // fallback to 3 hrs
+    
+      const finalHours = Math.floor(baseMinutes / 60);
+      const finalMinutes = baseMinutes % 60;
+      const hourLabel = finalHours === 1 ? "Hour" : "Hours";
+      const minuteLabel = finalMinutes === 1 ? "Minute" : "Minutes";
+    
+      // 6. Update summary UI
+      const price = parseFloat(selectedOption?.dataset.price || "130");
+      const taxRate = 0.08875;
+      const tax = price * taxRate;
+      const total = price + tax;
+    
+      document.getElementById("summary-items").innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div><i class="fa-solid fa-house me-2 text-primary"></i><strong>Studio ($130.00)</strong></div>
+          <div><strong>$${price.toFixed(2)}</strong></div>
+        </div>`;
+    
+      document.getElementById("summary-date").textContent = `${formattedDateText} @ 9:00 AM`;
+      document.getElementById("summary-duration").textContent = `${finalHours} ${hourLabel} ${finalMinutes} ${minuteLabel} (estimated time)`;
+      document.getElementById("summary-recurrence").textContent = "One Time";
+    
+      document.getElementById("subtotalPrice").innerText = price.toFixed(2);
+      document.getElementById("salesTax").innerText = tax.toFixed(2);
+      document.getElementById("totalPrice").innerText = total.toFixed(2);
+      
+      // ✅ Update payment amounts to match the new total
+      updatePaymentAmounts();
+    }
+  
+    function syncHiddenFields() {
+      console.log('🔍 syncHiddenFields called');
+      
+      // Sync calendar fields with Django form fields
+      const selectedDate = document.getElementById('selected_date')?.value;
+      const selectedTime = document.getElementById('selected_time')?.value;
+      
+      console.log('🔍 Syncing calendar values to Django form:', { selectedDate, selectedTime });
+      
+      // Update Django form fields
+      const dateField = document.getElementById("id_date");
+      const hourField = document.getElementById("id_hour");
+      
+      if (dateField && selectedDate) {
+        dateField.value = selectedDate;
+        console.log('🔍 Set Django date field to:', selectedDate);
+      }
+      
+      if (hourField && selectedTime) {
+        hourField.value = selectedTime;
+        console.log('🔍 Set Django hour field to:', selectedTime);
+      }
+      
+      // Ensure city and state are set to New York, NY
+      const cityField = document.getElementById("id_city");
+      const stateField = document.getElementById("id_state");
+      
+      if (cityField) {
+        cityField.value = "New York";
+        console.log('🔍 Set city field to: New York');
+      }
+      
+      if (stateField) {
+        stateField.value = "NY";
+        console.log('🔍 Set state field to: NY');
+      }
+      
+      // If large home section is visible, use that data
+      if (document.getElementById("largeHomeOptions")?.offsetParent !== null) {
+        const cleaners = document.querySelector('select[name="num_cleaners"]')?.value;
+        const hours = document.querySelector('select[name="est_hours"]')?.value;
+        const type = document.querySelector('select[name="cleaning_type"]')?.value;
+    
+        document.getElementById("hidden_hours_requested").value = hours;
+        document.getElementById("hidden_num_cleaners").value = cleaners;
+        document.getElementById("hidden_cleaning_type").value = type;
+      } else {
+        // For small homes: use computed time from summary
+        const homeSelect = document.getElementById("id_home_types");
+        let totalMinutes = parseInt(homeSelect?.selectedOptions[0]?.dataset.time || "0");
+    
+        document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+          totalMinutes += parseInt(cb.dataset.time || "0") || 0;
+        });
+    
+        const roundedHours = Math.ceil(totalMinutes / 60);
+    
+        document.getElementById("hidden_hours_requested").value = roundedHours;
+        document.getElementById("hidden_num_cleaners").value = 1; // Always 1 cleaner for small homes
+        document.getElementById("hidden_cleaning_type").value = ""; // optional
+      }
+    }
+    // Form submission is now handled by the FormValidator class
+    
+    // ================================
+    // STRIPE PAYMENT INTEGRATION
+    // ================================
+    
+    // Initialize Stripe
+    const stripe = Stripe('{{ STRIPE_PUBLISHABLE_KEY }}');
+    let elements;
+    let cardElement;
+    let clientSecret;
+    let currentBookingId = null;
+    let currentPaymentType = 'deposit';
+
+    // Initialize payment options when page loads
+    function initializePaymentOptions() {
+      try {
+        console.log('🔍 Initializing payment options...');
+        
+        // Update payment amounts when total changes
+        updatePaymentAmounts();
+        
+        // Handle payment option changes
+        document.getElementById('payment_deposit').addEventListener('change', handlePaymentOptionChange);
+        document.getElementById('payment_full').addEventListener('change', handlePaymentOptionChange);
+        
+      } catch (error) {
+        console.error('❌ Error initializing payment options:', error);
+      }
+    }
+
+    function updatePaymentAmounts() {
+      const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
+      const depositAmount = (totalAmount / 2).toFixed(2);
+      
+      document.getElementById('deposit-amount').textContent = depositAmount;
+      document.getElementById('full-amount').textContent = totalAmount.toFixed(2);
+    }
+
+    function handlePaymentOptionChange() {
+      const depositOption = document.getElementById('payment_deposit');
+      const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
+      
+      if (depositOption.checked) {
+        currentPaymentType = 'deposit';
+      } else {
+        currentPaymentType = 'full';
+      }
+    }
+    
+    // Update payment amounts initially and when pricing changes
+    updatePaymentAmounts();
+    const originalUpdatePrice = window.updatePrice;
+    if (originalUpdatePrice) {
+      window.updatePrice = function() {
+        originalUpdatePrice();
+        updatePaymentAmounts();
+      };
+    }
+  });
+  </script>
+  
+  <!-- Square Feet Functionality - Runs after DOM is loaded -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 Square Feet functionality loaded, DOM is ready');
+    
+    // Wait a bit longer to ensure the main script has completed
+    setTimeout(function() {
+      console.log('🔍 Starting square feet functionality after delay');
+      
+      // Get DOM elements
+    const sqftSelect = document.getElementById("id_square_feet_options");
+    const homeTypeGroup = document.getElementById("id_home_types")?.closest(".form-group");
+    const bathCountGroup = document.getElementById("id_bath_count")?.closest(".form-group");
+    const extrasContainer = document.getElementById("cleaningExtrasContainer");
+    const largeHomeOptions = document.getElementById("largeHomeOptions");
+    
+    console.log('🔍 DOM elements found:', {
+      sqftSelect: !!sqftSelect,
+      homeTypeGroup: !!homeTypeGroup,
+      bathCountGroup: !!bathCountGroup,
+      extrasContainer: !!extrasContainer,
+      largeHomeOptions: !!largeHomeOptions
+    });
+    
+    // Simple price update function for our square feet functionality
+    function updatePriceSimple() {
+      console.log('🔍 updatePriceSimple called');
+      
+      // Try to call the main updatePrice function first
+      if (typeof window.updatePrice === 'function') {
+        console.log('🔍 Calling main updatePrice function');
+        window.updatePrice();
+        return;
+      }
+      
+      // If main function not available, do a basic price update
+      console.log('🔍 Main updatePrice not available, doing basic price update');
+      
+      // Check if this is a small or large home
+      const selectedOption = sqftSelect?.selectedOptions[0];
+      const isSmallHome = selectedOption?.textContent.toLowerCase().includes("under 1000");
+      
+      let subtotal = 0;
+      
+      if (isSmallHome) {
+        // Small home pricing
+        const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
+        console.log('🔍 Square feet price:', sqftPrice);
+        subtotal += sqftPrice;
+        
+        // Get home type price (if visible)
+        let homePrice = 0;
+        if (homeTypeGroup && homeTypeGroup.style.display !== 'none') {
+          const homeSelect = document.getElementById("id_home_types");
+          homePrice = parseFloat(homeSelect?.selectedOptions[0]?.dataset.price || 0);
+          console.log('🔍 Home type price:', homePrice);
+        }
+        subtotal += homePrice;
+        
+        // Get extras price
+        let extrasPrice = 0;
+        document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+          extrasPrice += parseFloat(cb.dataset.price || 0);
+        });
+        console.log('🔍 Extras price:', extrasPrice);
+        subtotal += extrasPrice;
+      } else {
+        // Large home pricing - calculate based on hourly rate
+        const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
+        const hoursField = document.querySelector('select[name="est_hours"]');
+        const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
+        
+        if (cleanerSelect && hoursField && cleaningTypeSelect) {
+          const numCleaners = parseInt(cleanerSelect.value || 0);
+          const estimatedHours = parseFloat(hoursField.value || 0);
+          const cleaningType = cleaningTypeSelect.value?.toLowerCase() || "";
+          const hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
+          
+          subtotal = numCleaners * estimatedHours * hourlyRate;
+          console.log('🔍 Large home pricing:', { numCleaners, estimatedHours, cleaningType, hourlyRate, subtotal });
+        }
+      }
+      
+      // Calculate total with tax
+      const taxRate = 0.08875;
+      const tax = subtotal * taxRate;
+      const total = subtotal + tax;
+      console.log('🔍 Total price:', { subtotal, tax, total });
+      
+      // Update the summary display
+      const subtotalElement = document.getElementById("subtotalPrice");
+      const taxElement = document.getElementById("salesTax");
+      const totalElement = document.getElementById("totalPrice");
+      const summaryContainer = document.getElementById("summary-items");
+      
+      console.log('🔍 Summary elements found:', {
+        subtotalElement: !!subtotalElement,
+        taxElement: !!taxElement,
+        totalElement: !!totalElement,
+        summaryContainer: !!summaryContainer
+      });
+      
+      if (subtotalElement) {
+        subtotalElement.textContent = subtotal.toFixed(2);
+        console.log('🔍 Updated subtotal to:', subtotal.toFixed(2));
+      } else {
+        console.log('🔍 subtotalPrice element not found');
+      }
+      
+      if (taxElement) {
+        taxElement.textContent = tax.toFixed(2);
+        console.log('🔍 Updated tax to:', tax.toFixed(2));
+      } else {
+        console.log('🔍 salesTax element not found');
+      }
+      
+      if (totalElement) {
+        totalElement.textContent = total.toFixed(2);
+        console.log('🔍 Updated total to:', total.toFixed(2));
+      } else {
+        console.log('🔍 totalPrice element not found');
+      }
+      
+      // Update summary details
+      if (summaryContainer) {
+        console.log('🔍 Updating summary details');
+        summaryContainer.innerHTML = "";
+        
+        // Square Feet Selection (only for small homes)
+        if (sqftSelect && isSmallHome) {
+          const sqftLabel = sqftSelect.selectedOptions[0]?.textContent.trim();
+          const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
+          if (sqftPrice > 0) {
+            summaryContainer.innerHTML += `
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div><i class="fa-solid fa-house me-2 text-primary"></i><strong>${sqftLabel}</strong></div>
+                <div><strong>$${sqftPrice.toFixed(2)}</strong></div>
+              </div>`;
+          }
+        }
+        
+        // Home Type (only for small homes)
+        if (isSmallHome && homeTypeGroup && homeTypeGroup.style.display !== 'none') {
+          const homeSelect = document.getElementById("id_home_types");
+          const homeOption = homeSelect?.selectedOptions[0];
+          const homePrice = parseFloat(homeOption?.dataset.price || 0);
+          if (homeOption && homePrice > 0) {
+            summaryContainer.innerHTML += `
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div><i class="fa-solid fa-home me-2 text-primary"></i><strong>${homeOption.textContent.trim()}</strong></div>
+                <div><strong>$${homePrice.toFixed(2)}</strong></div>
+              </div>`;
+          }
+        }
+        
+        // Number of Bathrooms (only for small homes)
+        if (bathCountGroup && bathCountGroup.style.display !== 'none') {
+          const bathSelect = document.getElementById("id_bath_count");
+          const bathCount = bathSelect?.value;
+          if (bathCount && bathCount !== '') {
+            const bathLabel = bathCount === "1" ? "1 Bathroom" : `${bathCount} Bathrooms`;
+            summaryContainer.innerHTML += `
+              <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
+                <div><i class="fa-solid fa-bath me-2"></i>${bathLabel}</div>
+                <div>Included</div>
+              </div>`;
+          }
+        }
+        
+        // Cleaning Extras
+        const checkedExtras = document.querySelectorAll(".extra-checkbox:checked");
+        console.log('🔍 Found checked extras:', checkedExtras.length);
+        if (checkedExtras.length > 0) {
+          summaryContainer.innerHTML += `
+            <div class="mt-2 mb-1">
+              <small class="text-muted fw-semibold"><i class="fa-solid fa-plus me-1"></i>Extras:</small>
+            </div>`;
+        }
+        checkedExtras.forEach(cb => {
+          const label = cb.nextElementSibling?.textContent?.trim() || "Extra";
+          const price = parseFloat(cb.dataset.price || 0).toFixed(2);
+          console.log('🔍 Adding extra to summary:', { label, price });
+          summaryContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
+              <div>• ${label}</div>
+              <div>$${price}</div>
+            </div>`;
+        });
+        
+        // Large Home Options (if visible)
+        if (!isSmallHome && largeHomeOptions && largeHomeOptions.style.display !== 'none') {
+          const sqftLabel = sqftSelect?.selectedOptions[0]?.textContent.trim();
+          const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
+          const hoursField = document.querySelector('select[name="est_hours"]');
+          const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
+          
+          // Show square footage info
+          if (sqftLabel) {
+            summaryContainer.innerHTML += `
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div><i class="fa-solid fa-house me-2 text-primary"></i><strong>${sqftLabel}</strong></div>
+                <div><strong>Included</strong></div>
+              </div>`;
+          }
+          
+          // Show labor cost breakdown
+          if (cleanerSelect && hoursField && cleaningTypeSelect) {
+            const numCleaners = parseInt(cleanerSelect.value || 0);
+            const hours = parseFloat(hoursField.value || 0);
+            const cleaningType = cleaningTypeSelect.value?.toLowerCase() || "";
+            const hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
+            const laborCost = numCleaners * hours * hourlyRate;
+            
+            if (laborCost > 0) {
+              summaryContainer.innerHTML += `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div><i class="fa-solid fa-broom me-2 text-primary"></i><strong>${numCleaners} Cleaners × ${hours} Hours × $${hourlyRate}/hour</strong></div>
+                  <div><strong>$${laborCost.toFixed(2)}</strong></div>
+                </div>`;
+            }
+          }
+        }
+        
+        console.log('🔍 Summary details updated successfully');
+      } else {
+        console.log('🔍 summary-items container not found');
+      }
+      
+      console.log('🔍 Price updated successfully');
+    }
+    
+    // Helper function to safely call updatePrice
+    function safeUpdatePrice() {
+      updatePriceSimple();
+    }
+    
+    // Function to toggle between small and large home options
+    function toggleHomeAndExtras() {
+      console.log('🔍 toggleHomeAndExtras function called');
+      const selectedOption = sqftSelect?.selectedOptions[0];
+      if (!selectedOption) {
+        console.log('🔍 No selected option in toggleHomeAndExtras');
+        return;
+      }
+
+      const selectedName = selectedOption.textContent.trim().toLowerCase();
+      const isUnder1000 = selectedName.includes("under 1000");
+      
+      console.log('🔍 toggleHomeAndExtras called:', { selectedName, isUnder1000 });
+      
+      // Ensure elements exist before trying to manipulate them
+      if (!homeTypeGroup) {
+        console.error('🔍 homeTypeGroup not found!');
+        return;
+      }
+      if (!extrasContainer) {
+        console.error('🔍 extrasContainer not found!');
+        return;
+      }
+      if (!largeHomeOptions) {
+        console.error('🔍 largeHomeOptions not found!');
+        return;
+      }
+
+      if (isUnder1000) {
+        console.log('🔍 Showing small home options');
+        homeTypeGroup.style.display = "";
+        if (bathCountGroup) bathCountGroup.style.display = "";
+        extrasContainer.style.display = "";
+        largeHomeOptions.style.display = "none";
+      } else {
+        console.log('🔍 Showing large home options');
+        homeTypeGroup.style.display = "none";
+        if (bathCountGroup) bathCountGroup.style.display = "";
+        extrasContainer.style.display = "none";
+        largeHomeOptions.style.display = "";
+
+        // Clear extras for large homes since they're not available
+        document.querySelectorAll(".extra-checkbox").forEach(cb => {
+          cb.checked = false;
+        });
+      }
+      
+      // Update price after toggling
+      safeUpdatePrice();
+    }
+    
+    // Attach event listeners to all dropdowns that should update price
+    if (sqftSelect) {
+      sqftSelect.addEventListener("change", function() {
+        console.log('🔍 Square feet changed to:', this.value, this.selectedOptions[0]?.textContent);
+        toggleHomeAndExtras();
+        safeUpdatePrice();
+      });
+      console.log('🔍 Square feet event listener attached successfully');
+      
+      // Call toggleHomeAndExtras initially to set the correct state
+      toggleHomeAndExtras();
+    } else {
+      console.error('🔍 sqftSelect element not found, cannot attach event listener');
+    }
+    
+    // Home Type dropdown
+    if (homeTypeGroup) {
+      const homeTypeSelect = document.getElementById("id_home_types");
+      if (homeTypeSelect) {
+        homeTypeSelect.addEventListener("change", function() {
+          console.log('🔍 Home type changed to:', this.value, this.selectedOptions[0]?.textContent);
+          safeUpdatePrice();
+        });
+        console.log('🔍 Home type event listener attached successfully');
+      }
+    }
+    
+    // Number of Bathrooms dropdown
+    if (bathCountGroup) {
+      const bathCountSelect = document.getElementById("id_bath_count");
+      if (bathCountSelect) {
+        bathCountSelect.addEventListener("change", function() {
+          console.log('🔍 Bath count changed to:', this.value, this.selectedOptions[0]?.textContent);
+          safeUpdatePrice();
+        });
+        console.log('🔍 Bath count event listener attached successfully');
+      }
+    }
+    
+    // Large Home Options - Cleaners dropdown
+    const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
+    if (cleanerSelect) {
+      cleanerSelect.addEventListener("change", function() {
+        console.log('🔍 Number of cleaners changed to:', this.value);
+        safeUpdatePrice();
+      });
+      console.log('🔍 Cleaners event listener attached successfully');
+    }
+    
+    // Large Home Options - Hours dropdown
+    const hoursField = document.querySelector('select[name="est_hours"]');
+    if (hoursField) {
+      hoursField.addEventListener("change", function() {
+        console.log('🔍 Hours changed to:', this.value);
+        safeUpdatePrice();
+      });
+      console.log('🔍 Hours event listener attached successfully');
+    }
+    
+    // Large Home Options - Cleaning Type dropdown
+    const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
+    if (cleaningTypeSelect) {
+      cleaningTypeSelect.addEventListener("change", function() {
+        console.log('🔍 Cleaning type changed to:', this.value);
+        safeUpdatePrice();
+      });
+      console.log('🔍 Cleaning type event listener attached successfully');
+    }
+    
+    // Optional Extras checkboxes
+    document.querySelectorAll(".extra-checkbox").forEach(checkbox => {
+      checkbox.addEventListener("change", function() {
+        console.log('🔍 Extra changed:', this.name, this.value, this.checked);
+        safeUpdatePrice();
+      });
+    });
+    console.log('🔍 Extra checkboxes event listeners attached successfully');
+    
+    }, 500); // End of setTimeout - wait 500ms for main script to complete
+  });
+  </script>
+  
+  
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const summary = document.getElementById("stickySummary");
+        const wrapper = document.getElementById("stickySummaryWrapper");
+      
+        const offsetTop = wrapper.offsetTop;
+      
+        function handleScroll() {
+          const wrapperRect = wrapper.getBoundingClientRect();
+      
+          if (window.scrollY > offsetTop - 80) {
+            summary.classList.add("fixed");
+            summary.style.width = `${wrapper.offsetWidth}px`; // set exact width
+          } else {
+            summary.classList.remove("fixed");
+            summary.style.width = ""; // reset
+          }
+        }
+      
+        window.addEventListener("scroll", handleScroll);
+        window.addEventListener("resize", () => {
+          if (summary.classList.contains("fixed")) {
+            summary.style.width = `${wrapper.offsetWidth}px`;
+          }
+        });
+      });
+      </script>
+
+<!-- Address Selection Functionality -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const addrSelect = document.getElementById("addressSelect");
+  if (addrSelect) {
+    // Function to update form fields and show address details
+    function updateFormFields(selected) {
+      if (!selected) return;
+
+      document.getElementById("id_address").value = selected.dataset.street || "";
+      document.getElementById("id_apartment").value = selected.dataset.apt || "";
+      document.getElementById("id_zip_code").value = selected.dataset.zip || "";
+      document.getElementById("id_city").value = selected.dataset.city || "New York";
+      document.getElementById("id_state").value = selected.dataset.state || "NY";
+      
+      // Show address details
+      const addressDetails = document.getElementById("selectedAddressDetails");
+      if (addressDetails) {
+        document.getElementById("addressStreet").textContent = selected.dataset.street || "–";
+        document.getElementById("addressApt").textContent = selected.dataset.apt || "–";
+        document.getElementById("addressZip").textContent = selected.dataset.zip || "–";
+        addressDetails.classList.remove("d-none");
+      }
+    }
+    
+    // Handle address selection change
+    addrSelect.addEventListener("change", function () {
+      updateFormFields(this.selectedOptions[0]);
+    });
+    
+    // Check if form is pre-filled and select matching address
+    const currentAddress = document.getElementById("id_address").value;
+    const currentApt = document.getElementById("id_apartment").value;
+    const currentZip = document.getElementById("id_zip_code").value;
+    
+    if (currentAddress && currentZip) {
+      // Find matching address in dropdown
+      for (let i = 0; i < addrSelect.options.length; i++) {
+        const option = addrSelect.options[i];
+        if (option.dataset.street === currentAddress && 
+            option.dataset.zip === currentZip &&
+            (option.dataset.apt === currentApt || (!option.dataset.apt && !currentApt))) {
+          addrSelect.selectedIndex = i;
+          updateFormFields(option);
+          break;
+        }
+      }
+    }
+  }
+});
+
+// Modal Functions
+function openAddAddressModal() {
+  document.getElementById("customAddAddressModal").style.display = "block";
+}
+
+function closeAddAddressModal() {
+  document.getElementById("customAddAddressModal").style.display = "none";
+}
+
+window.addEventListener("click", function (event) {
+  const modal = document.getElementById("customAddAddressModal");
+  if (event.target === modal) {
+    closeAddAddressModal();
+  }
+});
+</script>
+
+<!-- Stripe Payment Form no longer needed - using hosted checkout -->
+      
+{% endblock %}

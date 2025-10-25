@@ -1,0 +1,181 @@
+.featured{
+    padding: 120px 0 120px ;
+}
+.featured-single{
+    position: relative;
+    overflow: hidden;
+    border-radius: 24px;
+    border: 1px solid #EAE9E9;
+    background: var(--white-color);
+}
+.featured-single-image{
+    width: 100%;
+    height: 272px;
+    overflow: hidden;
+}
+.featured-single-image img{
+    width: 100%;
+    height: 100%;
+    border-radius: 24px 24px 0 0;
+    transition: 0.5s;
+}
+.featured-single:hover .featured-single-image img{
+    transform: scale(1.1);
+}
+.featured-single-wishlist{
+    width: 100%;
+    padding: 20px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.featured-single-wishlist h6{
+    color: var(--primary-color);
+    background-color: var(--white-color);
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+}
+.featured-single-wishlist a{
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--white-color);
+    color: var(--black-color);
+}
+.featured-single-content{
+    padding: 20px 20px;
+}
+.featured-single-content h6{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    margin-bottom: 0;
+}
+.featured-single-content h6 span{
+    display: flex;
+    align-items: center;
+}
+.featured-single-content h6 span i{
+    color: var(--primary-color);
+    margin-right: 5px;
+}
+.featured-single-content h6 span:last-child i{
+    color: var(--secondary-color);
+    font-size: 12px;
+    line-height: 12px;
+}
+.featured-single-content a{
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 32px;
+    margin-top: 15px;
+    color: var(--black-color);
+}
+.featured-single-info{
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+.featured-single-info-left p{
+    font-size: 16px;
+    margin-bottom: 0;
+}
+.featured-single-info-left h5{
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 36px;
+    margin-bottom: 0;
+}
+.featured-single-info-left h5 span{
+    color: #404C55;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 24px;
+    text-decoration: line-through;
+}
+.featured-single-info a{
+    color: var(--primary-color);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    background-color: rgba(var(--primary-color-rgb),0.1);
+    border-radius: 8px;
+    padding: 8px 20px;
+}
+.featured-single-info a:hover{
+    background-color: var(--primary-color);
+    color: var(--white-color);
+}
+
+
+/* ----------------------------------------
+Responsive
+------------------------------------------- */
+/* Large screen  */
+@media only screen and (min-width: 1200px) and (max-width: 1319px) {
+    .featured-single-image {
+        height: 240px;
+    }
+}
+
+/* Medium screen  */
+@media only screen and (min-width: 992px) and (max-width: 1199px) {
+    .featured-single-image {
+        height: 200px;
+    }
+    .featured-single-content a {
+        font-size: 22px;
+    }
+    .featured-single-info-left h5 {
+        font-size: 16px;
+        line-height: 26px;
+    }
+    .featured-single-info-left h5 span {
+        font-size: 14px;
+    }
+    .featured-single-info a{
+        font-size: 16px;
+    }
+}
+
+/* Tablet Layout: 768px. */
+@media only screen and (min-width: 768px) and (max-width: 991px){
+    .featured {
+        padding: 100px 0 70px;
+    }
+    .featured-single {
+        margin-bottom: 25px;
+    }
+    .featured-single-image {
+        height: 220px;
+    }
+}
+
+/* Mobile Layout: 320px. */
+@media only screen and (max-width: 767px){
+    .featured {
+        padding: 80px 0 50px;
+    }
+    .featured-single {
+        margin-bottom: 25px;
+    }
+    .featured-single-image {
+        height: 190px;
+    }
+}
+/* ----------------------------------------
+Responsive
+------------------------------------------- */

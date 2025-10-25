@@ -1,0 +1,29 @@
+FINAL PAYMENT REQUIRED - Booking #{{ booking.id }}
+
+Hello {{ booking.name }},
+
+Great news! Your {{ booking.service_cat.name }} service has been completed successfully. Now it's time to complete your payment.
+
+BOOKING DETAILS:
+- Service: {{ booking.service_cat.name }}
+- Date: {{ booking.date|date:"F j, Y" }}
+- Time: {{ booking.hour|time:"g:i A" }}
+{% if booking.address %}- Address: {{ booking.address }}{% endif %}
+
+FINAL PAYMENT AMOUNT: ${{ final_amount|floatformat:2 }}
+
+To complete your payment, please click the following link:
+{{ payment_link_url }}
+
+IMPORTANT:
+- This payment link will expire in 30 days
+- You can pay using any major credit card
+- You'll receive a receipt via email after payment
+
+If you have any questions or need assistance, please don't hesitate to contact us.
+
+Thank you for choosing our services!
+
+---
+This is an automated message. Please do not reply to this email.
+If you need assistance, contact us at support@thecleanhandy.com

@@ -1,0 +1,1202 @@
+from django.db import models
+from customers.models import Customer  # Import the correct Customer model
+from giftcards.models import GiftCard
+from datetime import datetime, timedelta
+from decimal import Decimal, ROUND_HALF_UP
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
+class ServiceCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class Service(models.Model):
+    category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, related_name="services")
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    base_price = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
+    service_image = models.ImageField(upload_to='service_images/', blank=True, null=True)
+    service_detail_image = models.ImageField(upload_to='service_detail_images/', blank=True, null=True)
+    view_count = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.name}"
+
+class HourlyRate(models.Model):
+    """Model to manage hourly rates for different service types"""
+    SERVICE_TYPE_CHOICES = [
+        ('office_cleaning', 'Office Cleaning'),
+        ('home_cleaning', 'Home Cleaning'),
+        ('post_renovation', 'Post Renovation Cleaning'),
+        ('construction', 'Construction Cleaning'),
+        ('move_in_out', 'Move In/Out Cleaning'),
+        ('deep_cleaning', 'Deep Cleaning'),
+        ('regular_cleaning', 'Regular Cleaning'),
+    ]
+    
+    service_type = models.CharField(max_length=50, choices=SERVICE_TYPE_CHOICES, unique=True)
+    hourly_rate = models.DecimalField(max_digits=6, decimal_places=2, help_text="Hourly rate per cleaner")
+    is_active = models.BooleanField(default=True, help_text="Whether this rate is currently active")
+    description = models.TextField(blank=True, help_text="Additional description or notes about this rate")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['service_type']
+        verbose_name = "Hourly Rate"
+        verbose_name_plural = "Hourly Rates"
+    
+    def get_service_type_display(self):
+        """Get the display name for the service type with error handling"""
+        try:
+            return dict(self.SERVICE_TYPE_CHOICES).get(self.service_type, self.service_type)
+        except:
+            return str(self.service_type)
+    
+    def __str__(self):
+        try:
+            service_display = self.get_service_type_display()
+            return f"{service_display}: ${self.hourly_rate}/hour"
+        except:
+            return f"Hourly Rate {self.id}"
+    
+    @classmethod
+    def get_rate_for_service(cls, service_type):
+        """Get the active hourly rate for a specific service type"""
+        try:
+            rate = cls.objects.get(service_type=service_type, is_active=True)
+            return rate.hourly_rate
+        except cls.DoesNotExist:
+            # Return default rates if not configured
+            default_rates = {
+                'office_cleaning': Decimal('75.00'),
+                'home_cleaning': Decimal('58.00'),
+                'post_renovation': Decimal('63.00'),
+                'construction': Decimal('63.00'),
+                'move_in_out': Decimal('65.00'),
+                'deep_cleaning': Decimal('70.00'),
+                'regular_cleaning': Decimal('58.00'),
+            }
+            return default_rates.get(service_type, Decimal('58.00'))
+
+# Signal to clear hourly rate cache when rates are updated
+@receiver([post_save, post_delete], sender=HourlyRate)
+def clear_hourly_rate_cache_signal(sender, instance, **kwargs):
+    """Clear hourly rate cache when rates are updated or deleted"""
+    try:
+        from .utils import clear_hourly_rate_cache
+        clear_hourly_rate_cache()
+    except ImportError:
+        # If utils module is not available, just pass
+        pass
+
+
+class CleaningExtra(models.Model):
+    name = models.CharField(max_length=100)
+    price = models.DecimalField(max_digits=6, decimal_places=2)
+    extra_minutes = models.PositiveIntegerField(default=0, help_text="Add time in minutes (e.g. 30, 60)")
+
+    def __str__(self):
+        return f"{self.name} (${self.price})"
+    
+class HomeType(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    price = models.DecimalField(max_digits=6, decimal_places=2)
+    extra_minutes = models.PositiveIntegerField(default=180, help_text="Additional time in minutes for this home type")
+
+    def __str__(self):
+        return f"{self.name} (${self.price})"
+
+class SquareFeetOption(models.Model):
+    label = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100, unique=True)
+    price = models.DecimalField(max_digits=6, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.name}"
+
+class Quote(models.Model):
+    customer = models.ForeignKey("accounts.CustomerProfile", on_delete=models.CASCADE, null=True, blank=True)
+    service = models.ForeignKey("quotes.Service", on_delete=models.CASCADE)
+    extras = models.ManyToManyField("CleaningExtra", blank=True)
+    home_types = models.ForeignKey("HomeType", on_delete=models.CASCADE, null=True, blank=True)
+    square_feet_options = models.ForeignKey("SquareFeetOption", on_delete=models.CASCADE, null=True, blank=True)
+
+     # Cleaning-specific fields
+    cleaning_type = models.CharField(max_length=100, null=True, blank=True)
+    num_cleaners = models.PositiveIntegerField(null=True, blank=True)
+
+    # System Fields
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    quote_email_sent_at = models.DateTimeField(null=True, blank=True)
+    last_admin_note = models.TextField(null=True, blank=True)
+    approval_token = models.CharField(max_length=64, blank=True, null=True)
+    pdf_file = models.FileField(upload_to="quotes/pdfs/", null=True, blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("approved", "Approved"),
+            ("declined", "Declined"),
+            ("accepted", "Accepted"),
+            ("booked", "Booked"),
+            ("expired", "Expired"),
+        ],
+        default="pending",
+    )
+
+
+    # Scheduling
+    date = models.DateField()
+    hour = models.TimeField()
+    hours_requested = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    recurrence_pattern = models.CharField(
+        max_length=20,
+        choices=[
+            ("one_time", "One Time"),
+            ("weekly", "Weekly"),
+            ("biweekly", "Biweekly"),
+            ("monthly", "Monthly"),
+        ],
+        default="one_time",
+    )
+    job_description = models.TextField(null=True, blank=True)
+
+     # Address Info
+    address = models.CharField(max_length=255, null=True, blank=True)
+    apartment = models.CharField(max_length=50, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True, default="New York")
+    state = models.CharField(max_length=50, null=True, blank=True, default="NY")
+    zip_code = models.CharField(max_length=10, null=True, blank=True)
+    
+    def __str__(self):
+        return f"Quote {self.id} - {self.customer.full_name if self.customer else 'No Name'} ({self.status})"
+     
+    def get_time_slots(self):
+        """
+        Returns a list of hourly time slot strings based on the starting hour and requested duration.
+        Ensures at least 2 hours are used even if `hours_requested` is null or less.
+        """
+        if not self.hour:
+            return []
+
+        duration = max(self.hours_requested or 2, 2)
+        slots = []
+
+        base_datetime = datetime.combine(self.date, self.hour)
+        for i in range(duration):
+            start = base_datetime + timedelta(hours=i)
+            end = base_datetime + timedelta(hours=i + 1)
+            slots.append(f"{start.strftime('%H:%M')} - {end.strftime('%H:%M')}")
+
+        return slots
+    
+    def is_large_home(self):
+        if not self.square_feet_options:
+            return False  # Default to small home if no square feet option is set
+        return not self.square_feet_options.name.lower().startswith("under 1000")
+    
+    def calculate_subtotal(self):
+        subtotal = Decimal("0.00")
+
+        if self.square_feet_options:
+            subtotal += Decimal(self.square_feet_options.price)
+
+        # ✅ Only include home type price if it's a small home
+        if not self.is_large_home() and self.home_types:
+            subtotal += Decimal(self.home_types.price)
+
+        # ✅ Extras always apply (for small homes only)
+        for extra in self.extras.all():
+            subtotal += Decimal(extra.price)
+
+        # ✅ Labor cost only for large homes
+        if self.is_large_home() and self.hours_requested and self.num_cleaners:
+            rate = Decimal("63") if self.cleaning_type and ("post" in self.cleaning_type.lower() or "renovation" in self.cleaning_type.lower()) else Decimal("58")
+            subtotal += Decimal(self.num_cleaners) * Decimal(self.hours_requested) * rate
+
+        return subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+    def calculate_tax(self):
+        tax_rate = Decimal("0.08875")
+        # ✅ Subtotal already includes labor, no need to add again
+        return (self.calculate_subtotal() * tax_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+    def calculate_total_price(self):
+        subtotal = self.calculate_subtotal()
+        tax = self.calculate_tax()
+        return (subtotal + tax).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    
+
+class OfficeQuote(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone_number = models.CharField(max_length=20)
+    business_address = models.TextField()
+    square_footage = models.CharField(max_length=50, help_text="Estimated square footage")
+    job_description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("reviewed", "Reviewed"),
+            ("quoted", "Quoted"),
+            ("accepted", "Accepted"),
+            ("declined", "Declined"),
+        ],
+        default="pending",
+    )
+    admin_notes = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"Office Quote {self.id} - {self.name} ({self.status})"
+
+class NewsletterSubscriber(models.Model):
+    email = models.EmailField(unique=True)
+    subscribed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.email
+    
+
+
+class Booking(models.Model):
+    service_cat = models.ForeignKey("quotes.ServiceCategory", on_delete=models.CASCADE)
+    extras = models.ManyToManyField("CleaningExtra", blank=True)
+    home_types = models.ForeignKey("HomeType", on_delete=models.CASCADE, null=True, blank=True)
+    square_feet_options = models.ForeignKey("SquareFeetOption", on_delete=models.CASCADE, null=True, blank=True)
+
+     # Cleaning-specific fields
+    cleaning_type = models.CharField(max_length=100, null=True, blank=True)
+    num_cleaners = models.PositiveIntegerField(null=True, blank=True)
+
+    # Office Cleaning specific fields
+    business_type = models.CharField(
+        max_length=50, 
+        choices=[
+            ("office", "Office"),
+            ("retail", "Retail"),
+            ("medical", "Medical"),
+            ("school", "School"),
+            ("other", "Other")
+        ],
+        null=True,
+        blank=True
+    )
+    crew_size_hours = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        help_text="Format: num_cleaners_hours_sqft (e.g., 1_cleaner_2_hours_500)"
+    )
+    hear_about_us = models.CharField(
+        max_length=50,
+        choices=[
+            ("google", "Google Search"),
+            ("social_media", "Social Media"),
+            ("referral", "Referral"),
+            ("advertisement", "Advertisement"),
+            ("yelp", "Yelp"),
+            ("other", "Other")
+        ],
+        null=True,
+        blank=True
+    )
+    cleaning_frequency = models.CharField(
+        max_length=20,
+        choices=[
+            ("one_time", "One Time"),
+            ("daily", "Daily"),
+            ("weekly", "Weekly"),
+            ("bi_weekly", "Bi Weekly"),
+            ("monthly", "Monthly")
+        ],
+        default="one_time",
+        null=True,
+        blank=True
+    )
+
+    # System Fields
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    quote_email_sent_at = models.DateTimeField(null=True, blank=True)
+    last_admin_note = models.TextField(null=True, blank=True)
+    approval_token = models.CharField(max_length=64, blank=True, null=True)
+    pdf_file = models.FileField(upload_to="quotes/pdfs/", null=True, blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("confirmed", "Confirmed"),
+            ("declined", "Declined"),
+            ("accepted", "Accepted"),
+            ("booked", "Booked"),
+            ("completed", "Completed"),
+            ("expired", "Expired"),
+        ],
+        default="pending",
+    )
+
+
+    # Scheduling
+    date = models.DateField()
+    hour = models.TimeField()
+    hours_requested = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    recurrence_pattern = models.CharField(
+        max_length=20,
+        choices=[
+            ("one_time", "One Time"),
+            ("weekly", "Weekly"),
+            ("biweekly", "Biweekly"),
+            ("monthly", "Monthly"),
+        ],
+        default="one_time",
+    )
+    job_description = models.TextField(null=True, blank=True)
+
+    # Contract Info
+    name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=100)
+    phone = models.CharField(max_length=15, null=True, blank=True)
+
+     # Address Info
+    address = models.CharField(max_length=255, null=True, blank=True)
+    apartment = models.CharField(max_length=50, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True, default="New York")
+    state = models.CharField(max_length=50, null=True, blank=True, default="NY")
+    zip_code = models.CharField(max_length=10, null=True, blank=True)
+    
+    # Home Cleaning specific fields
+    bath_count = models.PositiveIntegerField(
+        choices=[
+            (1, "1 Bathroom"),
+            (2, "2 Bathrooms"),
+            (3, "3 Bathrooms"),
+            (4, "4 Bathrooms"),
+            (5, "5 Bathrooms"),
+            (6, "More than 5 Bathrooms")
+        ],
+        null=True,
+        blank=True,
+        help_text="Number of bathrooms in the home"
+    )
+
+    # --- New Gift Card fields ---
+    gift_card = models.ForeignKey(
+        "giftcards.GiftCard", 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name="bookings"
+    )
+    gift_card_discount = models.DecimalField(
+        max_digits=8, decimal_places=2, 
+        null=True, blank=True, 
+        help_text="Amount discounted using gift card."
+    )
+    
+    # --- Access and Property Information ---
+    get_in = models.CharField(
+        max_length=20,
+        choices=[
+            ("at_home", "I'll be at home"),
+            ("doorman", "The key is with doorman"),
+            ("lockbox", "Lockbox on premises"),
+            ("call_organize", "Call to organize"),
+            ("other", "Other"),
+        ],
+        null=True,
+        blank=True,
+        help_text="How the cleaning team will gain access to the property"
+    )
+    parking = models.TextField(
+        null=True,
+        blank=True,
+        help_text="Parking instructions for the cleaning team"
+    )
+    pet = models.CharField(
+        max_length=10,
+        choices=[
+            ("cat", "Cat"),
+            ("dog", "Dog"),
+            ("both", "Both"),
+            ("other", "Other"),
+        ],
+        null=True,
+        blank=True,
+        help_text="Type of pet in the household"
+    )
+    
+    # Payment fields
+    payment_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("unpaid", "Unpaid"),
+            ("partial", "Partial Payment"),
+            ("paid", "Fully Paid"),
+            ("refunded", "Refunded"),
+        ],
+        default="unpaid",
+        help_text="Overall payment status for this booking"
+    )
+    payment_method = models.CharField(
+        max_length=50,
+        choices=[
+            ("stripe", "Stripe"),
+            ("cash", "Cash"),
+            ("check", "Check"),
+            ("gift_card", "Gift Card"),
+        ],
+        null=True,
+        blank=True,
+        help_text="Payment method used for this booking"
+    )
+    
+    def __str__(self):
+        return f"Booking {self.id} - {self.name if self.name else 'No Name'} ({self.status})"
+    
+    def clean(self):
+        """Validate booking data including time slot conflicts"""
+        from django.core.exceptions import ValidationError
+        from .utils import check_time_slot_conflict
+        
+        # Skip time slot validation for completed or cancelled bookings
+        # as they don't need to check for conflicts
+        if self.status in ['completed', 'cancelled']:
+            return
+            
+        if self.date and self.hour and self.hours_requested:
+            # Check for time slot conflicts, excluding current booking if updating
+            if check_time_slot_conflict(self.date, self.hour, self.hours_requested, self.id):
+                raise ValidationError({
+                    'hour': 'This time slot is already booked. Please select a different time.',
+                })
+    
+    def save(self, *args, **kwargs):
+        """Override save to run validation"""
+        self.clean()
+        super().save(*args, **kwargs)
+     
+    def get_time_slots(self):
+        """
+        Returns a list of hourly time slot strings based on the starting hour and requested duration.
+        Ensures at least 2 hours are used even if `hours_requested` is null or less.
+        """
+        if not self.hour:
+            return []
+
+        duration = max(self.hours_requested or 2, 2)
+        slots = []
+
+        base_datetime = datetime.combine(self.date, self.hour)
+        for i in range(duration):
+            start = base_datetime + timedelta(hours=i)
+            end = base_datetime + timedelta(hours=i + 1)
+            slots.append(f"{start.strftime('%H:%M')} - {end.strftime('%H:%M')}")
+
+        return slots
+    
+    def is_large_home(self):
+        if not self.square_feet_options:
+            return False  # Default to small home if no square feet option is set
+        return not self.square_feet_options.name.lower().startswith("under 1000")
+    
+    def calculate_subtotal(self):
+        subtotal = Decimal("0.00")
+
+        if self.square_feet_options:
+            subtotal += Decimal(self.square_feet_options.price)
+
+        # ✅ Only include home type price if it's a small home
+        if not self.is_large_home() and self.home_types:
+            subtotal += Decimal(self.home_types.price)
+
+        # ✅ Extras always apply (for small homes only)
+        for extra in self.extras.all():
+            subtotal += Decimal(extra.price)
+
+        # ✅ Labor cost only for large homes
+        if self.is_large_home() and self.hours_requested and self.num_cleaners:
+            rate = Decimal("63") if self.cleaning_type and ("post" in self.cleaning_type.lower() or "renovation" in self.cleaning_type.lower()) else Decimal("58")
+            subtotal += Decimal(self.num_cleaners) * Decimal(self.hours_requested) * rate
+
+        return subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+    def calculate_tax(self):
+        tax_rate = Decimal("0.08875")
+        # ✅ Subtotal already includes labor, no need to add again
+        return (self.calculate_subtotal() * tax_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+    def calculate_total_price(self):
+        print(f"🔍 calculate_total_price called for booking {self.id}")
+        
+        try:
+            # Determine service type and use appropriate calculation methods
+            # Prioritize service category over business type
+            if self.service_cat.name.lower() == 'commercial':
+                # Office cleaning pricing
+                subtotal = self.calculate_office_subtotal()
+                tax = self.calculate_office_tax()
+                print(f"🔍 Office cleaning - subtotal: {subtotal}, tax: {tax}")
+            else:
+                # Home cleaning pricing (regardless of business_type)
+                subtotal = self.calculate_subtotal()
+                # Apply frequency discount to subtotal for home cleaning
+                frequency_discount = self.calculate_frequency_discount_amount()
+                if frequency_discount > 0:
+                    subtotal -= frequency_discount
+                    if subtotal < 0:
+                        subtotal = Decimal("0.00")
+                tax = subtotal * Decimal("0.08875")
+                tax = tax.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                print(f"🔍 Home cleaning - subtotal: {subtotal}, tax: {tax}")
+            
+            total = subtotal + tax
+            print(f"🔍 Total before gift card discount: {total}")
+
+            # Apply gift card discount
+            if self.gift_card_discount:
+                print(f"🔍 Applying gift card discount: {self.gift_card_discount}")
+                total -= self.gift_card_discount
+                if total < 0:
+                    total = Decimal("0.00")
+                print(f"🔍 Total after gift card discount: {total}")
+
+            final_total = total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            print(f"🔍 Final total: {final_total}")
+            
+            # Ensure we never return None or 0
+            if not final_total or final_total <= 0:
+                print(f"🔍 WARNING: Final total is {final_total}, using fallback")
+                # Use a more reasonable fallback based on service type
+                if self.service_cat.name.lower() == 'commercial':
+                    # For office cleaning, use a reasonable fallback based on cleaners and hours
+                    if self.num_cleaners and self.hours_requested:
+                        fallback_total = Decimal(str(self.num_cleaners)) * Decimal(str(self.hours_requested)) * Decimal("75.00")
+                        print(f"🔍 Using office cleaning fallback: {fallback_total}")
+                    else:
+                        fallback_total = Decimal("200.00")  # Reasonable fallback for office cleaning
+                        print(f"🔍 Using default office cleaning fallback: {fallback_total}")
+                else:
+                    fallback_total = Decimal("100.00")  # Fallback amount for home cleaning
+                    print(f"🔍 Using home cleaning fallback: {fallback_total}")
+                
+                final_total = fallback_total
+            
+            return final_total
+            
+        except Exception as e:
+            print(f"🔍 ERROR in calculate_total_price: {e}")
+            # Use a more reasonable fallback based on service type
+            if self.service_cat.name.lower() == 'commercial':
+                # For office cleaning, use a reasonable fallback based on cleaners and hours
+                if self.num_cleaners and self.hours_requested:
+                    fallback_total = Decimal(str(self.num_cleaners)) * Decimal(str(self.hours_requested)) * Decimal("75.00")
+                    print(f"🔍 Using office cleaning error fallback: {fallback_total}")
+                else:
+                    fallback_total = Decimal("200.00")  # Reasonable fallback for office cleaning
+                    print(f"🔍 Using default office cleaning error fallback: {fallback_total}")
+            else:
+                fallback_total = Decimal("100.00")  # Fallback amount for home cleaning
+                print(f"🔍 Using home cleaning error fallback: {fallback_total}")
+            
+            return fallback_total
+    
+    def get_payment_split(self, manual_total=None):
+        """Get or create payment split for this booking"""
+        from .payment_models import PaymentSplit
+        
+        # Use manual total if provided (from frontend summary)
+        if manual_total:
+            manual_total_decimal = Decimal(str(manual_total))
+            print(f"🔍 Getting PaymentSplit for booking {self.id} with manual total: {manual_total_decimal}")
+            
+            try:
+                existing_split = self.payment_split
+                # If split exists, update it with new amount if different
+                if existing_split and existing_split.total_amount != manual_total_decimal:
+                    print(f"🔍 Updating existing PaymentSplit from {existing_split.total_amount} to {manual_total_decimal}")
+                    existing_split.create_split(manual_total_decimal)
+                return existing_split
+            except:
+                # No existing split, create new one
+                print(f"🔍 Creating new PaymentSplit for booking {self.id} with manual total: {manual_total_decimal}")
+                return PaymentSplit.create_split_with_amount(self, manual_total_decimal)
+        
+        # No manual total provided, use existing split or create with calculated total
+        try:
+            return self.payment_split
+        except:
+            # Fallback to calculated total
+            try:
+                total = self.calculate_total_price()
+                print(f"🔍 Creating PaymentSplit for booking {self.id} with calculated total: {total}")
+                print(f"🔍 Calculated total type: {type(total)}")
+
+                # Safety check to ensure total is not None or 0
+                if not total or total <= 0:
+                    print(f"❌ ERROR: Invalid calculated total amount {total} for booking {self.id}")
+                    print(f"🔍 Booking details: square_feet={self.square_feet_options}, home_types={self.home_types}, extras={list(self.extras.all())}")
+                    print(f"🔍 Service category: {self.service_cat.name}")
+                    print(f"🔍 Business type: {self.business_type}")
+                    print(f"🔍 Cleaning frequency: {self.cleaning_frequency}")
+                    print(f"🔍 Num cleaners: {self.num_cleaners}")
+                    print(f"🔍 Hours requested: {self.hours_requested}")
+                    
+                    # Try to calculate a more reasonable fallback based on service type
+                    if self.service_cat.name.lower() == 'commercial':
+                        # For office cleaning, use a reasonable fallback based on cleaners and hours
+                        if self.num_cleaners and self.hours_requested:
+                            fallback_total = Decimal(str(self.num_cleaners)) * Decimal(str(self.hours_requested)) * Decimal("75.00")
+                            print(f"🔍 Using office cleaning fallback: {fallback_total}")
+                        else:
+                            fallback_total = Decimal("200.00")  # Reasonable fallback for office cleaning
+                            print(f"🔍 Using default office cleaning fallback: {fallback_total}")
+                    else:
+                        # For home cleaning, use a reasonable fallback
+                        fallback_total = Decimal("150.00")  # Reasonable fallback for home cleaning
+                        print(f"🔍 Using home cleaning fallback: {fallback_total}")
+                    
+                    total = fallback_total
+
+                return PaymentSplit.create_split_with_amount(self, total)
+                
+            except Exception as e:
+                print(f"❌ ERROR in get_payment_split: {e}")
+                # Ultimate fallback - use a reasonable amount based on service type
+                if self.service_cat.name.lower() == 'commercial':
+                    fallback_amount = Decimal("200.00")  # Reasonable fallback for office cleaning
+                else:
+                    fallback_amount = Decimal("150.00")  # Reasonable fallback for home cleaning
+                
+                return PaymentSplit.create_split_with_amount(self, fallback_amount)
+    
+    def update_payment_status(self):
+        """Update payment status based on individual payments"""
+        try:
+            split = self.get_payment_split()
+            if split.is_fully_paid:
+                self.payment_status = "paid"
+            elif split.is_deposit_paid:
+                self.payment_status = "partial"
+            else:
+                self.payment_status = "unpaid"
+            self.save()
+        except Exception as e:
+            print(f"Error updating payment status for booking {self.id}: {e}")
+    
+    def get_deposit_amount(self):
+        """Get the deposit amount (50% of total)"""
+        return self.get_payment_split().deposit_amount
+    
+    def get_final_amount(self):
+        """Get the final payment amount (50% of total)"""
+        return self.get_payment_split().final_amount
+    
+    def can_make_final_payment(self):
+        """Check if final payment can be made (deposit must be paid)"""
+        split = self.get_payment_split()
+        return split.is_deposit_paid and not split.final_paid
+    
+    def get_paid_amount(self):
+        """Get the total amount paid so far"""
+        try:
+            successful_payments = self.payments.filter(status='succeeded')
+            return sum(payment.amount for payment in successful_payments)
+        except:
+            return Decimal('0.00')
+    
+    def get_deposit_paid_amount(self):
+        """Get the amount paid for deposit"""
+        try:
+            deposit_payment = self.payments.filter(
+                payment_type='deposit', 
+                status='succeeded'
+            ).first()
+            return deposit_payment.amount if deposit_payment else Decimal('0.00')
+        except:
+            return Decimal('0.00')
+    
+    def get_final_paid_amount(self):
+        """Get the amount paid for final payment"""
+        try:
+            final_payment = self.payments.filter(
+                payment_type='final', 
+                status='succeeded'
+            ).first()
+            return final_payment.amount if final_payment else Decimal('0.00')
+        except:
+            return Decimal('0.00')
+    
+    def get_full_paid_amount(self):
+        """Get the amount paid for full payment"""
+        try:
+            full_payment = self.payments.filter(
+                payment_type='full', 
+                status='succeeded'
+            ).first()
+            return full_payment.amount if full_payment else Decimal('0.00')
+        except:
+            return Decimal('0.00')
+    
+    def get_payment_type_display(self):
+        """Get a human-readable description of payment status"""
+        try:
+            split = self.get_payment_split()
+            if split.is_fully_paid:
+                return "Fully Paid"
+            elif split.is_deposit_paid:
+                return f"Deposit Paid (${self.get_deposit_paid_amount()}) - ${self.get_final_amount()} remaining"
+            else:
+                return "Unpaid"
+        except:
+            return "Payment Status Unknown"
+    
+    def get_payment_type(self):
+        """Get the payment type (50% or 100%)"""
+        try:
+            # Check if there's a full payment
+            full_payment = self.payments.filter(payment_type='full', status='succeeded').first()
+            if full_payment:
+                return "100%"
+            
+            # Check if there's a deposit payment
+            deposit_payment = self.payments.filter(payment_type='deposit', status='succeeded').first()
+            if deposit_payment:
+                return "50%"
+            
+            # Check if there's a final payment (implies 50% was already paid)
+            final_payment = self.payments.filter(payment_type='final', status='succeeded').first()
+            if final_payment:
+                return "50%"
+            
+            return "0%"
+        except:
+            return "Unknown"
+    
+    def get_payment_status_display(self):
+        """Get a user-friendly payment status"""
+        if self.payment_status == 'paid':
+            return "Paid"
+        elif self.payment_status == 'partial':
+            return "Pending"
+        elif self.payment_status == 'unpaid':
+            return "Pending"
+        elif self.payment_status == 'refunded':
+            return "Refunded"
+        else:
+            return "Pending"
+    
+    def get_total_paid_amount(self):
+        """Get the total amount paid across all payments"""
+        try:
+            successful_payments = self.payments.filter(status='succeeded')
+            return sum(payment.amount for payment in successful_payments)
+        except:
+            return Decimal('0.00')
+    
+    def get_payment_breakdown(self):
+        """Get detailed payment breakdown"""
+        try:
+            split = self.get_payment_split()
+            successful_payments = self.payments.filter(status='succeeded')
+            
+            breakdown = {
+                'total_amount': split.total_amount,
+                'deposit_amount': split.deposit_amount,
+                'final_amount': split.final_amount,
+                'total_paid': self.get_total_paid_amount(),
+                'remaining_amount': split.remaining_amount,
+                'deposit_paid': split.deposit_paid,
+                'final_paid': split.final_paid,
+                'is_fully_paid': split.is_fully_paid,
+                'payment_method': self.payment_method,
+                'payment_status': self.payment_status,
+                'payments': []
+            }
+            
+            # Add individual payment details
+            for payment in successful_payments:
+                breakdown['payments'].append({
+                    'id': payment.id,
+                    'type': payment.payment_type,
+                    'amount': payment.amount,
+                    'paid_at': payment.paid_at,
+                    'stripe_payment_intent_id': payment.stripe_payment_intent_id,
+                })
+            
+            return breakdown
+        except Exception as e:
+            print(f"Error getting payment breakdown for booking {self.id}: {e}")
+            return None
+    
+    def get_final_payment_link_info(self):
+        """Get final payment link information if available"""
+        try:
+            split = self.get_payment_split()
+            if split.final_payment_link_url and not split.final_paid:
+                return {
+                    'url': split.final_payment_link_url,
+                    'created_at': split.final_payment_link_created_at,
+                    'expires_at': split.final_payment_link_expires_at,
+                    'is_expired': split.final_payment_link_expires_at and timezone.now() > split.final_payment_link_expires_at,
+                }
+            return None
+        except:
+            return None
+    
+    def get_current_payment_intent_id(self):
+        """Get the current payment intent ID for display in admin emails"""
+        try:
+            split = self.get_payment_split()
+            
+            # Check for successful payments first
+            successful_payments = self.payments.filter(status='succeeded').order_by('-created_at')
+            if successful_payments.exists():
+                return successful_payments.first().stripe_payment_intent_id
+            
+            # If no successful payments, check pending ones
+            pending_payments = self.payments.filter(status__in=['pending', 'processing']).order_by('-created_at')
+            if pending_payments.exists():
+                return pending_payments.first().stripe_payment_intent_id
+            
+            # If no payments yet, return the most recent intent ID from split
+            if split.deposit_payment_intent_id:
+                return split.deposit_payment_intent_id
+            elif split.final_payment_intent_id:
+                return split.final_payment_intent_id
+            
+            return None
+        except:
+            return None
+    
+    def get_payment_type_for_display(self):
+        """Get payment type for display in templates (50% or 100%)"""
+        try:
+            split = self.get_payment_split()
+            
+            # Check for full payment
+            full_payment = self.payments.filter(payment_type='full', status='succeeded').first()
+            if full_payment:
+                return "100% upfront"
+            
+            # Check for deposit payment
+            deposit_payment = self.payments.filter(payment_type='deposit', status='succeeded').first()
+            if deposit_payment:
+                return "50% upfront"
+            
+            # Check for final payment (implies 50% was already paid)
+            final_payment = self.payments.filter(payment_type='final', status='succeeded').first()
+            if final_payment:
+                return "50% upfront"
+            
+            return "Unpaid"
+        except:
+            return "Unpaid"
+    
+    def calculate_office_labor_cost(self):
+        """Calculate labor cost for office cleaning (before discount)"""
+        print(f"🔍 calculate_office_labor_cost called for booking {self.id}")
+        print(f"   - num_cleaners: {self.num_cleaners}")
+        print(f"   - hours_requested: {self.hours_requested}")
+        
+        if not self.num_cleaners or not self.hours_requested:
+            print(f"   - Missing values, returning 0.00")
+            return Decimal('0.00')
+        
+        labor_cost = Decimal(self.num_cleaners) * Decimal(self.hours_requested) * Decimal('75.00')
+        print(f"   - Calculated labor cost: {labor_cost}")
+        return labor_cost
+    
+    def calculate_office_discount_amount(self):
+        """Calculate discount amount for office cleaning based on frequency"""
+        labor_cost = self.calculate_office_labor_cost()
+        if not self.cleaning_frequency or self.cleaning_frequency == "one_time":
+            return Decimal('0.00')
+        
+        discount_percent = 0
+        if self.cleaning_frequency == "daily":
+            discount_percent = 20
+        elif self.cleaning_frequency == "weekly":
+            discount_percent = 15
+        elif self.cleaning_frequency == "bi_weekly":
+            discount_percent = 10
+        elif self.cleaning_frequency == "monthly":
+            discount_percent = 5
+        
+        return labor_cost * (Decimal(discount_percent) / Decimal('100'))
+    
+    def calculate_frequency_discount_amount(self):
+        """Calculate frequency discount amount for both home and office cleaning"""
+        if not self.cleaning_frequency or self.cleaning_frequency == "one_time":
+            return Decimal('0.00')
+        
+        # Get the base amount before any discounts based on service type
+        # Prioritize service category over business type
+        if self.service_cat.name.lower() == 'commercial':
+            # For office cleaning, use labor cost only for frequency discount
+            subtotal = self.calculate_office_labor_cost()
+        else:
+            # For home cleaning, use the full subtotal (regardless of business_type)
+            subtotal = self.calculate_subtotal()
+        
+        # Determine discount percentage based on frequency
+        discount_percent = 0
+        if self.cleaning_frequency == "daily":
+            discount_percent = 20
+        elif self.cleaning_frequency == "weekly":
+            discount_percent = 15
+        elif self.cleaning_frequency == "bi_weekly":
+            discount_percent = 10
+        elif self.cleaning_frequency == "monthly":
+            discount_percent = 5
+        
+        return subtotal * (Decimal(discount_percent) / Decimal('100'))
+    
+    def get_hourly_rate(self):
+        """Get the hourly rate for this booking's service type"""
+        from .utils import get_hourly_rate
+        
+        # Determine service type based on booking details
+        if self.service_cat.name.lower() == 'home':
+            if self.cleaning_type and ("post" in self.cleaning_type.lower() or "renovation" in self.cleaning_type.lower()):
+                return get_hourly_rate('post_renovation')
+            else:
+                return get_hourly_rate('home_cleaning')
+        else:
+            return get_hourly_rate('office_cleaning')
+    
+    def calculate_labor_cost(self):
+        """Calculate labor cost for this booking"""
+        from .utils import calculate_labor_cost
+        
+        if not self.num_cleaners or not self.hours_requested:
+            return Decimal('0.00')
+        
+        # Determine service type
+        if self.service_cat.name.lower() == 'home':
+            if self.cleaning_type and ("post" in self.cleaning_type.lower() or "renovation" in self.cleaning_type.lower()):
+                service_type = 'post_renovation'
+            else:
+                service_type = 'home_cleaning'
+        else:
+            service_type = 'office_cleaning'
+        
+        return calculate_labor_cost(service_type, self.num_cleaners, float(self.hours_requested))
+    
+    def calculate_office_subtotal(self):
+        """Calculate subtotal for office cleaning (labor + extras - discount)"""
+        print(f"🔍 calculate_office_subtotal called for booking {self.id}")
+        
+        labor_cost = self.calculate_office_labor_cost()
+        discount_amount = self.calculate_office_discount_amount()
+        
+        # Add extras
+        extras_total = Decimal('0.00')
+        for extra in self.extras.all():
+            extras_total += Decimal(extra.price)
+        
+        subtotal = labor_cost - discount_amount + extras_total
+        print(f"   - labor_cost: {labor_cost}")
+        print(f"   - discount_amount: {discount_amount}")
+        print(f"   - extras_total: {extras_total}")
+        print(f"   - subtotal: {subtotal}")
+        
+        return subtotal
+    
+    def calculate_office_tax(self):
+        """Calculate tax for office cleaning"""
+        subtotal = self.calculate_office_subtotal()
+        tax_rate = Decimal('0.08875')
+        return (subtotal * tax_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+
+
+
+
+class Contact(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Contact from {self.name} <{self.email}>: {self.subject}"
+
+
+
+
+
+class Review(models.Model):
+    booking = models.ForeignKey('Booking', on_delete=models.CASCADE, related_name='reviews')
+    rating = models.IntegerField(choices=[(i, str(i)) for i in range(1, 6)])
+    review = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Review for Booking {self.booking.id} - {self.rating} stars"
+
+
+
+
+
+class ContactInfo(models.Model):
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    address = models.TextField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Contact Information"
+        verbose_name_plural = "Contact Information"
+
+    def __str__(self):
+        return f"Contact Info - {self.email}"
+
+    @classmethod
+    def get_active(cls):
+        """Get the active contact information"""
+        return cls.objects.filter(is_active=True).first()
+
+
+
+
+
+class AboutContent(models.Model):
+    title = models.CharField(max_length=200)
+    subtitle = models.CharField(max_length=200)
+    content = models.TextField(help_text="HTML content for the about page")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "About Content"
+        verbose_name_plural = "About Content"
+
+    def __str__(self):
+        return f"About Content - {self.title}"
+
+    @classmethod
+    def get_active(cls):
+        """Get the active about content"""
+        return cls.objects.filter(is_active=True).first()
+
+
+class HandymanQuote(models.Model):
+    """Model for storing handyman quote requests"""
+    name = models.CharField(max_length=100, help_text="Full name of the customer")
+    email = models.EmailField(help_text="Email address of the customer")
+    phone_number = models.CharField(max_length=20, help_text="Phone number of the customer")
+    address = models.TextField(help_text="Address where the handyman work is needed")
+    job_description = models.TextField(help_text="Detailed description of the handyman job")
+    
+    # System fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("contacted", "Contacted"),
+            ("quoted", "Quoted"),
+            ("completed", "Completed"),
+            ("cancelled", "Cancelled"),
+        ],
+        default="pending"
+    )
+    admin_notes = models.TextField(blank=True, null=True, help_text="Internal notes for admin")
+    
+    def __str__(self):
+        return f"Handyman Quote - {self.name} ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Handyman Quote"
+        verbose_name_plural = "Handyman Quotes"
+
+
+class PostEventCleaningQuote(models.Model):
+    """Model for storing post event cleaning quote requests"""
+    
+    # Choices as class attributes
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("contacted", "Contacted"),
+        ("quoted", "Quoted"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+    
+    EVENT_TYPE_CHOICES = [
+        ("wedding", "Wedding"),
+        ("birthday", "Birthday Party"),
+        ("corporate", "Corporate Event"),
+        ("holiday", "Holiday Party"),
+        ("graduation", "Graduation Party"),
+        ("anniversary", "Anniversary"),
+        ("other", "Other"),
+    ]
+    
+    VENUE_SIZE_CHOICES = [
+        ("small", "Small (up to 50 people)"),
+        ("medium", "Medium (50-150 people)"),
+        ("large", "Large (150+ people)"),
+    ]
+    
+    name = models.CharField(max_length=100, help_text="Full name of the customer")
+    email = models.EmailField(help_text="Email address of the customer")
+    phone_number = models.CharField(max_length=20, help_text="Phone number of the customer")
+    address = models.TextField(help_text="Address where the post event cleaning is needed")
+    event_description = models.TextField(help_text="Detailed description of the event and cleaning requirements")
+    event_date = models.DateField(help_text="Date of the event")
+    cleaning_date = models.DateField(help_text="Preferred date for cleaning")
+    event_type = models.CharField(
+        max_length=50,
+        choices=EVENT_TYPE_CHOICES,
+        help_text="Type of event"
+    )
+    venue_size = models.CharField(
+        max_length=50,
+        choices=VENUE_SIZE_CHOICES,
+        help_text="Size of the venue"
+    )
+    special_requirements = models.TextField(
+        blank=True, 
+        null=True, 
+        help_text="Any special cleaning requirements or notes"
+    )
+    
+    # System fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+    admin_notes = models.TextField(blank=True, null=True, help_text="Internal notes for admin")
+    
+    def __str__(self):
+        return f"Post Event Cleaning Quote - {self.name} ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Post Event Cleaning Quote"
+        verbose_name_plural = "Post Event Cleaning Quotes"
+
+
+
+

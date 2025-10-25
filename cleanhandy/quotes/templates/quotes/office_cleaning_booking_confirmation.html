@@ -1,0 +1,515 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load quote_filters %}
+
+{% block content %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+        :root {
+            --primary-color: #F15A29;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --dark-color: #343a40;
+            --light-color: #f8f9fa;
+        }
+        
+        .confirmation-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .confirmation-header {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .booking-id {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-top: 1rem;
+            display: inline-block;
+        }
+        
+        .confirmation-content {
+            padding: 2rem;
+        }
+        
+        .detail-section {
+            margin-bottom: 2rem;
+        }
+        
+        .detail-section h6 {
+            color: var(--primary-color);
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0;
+        }
+        
+        .detail-item .label {
+            font-weight: 600;
+            color: var(--dark-color);
+            min-width: 120px;
+        }
+        
+        .detail-item .value {
+            color: var(--secondary-color);
+            text-align: right;
+            flex: 1;
+        }
+        
+        .success-icon {
+            animation: bounceIn 0.6s ease-out;
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .next-steps {
+            background: var(--light-color);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+        }
+        
+        .steps-timeline {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        
+        .step-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-weight: 600;
+        }
+        
+        .step-content h6 {
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .step-content p {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+        
+        .contact-info {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .contact-info a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+        
+        .pricing-details {
+            background: var(--light-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+        
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0;
+        }
+        
+        .price-row.total {
+            border-top: 2px solid #dee2e6;
+            padding-top: 1rem;
+            margin-top: 1rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--success-color);
+        }
+        
+        .extra-services {
+            margin: 1rem 0;
+        }
+        
+        .badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+        
+        .payment-status-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .payment-status-section h6 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .steps-timeline {
+                flex-direction: column;
+            }
+            
+            .step-item {
+                margin-bottom: 2rem;
+            }
+            
+            .detail-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .detail-item .value {
+                text-align: left;
+                margin-top: 0.25rem;
+            }
+        }
+    </style>
+
+<div class="container py-5">
+    <div class="text-center mb-4">
+        <div class="success-icon mb-3">
+            <i class="fas fa-check-circle fa-5x text-success"></i>
+        </div>
+        <h2 class="text-success">Booking Confirmed!</h2>
+        <p class="text-muted">Thank you for choosing CleanHandy. Your office cleaning service has been scheduled successfully.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="confirmation-card">
+                <div class="confirmation-header">
+                    <h4><i class="fas fa-building text-white me-2"></i>Booking Details</h4>
+                    <div class="booking-id">Booking #{{ booking.id }}</div>
+                </div>
+                
+                <div class="confirmation-content">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-section">
+                                <h6><i class="fas fa-building text-primary me-2"></i>Service Details</h6>
+                                <div class="detail-item">
+                                    <span class="label">Service Type:</span>
+                                    <span class="value">{{ booking.service_cat.name }}</span>
+                                </div>
+                                {% if booking.business_type %}
+                                <div class="detail-item">
+                                    <span class="label">Business Type:</span>
+                                    <span class="value">{{ booking.get_business_type_display|default:"Office" }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="detail-item">
+                                    <span class="label">Number of Cleaners:</span>
+                                    <span class="value">{{ booking.num_cleaners|default:"1" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Hours Requested:</span>
+                                    <span class="value">{{ booking.hours_requested|default:"2" }} hours</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Cleaning Frequency:</span>
+                                    <span class="value">{{ booking.get_cleaning_frequency_display|default:"One Time" }}</span>
+                                </div>
+                                {% if booking.hear_about_us %}
+                                <div class="detail-item">
+                                    <span class="label">How you heard about us:</span>
+                                    <span class="value">{{ booking.get_hear_about_us_display }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h6><i class="fas fa-calendar-alt text-info me-2"></i>Schedule</h6>
+                                <div class="detail-item">
+                                    <span class="label">Date:</span>
+                                    <span class="value">{{ booking.date|date:"F j, Y" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Time:</span>
+                                    <span class="value">{{ booking.hour|time:"g:i A" }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Duration:</span>
+                                    <span class="value">{{ booking.hours_requested|default:"2" }} hours</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="detail-section">
+                                <h6><i class="fas fa-user text-primary me-2"></i>Contact Information</h6>
+                                <div class="detail-item">
+                                    <span class="label">Name:</span>
+                                    <span class="value">{{ booking.name }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Email:</span>
+                                    <span class="value">{{ booking.email }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">Phone:</span>
+                                    <span class="value">{{ booking.phone|default:"Not provided" }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h6><i class="fas fa-map-marker-alt text-danger me-2"></i>Location</h6>
+                                <div class="detail-item">
+                                    <span class="label">Address:</span>
+                                    <span class="value">
+                                        {{ booking.address|default:"Not provided" }}
+                                        {% if booking.apartment %}, {{ booking.apartment }}{% endif %}
+                                    </span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="label">City, State, ZIP:</span>
+                                    <span class="value">{{ booking.city }}, {{ booking.state }} {{ booking.zip_code }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if booking.extras.all %}
+                    <div class="detail-section">
+                        <h6><i class="fas fa-plus-circle text-success me-2"></i>Extra Services</h6>
+                        <div class="extra-services">
+                            {% for extra in booking.extras.all %}
+                                <span class="badge bg-success me-2 mb-2">{{ extra.name }} (+${{ extra.price }})</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if booking.job_description %}
+                    <div class="detail-section">
+                        <h6><i class="fas fa-comment text-info me-2"></i>Job Description</h6>
+                        <p class="additional-details">{{ booking.job_description }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="detail-section">
+                        <h6><i class="fas fa-dollar-sign text-success me-2"></i>Pricing & Payment</h6>
+                        <div class="pricing-details">
+                            <!-- Office Cleaning Pricing -->
+                            <!-- Labor Cost Calculation -->
+                            <div class="price-row">
+                                <span class="label">Labor Cost:</span>
+                                <span class="value">${{ booking.num_cleaners }} × {{ booking.hours_requested }}h × $75/h = ${{ booking.calculate_office_labor_cost|floatformat:2 }}</span>
+                            </div>
+                            
+                            <!-- Frequency Discount -->
+                            {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
+                            <div class="price-row discount">
+                                <span class="label">Frequency Discount ({{ booking.get_cleaning_frequency_display }}):</span>
+                                <span class="value">-${{ booking.calculate_office_discount_amount|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Extras -->
+                            {% if booking.extras.all %}
+                            <div class="price-row">
+                                <span class="label">Additional Services:</span>
+                                <span class="value">
+                                    {% for extra in booking.extras.all %}
+                                        {{ extra.name }} (+${{ extra.price }}){% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </span>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Subtotal -->
+                            <div class="price-row">
+                                <span class="label">Subtotal:</span>
+                                <span class="value">${{ booking.calculate_office_subtotal|floatformat:2 }}</span>
+                            </div>
+                            
+                            <!-- Tax -->
+                            <div class="price-row">
+                                <span class="label">Sales Tax (8.875%):</span>
+                                <span class="value">${{ booking.calculate_office_tax|floatformat:2 }}</span>
+                            </div>
+                            
+                            {% if booking.gift_card_discount and booking.gift_card_discount > 0 %}
+                            <div class="price-row discount">
+                                <span class="label">Gift Card Discount:</span>
+                                <span class="value">-${{ booking.gift_card_discount|floatformat:2 }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Total Price -->
+                            <div class="price-row total">
+                                <span class="label">Total Price:</span>
+                                <span class="value">${{ booking.price|floatformat:2 }}</span>
+                            </div>
+                            
+                            <!-- Payment Status Section -->
+                            <hr style="margin: 1.5rem 0;">
+                            <div class="payment-status-section">
+                                <h6 class="text-primary mb-3"><i class="fas fa-credit-card me-2"></i>Payment Status</h6>
+                                
+                                <!-- Payment Type Display -->
+                                <div class="price-row">
+                                    <span class="label">Payment Type:</span>
+                                    <span class="value">
+                                        {% if booking.payment_status == "paid" %}
+                                            <span class="badge bg-success">Fully Paid</span>
+                                        {% elif booking.payment_status == "partial" %}
+                                            <span class="badge bg-warning">Partial Payment (50%)</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Unpaid</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                <!-- Amount Paid -->
+                                {% if booking.get_paid_amount > 0 %}
+                                <div class="price-row">
+                                    <span class="label text-success">Amount Paid:</span>
+                                    <span class="value text-success">${{ booking.get_paid_amount|floatformat:2 }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Remaining Balance -->
+                                {% if booking.get_paid_amount < booking.price %}
+                                <div class="price-row">
+                                    <span class="label text-warning">Remaining Balance:</span>
+                                    <span class="value text-warning">${{ booking.price|sub:booking.get_paid_amount|floatformat:2 }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Payment Breakdown for Unpaid/Partial -->
+                                {% if booking.payment_status != "paid" %}
+                                <div class="mt-3">
+                                    <div class="price-row">
+                                        <span class="label text-info">Deposit Required (50%):</span>
+                                        <span class="value text-info">${{ booking.get_deposit_amount|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="price-row">
+                                        <span class="label text-muted">Final Payment (50%):</span>
+                                        <span class="value text-muted">${{ booking.get_final_amount|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="next-steps">
+                <h5><i class="fas fa-list-check text-primary me-2"></i>What Happens Next?</h5>
+                <div class="steps-timeline">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h6>Confirmation Email</h6>
+                            <p>You'll receive a detailed confirmation email within the next few minutes.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h6>Team Assignment</h6>
+                            <p>Our cleaning team will be assigned and you'll receive their contact information 24 hours before service.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h6>Service Day</h6>
+                            <p>Our professional cleaning team will arrive at your scheduled time and complete the service.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h6>Quality Check</h6>
+                            <p>We'll conduct a final inspection and ensure your complete satisfaction.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="contact-info">
+                <h5><i class="fas fa-headset text-primary me-2"></i>Need Help?</h5>
+                <p class="mb-3">Our customer support team is here to help with any questions or changes to your booking.</p>
+                <div class="contact-methods">
+                    <div class="contact-method mb-2">
+                        <i class="fas fa-phone text-primary me-2"></i>
+                        <span>Call us: <a href="tel:{{ contact_info.phone }}">{{ contact_info.phone }}</a></span>
+                    </div>
+                    <div class="contact-method mb-2">
+                        <i class="fas fa-envelope text-primary me-2"></i>
+                        <span>Email us: <a href="mailto:support@thecleanhandy.com">support@thecleanhandy.com</a></span>
+                    </div>
+                    <div class="contact-method">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        <span>Support hours: Mon-Fri 8AM-6PM, Sat 9AM-3PM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'office_cleaning_booking' %}" class="btn btn-primary me-3">
+                <i class="fas fa-plus me-2"></i>Book Another Service
+            </a>
+            <a href="{% url 'download_office_cleaning_pdf' booking.id %}" class="btn btn-outline-primary">
+                <i class="fas fa-download me-2"></i>Download Receipt
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

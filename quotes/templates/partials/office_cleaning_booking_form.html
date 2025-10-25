@@ -1,0 +1,1941 @@
+{% load form_tags %}
+
+<script>
+  // Set hourly rate from Django backend
+  window.officeCleaningHourlyRate = {{ hourly_rate|default:75 }};
+</script>
+
+<style>  
+  .summary-font {
+    font-size: 20px !important;
+  }
+
+  .total-font {
+    font-size: 24px !important;
+  }
+
+  /* Frequency Section Styles */
+  .frequency-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .frequency-btn {
+    padding: 12px 20px;
+    border: 1px solid #F15A29;
+    background: white;
+    color: #666;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    min-width: 100px;
+  }
+
+  .frequency-btn.active {
+    background: #F15A29;
+    color: white;
+    border-color: #F15A29;
+  }
+
+  .frequency-btn:hover {
+    border-color: #F15A29;
+    color: #F15A29;
+  }
+
+  .frequency-btn.active:hover {
+    background: #F15A29;
+    color: white;
+  }
+
+  /* Calendar Navigation Styles */
+  .calendar-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .nav-arrow {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .nav-arrow:hover {
+    background: #f8f9fa;
+    border-color: #F15A29;
+  }
+
+  .calendar-dates {
+    display: flex;
+    gap: 15px;
+    flex-wrap: 1;
+    justify-content: center;
+  }
+
+  .date-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 60px;
+  }
+
+  .date-item:hover {
+    border-color: #F15A29;
+  }
+
+  .date-item.selected {
+    border-color: #F15A29;
+    background: #f8f8ff;
+  }
+
+  .date-icon {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 5px;
+  }
+
+  .date-day {
+    font-size: 12px;
+    color: #999;
+    font-weight: 500;
+  }
+
+  .date-number {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  /* Time Slots Styles */
+  .time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .time-slot {
+    padding: 10px 15px;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .time-slot:hover {
+    border-color: #F15A29;
+    color: #F15A29;
+  }
+
+  .time-slot.selected {
+    background: #F15A29;
+    color: white;
+    border-color: #F15A29;
+  }
+
+  .time-slot.unavailable {
+    background: #f8f9fa;
+    color: #999;
+    cursor: not-allowed;
+    border-color: #eee;
+  }
+
+  .time-slot.unavailable:hover {
+    border-color: #eee;
+    color: #999;
+  }
+
+  /* Sticky Summary Styles */
+  #stickySummary.fixed {
+    position: fixed;
+    top: 150px; /* Increased to account for sticky header */
+    z-index: 1000;
+  }
+  
+  #stickySummaryWrapper {
+    position: relative;
+  }
+  
+  @media (max-width: 991px) {
+    #stickySummary.fixed {
+      position: static;
+      width: 100%;
+    }
+  }
+
+  /* Custom Modal Styles */
+  .custom-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .custom-modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .custom-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .custom-modal-header h5 {
+    margin: 0;
+    color: #333;
+  }
+
+  .custom-modal-close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .custom-modal-close:hover,
+  .custom-modal-close:focus {
+    color: #F15A29;
+    text-decoration: none;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .custom-modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    background-color: #f8f9fa;
+    border-radius: 0 0 8px 8px;
+  }
+
+  /* Stripe Elements Styling */
+  #card-element {
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    background-color: #fff;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+
+  #card-element:focus {
+    border-color: #F15A29;
+    box-shadow: 0 0 0 0.2rem rgba(241, 90, 41, 0.25);
+  }
+
+  .StripeElement {
+    background-color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    box-shadow: 0 1px 3px 0 #e6ebf1;
+    transition: box-shadow 150ms ease;
+  }
+
+  .StripeElement--focus {
+    box-shadow: 0 1px 3px 0 #cfd7df;
+  }
+
+  .StripeElement--invalid {
+    border-color: #fa755a;
+  }
+
+  .StripeElement--webkit-autofill {
+    background-color: #fefde5 !important;
+  }
+
+  .payment-option-info {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+  }
+
+  .payment-amount {
+    font-weight: 600;
+    color: #F15A29;
+  }
+
+  /* Validation Styles */
+  .field-error {
+    display: block !important;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #dc3545;
+    animation: fadeIn 0.3s ease-in;
+    margin-top: -5px !important;
+  }
+
+  .is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+  }
+
+  .calendar-section.is-invalid {
+    border: 2px solid #dc3545 !important;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .form-check.is-invalid {
+    border: 1px solid #dc3545 !important;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: rgba(220, 53, 69, 0.1);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<div class="row">
+  <div class="col-lg-8">
+<form method="post" id="quoteForm">
+    {% csrf_token %}
+
+    <input type="hidden" name="hours_requested" id="hidden_hours_requested">
+    <input type="hidden" name="num_cleaners" id="hidden_num_cleaners">
+    <input type="hidden" name="cleaning_type" id="hidden_cleaning_type">
+
+    <!-- Step 1: Cleaning Details -->
+    <div class="step mb-4" id="step1">
+      <h4 class="mb-4" style="color: #666; padding-top: 20px;">Tell Us About Your Cleaning</h4>
+      
+      <!-- Type Of Business -->
+      <div class="form-group mb-4">
+        <label for="business_type" style="display: block; margin-bottom: 10px; font-weight: 500;">Type Of Business</label>
+        <div class="business-type-buttons" style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button type="button" class="frequency-btn active" data-value="office">Office</button>
+          <button type="button" class="frequency-btn" data-value="retail">Retail</button>
+          <button type="button" class="frequency-btn" data-value="medical">Medical</button>
+          <button type="button" class="frequency-btn" data-value="school">School</button>
+          <button type="button" class="frequency-btn" data-value="other">Other</button>
+        </div>
+        <input type="hidden" name="business_type" id="business_type" value="office">
+      </div>
+
+      <!-- Crew/Size/Hours -->
+      <div class="form-group mb-4">
+        <label for="crew_size_hours" style="display: block; margin-bottom: 10px; font-weight: 500;">Crew/Size/Hours</label>
+        <select name="crew_size_hours" id="crew_size_hours" class="cmn-input">
+          <option value="1_cleaner_2_hours_500">1 Cleaner Total 2 Hours (<500 Sq Ft)</option>
+          <option value="1_cleaner_3_hours_1000">1 Cleaner Total 3 Hours (<1000 Sq Ft)</option>
+          <option value="1_cleaner_4_hours_1500">1 Cleaner Total 4 Hours (<1500 Sq Ft)</option>
+          <option value="2_cleaners_2.5_hours_2000">2 Cleaners Total 2.5 Hours (<2000 Sq Ft)</option>
+          <option value="2_cleaners_3_hours_2500">2 Cleaners Total 3 Hours (<2500 Sq Ft)</option>
+          <option value="2_cleaners_4_hours_3000">2 Cleaners Total 4 Hours (<3000 Sq Ft)</option>
+          <option value="2_cleaners_5_hours_3500">2 Cleaners Total 5 Hours (<3500 Sq Ft)</option>
+          <option value="2_cleaners_6_hours_4000">2 Cleaners Total 6 Hours (<4000 Sq Ft)</option>
+          <option value="2_cleaners_7_hours_5000">2 Cleaners Total 7 Hours (<5000 Sq Ft)</option>
+          <option value="custom_cleaning">Customized Cleaning (>5000 Sq Ft) Please Email</option>
+        </select>
+      </div>
+
+      <!-- How did you hear about us? -->
+      <div class="form-group mb-4">
+        <label for="hear_about_us" style="display: block; margin-bottom: 10px; font-weight: 500;">How did you hear about us?</label>
+        <select name="hear_about_us" id="hear_about_us" class="cmn-input">
+          <option value="">Select an option</option>
+          <option value="google">Google Search</option>
+          <option value="social_media">Social Media</option>
+          <option value="referral">Referral</option>
+          <option value="advertisement">Advertisement</option>
+          <option value="yelp">Yelp</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <!-- Job Description -->
+      <div class="form-group mb-4">
+        <label for="{{ form.job_description.id_for_label }}" class="form-label">Job Description *</label>
+        {{ form.job_description|add_class:"cmn-input" }}
+      </div>
+    </div>
+
+    <!-- Step 2: Schedule Info -->
+    <div class="step mb-4" id="step2">
+      <h4 class="mt-4 mb-3">Schedule</h4>
+      
+      <!-- Cleaning Frequency Section -->
+      <div class="frequency-section mb-4">
+        <h5>How often would you like us to clean?</h5>
+        <p class="text-muted mb-3">Save With Our Cleany Loyalty Program! (Discount applied on 2nd cleaning and onward)</p>
+        
+        <div class="frequency-buttons">
+          <button type="button" class="frequency-btn active" data-frequency="one_time" data-discount="0">
+            One time
+          </button>
+          <button type="button" class="frequency-btn" data-frequency="daily" data-discount="20">
+            Daily - 20% Off
+          </button>
+          <button type="button" class="frequency-btn" data-frequency="weekly" data-discount="15">
+            Weekly 15% Off
+          </button>
+          <button type="button" class="frequency-btn" data-frequency="bi_weekly" data-discount="10">
+            Bi Weekly 10% Off
+          </button>
+          <button type="button" class="frequency-btn" data-frequency="monthly" data-discount="5">
+            Monthly 5% Off
+          </button>
+        </div>
+        <input type="hidden" name="cleaning_frequency" id="cleaning_frequency" value="one_time">
+        <input type="hidden" name="frequency_discount" id="frequency_discount" value="0">
+      </div>
+
+      <!-- Date of Service Section -->
+      <div class="date-section mb-4">
+        <h5>Date of service</h5>
+        <p class="text-muted mb-3">For recurring services, each one will commence on the same day and time as selected for the first service.</p>
+        
+        <!-- Calendar and Time Selection -->
+        <div class="calendar-section">
+          <div class="calendar-navigation mb-3">
+            <button type="button" class="nav-arrow" id="prev_week">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="calendar-dates" id="calendar_dates">
+              <!-- Calendar dates will be populated by JavaScript -->
+            </div>
+            <button type="button" class="nav-arrow" id="next_week">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+          
+          <div class="time-slots" id="time_slots">
+            <!-- Time slots will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Hidden form fields for compatibility -->
+        <input type="hidden" name="selected_date" id="selected_date">
+        <input type="hidden" name="selected_time" id="selected_time">
+        <input type="hidden" name="recurrence_pattern" id="recurrence_pattern" value="one_time">
+      </div>
+    </div>
+
+    <!-- Step 3: Contact Info -->
+    <div class="step mb-4" id="step3">
+      <h4>Contact Info</h4>
+      
+      <!-- Name Field -->
+      <div class="form-group mb-3">
+        <label for="{{ form.name.id_for_label }}" class="form-label">Name *</label>
+        {{ form.name|add_class:"cmn-input" }}
+      </div>
+      
+      <!-- Email Field -->
+      <div class="form-group mb-3">
+        <label for="{{ form.email.id_for_label }}" class="form-label">Email *</label>
+        {{ form.email|add_class:"cmn-input" }}
+      </div>
+      
+      <!-- Phone Field -->
+      <div class="form-group mb-3">
+        <label for="{{ form.phone.id_for_label }}" class="form-label">Phone *</label>
+        {{ form.phone|add_class:"cmn-input" }}
+      </div>
+
+      <!-- Saved Address Select -->
+      {% if saved_addresses %}
+        <div class="card mb-4 shadow-sm" style="border: 1px solid #F15A29;">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title mb-0">Select Address</h5>
+              <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddAddressModal()">
+                + Add New Address
+              </button>
+            </div>
+            <div class="form-group mb-3">
+              <label for="addressSelect" class="form-label">Your Saved Addresses</label>
+              <select id="addressSelect" class="form-select">
+                <option value="">Select Address</option>
+                {% for addr in saved_addresses %}
+                  <option 
+                    data-street="{{ addr.street_address }}"
+                    data-apt="{{ addr.apt_suite }}"
+                    data-zip="{{ addr.zip_code }}"
+                    data-city="{{ addr.city }}"
+                    data-state="{{ addr.state }}"
+                  >
+                    {{ addr.street_address }}, Apt {{ addr.apt_suite }}, {{ addr.zip_code }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Preview of selected address -->
+            <div id="selectedAddressDetails" class="row g-2 d-none">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Street</label>
+                <p class="form-control-plaintext" id="addressStreet">–</p>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">Apt/Suite</label>
+                <p class="form-control-plaintext" id="addressApt">–</p>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">ZIP Code</label>
+                <p class="form-control-plaintext" id="addressZip">–</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Manual address fields -->
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="{{ form.address.id_for_label }}" class="form-label">Street Address *</label>
+            {{ form.address|add_class:"cmn-input" }}
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="{{ form.apartment.id_for_label }}" class="form-label">Apt/Suite</label>
+            {{ form.apartment|add_class:"cmn-input" }}
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="{{ form.zip_code.id_for_label }}" class="form-label">ZIP Code *</label>
+            {{ form.zip_code|add_class:"cmn-input" }}
+          </div>
+        </div>
+      </div>
+      <!-- Hidden city and state fields (default to New York) -->
+      <div style="display: none;">
+        {{ form.city }}
+        {{ form.state }}
+      </div>
+      
+      <!-- Set default values for city and state -->
+      <script>
+        document.addEventListener("DOMContentLoaded", function() {
+          // Set default values for city and state
+          const cityField = document.getElementById('id_city');
+          const stateField = document.getElementById('id_state');
+          
+          if (cityField && !cityField.value) {
+            cityField.value = 'New York';
+          }
+          if (stateField && !stateField.value) {
+            stateField.value = 'NY';
+          }
+        });
+      </script>
+
+     
+
+      <!-- Payment Option Selection -->
+      <div class="card mt-4 border-0 shadow-sm">
+        <div class="card-header text-white" style="background-color: #F15A29;">
+          <h5 class="mb-0"><i class="fa-solid fa-credit-card me-2"></i>Payment Option</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <h6>Choose Payment Option:</h6>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="payment_option" id="payment_deposit" value="deposit" checked>
+              <label class="form-check-label" for="payment_deposit">
+                <strong>Pay 50% Deposit Now</strong> <span class="text-muted">($<span id="deposit-amount">0.00</span>)</span>
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="payment_option" id="payment_full" value="full">
+              <label class="form-check-label" for="payment_full">
+                <strong>Pay Full Amount Now</strong> <span class="text-muted">($<span id="full-amount">0.00</span>)</span>
+              </label>
+            </div>
+          </div>
+          <div class="alert alert-info">
+            <i class="fa-solid fa-info-circle me-2"></i>
+            You will be redirected to our secure payment page to complete your booking.
+          </div>
+        </div>
+      </div>
+
+       <!-- Terms -->
+       <div class="checkbox-wrap mt-4">
+        <input type="checkbox" id="terms" required>
+        <label for="terms">I agree with all the terms & conditions</label>
+    </div>
+      
+      <!-- Submit Button -->
+      <button type="submit" class="btn-1 w-100 mt-4" id="submit-booking-btn">Book Service & Pay</button>
+    </div>
+  </form>
+  </div>
+  <div class="col-lg-4">
+
+  <!-- Price Summary -->
+  <div id="stickySummaryWrapper">
+    <div id="stickySummary" class="service-summary mt-4 p-3 border rounded shadow-sm" style="background: #fff;">
+      <!-- Dynamic Items -->
+      <div id="summary-items" class="mb-3"></div>
+
+      <!-- Date -->
+      <div class="d-flex align-items-center mb-1">
+        <i class="fa-solid fa-calendar-days me-2 text-muted"></i>
+        <span id="summary-date">–</span>
+      </div>
+
+      <!-- Duration -->
+      <div class="d-flex align-items-center mb-1">
+        <i class="fa-regular fa-clock me-2 text-muted"></i>
+        <span id="summary-duration">–</span>
+      </div>
+
+      <!-- Recurrence -->
+      <div class="d-flex align-items-center mb-3">
+        <i class="fa-solid fa-rotate me-2 text-muted"></i>
+        <span id="summary-recurrence">–</span>
+      </div>
+
+      <hr>
+
+      <!-- Totals -->
+      <div class="d-flex justify-content-between">
+        <strong>SUB-TOTAL</strong>
+        <strong>$<span id="subtotalPrice">0.00</span></strong>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span>SALES TAX</span>
+        <span>$<span id="salesTax">0.00</span></span>
+      </div>
+      <div class="d-flex justify-content-between mt-2" style="font-size: 1.3rem;">
+        <strong>TOTAL</strong>
+        <strong style="color: orange;">$<span id="totalPrice">0.00</span></strong>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- Custom Add Address Modal -->
+<div id="customAddAddressModal" class="custom-modal" style="margin-top:50px;">
+  <div class="custom-modal-content">
+    <div class="custom-modal-header">
+      <h5>Add New Address</h5>
+      <span class="custom-modal-close" onclick="closeAddAddressModal()">&times;</span>
+    </div>
+    <form method="post" action="{% url 'add_customer_address' %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div class="form-group mb-2">
+          <label>Street Address</label>
+          <input type="text" name="street_address" class="cmn-input" required>
+        </div>
+        <div class="form-group mb-2">
+          <label>Apt / Suite</label>
+          <input type="text" name="apt_suite" class="cmn-input">
+        </div>
+        <div class="form-group mb-2">
+          <label>ZIP Code</label>
+          <input type="text" name="zip_code" class="cmn-input" required>
+        </div>
+       
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddAddressModal()">Cancel</button>
+        <button type="submit" class="btn-1">Save Address</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // === Business Type Button Logic ===
+  const businessTypeButtons = document.querySelectorAll('.business-type-buttons .frequency-btn');
+  const businessTypeInput = document.getElementById('business_type');
+
+  businessTypeButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      businessTypeButtons.forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+      businessTypeInput.value = this.dataset.value;
+      updateSummary();
+    });
+  });
+
+  // === Frequency Button Logic ===
+  const frequencyButtons = document.querySelectorAll('.frequency-section .frequency-btn');
+  const frequencyInput = document.getElementById('cleaning_frequency');
+  const discountInput = document.getElementById('frequency_discount');
+
+  frequencyButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      frequencyButtons.forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+      frequencyInput.value = this.dataset.frequency;
+      discountInput.value = this.dataset.discount;
+      updateSummary();
+    });
+  });
+
+  // === Calendar and Time Selection Logic ===
+  let currentWeekStart = new Date();
+  currentWeekStart.setDate(currentWeekStart.getDate() + 2);
+  let selectedDate = null;
+  let selectedTime = null;
+
+  function renderCalendar() {
+    const calendarDates = document.getElementById('calendar_dates');
+    calendarDates.innerHTML = '';
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(currentWeekStart);
+      date.setDate(currentWeekStart.getDate() + i);
+      
+      const dayNames = ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa'];
+      const dayName = dayNames[date.getDay()];
+      const dateNumber = date.getDate();
+      const month = date.getMonth() + 1;
+      
+      const dateItem = document.createElement('div');
+      dateItem.className = 'date-item';
+      
+      // Check if this date is the selected date
+      if (selectedDate && date.toDateString() === selectedDate.toDateString()) {
+        dateItem.classList.add('selected');
+      }
+      
+      dateItem.innerHTML = `
+        <div class="date-icon">
+          <i class="fa-solid fa-calendar"></i>
+        </div>
+        <div class="date-day">${dayName}</div>
+        <div class="date-number">${month}/${dateNumber.toString().padStart(2, '0')}</div>
+      `;
+      
+      dateItem.addEventListener('click', () => selectDate(date));
+      calendarDates.appendChild(dateItem);
+    }
+    
+    // If no date is selected, select the first date by default
+    if (!selectedDate) {
+      selectDate(new Date(currentWeekStart));
+    }
+  }
+
+  function selectDate(date) {
+    selectedDate = date;
+    
+    document.querySelectorAll('.date-item').forEach(item => {
+      item.classList.remove('selected');
+    });
+    event.target.closest('.date-item').classList.add('selected');
+    
+    document.getElementById('selected_date').value = date.toISOString().split('T')[0];
+    loadTimeSlots(date);
+    updateSummary();
+    
+    // Trigger validation update
+    if (typeof formValidator !== 'undefined' && formValidator.validateDateAndTime) {
+      formValidator.validateDateAndTime();
+    }
+    if (typeof updateSubmitButtonState === 'function') {
+      updateSubmitButtonState();
+    }
+  }
+
+  function loadTimeSlots(date, retryCount = 0) {
+    const timeSlots = document.getElementById('time_slots');
+    timeSlots.innerHTML = '';
+    
+    // Get the hours requested from the crew selection
+    const crewSelection = document.getElementById('crew_size_hours').value;
+    let hoursRequested = 2; // default fallback
+    
+    if (crewSelection) {
+      const parts = crewSelection.split('_');
+      let hoursStr = parts[2] || "2";
+      if (hoursStr.includes('hours')) {
+        hoursStr = hoursStr.replace('hours', '').replace('hour', '');
+      }
+      hoursRequested = parseFloat(hoursStr) || 2;
+    }
+    
+    // Fetch available hours from API
+    const selectedDate = date.toISOString().split('T')[0];
+    
+    console.log('🔍 Loading time slots for:', { selectedDate, hoursRequested, crewSelection, retryCount });
+    
+    timeSlots.innerHTML = '<div class="text-center text-muted">Loading available times...</div>';
+    
+    fetch(`/quotes/api/available-hours/?date=${selectedDate}&hours=${hoursRequested}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('🔍 Available hours API response:', data);
+        timeSlots.innerHTML = '';
+        
+        if (!data.available_hours || data.available_hours.length === 0) {
+          timeSlots.innerHTML = '<div class="text-center text-muted">No available times for this date</div>';
+          return;
+        }
+        
+        // Create time slots from available hours
+        data.available_hours.forEach((timeStr, index) => {
+          const timeSlot = document.createElement('div');
+          timeSlot.className = 'time-slot';
+          
+          // Parse time string (e.g., "14:00" to "2:00 PM")
+          const [hour, minute] = timeStr.split(':').map(Number);
+          const ampm = hour < 12 ? 'am' : 'pm';
+          const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+          const displayTime = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+          
+          timeSlot.textContent = displayTime;
+          timeSlot.dataset.time = timeStr; // Store original time for form submission
+          
+          timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, hour, timeStr));
+          timeSlots.appendChild(timeSlot);
+        });
+        
+        // Select first available time slot by default
+        if (timeSlots.children.length > 0) {
+          selectTimeSlot(timeSlots.children[0], parseInt(data.available_hours[0].split(':')[0]), data.available_hours[0]);
+        }
+      })
+      .catch(error => {
+        console.error('❌ Failed to fetch available hours:', error);
+        
+        // Retry up to 2 times for network errors
+        if (retryCount < 2 && (error.message.includes('Failed to fetch') || error.message.includes('HTTP'))) {
+          console.log(`🔄 Retrying time slot fetch (attempt ${retryCount + 1})`);
+          setTimeout(() => loadTimeSlots(date, retryCount + 1), 1000);
+          return;
+        }
+        
+        timeSlots.innerHTML = '<div class="text-center text-muted p-3" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; color: #6c757d;"><i class="fa-solid fa-exclamation-triangle me-2"></i>Unable to load available times. Please try refreshing the page.</div>';
+      });
+  }
+
+  function selectTimeSlot(slot, hour, timeStr) {
+    selectedTime = hour;
+    
+    document.querySelectorAll('.time-slot').forEach(s => {
+      s.classList.remove('selected');
+    });
+    slot.classList.add('selected');
+    
+    document.getElementById('selected_time').value = timeStr;
+    updateSummary();
+    
+    // Trigger validation update
+    if (typeof formValidator !== 'undefined' && formValidator.validateDateAndTime) {
+      formValidator.validateDateAndTime();
+    }
+    if (typeof updateSubmitButtonState === 'function') {
+      updateSubmitButtonState();
+    }
+  }
+
+  // Navigation arrows
+  document.getElementById('prev_week').addEventListener('click', () => {
+    currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+    renderCalendar();
+  });
+
+  document.getElementById('next_week').addEventListener('click', () => {
+    currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    renderCalendar();
+  });
+
+  // === Summary Update Logic ===
+  function updateSummary() {
+    const crewSelection = document.getElementById('crew_size_hours').value;
+    const frequency = document.getElementById('cleaning_frequency').value;
+    const discount = parseInt(document.getElementById('frequency_discount').value);
+    const businessType = document.getElementById('business_type').value;
+    
+    console.log('🔍 updateSummary called with:', {
+      crewSelection,
+      frequency,
+      discount,
+      selectedDate,
+      selectedTime,
+      businessType
+    });
+    
+    let numCleaners = 1;
+    let hours = 2;
+    
+    if (crewSelection) {
+      const parts = crewSelection.split('_');
+      numCleaners = parseInt(parts[0]) || 1;
+      let hoursStr = parts[2] || "2";
+      if (hoursStr.includes('hours')) {
+        hoursStr = hoursStr.replace('hours', '').replace('hour', '');
+      }
+      hours = parseFloat(hoursStr) || 2;
+    }
+    
+    console.log('🔍 Calculated values:', { numCleaners, hours });
+    
+    // Calculate pricing: Use hourly rate from backend
+    const hourlyRate = window.officeCleaningHourlyRate || 75;
+    const laborCost = numCleaners * hours * hourlyRate;
+    const discountAmount = laborCost * (discount / 100);
+    const subtotal = laborCost - discountAmount;
+    const taxRate = 0.08875;
+    const tax = subtotal * taxRate;
+    const total = subtotal + tax;
+    
+    console.log('🔍 Pricing calculated:', { laborCost, discountAmount, subtotal, tax, total });
+    
+    // Update summary items
+    const summaryItems = document.getElementById('summary-items');
+    summaryItems.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <div><i class="fa-solid fa-building me-2"></i>${businessType.charAt(0).toUpperCase() + businessType.slice(1)} Cleaning</div>
+        <div>$${laborCost.toFixed(2)}</div>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mb-1 ps-4 text-muted">
+        <div>• ${crewSelection.replace(/_/g, ' ')}</div>
+        <div></div>
+      </div>
+    `;
+    
+    if (discount > 0) {
+      summaryItems.innerHTML += `
+        <div class="d-flex justify-content-between align-items-center mb-1 text-success">
+          <div><i class="fa-solid fa-tag me-2"></i>Frequency Discount (${discount}%)</div>
+          <div>-$${discountAmount.toFixed(2)}</div>
+        </div>
+      `;
+    }
+    
+    // Update date and time
+    if (selectedDate) {
+      const formattedDate = `${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}/${selectedDate.getDate().toString().padStart(2, '0')}/${selectedDate.getFullYear()}`;
+      document.getElementById('summary-date').textContent = `${formattedDate} @ ${selectedTime || '8:00'} ${(selectedTime || 8) < 12 ? 'am' : 'pm'}`;
+    }
+    
+    // Update duration
+    const hourLabel = hours === 1 ? "Hour" : "Hours";
+    document.getElementById('summary-duration').textContent = `${hours} ${hourLabel} (estimated time)`;
+    
+    // Update frequency
+    const frequencyLabels = {
+      'one_time': 'One Time',
+      'daily': 'Daily',
+      'weekly': 'Weekly',
+      'bi_weekly': 'Bi-Weekly',
+      'monthly': 'Monthly'
+    };
+    document.getElementById('summary-recurrence').textContent = frequencyLabels[frequency] || "One Time";
+    
+    // Update pricing
+    document.getElementById('subtotalPrice').innerText = subtotal.toFixed(2);
+    document.getElementById('salesTax').innerText = tax.toFixed(2);
+    document.getElementById('totalPrice').innerText = total.toFixed(2);
+    
+    // Update payment amounts to match the new total
+    updateStripePaymentAmounts();
+    
+    // Trigger validation update
+    if (typeof updateSubmitButtonState === 'function') {
+      updateSubmitButtonState();
+    }
+    
+    console.log('🔍 Summary updated successfully');
+  }
+
+  // === Set Default Summary Values ===
+  function setDefaultSummary() {
+    console.log('🔍 setDefaultSummary called');
+    
+    // Set default crew selection (first option: 1_cleaner_2_hours_500)
+    const crewSelect = document.getElementById('crew_size_hours');
+    if (crewSelect && crewSelect.options.length > 0) {
+      crewSelect.selectedIndex = 0;
+      console.log('🔍 Set crew selection to index 0:', crewSelect.value);
+    }
+    
+    // Set default business type (office)
+    const businessTypeInput = document.getElementById('business_type');
+    if (businessTypeInput) {
+      businessTypeInput.value = 'office';
+      console.log('🔍 Set business type to:', businessTypeInput.value);
+    }
+    
+    // Set default frequency (one_time)
+    const frequencyInput = document.getElementById('cleaning_frequency');
+    const discountInput = document.getElementById('frequency_discount');
+    if (frequencyInput) {
+      frequencyInput.value = 'one_time';
+      console.log('🔍 Set frequency to:', frequencyInput.value);
+    }
+    if (discountInput) {
+      discountInput.value = '0';
+      console.log('🔍 Set discount to:', discountInput.value);
+    }
+    
+    // Set default date (2 days from now)
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 2);
+    selectedDate = defaultDate;
+    console.log('🔍 Set selected date to:', selectedDate);
+    
+    // Set default time (8:00 AM)
+    selectedTime = 8;
+    console.log('🔍 Set selected time to:', selectedTime);
+    
+    // Update hidden fields with defaults
+    document.getElementById('selected_date').value = defaultDate.toISOString().split('T')[0];
+    document.getElementById('selected_time').value = '08:00';
+    console.log('🔍 Set hidden fields - date:', document.getElementById('selected_date').value, 'time:', document.getElementById('selected_time').value);
+    
+    // Force update the summary with default values
+    setTimeout(() => {
+      console.log('🔍 Calling updateSummary from setTimeout');
+      updateSummary();
+    }, 100);
+  }
+
+  // === Form Submission Logic ===
+  function syncHiddenFields() {
+    const crewSelection = document.getElementById('crew_size_hours').value;
+    let numCleaners = 1;
+    let hours = 2;
+    
+    if (crewSelection) {
+      const parts = crewSelection.split('_');
+      numCleaners = parseInt(parts[0]) || 1;
+      let hoursStr = parts[2] || "2";
+      if (hoursStr.includes('hours')) {
+        hoursStr = hoursStr.replace('hours', '').replace('hour', '');
+      }
+      hours = parseFloat(hoursStr) || 2;
+    }
+    
+    document.getElementById('hidden_hours_requested').value = hours;
+    document.getElementById('hidden_num_cleaners').value = numCleaners;
+    document.getElementById('hidden_cleaning_type').value = "office_cleaning";
+    
+    // Set other required fields
+    const form = document.getElementById('quoteForm');
+    if (form) {
+      const requiredFields = {
+        'service_cat': '1',
+        'square_feet_options': '1',
+        'home_types': '1',
+        'cleaning_type': 'office_cleaning',
+        'date': document.getElementById('selected_date')?.value || new Date().toISOString().split('T')[0],
+        'hour': document.getElementById('selected_time')?.value || '09:00',
+        'recurrence_pattern': document.getElementById('cleaning_frequency').value
+      };
+      
+      Object.entries(requiredFields).forEach(([fieldName, value]) => {
+        let field = form.querySelector(`input[name="${fieldName}"], select[name="${fieldName}"]`);
+        if (!field) {
+          field = document.createElement('input');
+          field.type = 'hidden';
+          field.name = fieldName;
+          form.appendChild(field);
+        }
+        field.value = value;
+      });
+    }
+  }
+
+  // Event listeners
+  document.getElementById('crew_size_hours').addEventListener('change', updateSummary);
+  document.getElementById('crew_size_hours').addEventListener('change', function() {
+    // Refresh available hours when crew selection changes
+    if (selectedDate) {
+      loadTimeSlots(selectedDate);
+    }
+  });
+  document.getElementById('quoteForm').addEventListener('submit', function(e) {
+    syncHiddenFields();
+    
+    // Check if payment is required and handle accordingly
+    const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
+    if (totalAmount > 0) {
+      e.preventDefault(); // Prevent normal form submission
+      
+      // First create the booking, then process payment
+      createBookingAndProcessPayment();
+    }
+  });
+  
+  function createBookingAndProcessPayment() {
+    const formData = new FormData(document.getElementById("quoteForm"));
+    
+    // Show loading state
+    const submitBtn = document.getElementById("submit-booking-btn");
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Creating Booking...';
+    submitBtn.disabled = true;
+    
+    fetch(window.location.href, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+    .then(response => {
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return response.json();
+      } else {
+        // If not JSON, it's likely an HTML error page
+        throw new Error(`Server returned ${response.status}: ${response.statusText}. This usually indicates a server error.`);
+      }
+    })
+    .then(data => {
+      if (data.success && data.booking_id) {
+        stripeCurrentBookingId = data.booking_id;
+        const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
+        
+        // Create checkout session and redirect to payment
+        createStripeCheckoutSessionAndRedirect(data.booking_id, totalAmount, submitBtn, originalText);
+      } else {
+        throw new Error(data.error || 'Failed to create booking');
+      }
+    })
+    .catch(error => {
+      console.error('Error creating booking:', error);
+      
+      // Check if it's a JSON parsing error
+      if (error.message && error.message.includes('JSON.parse')) {
+        alert('Server error: Unable to process the response. Please check your internet connection and try again.');
+      }
+      // Check if it's a time slot conflict error
+      else if (error.message && error.message.includes('time slot is already booked')) {
+        // Show user-friendly error and refresh available time slots
+        alert('This time slot is no longer available. Please select a different time.');
+        
+        // Refresh the time slots for the selected date
+        if (selectedDate) {
+          loadTimeSlots(selectedDate);
+        }
+      }
+      // Check if it's a server error
+      else if (error.message && error.message.includes('Server returned')) {
+        alert('Server error: ' + error.message + ' Please try again in a few moments.');
+      }
+      else {
+        alert('Error creating booking: ' + error.message);
+      }
+      
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+    });
+  }
+  
+  // Initialize
+  setDefaultSummary(); // Set default values first
+  renderCalendar(); // Then render calendar with selected date
+  updateSummary(); // Finally update the summary
+  
+  // ================================
+  // FORM VALIDATION SYSTEM
+  // ================================
+  
+  class FormValidator {
+    constructor() {
+      console.log('🔍 FormValidator constructor called');
+      this.form = document.getElementById('quoteForm');
+      console.log('🔍 Form element in constructor:', !!this.form);
+      this.validators = new Map();
+      this.errors = new Map();
+      this.initializeValidators();
+      this.attachEventListeners();
+      console.log('🔍 FormValidator constructor completed');
+    }
+
+    initializeValidators() {
+      // Contact fields
+      this.validators.set('id_name', {
+        required: true,
+        minLength: 2,
+        pattern: /^[a-zA-Z\s]+$/,
+        message: 'Please enter a valid name (letters and spaces only)'
+      });
+
+      this.validators.set('id_email', {
+        required: true,
+        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        message: 'Please enter a valid email address'
+      });
+
+      this.validators.set('id_phone', {
+        required: true,
+        pattern: /^[\+]?[1-9][\d]{0,15}$/,
+        transform: (value) => value.replace(/[\s\-\(\)]/g, ''),
+        message: 'Please enter a valid phone number'
+      });
+
+      // Address fields
+      this.validators.set('id_address', {
+        required: true,
+        minLength: 5,
+        message: 'Please enter a valid street address'
+      });
+
+      this.validators.set('id_zip_code', {
+        required: true,
+        pattern: /^\d{5}(-\d{4})?$/,
+        message: 'Please enter a valid ZIP code'
+      });
+
+      // Job description
+      this.validators.set('id_job_description', {
+        required: true,
+        minLength: 10,
+        message: 'Please provide a job description (at least 10 characters)'
+      });
+
+      // Service selection
+      this.validators.set('crew_size_hours', {
+        required: true,
+        message: 'Please select a crew size and hours option'
+      });
+
+      // Terms
+      this.validators.set('terms', {
+        required: true,
+        custom: (field) => field.checked,
+        message: 'Please accept the terms and conditions'
+      });
+    }
+
+    attachEventListeners() {
+      // Attach to all form fields
+      this.validators.forEach((validator, fieldId) => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          // Input event for real-time validation
+          field.addEventListener('input', () => {
+            this.validateField(fieldId);
+            this.updateSubmitButtonState();
+          });
+
+          // Blur event for validation on field exit
+          field.addEventListener('blur', () => {
+            this.validateField(fieldId);
+          });
+
+          // Change event for select fields
+          field.addEventListener('change', () => {
+            this.validateField(fieldId);
+            this.updateSubmitButtonState();
+          });
+        }
+      });
+
+      // Special handling for date and time selection
+      this.attachDateTimeListeners();
+      
+      // Ensure all important fields have validation
+      this.ensureAllFieldsHaveValidation();
+    }
+
+    attachDateTimeListeners() {
+      // Override the existing selectDate function to include validation
+      const originalSelectDate = window.selectDate;
+      window.selectDate = (date) => {
+        if (originalSelectDate) {
+          originalSelectDate(date);
+        }
+        this.validateDateAndTime();
+        this.updateSubmitButtonState();
+      };
+
+      // Override the existing selectTimeSlot function to include validation
+      const originalSelectTimeSlot = window.selectTimeSlot;
+      window.selectTimeSlot = (slot, hour, timeStr) => {
+        if (originalSelectTimeSlot) {
+          originalSelectTimeSlot(slot, hour, timeStr);
+        }
+        this.validateDateAndTime();
+        this.updateSubmitButtonState();
+      };
+    }
+
+    ensureAllFieldsHaveValidation() {
+      // Important fields that should always have validation
+      const importantFields = ['id_name', 'id_email', 'id_phone', 'id_address', 'id_zip_code', 'id_job_description'];
+      
+      importantFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field && !field.hasAttribute('data-validation-attached')) {
+          field.addEventListener('input', () => {
+            this.validateField(fieldId);
+            this.updateSubmitButtonState();
+          });
+          field.addEventListener('blur', () => {
+            this.validateField(fieldId);
+          });
+          field.setAttribute('data-validation-attached', 'true');
+        }
+      });
+    }
+
+    validateField(fieldId) {
+      const field = document.getElementById(fieldId);
+      if (!field) return false;
+
+      const validator = this.validators.get(fieldId);
+      if (!validator) return true;
+
+      let value = field.value;
+      if (validator.transform) {
+        value = validator.transform(value);
+      }
+
+      let isValid = true;
+      let message = '';
+
+      // Required check
+      if (validator.required) {
+        if (validator.custom) {
+          if (!validator.custom(field)) {
+            isValid = false;
+            message = validator.message;
+          }
+        } else if (!value || value.trim() === '') {
+          isValid = false;
+          message = validator.message || `${this.getFieldName(fieldId)} is required`;
+        }
+      }
+
+      // Pattern check
+      if (isValid && value && validator.pattern) {
+        if (!validator.pattern.test(value)) {
+          isValid = false;
+          message = validator.message;
+        }
+      }
+
+      // Min length check
+      if (isValid && value && validator.minLength) {
+        if (value.length < validator.minLength) {
+          isValid = false;
+          message = validator.message;
+        }
+      }
+
+      // Show or clear error
+      if (isValid) {
+        this.clearFieldError(field);
+      } else {
+        this.showFieldError(field, message);
+      }
+
+      return isValid;
+    }
+
+
+    validateAllFields() {
+      console.log('🔍 validateAllFields called');
+      let allValid = true;
+      
+      // Always validate important fields first
+      const importantFields = ['id_name', 'id_email', 'id_phone', 'id_job_description'];
+      importantFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          console.log(`🔍 Validating ${fieldId}:`, field.value);
+          if (!this.validateField(fieldId)) {
+            allValid = false;
+            console.log(`❌ ${fieldId} validation failed`);
+          }
+        } else {
+          console.log(`⚠️ Field ${fieldId} not found`);
+        }
+      });
+
+      // Validate other fields
+      this.validators.forEach((validator, fieldId) => {
+        if (!importantFields.includes(fieldId)) {
+          const field = document.getElementById(fieldId);
+          if (field) {
+            console.log(`🔍 Validating ${fieldId}:`, field.value);
+            if (!this.validateField(fieldId)) {
+              allValid = false;
+              console.log(`❌ ${fieldId} validation failed`);
+            }
+          }
+        }
+      });
+
+      // Validate date and time
+      if (!this.validateDateAndTime()) {
+        allValid = false;
+        console.log('❌ Date/time validation failed');
+      }
+
+      // Ensure contact section is visible if there are errors
+      this.ensureContactSectionVisible();
+
+      console.log('🔍 validateAllFields result:', allValid);
+      return allValid;
+    }
+
+
+    validateDateAndTime() {
+      const dateValid = selectedDate !== null;
+      const timeValid = selectedTime !== null;
+      
+      // Clear previous calendar feedback
+      document.querySelectorAll('.calendar-error, .calendar-success').forEach(el => el.remove());
+      
+      // Validate date
+      const calendarContainer = document.querySelector('.calendar-section');
+      if (calendarContainer) {
+        if (dateValid) {
+          calendarContainer.classList.remove('is-invalid');
+        } else {
+          calendarContainer.classList.add('is-invalid');
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'calendar-error field-error text-danger small mt-1';
+          errorDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle me-1"></i>Please select a date for your booking';
+          calendarContainer.appendChild(errorDiv);
+        }
+      }
+      
+      // Validate time
+      const timeSlotsContainer = document.getElementById('time_slots');
+      if (timeSlotsContainer) {
+        if (timeValid) {
+          timeSlotsContainer.classList.remove('is-invalid');
+        } else {
+          timeSlotsContainer.classList.add('is-invalid');
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'calendar-error field-error text-danger small mt-1';
+          errorDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle me-1"></i>Please select a time for your booking';
+          timeSlotsContainer.appendChild(errorDiv);
+        }
+      }
+      
+      return dateValid && timeValid;
+    }
+
+    async validateTimeSlotAvailability() {
+      if (!selectedDate || !selectedTime) {
+        return true; // Let basic validation handle this
+      }
+
+      try {
+        // Get the hours requested from the crew selection
+        const crewSelection = document.getElementById('crew_size_hours').value;
+        let hoursRequested = 2; // default fallback
+        
+        if (crewSelection) {
+          const parts = crewSelection.split('_');
+          let hoursStr = parts[2] || "2";
+          if (hoursStr.includes('hours')) {
+            hoursStr = hoursStr.replace('hours', '').replace('hour', '');
+          }
+          hoursRequested = parseFloat(hoursStr) || 2;
+        }
+
+        const selectedDateStr = selectedDate.toISOString().split('T')[0];
+        console.log('🔍 Validating time slot availability:', { selectedDateStr, selectedTime, hoursRequested });
+
+        const response = await fetch(`/quotes/api/available-hours/?date=${selectedDateStr}&hours=${hoursRequested}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        const availableHours = data.available_hours || [];
+        
+        console.log('🔍 Available hours from API:', availableHours);
+        console.log('🔍 Selected time:', selectedTime);
+        
+        // Check if selected time is still available
+        const isAvailable = availableHours.includes(selectedTime);
+        
+        if (!isAvailable) {
+          console.log('❌ Selected time slot is no longer available');
+          
+          // Clear the time selection
+          selectedTime = null;
+          document.getElementById('selected_time').value = '';
+          
+          // Remove selection from UI
+          document.querySelectorAll('.time-slot').forEach(slot => {
+            slot.classList.remove('selected');
+          });
+          
+          // Show error message
+          const timeSlotsContainer = document.getElementById('time_slots');
+          if (timeSlotsContainer) {
+            timeSlotsContainer.classList.add('is-invalid');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'calendar-error field-error text-danger small mt-1';
+            errorDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle me-1"></i>This time slot is no longer available. Please select a different time.';
+            timeSlotsContainer.appendChild(errorDiv);
+          }
+          
+          // Reload available time slots
+          loadTimeSlots(selectedDate);
+          
+          return false;
+        }
+        
+        console.log('✅ Selected time slot is still available');
+        return true;
+        
+      } catch (error) {
+        console.error('❌ Error validating time slot availability:', error);
+        // Don't block submission on API errors, let server handle it
+        return true;
+      }
+    }
+
+
+    ensureContactSectionVisible() {
+      // Check if there are important field errors (contact fields or job description)
+      const importantFields = ['id_name', 'id_email', 'id_phone', 'id_job_description'];
+      const hasImportantErrors = importantFields.some(fieldId => {
+        const field = document.getElementById(fieldId);
+        return field && (field.classList.contains('is-invalid') || field.style.borderColor === 'red');
+      });
+      
+      if (hasImportantErrors) {
+        // Make contact section visible
+        const contactSection = document.getElementById('step3');
+        if (contactSection) {
+          contactSection.classList.remove('hidden-step');
+          contactSection.style.display = 'block';
+        }
+      }
+    }
+
+    isContactSectionVisible() {
+      const contactSection = document.getElementById('step3');
+      return contactSection && contactSection.style.display !== 'none' && !contactSection.classList.contains('hidden-step');
+    }
+
+    showFieldError(field, message) {
+      this.clearFieldError(field);
+      
+      // Add error styling
+      field.style.borderColor = 'red';
+      field.classList.add('is-invalid');
+      
+      // Create error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'field-error text-danger small mt-1';
+      errorDiv.style.fontSize = '12px';
+      errorDiv.style.color = 'red';
+      errorDiv.textContent = message;
+      
+      // Find the appropriate container for the error message
+      let container = field.parentNode;
+      
+      // For important fields, ensure we're using the form-group container
+      if (field.id === 'id_name' || field.id === 'id_email' || field.id === 'id_phone' || field.id === 'id_job_description') {
+        // Look for the form-group container
+        const formGroup = field.closest('.form-group');
+        if (formGroup) {
+          container = formGroup;
+        }
+      }
+      
+      // Insert error message after the field or at the end of the container
+      if (field.parentNode === container) {
+        // Field is directly in the container, insert after field
+        field.parentNode.insertBefore(errorDiv, field.nextSibling);
+      } else {
+        // Field is nested, append to container
+        container.appendChild(errorDiv);
+      }
+      
+      // Store error for cleanup
+      this.errors.set(field, errorDiv);
+    }
+
+    clearFieldError(field) {
+      // Remove error styling
+      field.style.borderColor = '';
+      field.classList.remove('is-invalid');
+      
+      // Remove error message
+      const errorDiv = this.errors.get(field);
+      if (errorDiv) {
+        errorDiv.remove();
+        this.errors.delete(field);
+      }
+      
+      // Also remove any existing error messages in the form-group container
+      if (field.id === 'id_name' || field.id === 'id_email' || field.id === 'id_phone' || field.id === 'id_job_description') {
+        const formGroup = field.closest('.form-group');
+        if (formGroup) {
+          const existingError = formGroup.querySelector('.field-error');
+          if (existingError) {
+            existingError.remove();
+          }
+        }
+      }
+    }
+
+    getFieldName(fieldId) {
+      const fieldNames = {
+        'id_name': 'Name',
+        'id_email': 'Email',
+        'id_phone': 'Phone',
+        'id_address': 'Street Address',
+        'id_zip_code': 'ZIP Code',
+        'id_job_description': 'Job Description',
+        'crew_size_hours': 'Crew/Size/Hours',
+        'terms': 'Terms and Conditions'
+      };
+      return fieldNames[fieldId] || fieldId;
+    }
+
+    updateSubmitButtonState() {
+      const submitBtn = document.getElementById("submit-booking-btn");
+      if (!submitBtn) return;
+
+      const isValid = this.validateAllFields();
+      
+      if (isValid) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-secondary');
+        submitBtn.classList.add('btn-primary');
+      } else {
+        submitBtn.disabled = true;
+        submitBtn.classList.remove('btn-primary');
+        submitBtn.classList.add('btn-secondary');
+      }
+    }
+
+    async validateAndSubmit() {
+      if (this.validateAllFields()) {
+        // All basic validation passed, now check time slot availability
+        console.log('🔍 Basic validation passed, checking time slot availability...');
+        
+        const timeSlotValid = await this.validateTimeSlotAvailability();
+        if (timeSlotValid) {
+          // All validations passed, proceed with form submission
+          this.submitForm();
+        } else {
+          // Time slot validation failed, ensure contact section is visible
+          this.ensureContactSectionVisible();
+        }
+      } else {
+        // Make sure contact section is visible if there are contact field errors
+        this.ensureContactSectionVisible();
+        
+        // Scroll to first error - prioritize empty required fields
+        let firstError = null;
+        
+        // First, look for empty required fields (most important)
+        const requiredFields = ['id_name', 'id_email', 'id_phone', 'id_job_description', 'id_address', 'id_zip_code', 'crew_size_hours'];
+        for (const fieldId of requiredFields) {
+          const field = document.getElementById(fieldId);
+          if (field && (!field.value || field.value.trim() === '')) {
+            firstError = field;
+            break;
+          }
+        }
+        
+        // If no empty required fields found, look for any field with validation errors
+        if (!firstError) {
+          firstError = this.form.querySelector('.is-invalid, [style*="border: 1px solid red"]');
+        }
+        
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Focus the field for better UX
+          setTimeout(() => {
+            firstError.focus();
+          }, 500);
+        }
+        
+        // Show summary alert
+        const errorCount = this.errors.size;
+        alert(`❌ Please fix the ${errorCount} error${errorCount > 1 ? 's' : ''} before submitting the form.`);
+      }
+    }
+
+    submitForm() {
+      console.log('🔍 Validation passed, proceeding with submission');
+      
+      // Run all existing validation
+      syncHiddenFields();
+      
+      const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
+      if (totalAmount > 0) {
+        // Create booking first, then process payment
+        createBookingAndProcessPayment();
+      } else {
+        // No payment needed, submit normally
+        this.form.submit();
+      }
+    }
+  }
+
+  // Initialize payment options
+  initializePaymentOptions();
+  
+
+  // ================================
+  // STRIPE PAYMENT INTEGRATION
+  // ================================
+  
+  // Initialize Stripe
+  const stripePublishableKey = '{{ STRIPE_PUBLISHABLE_KEY }}';
+  console.log('🔍 Stripe publishable key:', stripePublishableKey ? 'Present' : 'Missing');
+  
+  if (!stripePublishableKey || stripePublishableKey === 'None' || stripePublishableKey.trim() === '') {
+    console.error('❌ Stripe publishable key is missing or invalid');
+    alert('Payment system is not properly configured. Please contact support.');
+    return;
+  }
+  
+  const stripe = Stripe(stripePublishableKey);
+  let stripeElements;
+  let stripeCardElement;
+  let stripeClientSecret;
+  let stripeCurrentBookingId = null;
+  let stripeCurrentPaymentType = 'deposit';
+
+  // No need for billing field auto-population since we're using Stripe Checkout
+
+
+  // Initialize payment options when page loads
+  function initializePaymentOptions() {
+    try {
+      console.log('🔍 Initializing payment options...');
+      
+      // Update payment amounts when total changes
+      updateStripePaymentAmounts();
+      
+      // Handle payment option changes
+      document.getElementById('payment_deposit').addEventListener('change', handleStripePaymentOptionChange);
+      document.getElementById('payment_full').addEventListener('change', handleStripePaymentOptionChange);
+      
+    } catch (error) {
+      console.error('❌ Error initializing payment options:', error);
+    }
+  }
+
+  function updateStripePaymentAmounts() {
+    const totalAmount = parseFloat(document.getElementById("totalPrice").textContent);
+    const depositAmount = (totalAmount / 2).toFixed(2);
+    
+    document.getElementById('deposit-amount').textContent = depositAmount;
+    document.getElementById('full-amount').textContent = totalAmount.toFixed(2);
+  }
+
+  function handleStripePaymentOptionChange() {
+    const depositOption = document.getElementById('payment_deposit');
+    
+    if (depositOption.checked) {
+      stripeCurrentPaymentType = 'deposit';
+    } else {
+      stripeCurrentPaymentType = 'full';
+    }
+  }
+
+  // Initialize the form validator
+  console.log('🔍 Initializing FormValidator...');
+  const formValidator = new FormValidator();
+  console.log('🔍 FormValidator initialized:', !!formValidator);
+
+  // Override the existing form submission to handle validation and payment
+  const originalFormSubmit = document.getElementById("quoteForm");
+  if (originalFormSubmit) {
+    originalFormSubmit.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      
+      console.log('🔍 Form submission triggered');
+      
+      // Use the FormValidator's validateAndSubmit method for consistency
+      await formValidator.validateAndSubmit();
+    });
+    console.log('🔍 Submit event listener added successfully');
+  } else {
+    console.error('❌ Form element not found');
+  }
+
+
+
+    function createStripeCheckoutSessionAndRedirect(bookingId, totalAmount, submitBtn, originalText) {
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Redirecting to Payment...';
+
+      const frontendTotal = parseFloat(document.getElementById("totalPrice").textContent);
+      console.log('🔍 Creating checkout session with:', {
+        booking_id: bookingId,
+        payment_type: stripeCurrentPaymentType,
+        frontend_total_amount: frontendTotal,
+        totalPrice_element: document.getElementById("totalPrice").textContent
+      });
+
+      fetch('/quotes/api/create-checkout-session/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({
+          booking_id: bookingId,
+          payment_type: stripeCurrentPaymentType,
+          frontend_total_amount: frontendTotal,
+        }),
+      })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      // Redirect to Stripe Checkout
+      window.location.href = data.checkout_url;
+    })
+    .catch(error => {
+      console.error('Payment error:', error);
+      alert('Payment failed: ' + error.message);
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+    });
+  }
+
+  function handleStripePaymentSuccess(paymentIntent, submitBtn, originalText) {
+    console.log('Payment succeeded:', paymentIntent);
+    
+    // Show success message
+    submitBtn.innerHTML = '<i class="fa-solid fa-check-circle me-2"></i>Payment Successful!';
+    submitBtn.className = 'btn btn-success w-100 mt-4';
+    
+    // Redirect to confirmation page after a short delay
+    setTimeout(() => {
+      window.location.href = `/quotes/booking/confirmation/${stripeCurrentBookingId}/`;
+    }, 2000);
+  }
+
+  // Stripe Elements no longer needed - using hosted checkout
+  
+  // Update payment amounts when pricing changes
+  const originalUpdateSummary = window.updateSummary;
+  if (originalUpdateSummary) {
+    window.updateSummary = function() {
+      originalUpdateSummary();
+      updateStripePaymentAmounts();
+    };
+  }
+});
+
+// Sticky Summary Functionality
+document.addEventListener("DOMContentLoaded", function () {
+  const summary = document.getElementById("stickySummary");
+  const wrapper = document.getElementById("stickySummaryWrapper");
+
+  if (summary && wrapper) {
+    const offsetTop = wrapper.offsetTop;
+
+    function handleScroll() {
+      const wrapperRect = wrapper.getBoundingClientRect();
+
+      if (window.scrollY > offsetTop - 80) {
+        summary.classList.add("fixed");
+        summary.style.width = `${wrapper.offsetWidth}px`; // set exact width
+      } else {
+        summary.classList.remove("fixed");
+        summary.style.width = ""; // reset
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", () => {
+      if (summary.classList.contains("fixed")) {
+        summary.style.width = `${wrapper.offsetWidth}px`;
+      }
+    });
+  }
+});
+
+// Address Selection Functionality
+document.addEventListener("DOMContentLoaded", function () {
+  const addrSelect = document.getElementById("addressSelect");
+  if (addrSelect) {
+    addrSelect.addEventListener("change", function () {
+      const selected = this.selectedOptions[0];
+      if (!selected) return;
+
+      document.getElementById("id_address").value = selected.dataset.street || "";
+      document.getElementById("id_apartment").value = selected.dataset.apt || "";
+      document.getElementById("id_zip_code").value = selected.dataset.zip || "";
+      document.getElementById("id_city").value = selected.dataset.city || "New York";
+      document.getElementById("id_state").value = selected.dataset.state || "NY";
+    });
+  }
+});
+
+// Modal Functions
+function openAddAddressModal() {
+  document.getElementById("customAddAddressModal").style.display = "block";
+}
+
+function closeAddAddressModal() {
+  document.getElementById("customAddAddressModal").style.display = "none";
+}
+
+window.addEventListener("click", function (event) {
+  const modal = document.getElementById("customAddAddressModal");
+  if (event.target === modal) {
+    closeAddAddressModal();
+  }
+});
+</script>
+
+
+    
