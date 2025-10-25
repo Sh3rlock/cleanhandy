@@ -2460,27 +2460,35 @@
       let subtotal = 0;
       const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
       console.log('🔍 Square feet price:', sqftPrice);
-      subtotal += sqftPrice;
-  
-      // Home Type (only if visible)
+      
+      // For large homes, don't add square feet price as it's included in hourly calculation
       const isSmallHome = isSmallHomeSelected();
       console.log('🔍 Is small home selected:', isSmallHome);
+      
+      if (isSmallHome) {
+        // For small homes, add square feet price
+        subtotal += sqftPrice;
+      }
+
+      // Home Type (only if visible and small home)
       if (isSmallHome) {
         const homeSelect = document.getElementById("id_home_types");
         const homePrice = parseFloat(homeSelect?.selectedOptions[0]?.dataset.price || 0);
         console.log('🔍 Home type price:', homePrice, 'from option:', homeSelect?.selectedOptions[0]?.textContent);
         subtotal += homePrice;
       }
-  
-      // Extras (always check if any are selected)
-      const checkedExtras = document.querySelectorAll(".extra-checkbox:checked");
-      console.log('🔍 Processing extras for pricing:', checkedExtras.length);
-      checkedExtras.forEach(cb => {
-        const price = parseFloat(cb.dataset.price || 0);
-        console.log('🔍 Adding extra price:', price);
-        subtotal += price;
-      });
-  
+
+      // Extras (only for small homes)
+      if (isSmallHome) {
+        const checkedExtras = document.querySelectorAll(".extra-checkbox:checked");
+        console.log('🔍 Processing extras for pricing:', checkedExtras.length);
+        checkedExtras.forEach(cb => {
+          const price = parseFloat(cb.dataset.price || 0);
+          console.log('🔍 Adding extra price:', price);
+          subtotal += price;
+        });
+      }
+
       // Labor cost for large homes
       let laborCost = 0;
       const isLargeHomeVisible = largeHomeOptions && largeHomeOptions.style.display !== "none";
@@ -2560,8 +2568,8 @@ updatePaymentAmounts();
         console.log('🔍 Updating summary with subtotal:', subtotal);
         summaryContainer.innerHTML = "";
 
-      // Square Feet Selection
-      if (sqftSelect) {
+      // Square Feet Selection (only for small homes)
+      if (sqftSelect && isSmallHome) {
         const sqftLabel = sqftSelect.selectedOptions[0]?.textContent.trim();
         if (sqftPrice > 0) {
           summaryContainer.innerHTML += `
@@ -2625,17 +2633,31 @@ updatePaymentAmounts();
           </div>`;
       });
   
-      if (isLargeHomeVisible && laborCost > 0) {
+      // Large Home Summary
+      if (isLargeHomeVisible) {
+        const sqftLabel = sqftSelect?.selectedOptions[0]?.textContent.trim();
         const numCleaners = parseInt(cleanerSelect?.value || "0");
         const hours = parseFloat(hoursField?.value || "0");
         const cleaningType = cleaningTypeSelect?.value?.toLowerCase() || "";
         const hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
-      
-        summaryContainer.innerHTML += `
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div><i class="fa-solid fa-broom me-2 text-primary"></i><strong>${numCleaners} Cleaners × ${hours} Hours × $${hourlyRate}/hour</strong></div>
-            <div><strong>$${laborCost.toFixed(2)}</strong></div>
-          </div>`;
+        
+        // Show square footage info
+        if (sqftLabel) {
+          summaryContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div><i class="fa-solid fa-house me-2 text-primary"></i><strong>${sqftLabel}</strong></div>
+              <div><strong>Included</strong></div>
+            </div>`;
+        }
+        
+        // Show labor cost breakdown
+        if (laborCost > 0) {
+          summaryContainer.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div><i class="fa-solid fa-broom me-2 text-primary"></i><strong>${numCleaners} Cleaners × ${hours} Hours × $${hourlyRate}/hour</strong></div>
+              <div><strong>$${laborCost.toFixed(2)}</strong></div>
+            </div>`;
+        }
       }
   
         // Show frequency discount if applicable
@@ -2954,27 +2976,52 @@ updatePaymentAmounts();
       // If main function not available, do a basic price update
       console.log('🔍 Main updatePrice not available, doing basic price update');
       
-      // Get the current square feet price
-      const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
-      console.log('🔍 Square feet price:', sqftPrice);
+      // Check if this is a small or large home
+      const selectedOption = sqftSelect?.selectedOptions[0];
+      const isSmallHome = selectedOption?.textContent.toLowerCase().includes("under 1000");
       
-      // Get home type price (if visible)
-      let homePrice = 0;
-      if (homeTypeGroup && homeTypeGroup.style.display !== 'none') {
-        const homeSelect = document.getElementById("id_home_types");
-        homePrice = parseFloat(homeSelect?.selectedOptions[0]?.dataset.price || 0);
-        console.log('🔍 Home type price:', homePrice);
+      let subtotal = 0;
+      
+      if (isSmallHome) {
+        // Small home pricing
+        const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
+        console.log('🔍 Square feet price:', sqftPrice);
+        subtotal += sqftPrice;
+        
+        // Get home type price (if visible)
+        let homePrice = 0;
+        if (homeTypeGroup && homeTypeGroup.style.display !== 'none') {
+          const homeSelect = document.getElementById("id_home_types");
+          homePrice = parseFloat(homeSelect?.selectedOptions[0]?.dataset.price || 0);
+          console.log('🔍 Home type price:', homePrice);
+        }
+        subtotal += homePrice;
+        
+        // Get extras price
+        let extrasPrice = 0;
+        document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
+          extrasPrice += parseFloat(cb.dataset.price || 0);
+        });
+        console.log('🔍 Extras price:', extrasPrice);
+        subtotal += extrasPrice;
+      } else {
+        // Large home pricing - calculate based on hourly rate
+        const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
+        const hoursField = document.querySelector('select[name="est_hours"]');
+        const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
+        
+        if (cleanerSelect && hoursField && cleaningTypeSelect) {
+          const numCleaners = parseInt(cleanerSelect.value || 0);
+          const estimatedHours = parseFloat(hoursField.value || 0);
+          const cleaningType = cleaningTypeSelect.value?.toLowerCase() || "";
+          const hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
+          
+          subtotal = numCleaners * estimatedHours * hourlyRate;
+          console.log('🔍 Large home pricing:', { numCleaners, estimatedHours, cleaningType, hourlyRate, subtotal });
+        }
       }
       
-      // Get extras price
-      let extrasPrice = 0;
-      document.querySelectorAll(".extra-checkbox:checked").forEach(cb => {
-        extrasPrice += parseFloat(cb.dataset.price || 0);
-      });
-      console.log('🔍 Extras price:', extrasPrice);
-      
       // Calculate total with tax
-      const subtotal = sqftPrice + homePrice + extrasPrice;
       const taxRate = 0.08875;
       const tax = subtotal * taxRate;
       const total = subtotal + tax;
@@ -3019,9 +3066,10 @@ updatePaymentAmounts();
         console.log('🔍 Updating summary details');
         summaryContainer.innerHTML = "";
         
-        // Square Feet Selection
-        if (sqftSelect) {
+        // Square Feet Selection (only for small homes)
+        if (sqftSelect && isSmallHome) {
           const sqftLabel = sqftSelect.selectedOptions[0]?.textContent.trim();
+          const sqftPrice = parseFloat(sqftSelect?.selectedOptions[0]?.dataset.price || 0);
           if (sqftPrice > 0) {
             summaryContainer.innerHTML += `
               <div class="d-flex justify-content-between align-items-center mb-2">
@@ -3032,9 +3080,10 @@ updatePaymentAmounts();
         }
         
         // Home Type (only for small homes)
-        if (homeTypeGroup && homeTypeGroup.style.display !== 'none') {
+        if (isSmallHome && homeTypeGroup && homeTypeGroup.style.display !== 'none') {
           const homeSelect = document.getElementById("id_home_types");
           const homeOption = homeSelect?.selectedOptions[0];
+          const homePrice = parseFloat(homeOption?.dataset.price || 0);
           if (homeOption && homePrice > 0) {
             summaryContainer.innerHTML += `
               <div class="d-flex justify-content-between align-items-center mb-2">
@@ -3079,38 +3128,34 @@ updatePaymentAmounts();
         });
         
         // Large Home Options (if visible)
-        if (largeHomeOptions && largeHomeOptions.style.display !== 'none') {
+        if (!isSmallHome && largeHomeOptions && largeHomeOptions.style.display !== 'none') {
+          const sqftLabel = sqftSelect?.selectedOptions[0]?.textContent.trim();
           const cleanerSelect = document.querySelector('select[name="num_cleaners"]');
           const hoursField = document.querySelector('select[name="est_hours"]');
           const cleaningTypeSelect = document.querySelector('select[name="cleaning_type"]');
           
-          if (cleanerSelect && cleanerSelect.value) {
-            const cleanerCount = cleanerSelect.value;
-            const cleanerLabel = cleanerCount === "1" ? "1 Cleaner" : `${cleanerCount} Cleaners`;
+          // Show square footage info
+          if (sqftLabel) {
             summaryContainer.innerHTML += `
-              <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
-                <div><i class="fa-solid fa-users me-2"></i>${cleanerLabel}</div>
-                <div>Included</div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div><i class="fa-solid fa-house me-2 text-primary"></i><strong>${sqftLabel}</strong></div>
+                <div><strong>Included</strong></div>
               </div>`;
           }
           
-          if (hoursField && hoursField.value) {
-            const hours = hoursField.value;
-            const hourLabel = hours === "1" ? "1 Hour" : `${hours} Hours`;
-            summaryContainer.innerHTML += `
-              <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
-                <div><i class="fa-solid fa-clock me-2"></i>${hourLabel}</div>
-                <div>Included</div>
-              </div>`;
-          }
-          
-          if (cleaningTypeSelect && cleaningTypeSelect.value) {
-            const cleaningType = cleaningTypeSelect.selectedOptions[0]?.textContent.trim();
-            if (cleaningType) {
+          // Show labor cost breakdown
+          if (cleanerSelect && hoursField && cleaningTypeSelect) {
+            const numCleaners = parseInt(cleanerSelect.value || 0);
+            const hours = parseFloat(hoursField.value || 0);
+            const cleaningType = cleaningTypeSelect.value?.toLowerCase() || "";
+            const hourlyRate = cleaningType.includes("post") || cleaningType.includes("renovation") ? 63 : 58;
+            const laborCost = numCleaners * hours * hourlyRate;
+            
+            if (laborCost > 0) {
               summaryContainer.innerHTML += `
-                <div class="d-flex justify-content-between align-items-center mb-1 ps-3 text-muted">
-                  <div><i class="fa-solid fa-broom me-2"></i>${cleaningType}</div>
-                  <div>Included</div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div><i class="fa-solid fa-broom me-2 text-primary"></i><strong>${numCleaners} Cleaners × ${hours} Hours × $${hourlyRate}/hour</strong></div>
+                  <div><strong>$${laborCost.toFixed(2)}</strong></div>
                 </div>`;
             }
           }
