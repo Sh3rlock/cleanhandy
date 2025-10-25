@@ -60,6 +60,34 @@ coverage.xml
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+db_test.sqlite3
+*.db
+*.sqlite
+*.sqlite3
+
+# Database files
+*.db-journal
+*.sqlite3-wal
+*.sqlite3-shm
+
+# Data export files
+data_export.json
+*.json.bak
+
+# Sensitive configuration files
+.env.local
+.env.production
+secrets.json
+config.json
+
+# Temporary migration and test files
+sqlite_settings.py
+export_*.py
+test_*.py
+migrate_to_postgres.py
+manage_db.py
+simple_start.sh
+start.sh
 
 # Flask stuff:
 instance/
