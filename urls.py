@@ -6,10 +6,21 @@ from accounts import views as account_views
 from django.conf.urls.static import static
 from django.conf import settings
 from accounts.forms import StyledPasswordResetForm, StyledSetPasswordForm
-
+from django.contrib.sitemaps.views import sitemap
+from quotes.sitemaps import StaticViewSitemap, ServiceSitemap, BlogPostSitemap
+from django.views.generic import TemplateView
 from django.http import HttpResponse
+import os
+
 def healthcheck(request):
     return HttpResponse("OK")
+
+# Sitemap configuration
+sitemaps = {
+    'static': StaticViewSitemap,
+    'services': ServiceSitemap,
+    'blog': BlogPostSitemap,
+}
 
 urlpatterns = [
     path("", home, name="home"),
@@ -42,4 +53,6 @@ urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += [
     path("healthz/", healthcheck),  # add this
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    path('robots.txt', TemplateView.as_view(template_name='robots.txt', content_type='text/plain'), name='robots'),
 ]

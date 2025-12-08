@@ -119,6 +119,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
     'whitenoise.runserver_nostatic',
     "quotes",
     "bookings",
@@ -138,6 +139,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'cleanhandy.middleware.UnderConstructionMiddleware',  # Under construction mode
 ]
 
 ROOT_URLCONF = 'cleanhandy.urls'
@@ -157,6 +159,7 @@ TEMPLATES = [
                 'quotes.context_processors.contact_info',
                 'quotes.context_processors.about_content',
                 'quotes.context_processors.newsletter_form',
+                'quotes.context_processors.seo_defaults',
             ],
         },
     },
@@ -247,3 +250,9 @@ STRIPE_CURRENCY = 'usd'
 
 # Site Configuration
 SITE_URL = os.getenv('SITE_URL', 'https://thecleanhandy.com')
+
+# Under Construction Mode
+# Set to True to enable the under construction page for all visitors
+# Admin users and staff will still be able to access the site normally
+# To enable: Set environment variable UNDER_CONSTRUCTION=True, or change 'False' to 'True' below
+UNDER_CONSTRUCTION = os.getenv('UNDER_CONSTRUCTION', 'True').lower() == 'true'

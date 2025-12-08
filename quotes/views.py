@@ -45,6 +45,14 @@ all_rates = get_all_hourly_rates()  # Returns dict of all active rates
 
 
 def home(request):
+    # Check if under construction mode is enabled
+    if getattr(settings, 'UNDER_CONSTRUCTION', False):
+        # Allow admin/staff users to access the site normally
+        if not (hasattr(request, 'user') and request.user.is_authenticated and 
+                (request.user.is_staff or request.user.is_superuser)):
+            # Show under construction page for regular users and anonymous visitors
+            return render(request, "under_construction.html", status=503)
+    
     services = Service.objects.filter(category__name="Cleaning")
     home_services = Service.objects.filter(category__name="Home")
     commercial_services = Service.objects.filter(category__name="Commercial")
