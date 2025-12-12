@@ -1,0 +1,1009 @@
+{% extends "base.html" %}
+{% load static %}
+{% load form_tags %}
+{% block content %}
+<style>
+  .cmn-input {
+    border-radius: 8px;
+    border: 1px solid #F15A29;
+    background: var(--white-color);
+    width: 100%;
+    margin-bottom: 15px !important;
+    padding: 15px 10px !important;
+  }
+
+  select.cmn-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #F15A29;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .field-error {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: red;
+  }
+
+  .is-invalid {
+    border-color: red !important;
+  }
+
+  /* Frequency/Business Type Button Styles */
+  .frequency-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .frequency-btn {
+    padding: 12px 20px;
+    border: 1px solid #F15A29;
+    background: white;
+    color: #666;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    min-width: 131px;
+  }
+
+  .frequency-btn.active {
+    background: #F15A29;
+    color: white;
+    border-color: #F15A29;
+  }
+
+  .frequency-btn:hover {
+    border-color: #F15A29;
+    color: #F15A29;
+  }
+
+  .frequency-btn.active:hover {
+    background: #F15A29;
+    color: white;
+  }
+
+  /* Calendar Navigation Styles */
+  .calendar-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .nav-arrow {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .nav-arrow:hover {
+    background: #f8f9fa;
+    border-color: #F15A29;
+  }
+
+  .calendar-dates {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .date-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 60px;
+  }
+
+  .date-item:hover {
+    border-color: #F15A29;
+  }
+
+  .date-item.selected {
+    border-color: #F15A29;
+    background: #f8f8ff;
+  }
+
+  .date-icon {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 5px;
+  }
+
+  .date-day {
+    font-size: 12px;
+    color: #999;
+    font-weight: 500;
+  }
+
+  .date-number {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  /* Time Slots Styles */
+  .time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .time-slot {
+    padding: 10px 15px;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .time-slot:hover {
+    border-color: #F15A29;
+    color: #F15A29;
+  }
+
+  .time-slot.selected {
+    background: #F15A29;
+    color: white;
+    border-color: #F15A29;
+  }
+
+  .time-slot.unavailable {
+    background: #f8f9fa;
+    color: #999;
+    cursor: not-allowed;
+    border-color: #eee;
+  }
+
+  .time-slot.unavailable:hover {
+    border-color: #eee;
+    color: #999;
+  }
+</style>
+
+<!-- common banner -->
+<section class="common-banner" style="position: relative;">
+    <div class="bg-layer" style="background-image: url('{% static 'assets/images/background/common-banner-bg.jpg' %}');"></div>
+    <div class="common-banner-content">
+        <h3>Office Cleaning Quote</h3>
+        <div class="breadcrumb">
+            <ul>
+              <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+              <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Office Cleaning Quote</li>
+            </ul>
+        </div>
+
+        {% if user.is_authenticated %}
+        <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+      {% else %}
+        <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+      {% endif %}
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
+        {% endif %}
+        {% for service in all_services %}
+          {% if service.category.name|lower == 'post event cleaning' %}
+            {% if user.is_authenticated %}
+              <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+            {% else %}
+              <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+    </div>
+</section>
+
+<section class="mb-4">
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+      <h3 class="mb-4 text-center">Request an Office Cleaning Quote</h3>
+      
+      <form method="post" id="officeQuoteForm">
+        {% csrf_token %}
+        
+        <!-- Errors -->
+        {% if form.errors %}
+          <div class="alert alert-danger rounded shadow-sm">
+            <ul class="mb-0">
+              {% for field in form.visible_fields %}
+                {% for error in field.errors %}
+                  <li>{{ field.label }}: {{ error }}</li>
+                {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <!-- Business Information -->
+        <div class="form-group">
+          <h5 class="mb-3">Business Information</h5>
+          
+          <!-- Type Of Business -->
+          <div class="form-group mb-4">
+            <label for="business_type" style="display: block; margin-bottom: 10px; font-weight: 500;">Type Of Business</label>
+            <div class="business-type-buttons" style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button type="button" class="frequency-btn active" data-value="office">Office</button>
+              <button type="button" class="frequency-btn" data-value="retail">Retail</button>
+              <button type="button" class="frequency-btn" data-value="medical">Medical</button>
+              <button type="button" class="frequency-btn" data-value="school">School</button>
+              <button type="button" class="frequency-btn" data-value="other">Other</button>
+            </div>
+            <input type="hidden" name="business_type" id="business_type" value="office">
+          </div>
+
+          <!-- Crew/Size/Hours -->
+          <div class="form-group mb-4">
+            <label for="crew_size_hours" style="display: block; margin-bottom: 10px; font-weight: 500;">Crew/Size/Hours *</label>
+            <select name="crew_size_hours" id="crew_size_hours" class="cmn-input" required>
+              <option value="">Select Crew/Size/Hours</option>
+              <option value="1_cleaner_2_hours_500">1 Cleaner Total 2 Hours (<500 Sq Ft)</option>
+              <option value="1_cleaner_3_hours_1000">1 Cleaner Total 3 Hours (<1000 Sq Ft)</option>
+              <option value="1_cleaner_4_hours_1500">1 Cleaner Total 4 Hours (<1500 Sq Ft)</option>
+              <option value="2_cleaners_2.5_hours_2000">2 Cleaners Total 2.5 Hours (<2000 Sq Ft)</option>
+              <option value="2_cleaners_3_hours_2500">2 Cleaners Total 3 Hours (<2500 Sq Ft)</option>
+              <option value="2_cleaners_4_hours_3000">2 Cleaners Total 4 Hours (<3000 Sq Ft)</option>
+              <option value="2_cleaners_5_hours_3500">2 Cleaners Total 5 Hours (<3500 Sq Ft)</option>
+              <option value="2_cleaners_6_hours_4000">2 Cleaners Total 6 Hours (<4000 Sq Ft)</option>
+              <option value="2_cleaners_7_hours_5000">2 Cleaners Total 7 Hours (<5000 Sq Ft)</option>
+              <option value="custom_cleaning">Customized Cleaning (>5000 Sq Ft) Please Email</option>
+            </select>
+          </div>
+
+          <!-- How did you hear about us? -->
+          <div class="form-group">
+            <label for="hear_about_us" class="form-label">How did you hear about us?</label>
+            <select name="hear_about_us" id="hear_about_us" class="cmn-input">
+              <option value="">Select an option</option>
+              <option value="google">Google Search</option>
+              <option value="social_media">Social Media</option>
+              <option value="referral">Referral</option>
+              <option value="advertisement">Advertisement</option>
+              <option value="yelp">Yelp</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="form-group">
+          <h5 class="mb-3">Contact Information</h5>
+          
+          <div class="form-group">
+            <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }} *</label>
+            {{ form.name|add_class:"cmn-input" }}
+            {% if form.name.errors %}
+              <span class="field-error">{{ form.name.errors.0 }}</span>
+            {% endif %}
+          </div>
+          
+          <div class="form-group">
+            <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }} *</label>
+            {{ form.email|add_class:"cmn-input" }}
+            {% if form.email.errors %}
+              <span class="field-error">{{ form.email.errors.0 }}</span>
+            {% endif %}
+          </div>
+          
+          <div class="form-group">
+            <label for="{{ form.phone_number.id_for_label }}" class="form-label">{{ form.phone_number.label }} *</label>
+            {{ form.phone_number|add_class:"cmn-input" }}
+            {% if form.phone_number.errors %}
+              <span class="field-error">{{ form.phone_number.errors.0 }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Business Address -->
+        <div class="form-group">
+          <h5 class="mb-3">Business Address</h5>
+          
+          <!-- Manual address fields -->
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="address_street" class="form-label">Street Address *</label>
+                <input type="text" name="address_street" id="address_street" class="cmn-input" required>
+                {% if form.business_address.errors %}
+                  <span class="field-error">{{ form.business_address.errors.0 }}</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="address_apt" class="form-label">Apt/Suite</label>
+                <input type="text" name="address_apt" id="address_apt" class="cmn-input">
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="address_zip" class="form-label">ZIP Code *</label>
+                <input type="text" name="address_zip" id="address_zip" class="cmn-input" required>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Hidden fields for city, state, and business_address (will be populated by JS) -->
+          <input type="hidden" name="address_city" id="address_city" value="New York">
+          <input type="hidden" name="address_state" id="address_state" value="NY">
+          <input type="hidden" name="business_address" id="id_business_address" value="">
+          
+          <!-- Set default values for city and state -->
+          <script>
+            document.addEventListener("DOMContentLoaded", function() {
+              // Set default values for city and state
+              const cityField = document.getElementById('address_city');
+              const stateField = document.getElementById('address_state');
+              
+              if (cityField && !cityField.value) {
+                cityField.value = 'New York';
+              }
+              if (stateField && !stateField.value) {
+                stateField.value = 'NY';
+              }
+            });
+          </script>
+        </div>
+
+        <!-- Schedule -->
+        <div class="form-group">
+          <h5 class="mb-3">Schedule</h5>
+          
+          <!-- Cleaning Frequency Section -->
+          <div class="frequency-section mb-4">
+            <h6>How often would you like us to clean?</h6>
+           
+            <div class="frequency-buttons">
+              <button type="button" class="frequency-btn active" data-frequency="one_time" data-discount="0">
+                One time
+              </button>
+              <button type="button" class="frequency-btn" data-frequency="weekly" data-discount="10">
+                Weekly - 10% Off
+              </button>
+              <button type="button" class="frequency-btn" data-frequency="bi_weekly" data-discount="5">
+                Bi Weekly - 5% Off
+              </button>
+              <button type="button" class="frequency-btn" data-frequency="monthly" data-discount="0">
+                Monthly
+              </button>
+            </div>
+            <input type="hidden" name="cleaning_frequency" id="cleaning_frequency" value="one_time">
+            <input type="hidden" name="frequency_discount" id="frequency_discount" value="0">
+          </div>
+
+          <!-- Date of Service Section -->
+          <div class="date-section mb-4">
+            <h6>Date of service *</h6>
+            <p class="text-muted mb-3">For recurring services, each one will commence on the same day and time as selected for the first service.</p>
+            
+            <!-- Calendar and Time Selection -->
+            <div class="calendar-section">
+              <div class="calendar-navigation mb-3">
+                <button type="button" class="nav-arrow" id="prev_week">
+                  <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <div class="calendar-dates" id="calendar_dates">
+                  <!-- Calendar dates will be populated by JavaScript -->
+                </div>
+                <button type="button" class="nav-arrow" id="next_week">
+                  <i class="fa-solid fa-chevron-right"></i>
+                </button>
+              </div>
+              
+              <div class="time-slots" id="time_slots" style="display: none;">
+                <!-- Time slots will be populated by JavaScript -->
+              </div>
+            </div>
+
+            <!-- Hidden form fields for compatibility -->
+            <input type="hidden" name="selected_date" id="selected_date">
+            <input type="hidden" name="selected_time" id="selected_time">
+            <input type="hidden" name="recurrence_pattern" id="recurrence_pattern" value="one_time">
+          </div>
+        </div>
+
+        <!-- Job Description -->
+        <div class="form-group">
+          <label for="{{ form.job_description.id_for_label }}" class="form-label">{{ form.job_description.label }} *</label>
+          {{ form.job_description|add_class:"cmn-input" }}
+          {% if form.job_description.errors %}
+            <span class="field-error">{{ form.job_description.errors.0 }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Terms -->
+       <div class="checkbox-wrap mt-4">
+        <input type="checkbox" id="terms" required>
+        <label for="terms">I agree with all the terms & conditions</label>
+    </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn-1 w-100">Submit Quote Request</button>
+      </form>
+    </div>
+  </div>
+</div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('officeQuoteForm');
+  
+  // Business Type Button Logic
+  const businessTypeButtons = document.querySelectorAll('.business-type-buttons .frequency-btn');
+  const businessTypeInput = document.getElementById('business_type');
+
+  if (businessTypeButtons.length > 0 && businessTypeInput) {
+    businessTypeButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        businessTypeButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        businessTypeInput.value = this.dataset.value;
+      });
+    });
+  }
+
+  // Extract square footage from crew_size_hours selection
+  const crewSizeHoursSelect = document.getElementById('crew_size_hours');
+  let squareFootageInput = document.getElementById('square_footage');
+  
+  // Create hidden input for square footage if it doesn't exist
+  if (!squareFootageInput && form) {
+    squareFootageInput = document.createElement('input');
+    squareFootageInput.type = 'hidden';
+    squareFootageInput.name = 'square_footage';
+    squareFootageInput.id = 'square_footage';
+    form.appendChild(squareFootageInput);
+  }
+
+  function updateSquareFootage() {
+    if (crewSizeHoursSelect && squareFootageInput) {
+      const crewSelection = crewSizeHoursSelect.value;
+      if (crewSelection) {
+        // Extract square footage from the option value (e.g., "1_cleaner_2_hours_500" -> "500")
+        const parts = crewSelection.split('_');
+        const sqFt = parts[parts.length - 1]; // Last part is the square footage
+        if (sqFt && sqFt !== 'cleaning') {
+          squareFootageInput.value = sqFt + ' sq ft';
+        } else if (crewSelection === 'custom_cleaning') {
+          squareFootageInput.value = '>5000 sq ft';
+        }
+      }
+    }
+  }
+
+  if (crewSizeHoursSelect) {
+    crewSizeHoursSelect.addEventListener('change', updateSquareFootage);
+    updateSquareFootage(); // Set initial value
+  }
+
+  // === Frequency Button Logic ===
+  const frequencyButtons = document.querySelectorAll('.frequency-section .frequency-btn');
+  const frequencyInput = document.getElementById('cleaning_frequency');
+  const discountInput = document.getElementById('frequency_discount');
+
+  if (frequencyButtons.length > 0 && frequencyInput && discountInput) {
+    frequencyButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        frequencyButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        frequencyInput.value = this.dataset.frequency;
+        discountInput.value = this.dataset.discount;
+      });
+    });
+  }
+
+  // === Calendar and Time Selection Logic ===
+  let currentWeekStart = new Date();
+  currentWeekStart.setDate(currentWeekStart.getDate() + 2);
+  let selectedDate = null;
+  let selectedTime = null;
+
+  function renderCalendar() {
+    const calendarDates = document.getElementById('calendar_dates');
+    if (!calendarDates) return;
+    
+    calendarDates.innerHTML = '';
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(currentWeekStart);
+      date.setDate(currentWeekStart.getDate() + i);
+      
+      const dayNames = ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa'];
+      const dayName = dayNames[date.getDay()];
+      const dateNumber = date.getDate();
+      const month = date.getMonth() + 1;
+      
+      const dateItem = document.createElement('div');
+      dateItem.className = 'date-item';
+      
+      // Check if this date is the selected date
+      if (selectedDate && date.toDateString() === selectedDate.toDateString()) {
+        dateItem.classList.add('selected');
+      }
+      
+      dateItem.innerHTML = `
+        <div class="date-icon">
+          <i class="fa-solid fa-calendar"></i>
+        </div>
+        <div class="date-day">${dayName}</div>
+        <div class="date-number">${month}/${dateNumber.toString().padStart(2, '0')}</div>
+      `;
+      
+      dateItem.addEventListener('click', function() {
+        selectDate(date, this);
+      });
+      calendarDates.appendChild(dateItem);
+    }
+  }
+
+  function selectDate(date, clickedElement) {
+    selectedDate = date;
+    
+    document.querySelectorAll('.date-item').forEach(item => {
+      item.classList.remove('selected');
+    });
+    
+    if (clickedElement) {
+      clickedElement.classList.add('selected');
+    }
+    
+    const dateInput = document.getElementById('selected_date');
+    if (dateInput) {
+      dateInput.value = date.toISOString().split('T')[0];
+    }
+    
+    // Show time slots when date is selected
+    const timeSlots = document.getElementById('time_slots');
+    if (timeSlots) {
+      timeSlots.style.display = 'grid';
+    }
+    
+    loadTimeSlots(date);
+  }
+
+  function loadTimeSlots(date, retryCount = 0) {
+    const timeSlots = document.getElementById('time_slots');
+    if (!timeSlots) return;
+    
+    timeSlots.innerHTML = '';
+    
+    // Get the hours requested from the crew selection
+    const crewSelection = document.getElementById('crew_size_hours')?.value;
+    let hoursRequested = 2; // default fallback
+    
+    if (crewSelection) {
+      const parts = crewSelection.split('_');
+      let hoursStr = parts[2] || "2";
+      if (hoursStr.includes('hours')) {
+        hoursStr = hoursStr.replace('hours', '').replace('hour', '');
+      }
+      hoursRequested = parseFloat(hoursStr) || 2;
+    }
+    
+    // Fetch available hours from API
+    const selectedDate = date.toISOString().split('T')[0];
+    
+    timeSlots.innerHTML = '<div class="text-center text-muted">Loading available times...</div>';
+    
+    fetch(`{% url 'available_hours_api' %}?date=${selectedDate}&hours=${hoursRequested}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        timeSlots.innerHTML = '';
+        
+        if (!data.available_hours || data.available_hours.length === 0) {
+          timeSlots.innerHTML = '<div class="text-center text-muted">No available times for this date</div>';
+          return;
+        }
+        
+        // Create time slots from available hours
+        data.available_hours.forEach((timeStr, index) => {
+          const timeSlot = document.createElement('div');
+          timeSlot.className = 'time-slot';
+          
+          // Parse time string (e.g., "14:00" to "2:00 PM")
+          const [hour, minute] = timeStr.split(':').map(Number);
+          const ampm = hour < 12 ? 'am' : 'pm';
+          const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+          const displayTime = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+          
+          timeSlot.textContent = displayTime;
+          timeSlot.dataset.time = timeStr; // Store original time for form submission
+          
+          timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, hour, timeStr));
+          timeSlots.appendChild(timeSlot);
+        });
+        
+        // Select first available time slot by default
+        if (timeSlots.children.length > 0) {
+          selectTimeSlot(timeSlots.children[0], parseInt(data.available_hours[0].split(':')[0]), data.available_hours[0]);
+        }
+      })
+      .catch(error => {
+        console.error('❌ Failed to fetch available hours:', error);
+        
+        // Retry up to 2 times for network errors
+        if (retryCount < 2 && (error.message.includes('Failed to fetch') || error.message.includes('HTTP'))) {
+          setTimeout(() => loadTimeSlots(date, retryCount + 1), 1000);
+          return;
+        }
+        
+        timeSlots.innerHTML = '<div class="text-center text-muted p-3" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; color: #6c757d;"><i class="fa-solid fa-exclamation-triangle me-2"></i>Unable to load available times. Please try refreshing the page.</div>';
+      });
+  }
+
+  function selectTimeSlot(slot, hour, timeStr) {
+    selectedTime = hour;
+    
+    document.querySelectorAll('.time-slot').forEach(s => {
+      s.classList.remove('selected');
+    });
+    slot.classList.add('selected');
+    
+    const timeInput = document.getElementById('selected_time');
+    if (timeInput) {
+      timeInput.value = timeStr;
+    }
+  }
+
+  // Navigation arrows
+  const prevWeekBtn = document.getElementById('prev_week');
+  const nextWeekBtn = document.getElementById('next_week');
+  
+  if (prevWeekBtn) {
+    prevWeekBtn.addEventListener('click', () => {
+      currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+      renderCalendar();
+    });
+  }
+
+  if (nextWeekBtn) {
+    nextWeekBtn.addEventListener('click', () => {
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      renderCalendar();
+    });
+  }
+
+  // Initialize calendar
+  renderCalendar();
+
+  // Real-time validation - clear error state when user starts typing/selecting
+  const formFields = ['crew_size_hours', 'id_name', 'id_email', 'id_phone_number', 'address_street', 'address_zip', 'id_job_description'];
+  formFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (field) {
+      field.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+      });
+      field.addEventListener('change', function() {
+        this.classList.remove('is-invalid');
+      });
+    }
+  });
+  
+  // Pre-fill contact information if user is logged in
+  {% if user.is_authenticated %}
+    {% if user.profile %}
+      const nameField = document.getElementById('id_name');
+      const emailField = document.getElementById('id_email');
+      const phoneField = document.getElementById('id_phone_number');
+      
+      if (nameField && !nameField.value && '{{ user.profile.full_name|default:"" }}') {
+        nameField.value = '{{ user.profile.full_name|default:"" }}';
+      }
+      if (emailField && !emailField.value && '{{ user.email|default:"" }}') {
+        emailField.value = '{{ user.email|default:"" }}';
+      }
+      if (phoneField && !phoneField.value && '{{ user.profile.phone|default:"" }}') {
+        phoneField.value = '{{ user.profile.phone|default:"" }}';
+      }
+    {% else %}
+      // If no profile, at least pre-fill email
+      const emailField = document.getElementById('id_email');
+      if (emailField && !emailField.value && '{{ user.email|default:"" }}') {
+        emailField.value = '{{ user.email|default:"" }}';
+      }
+    {% endif %}
+  {% endif %}
+  
+  // Pre-fill address fields if user is logged in and has saved addresses
+  {% if user.is_authenticated and saved_addresses %}
+    {% with default_address=saved_addresses.first %}
+      const addressStreet = document.getElementById('address_street');
+      const addressApt = document.getElementById('address_apt');
+      const addressZip = document.getElementById('address_zip');
+      const addressCity = document.getElementById('address_city');
+      const addressState = document.getElementById('address_state');
+      
+      if (addressStreet && !addressStreet.value) {
+        addressStreet.value = '{{ default_address.street_address|default:"" }}';
+      }
+      if (addressApt && !addressApt.value) {
+        addressApt.value = '{{ default_address.apt_suite|default:"" }}';
+      }
+      if (addressZip && !addressZip.value) {
+        addressZip.value = '{{ default_address.zip_code|default:"" }}';
+      }
+      if (addressCity && !addressCity.value) {
+        addressCity.value = '{{ default_address.city|default:"New York" }}';
+      }
+      if (addressState && !addressState.value) {
+        addressState.value = '{{ default_address.state|default:"NY" }}';
+      }
+    {% endwith %}
+  {% endif %}
+  
+  // Combine address fields into business_address before submission
+  function combineAddressFields() {
+    const street = document.getElementById('address_street')?.value || '';
+    const apt = document.getElementById('address_apt')?.value || '';
+    const zip = document.getElementById('address_zip')?.value || '';
+    const city = document.getElementById('address_city')?.value || 'New York';
+    const state = document.getElementById('address_state')?.value || 'NY';
+    
+    // Build the full address string
+    let fullAddress = street;
+    if (apt) {
+      fullAddress += `, Apt ${apt}`;
+    }
+    if (zip) {
+      fullAddress += `, ${zip}`;
+    }
+    if (city) {
+      fullAddress += `, ${city}`;
+    }
+    if (state) {
+      fullAddress += `, ${state}`;
+    }
+    
+    // Set the hidden business_address field
+    const businessAddressField = document.getElementById('id_business_address');
+    if (businessAddressField) {
+      businessAddressField.value = fullAddress;
+    }
+  }
+
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Form validation
+      let isValid = true;
+      let errorMessages = [];
+
+      // Validate Crew/Size/Hours
+      const crewSizeHours = document.getElementById('crew_size_hours');
+      if (!crewSizeHours || !crewSizeHours.value) {
+        isValid = false;
+        errorMessages.push('Please select Crew/Size/Hours');
+        if (crewSizeHours) crewSizeHours.classList.add('is-invalid');
+      } else {
+        if (crewSizeHours) crewSizeHours.classList.remove('is-invalid');
+      }
+
+      // Validate Full Name
+      const name = document.getElementById('id_name');
+      if (!name || !name.value.trim()) {
+        isValid = false;
+        errorMessages.push('Please enter your Full Name');
+        if (name) name.classList.add('is-invalid');
+      } else {
+        if (name) name.classList.remove('is-invalid');
+      }
+
+      // Validate Email
+      const email = document.getElementById('id_email');
+      if (!email || !email.value.trim()) {
+        isValid = false;
+        errorMessages.push('Please enter your Email Address');
+        if (email) email.classList.add('is-invalid');
+      } else {
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.value.trim())) {
+          isValid = false;
+          errorMessages.push('Please enter a valid Email Address');
+          if (email) email.classList.add('is-invalid');
+        } else {
+          if (email) email.classList.remove('is-invalid');
+        }
+      }
+
+      // Validate Phone Number
+      const phone = document.getElementById('id_phone_number');
+      if (!phone || !phone.value.trim()) {
+        isValid = false;
+        errorMessages.push('Please enter your Phone Number');
+        if (phone) phone.classList.add('is-invalid');
+      } else {
+        if (phone) phone.classList.remove('is-invalid');
+      }
+
+      // Validate Street Address
+      const addressStreet = document.getElementById('address_street');
+      if (!addressStreet || !addressStreet.value.trim()) {
+        isValid = false;
+        errorMessages.push('Please enter your Street Address');
+        if (addressStreet) addressStreet.classList.add('is-invalid');
+      } else {
+        if (addressStreet) addressStreet.classList.remove('is-invalid');
+      }
+
+      // Validate ZIP Code
+      const addressZip = document.getElementById('address_zip');
+      if (!addressZip || !addressZip.value.trim()) {
+        isValid = false;
+        errorMessages.push('Please enter your ZIP Code');
+        if (addressZip) addressZip.classList.add('is-invalid');
+      } else {
+        if (addressZip) addressZip.classList.remove('is-invalid');
+      }
+
+      // Validate Date and Time
+      if (!selectedDate || selectedTime === null) {
+        isValid = false;
+        errorMessages.push('Please select a date and time for your service');
+      }
+
+      // Validate Job Description
+      const jobDescription = document.getElementById('id_job_description');
+      if (!jobDescription || !jobDescription.value.trim()) {
+        isValid = false;
+        errorMessages.push('Please provide a description about the job');
+        if (jobDescription) jobDescription.classList.add('is-invalid');
+      } else {
+        if (jobDescription) jobDescription.classList.remove('is-invalid');
+      }
+
+      // Validate Terms checkbox
+      const terms = document.getElementById('terms');
+      if (!terms || !terms.checked) {
+        isValid = false;
+        errorMessages.push('Please agree to the terms & conditions');
+      }
+
+      if (!isValid) {
+        alert('Please fix the following errors:\n\n' + errorMessages.join('\n'));
+        // Scroll to first error
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          firstError.focus();
+        }
+        return false;
+      }
+      
+      // Update square footage before submission
+      updateSquareFootage();
+      
+      // Combine address fields into business_address
+      combineAddressFields();
+      
+      // Ensure date and time are set
+      const selectedDateInput = document.getElementById('selected_date');
+      const selectedTimeInput = document.getElementById('selected_time');
+      if (selectedDateInput && !selectedDateInput.value && selectedDate) {
+        selectedDateInput.value = selectedDate.toISOString().split('T')[0];
+      }
+      if (selectedTimeInput && !selectedTimeInput.value && selectedTime !== null) {
+        const timeStr = `${selectedTime.toString().padStart(2, '0')}:00`;
+        selectedTimeInput.value = timeStr;
+      }
+      
+      // Get form data
+      const formData = new FormData(form);
+      
+      // Disable submit button to prevent double submission
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Submitting...';
+      
+      // Submit form via AJAX
+      fetch('{% url "office_cleaning_quote" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => {
+        // Check if response is JSON or HTML redirect
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          return response.json();
+        } else {
+          // If it's a redirect (HTML response), the form was submitted successfully
+          return { success: true, message: 'Your quote request has been submitted successfully! We will contact you soon.' };
+        }
+      })
+      .then(data => {
+        if (data.success) {
+          // Redirect to quote submitted page
+          if (data.redirect_url) {
+            window.location.href = data.redirect_url;
+          } else if (data.quote_id) {
+            window.location.href = '{% url "office_cleaning_quote_submitted" quote_id=0 %}'.replace('0', data.quote_id.toString());
+          } else {
+            // Fallback: redirect to home
+            window.location.href = '{% url "home" %}';
+          }
+        } else {
+          // Show error message
+          let errorMsg = data.message || 'An error occurred. Please try again.';
+          if (data.errors) {
+            const errorList = Object.values(data.errors).flat().join(', ');
+            errorMsg = errorList || errorMsg;
+          }
+          alert(errorMsg);
+          
+          // Reset submit button
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+        
+        // Reset submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      });
+    });
+  }
+});
+</script>
+
+{% endblock %}

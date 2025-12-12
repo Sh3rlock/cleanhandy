@@ -255,4 +255,4 @@ SITE_URL = os.getenv('SITE_URL', 'https://thecleanhandy.com')
 # Set to True to enable the under construction page for all visitors
 # Admin users and staff will still be able to access the site normally
 # To enable: Set environment variable UNDER_CONSTRUCTION=True, or change 'False' to 'True' below
-UNDER_CONSTRUCTION = os.getenv('UNDER_CONSTRUCTION', 'True').lower() == 'true'
+UNDER_CONSTRUCTION = os.getenv('UNDER_CONSTRUCTION', 'False').lower() == 'false'

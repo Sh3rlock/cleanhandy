@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Cleaning Quote - CleanHandy</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #F15A29 0%, #d14a1f 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #F15A29;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #F15A29;
+            font-size: 18px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+        }
+        .detail-value {
+            color: #333;
+        }
+        .pricing-box {
+            background: #fff3e0;
+            border: 2px solid #F15A29;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .pricing-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 16px;
+        }
+        .pricing-row.total {
+            border-top: 2px solid #F15A29;
+            margin-top: 10px;
+            padding-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #F15A29;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #F15A29;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .note-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🏢 Your Office Cleaning Quote</h1>
+            <p style="margin: 10px 0 0 0;">Quote #{{ quote.id }}</p>
+        </div>
+        
+        <div class="content">
+            <p>Dear {{ customer_name }},</p>
+            
+            <p>Thank you for your interest in our office cleaning services. We have reviewed your request and prepared a detailed quote for you.</p>
+            
+            <!-- Customer Information -->
+            <div class="section">
+                <h3>📋 Your Information</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value">{{ customer_name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Email:</span>
+                    <span class="detail-value">{{ customer_email }}</span>
+                </div>
+                {% if customer_phone %}
+                <div class="detail-row">
+                    <span class="detail-label">Phone:</span>
+                    <span class="detail-value">{{ customer_phone }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Business Information -->
+            <div class="section">
+                <h3>🏢 Business Information</h3>
+                {% if business_type %}
+                <div class="detail-row">
+                    <span class="detail-label">Type of Business:</span>
+                    <span class="detail-value">{{ business_type }}</span>
+                </div>
+                {% endif %}
+                {% if crew_size_hours %}
+                <div class="detail-row">
+                    <span class="detail-label">Crew/Size/Hours:</span>
+                    <span class="detail-value">{{ crew_size_hours }}</span>
+                </div>
+                {% endif %}
+                {% if square_footage %}
+                <div class="detail-row">
+                    <span class="detail-label">Square Footage:</span>
+                    <span class="detail-value">{{ square_footage }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <span class="detail-label">Business Address:</span>
+                    <span class="detail-value">{{ business_address }}</span>
+                </div>
+            </div>
+            
+            <!-- Service Details -->
+            <div class="section">
+                <h3>🧹 Service Details</h3>
+                {% if cleaning_frequency %}
+                <div class="detail-row">
+                    <span class="detail-label">Cleaning Frequency:</span>
+                    <span class="detail-value">{{ cleaning_frequency }}</span>
+                </div>
+                {% endif %}
+                {% if service_date %}
+                <div class="detail-row">
+                    <span class="detail-label">Service Date:</span>
+                    <span class="detail-value">{{ service_date }}</span>
+                </div>
+                {% endif %}
+                {% if service_time %}
+                <div class="detail-row">
+                    <span class="detail-label">Service Time:</span>
+                    <span class="detail-value">{{ service_time }}</span>
+                </div>
+                {% endif %}
+                {% if estimated_time %}
+                <div class="detail-row">
+                    <span class="detail-label">Estimated Time:</span>
+                    <span class="detail-value">{{ estimated_time }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Pricing -->
+            {% if price or parking_fee or discount %}
+            <div class="pricing-box">
+                <h3 style="margin-top: 0; color: #F15A29;">💰 Pricing Breakdown</h3>
+                {% if price %}
+                <div class="pricing-row">
+                    <span>Service Price:</span>
+                    <span>${{ price }}</span>
+                </div>
+                {% endif %}
+                {% if parking_fee %}
+                <div class="pricing-row">
+                    <span>Parking Fee:</span>
+                    <span>${{ parking_fee }}</span>
+                </div>
+                {% endif %}
+                {% if discount %}
+                <div class="pricing-row" style="color: #28a745;">
+                    <span>Discount{% if discount_type == 'percentage' %} ({{ discount }}%){% else %} ({{ discount_display }}){% endif %}:</span>
+                    <span>-${{ discount_amount|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                {% if subtotal %}
+                <div class="pricing-row" style="border-top: 1px solid #e0e0e0; margin-top: 10px; padding-top: 10px;">
+                    <span>Subtotal:</span>
+                    <span>${{ subtotal|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                {% if sales_tax %}
+                <div class="pricing-row">
+                    <span>Sales Tax ({{ sales_tax_rate }}%):</span>
+                    <span>${{ sales_tax|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                <div class="pricing-row total">
+                    <span>Total:</span>
+                    <span>${{ total_price|floatformat:2|default:"0.00" }}</span>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Job Description -->
+            {% if job_description %}
+            <div class="section">
+                <h3>📝 Job Description</h3>
+                <p style="white-space: pre-wrap;">{{ job_description }}</p>
+            </div>
+            {% endif %}
+            
+            <!-- Payment Link -->
+            {% if payment_link %}
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ payment_link }}" class="btn">💳 Make Payment</a>
+            </div>
+            {% endif %}
+            
+            <!-- Note from Admin -->
+            {% if note %}
+            <div class="note-box">
+                <strong>📌 Note from our team:</strong>
+                <p style="margin: 10px 0 0 0; white-space: pre-wrap;">{{ note }}</p>
+            </div>
+            {% endif %}
+            
+            <p>If you have any questions or would like to discuss this quote, please don't hesitate to contact us.</p>
+            
+            <p>Best regards,<br>
+            <strong>The CleanHandy Team</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>CleanHandy Services<br>
+            Email: support@thecleanhandy.com<br>
+            Phone: +1 516 619 3065</p>
+        </div>
+    </div>
+</body>
+</html>

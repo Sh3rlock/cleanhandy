@@ -49,9 +49,9 @@
           <a class="btn-1" href="{% url 'handyman_booking' %}">Book Handyman</a>
         {% endif %} -->
         {% if user.is_authenticated %}
-          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+          <a class="btn-1" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
         {% else %}
-          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+          <a class="btn-1" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
         {% endif %}
         {% for service in all_services %}
           {% if service.category.name|lower == 'post event cleaning' %}
@@ -131,7 +131,13 @@
         <div class="col-lg-3 col-md-6" style="padding-bottom: 20px;">
           <div class="service-tow-single">
               <div class="service-tow-single-img">
+                  {% if service.service_detail_image %}
                   <img src="{{ service.service_detail_image.url }}" alt="image">
+                  {% elif service.service_image %}
+                      <img src="{{ service.service_image.url }}" alt="image">
+                  {% else %}
+                      <img src="{% static 'assets/images/resource/service-1.jpg' %}" alt="{{ service.name }}">
+                  {% endif %}
               </div>
               <div class="service-tow-single-content">
                     {% if service.category.name|lower == "cleaning" %}

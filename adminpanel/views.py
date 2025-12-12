@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.db import models
 from django.core.paginator import Paginator
-from quotes.models import Quote, Service, ServiceCategory, Booking, NewsletterSubscriber, OfficeQuote, HandymanQuote, PostEventCleaningQuote
+from quotes.models import Quote, Service, ServiceCategory, Booking, NewsletterSubscriber, OfficeQuote, HandymanQuote, PostEventCleaningQuote, HomeCleaningQuoteRequest
 from giftcards.models import GiftCard, DiscountCode
 from quotes.forms import CleaningQuoteForm, HandymanQuoteForm
 from customers.models import Customer
@@ -81,8 +81,19 @@ def admin_dashboard(request):
     total_customers = User.objects.count()
     total_subscribers = NewsletterSubscriber.objects.count()
     total_office_quotes = OfficeQuote.objects.count()
+    total_office_cleaning_quotes = OfficeQuote.objects.count()  # Office Cleaning Quotes use OfficeQuote model
     total_handyman_quotes = HandymanQuote.objects.count()
     total_post_event_cleaning_quotes = PostEventCleaningQuote.objects.count()
+    total_home_cleaning_quotes = HomeCleaningQuoteRequest.objects.count()
+
+    # Status counts for office cleaning quotes (using OfficeQuote model)
+    office_cleaning_quote_status_counts = {
+        'pending': OfficeQuote.objects.filter(status='pending').count(),
+        'reviewed': OfficeQuote.objects.filter(status='reviewed').count(),
+        'quoted': OfficeQuote.objects.filter(status='quoted').count(),
+        'accepted': OfficeQuote.objects.filter(status='accepted').count(),
+        'declined': OfficeQuote.objects.filter(status='declined').count(),
+    }
 
     # Status counts for handyman quotes
     handyman_quote_status_counts = {
@@ -111,6 +122,16 @@ def admin_dashboard(request):
         'cancelled': OfficeQuote.objects.filter(status='cancelled').count(),
     }
 
+    # Status counts for home cleaning quotes
+    # Note: HomeCleaningQuoteRequest doesn't have a status field, so we show all as pending
+    home_cleaning_quote_status_counts = {
+        'pending': total_home_cleaning_quotes,
+        'reviewed': 0,
+        'quoted': 0,
+        'accepted': 0,
+        'declined': 0,
+    }
+
     return render(request, "adminpanel/dashboard.html", {
         "latest_quotes": latest_quotes,
         "latest_bookings": latest_bookings,
@@ -127,9 +148,13 @@ def admin_dashboard(request):
         "total_office_quotes": total_office_quotes,
         "total_handyman_quotes": total_handyman_quotes,
         "total_post_event_cleaning_quotes": total_post_event_cleaning_quotes,
+        "total_home_cleaning_quotes": total_home_cleaning_quotes,
+        "total_office_cleaning_quotes": total_office_cleaning_quotes,
         "handyman_quote_status_counts": handyman_quote_status_counts,
         "post_event_cleaning_quote_status_counts": post_event_cleaning_quote_status_counts,
         "office_quote_status_counts": office_quote_status_counts,
+        "office_cleaning_quote_status_counts": office_cleaning_quote_status_counts,
+        "home_cleaning_quote_status_counts": home_cleaning_quote_status_counts,
     })
 
 
@@ -598,7 +623,7 @@ def get_quotes_for_calendar(request):
     total_bookings = Booking.objects.count()
     print(f"🔍 Total bookings in database: {total_bookings}")
 
-    # 🟢 1. Add all Quotes
+    # 🟢 1. Add all Bookings (existing quotes)
     for quote in Booking.objects.all():
         try:
             # Convert Decimal to float for timedelta calculation
@@ -608,7 +633,7 @@ def get_quotes_for_calendar(request):
             end_time = start_time + timedelta(hours=duration)
 
             events.append({
-                "id": f"quote-{quote.id}",
+                "id": f"booking-{quote.id}",
                 "title": f"{quote.name} - {quote.service_cat.name}",
                 "start": start_time.isoformat(),
                 "end": end_time.isoformat(),
@@ -622,11 +647,126 @@ def get_quotes_for_calendar(request):
                     "time_slots": f"{quote.hour.strftime('%H:%M')} - {end_time.strftime('%H:%M')}",
                     "price": str(quote.price) if quote.price else "N/A",
                     "status": quote.status,
+                    "type": "booking"
                 }
             })
             print(f"✅ Added event for booking {quote.id}: {quote.name}")
         except Exception as e:
             print(f"❌ Error processing booking {quote.id}: {e}")
+            continue
+
+    # 🏠 2. Add Home Cleaning Quote Requests
+    for quote in HomeCleaningQuoteRequest.objects.filter(date__isnull=False, hour__isnull=False):
+        try:
+            # Default to 2 hours if not specified
+            hours = 2.0
+            start_time = datetime.combine(quote.date, quote.hour)
+            end_time = start_time + timedelta(hours=hours)
+
+            # Determine color based on status
+            status_colors = {
+                "pending": "#ffc107",  # Yellow
+                "email_sent": "#17a2b8",  # Cyan
+                "accepted": "#6f42c1",  # Purple
+                "completed": "#28a745",  # Green
+                "declined": "#dc3545",  # Red
+            }
+            color = status_colors.get(quote.status, "#ffc107")
+
+            events.append({
+                "id": f"home-quote-{quote.id}",
+                "title": f"🏠 {quote.name or 'Home Cleaning'} - Home Cleaning",
+                "start": start_time.isoformat(),
+                "end": end_time.isoformat(),
+                "color": color,
+                "extendedProps": {
+                    "customer": quote.name or "N/A",
+                    "zip_code": quote.zip_code or "N/A",
+                    "email": quote.email or "N/A",
+                    "phone": quote.phone or "N/A",
+                    "service": "Home Cleaning",
+                    "cleaning_type": quote.cleaning_type or "N/A",
+                    "home_type": quote.home_types.name if quote.home_types else "N/A",
+                    "bath_count": quote.bath_count or "N/A",
+                    "job_description": quote.job_description or "N/A",
+                    "time_slots": f"{quote.hour.strftime('%H:%M')} - {end_time.strftime('%H:%M')}",
+                    "status": quote.status,
+                    "type": "home_cleaning_quote"
+                }
+            })
+            print(f"✅ Added event for home cleaning quote {quote.id}: {quote.name}")
+        except Exception as e:
+            print(f"❌ Error processing home cleaning quote {quote.id}: {e}")
+            continue
+
+    # 🏢 3. Add Office Cleaning Quote Requests
+    for quote in OfficeQuote.objects.all():
+        try:
+            # Parse admin_notes JSON to get date and time
+            if quote.admin_notes:
+                try:
+                    additional_data = json.loads(quote.admin_notes)
+                    selected_date = additional_data.get('selected_date')
+                    selected_time = additional_data.get('selected_time')
+                    
+                    if selected_date and selected_time:
+                        # Parse date and time
+                        quote_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
+                        quote_time = datetime.strptime(selected_time, '%H:%M').time()
+                        
+                        # Calculate duration from crew_size_hours if available
+                        hours = 2.0  # Default
+                        crew_size_hours = additional_data.get('crew_size_hours', '')
+                        if crew_size_hours:
+                            # Parse format like "1_cleaner_2_hours_500" or "2_cleaners_3_hours_2500"
+                            parts = crew_size_hours.split('_')
+                            for i, part in enumerate(parts):
+                                if part in ['hours', 'hour'] and i > 0:
+                                    try:
+                                        hours = float(parts[i-1])
+                                        break
+                                    except ValueError:
+                                        pass
+                        
+                        start_time = datetime.combine(quote_date, quote_time)
+                        end_time = start_time + timedelta(hours=hours)
+
+                        # Determine color based on status
+                        status_colors = {
+                            "pending": "#ffc107",  # Yellow
+                            "email_sent": "#17a2b8",  # Cyan
+                            "accepted": "#6f42c1",  # Purple
+                            "completed": "#28a745",  # Green
+                            "declined": "#dc3545",  # Red
+                        }
+                        color = status_colors.get(quote.status, "#ffc107")
+
+                        events.append({
+                            "id": f"office-quote-{quote.id}",
+                            "title": f"🏢 {quote.name} - Office Cleaning",
+                            "start": start_time.isoformat(),
+                            "end": end_time.isoformat(),
+                            "color": color,
+                            "extendedProps": {
+                                "customer": quote.name or "N/A",
+                                "email": quote.email or "N/A",
+                                "phone": quote.phone_number or "N/A",
+                                "service": "Office Cleaning",
+                                "business_type": additional_data.get('business_type', 'N/A'),
+                                "crew_size_hours": crew_size_hours or "N/A",
+                                "square_footage": quote.square_footage or "N/A",
+                                "job_description": quote.job_description or "N/A",
+                                "time_slots": f"{quote_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}",
+                                "status": quote.status,
+                                "type": "office_cleaning_quote"
+                            }
+                        })
+                        print(f"✅ Added event for office cleaning quote {quote.id}: {quote.name}")
+                except (json.JSONDecodeError, ValueError, KeyError) as e:
+                    print(f"⚠️ Could not parse admin_notes for office quote {quote.id}: {e}")
+                    continue
+        except Exception as e:
+            print(f"❌ Error processing office cleaning quote {quote.id}: {e}")
             continue
 
     # 🔴 2. Add Blocked Time Slots
@@ -1649,8 +1789,870 @@ def send_payment_link(request):
         return JsonResponse({'success': False, 'error': f'An error occurred: {str(e)}'}, status=500)
 
 
+# Home Cleaning Quotes Management
+@login_required
+@user_passes_test(admin_check)
+def home_cleaning_quote_list(request):
+    """List all home cleaning quotes with filtering and search"""
+    home_cleaning_quotes = HomeCleaningQuoteRequest.objects.all().order_by('-created_at')
+
+    # Filter by cleaning type
+    cleaning_type_filter = request.GET.get('cleaning_type', '')
+    if cleaning_type_filter:
+        home_cleaning_quotes = home_cleaning_quotes.filter(cleaning_type=cleaning_type_filter)
+
+    # Filter by frequency
+    frequency_filter = request.GET.get('frequency', '')
+    if frequency_filter:
+        home_cleaning_quotes = home_cleaning_quotes.filter(cleaning_frequency=frequency_filter)
+
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        home_cleaning_quotes = home_cleaning_quotes.filter(
+            models.Q(name__icontains=search_query) |
+            models.Q(email__icontains=search_query) |
+            models.Q(phone__icontains=search_query) |
+            models.Q(address__icontains=search_query) |
+            models.Q(job_description__icontains=search_query)
+        )
+
+    # Date range filter
+    from_date = request.GET.get('from_date', '')
+    to_date = request.GET.get('to_date', '')
+
+    if from_date:
+        try:
+            from datetime import datetime
+            from_date_obj = datetime.strptime(from_date, '%Y-%m-%d').date()
+            home_cleaning_quotes = home_cleaning_quotes.filter(created_at__date__gte=from_date_obj)
+        except (ValueError, TypeError):
+            pass
+    
+    if to_date:
+        try:
+            from datetime import datetime
+            to_date_obj = datetime.strptime(to_date, '%Y-%m-%d').date()
+            home_cleaning_quotes = home_cleaning_quotes.filter(created_at__date__lte=to_date_obj)
+        except (ValueError, TypeError):
+            pass
+
+    # Cleaning type choices for filter dropdown
+    cleaning_type_choices = [
+        ('Regular Cleaning', 'Regular Cleaning'),
+        ('Deep Cleaning', 'Deep Cleaning'),
+        ('Move In/Out Cleaning', 'Move In/Out Cleaning'),
+        ('Post Renovation', 'Post Renovation'),
+    ]
+
+    # Frequency choices
+    frequency_choices = [
+        ('one_time', 'One Time'),
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('bi_weekly', 'Bi Weekly'),
+        ('monthly', 'Monthly'),
+    ]
+
+    # Convert queryset to list to ensure it's evaluated (for debugging and to ensure filters work)
+    # Actually, Django templates handle querysets fine, so we'll keep it as queryset for efficiency
+    
+    context = {
+        'home_cleaning_quotes': home_cleaning_quotes,
+        'cleaning_type_choices': cleaning_type_choices,
+        'frequency_choices': frequency_choices,
+        'selected_cleaning_type': cleaning_type_filter,
+        'selected_frequency': frequency_filter,
+        'search_query': search_query,
+        'from_date': from_date,
+        'to_date': to_date,
+    }
+
+    return render(request, 'adminpanel/home_cleaning_quote_list.html', context)
 
 
+@login_required
+@user_passes_test(admin_check)
+def home_cleaning_quote_detail(request, quote_id):
+    """View home cleaning quote details"""
+    home_cleaning_quote = get_object_or_404(HomeCleaningQuoteRequest, pk=quote_id)
+
+    if request.method == "POST":
+        # Check if this is an email form submission
+        if request.POST.get("email_action") == "send_quote_email":
+            return send_home_cleaning_quote_email(request, quote_id)
+        
+        # Update status if provided
+        new_status = request.POST.get("status")
+        if new_status:
+            home_cleaning_quote.status = new_status
+            home_cleaning_quote.save(update_fields=['status'])
+            messages.success(request, "Status updated successfully!")
+            return redirect("home_cleaning_quote_detail", quote_id=quote_id)
+
+    # Parse email history from admin_notes if it exists
+    email_sent_at = None
+    email_sent_to = None
+    email_history = []
+    import json
+    if hasattr(home_cleaning_quote, 'admin_notes') and home_cleaning_quote.admin_notes:
+        try:
+            notes_data = json.loads(home_cleaning_quote.admin_notes)
+            if isinstance(notes_data, dict):
+                # Get latest email sent time
+                if 'quote_email_sent_at' in notes_data:
+                    from django.utils.dateparse import parse_datetime
+                    email_sent_at = parse_datetime(notes_data['quote_email_sent_at'])
+                    email_sent_to = notes_data.get('customer_email')
+                
+                # Get email history log
+                if 'email_history' in notes_data and isinstance(notes_data['email_history'], list):
+                    from django.utils.dateparse import parse_datetime
+                    for entry in notes_data['email_history']:
+                        if isinstance(entry, dict) and 'sent_at' in entry:
+                            parsed_time = parse_datetime(entry['sent_at'])
+                            if parsed_time:
+                                email_history.append({
+                                    'sent_at': parsed_time,
+                                    'customer_email': entry.get('customer_email', ''),
+                                    'price': entry.get('price'),
+                                    'discount': entry.get('discount'),
+                                    'discount_type': entry.get('discount_type'),
+                                })
+                    # Sort by most recent first
+                    email_history.sort(key=lambda x: x['sent_at'], reverse=True)
+        except (json.JSONDecodeError, ValueError, TypeError):
+            pass
+    
+    # Also check if quote_email_sent_at field exists (for backward compatibility)
+    if not email_sent_at and hasattr(home_cleaning_quote, 'quote_email_sent_at') and home_cleaning_quote.quote_email_sent_at:
+        email_sent_at = home_cleaning_quote.quote_email_sent_at
+        if not email_history:
+            email_history.append({
+                'sent_at': email_sent_at,
+                'customer_email': home_cleaning_quote.email,
+                'price': None,
+                'discount': None,
+                'discount_type': None,
+            })
+    
+    return render(request, "adminpanel/home_cleaning_quote_detail.html", {
+        "home_cleaning_quote": home_cleaning_quote,
+        "email_sent_at": email_sent_at,
+        "email_sent_to": email_sent_to or home_cleaning_quote.email,
+        "email_history": email_history,
+    })
+
+
+@login_required
+@require_POST
+def delete_home_cleaning_quote(request, quote_id):
+    """Delete a home cleaning quote"""
+    quote = get_object_or_404(HomeCleaningQuoteRequest, id=quote_id)
+    quote.delete()
+    messages.success(request, "Home cleaning quote deleted successfully.")
+    return redirect("home_cleaning_quote_list")
+
+
+@login_required
+@user_passes_test(admin_check)
+def office_cleaning_quote_list(request):
+    """List all office cleaning quotes with filtering and search"""
+    office_cleaning_quotes = OfficeQuote.objects.all().order_by('-created_at')
+
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        office_cleaning_quotes = office_cleaning_quotes.filter(
+            models.Q(name__icontains=search_query) |
+            models.Q(email__icontains=search_query) |
+            models.Q(phone_number__icontains=search_query) |
+            models.Q(business_address__icontains=search_query) |
+            models.Q(job_description__icontains=search_query)
+        )
+
+    # Filter by status
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        office_cleaning_quotes = office_cleaning_quotes.filter(status=status_filter)
+
+    # Date range filter
+    from_date = request.GET.get('from_date', '')
+    to_date = request.GET.get('to_date', '')
+
+    if from_date:
+        try:
+            from datetime import datetime
+            from_date_obj = datetime.strptime(from_date, '%Y-%m-%d').date()
+            office_cleaning_quotes = office_cleaning_quotes.filter(created_at__date__gte=from_date_obj)
+        except (ValueError, TypeError):
+            pass
+    
+    if to_date:
+        try:
+            from datetime import datetime
+            to_date_obj = datetime.strptime(to_date, '%Y-%m-%d').date()
+            office_cleaning_quotes = office_cleaning_quotes.filter(created_at__date__lte=to_date_obj)
+        except (ValueError, TypeError):
+            pass
+
+    # Status choices for filter dropdown
+    status_choices = [
+        ('pending', 'Pending'),
+        ('reviewed', 'Reviewed'),
+        ('quoted', 'Quoted'),
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+    ]
+    
+    context = {
+        'office_cleaning_quotes': office_cleaning_quotes,
+        'status_choices': status_choices,
+        'selected_status': status_filter,
+        'search_query': search_query,
+        'from_date': from_date,
+        'to_date': to_date,
+    }
+
+    return render(request, 'adminpanel/office_cleaning_quote_list.html', context)
+
+
+@login_required
+@user_passes_test(admin_check)
+def office_cleaning_quote_detail(request, quote_id):
+    """View office cleaning quote details"""
+    import json
+    from datetime import datetime
+    
+    office_cleaning_quote = get_object_or_404(OfficeQuote, pk=quote_id)
+
+    if request.method == "POST":
+        # Check if this is an email form submission
+        if request.POST.get("email_action") == "send_quote_email":
+            return send_office_cleaning_quote_email(request, quote_id)
+        
+        # Update status if provided
+        new_status = request.POST.get("status")
+        if new_status:
+            office_cleaning_quote.status = new_status
+        
+        # Update admin notes if provided (preserve JSON form data if it exists)
+        admin_notes = request.POST.get("admin_notes")
+        if admin_notes is not None:
+            # Check if current admin_notes is JSON (form data)
+            current_notes = office_cleaning_quote.admin_notes or ""
+            try:
+                existing_form_data = json.loads(current_notes)
+                if isinstance(existing_form_data, dict):
+                    # Preserve form data and add admin notes separately
+                    # Store admin notes in a separate field or append to JSON
+                    existing_form_data['admin_notes_text'] = admin_notes
+                    office_cleaning_quote.admin_notes = json.dumps(existing_form_data, indent=2)
+                else:
+                    office_cleaning_quote.admin_notes = admin_notes
+            except (json.JSONDecodeError, ValueError):
+                # Current notes are not JSON, replace with new notes
+                office_cleaning_quote.admin_notes = admin_notes
+        
+        office_cleaning_quote.save()
+        messages.success(request, "Quote updated successfully!")
+        return redirect("office_cleaning_quote_list")
+
+    # Parse additional form data from admin_notes if it's JSON
+    form_data = {}
+    if office_cleaning_quote.admin_notes:
+        try:
+            form_data = json.loads(office_cleaning_quote.admin_notes)
+            # If it's not JSON, treat it as regular admin notes
+            if not isinstance(form_data, dict):
+                form_data = {}
+        except (json.JSONDecodeError, ValueError):
+            # admin_notes contains regular text, not JSON
+            form_data = {}
+    
+    # Import ContactInfo from the correct location
+    try:
+        from quotes.models import ContactInfo
+    except ImportError:
+        ContactInfo = None
+    
+    # Format string values for display (replace underscores with spaces, title case)
+    if isinstance(form_data, dict):
+        # Format business_type
+        if form_data.get('business_type'):
+            form_data['business_type_display'] = form_data['business_type'].replace('_', ' ').title()
+        
+        # Format crew_size_hours
+        if form_data.get('crew_size_hours'):
+            crew_display = form_data['crew_size_hours'].replace('_', ' ')
+            # Make it more readable
+            crew_display = crew_display.replace('cleaner', 'Cleaner').replace('cleaners', 'Cleaners')
+            crew_display = crew_display.replace('hours', 'Hours').replace('hour', 'Hour')
+            crew_display = crew_display.replace('sq ft', 'Sq Ft').replace('sqft', 'Sq Ft')
+            form_data['crew_size_hours_display'] = crew_display
+        
+        # Format hear_about_us
+        if form_data.get('hear_about_us'):
+            form_data['hear_about_us_display'] = form_data['hear_about_us'].replace('_', ' ').title()
+        
+        # Format cleaning_frequency
+        if form_data.get('cleaning_frequency'):
+            freq = form_data['cleaning_frequency']
+            if freq == 'one_time':
+                form_data['cleaning_frequency_display'] = 'One Time'
+            elif freq == 'weekly':
+                form_data['cleaning_frequency_display'] = 'Weekly - 10% Off'
+            elif freq == 'bi_weekly':
+                form_data['cleaning_frequency_display'] = 'Bi Weekly - 5% Off'
+            elif freq == 'monthly':
+                form_data['cleaning_frequency_display'] = 'Monthly'
+            else:
+                form_data['cleaning_frequency_display'] = freq.replace('_', ' ').title()
+        
+        # Format recurrence_pattern
+        if form_data.get('recurrence_pattern'):
+            form_data['recurrence_pattern_display'] = form_data['recurrence_pattern'].replace('_', ' ').title()
+    
+    # Parse dates and times if they exist
+    if form_data.get('selected_date'):
+        try:
+            if isinstance(form_data['selected_date'], str):
+                form_data['selected_date'] = datetime.strptime(form_data['selected_date'], '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            pass
+    
+    if form_data.get('selected_time'):
+        try:
+            if isinstance(form_data['selected_time'], str):
+                if ':' in str(form_data['selected_time']):
+                    hour, minute = map(int, str(form_data['selected_time']).split(':'))
+                    from datetime import time
+                    form_data['selected_time'] = time(hour, minute)
+        except (ValueError, TypeError):
+            pass
+
+    # Parse email history from admin_notes if it exists
+    email_sent_at = None
+    email_sent_to = None
+    email_history = []
+    if office_cleaning_quote.admin_notes:
+        try:
+            notes_data = json.loads(office_cleaning_quote.admin_notes)
+            if isinstance(notes_data, dict):
+                # Get latest email sent time
+                if 'quote_email_sent_at' in notes_data:
+                    from django.utils.dateparse import parse_datetime
+                    email_sent_at = parse_datetime(notes_data['quote_email_sent_at'])
+                    email_sent_to = notes_data.get('customer_email')
+                
+                # Get email history log
+                if 'email_history' in notes_data and isinstance(notes_data['email_history'], list):
+                    from django.utils.dateparse import parse_datetime
+                    for entry in notes_data['email_history']:
+                        if isinstance(entry, dict) and 'sent_at' in entry:
+                            parsed_time = parse_datetime(entry['sent_at'])
+                            if parsed_time:
+                                email_history.append({
+                                    'sent_at': parsed_time,
+                                    'customer_email': entry.get('customer_email', ''),
+                                    'price': entry.get('price'),
+                                    'discount': entry.get('discount'),
+                                    'discount_type': entry.get('discount_type'),
+                                })
+                    # Sort by most recent first
+                    email_history.sort(key=lambda x: x['sent_at'], reverse=True)
+        except (json.JSONDecodeError, ValueError, TypeError):
+            pass
+    
+    return render(request, "adminpanel/office_cleaning_quote_detail.html", {
+        "office_cleaning_quote": office_cleaning_quote,
+        "form_data": form_data,
+        "email_sent_at": email_sent_at,
+        "email_sent_to": email_sent_to or office_cleaning_quote.email,
+        "email_history": email_history,
+    })
+
+
+@login_required
+@user_passes_test(admin_check)
+def send_home_cleaning_quote_email(request, quote_id):
+    """Send email to customer with quote details and admin-provided information"""
+    from django.core.mail import EmailMultiAlternatives
+    from django.template.loader import render_to_string
+    from django.utils.html import strip_tags
+    from django.contrib.sites.shortcuts import get_current_site
+    
+    home_cleaning_quote = get_object_or_404(HomeCleaningQuoteRequest, pk=quote_id)
+    
+    if request.method == "POST":
+        try:
+            # Get form data
+            estimated_time = request.POST.get("estimated_time", "")
+            price = request.POST.get("price", "")
+            parking_fee = request.POST.get("parking_fee", "")
+            discount = request.POST.get("discount", "")
+            discount_type = request.POST.get("discount_type", "value")
+            payment_link = request.POST.get("payment_link", "")
+            note = request.POST.get("note", "")
+            
+            # Get editable customer details
+            customer_name = request.POST.get("customer_name", home_cleaning_quote.name)
+            customer_email = request.POST.get("customer_email", home_cleaning_quote.email)
+            customer_phone = request.POST.get("customer_phone", home_cleaning_quote.phone)
+            service_date = request.POST.get("service_date", home_cleaning_quote.date.strftime("%Y-%m-%d") if home_cleaning_quote.date else "")
+            service_time = request.POST.get("service_time", home_cleaning_quote.hour.strftime("%H:%M") if home_cleaning_quote.hour else "")
+            address = request.POST.get("address", home_cleaning_quote.address)
+            apartment = request.POST.get("apartment", home_cleaning_quote.apartment or "")
+            city = request.POST.get("city", home_cleaning_quote.city or "")
+            state = request.POST.get("state", home_cleaning_quote.state or "")
+            zip_code = request.POST.get("zip_code", home_cleaning_quote.zip_code or "")
+            cleaning_type = request.POST.get("cleaning_type", home_cleaning_quote.cleaning_type or "")
+            cleaning_frequency = request.POST.get("cleaning_frequency", home_cleaning_quote.cleaning_frequency or "")
+            job_description = request.POST.get("job_description", home_cleaning_quote.job_description or "")
+            
+            # Calculate total price
+            from decimal import Decimal
+            subtotal = Decimal("0.00")
+            discount_amount = Decimal("0.00")
+            discount_display = ""
+            sales_tax_rate = Decimal("8.875")  # 8.875%
+            sales_tax = Decimal("0.00")
+            total_price = Decimal("0.00")
+            
+            try:
+                if price:
+                    price_decimal = Decimal(str(price))
+                    subtotal += price_decimal
+                if parking_fee:
+                    subtotal += Decimal(str(parking_fee))
+                
+                # Calculate discount
+                if discount:
+                    discount_value = Decimal(str(discount))
+                    if discount_type == "percentage":
+                        # Calculate discount from subtotal
+                        if subtotal > 0:
+                            discount_amount = (subtotal * discount_value) / Decimal("100")
+                            discount_display = f"{discount}%"
+                        else:
+                            discount_amount = Decimal("0.00")
+                            discount_display = f"{discount}%"
+                    else:
+                        # Direct dollar amount
+                        discount_amount = discount_value
+                        discount_display = f"${discount}"
+                    subtotal -= discount_amount
+                
+                # Calculate sales tax (8.875% of subtotal after discount)
+                if subtotal > 0:
+                    sales_tax = (subtotal * sales_tax_rate) / Decimal("100")
+                
+                # Calculate total (subtotal + sales tax)
+                total_price = subtotal + sales_tax
+            except (ValueError, TypeError):
+                pass
+            
+            # Prepare email context
+            context = {
+                "quote": home_cleaning_quote,
+                "customer_name": customer_name,
+                "customer_email": customer_email,
+                "customer_phone": customer_phone,
+                "service_date": service_date,
+                "service_time": service_time,
+                "address": address,
+                "apartment": apartment,
+                "city": city,
+                "state": state,
+                "zip_code": zip_code,
+                "cleaning_type": cleaning_type,
+                "cleaning_frequency": cleaning_frequency,
+                "job_description": job_description,
+                "estimated_time": estimated_time,
+                "price": price,
+                "parking_fee": parking_fee,
+                "discount": discount,
+                "discount_type": discount_type,
+                "discount_amount": discount_amount,
+                "discount_display": discount_display,
+                "subtotal": subtotal,
+                "sales_tax_rate": sales_tax_rate,
+                "sales_tax": sales_tax,
+                "total_price": total_price,
+                "payment_link": payment_link,
+                "note": note,
+                "request_scheme": request.scheme,
+                "domain": get_current_site(request).domain,
+            }
+            
+            # Render email template
+            html_content = render_to_string("adminpanel/emails/home_cleaning_quote_email.html", context)
+            text_content = strip_tags(html_content)
+            
+            # Send email
+            subject = f"Your Home Cleaning Quote - #{home_cleaning_quote.id}"
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email="noreply@cleanhandy.com",
+                to=[customer_email],
+                bcc=["support@thecleanhandy.com"]
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+            
+            # Save email sending time and add to email history log
+            from django.utils import timezone
+            import json
+            email_sent_time = timezone.now()
+            
+            # Store email history in admin_notes as JSON
+            try:
+                email_entry = {
+                    'sent_at': email_sent_time.isoformat(),
+                    'customer_email': customer_email,
+                    'price': str(price) if price else None,
+                    'discount': str(discount) if discount else None,
+                    'discount_type': discount_type,
+                    'parking_fee': str(parking_fee) if parking_fee else None,
+                }
+                
+                # Try to preserve existing admin_notes if it's JSON
+                existing_notes = {}
+                if hasattr(home_cleaning_quote, 'admin_notes') and home_cleaning_quote.admin_notes:
+                    try:
+                        existing_notes = json.loads(home_cleaning_quote.admin_notes)
+                        if not isinstance(existing_notes, dict):
+                            existing_notes = {}
+                    except:
+                        existing_notes = {}
+                
+                # Initialize email_history array if it doesn't exist
+                if 'email_history' not in existing_notes:
+                    existing_notes['email_history'] = []
+                
+                # Add new email entry to history
+                existing_notes['email_history'].append(email_entry)
+                
+                # Also keep latest email info for backward compatibility
+                existing_notes['quote_email_sent_at'] = email_sent_time.isoformat()
+                existing_notes['customer_email'] = customer_email
+                
+                # Save updated notes
+                home_cleaning_quote.admin_notes = json.dumps(existing_notes, indent=2)
+                # Update status to "email_sent" after sending email
+                home_cleaning_quote.status = "email_sent"
+                home_cleaning_quote.save(update_fields=['admin_notes', 'status'])
+            except Exception as save_error:
+                print(f"Warning: Could not save email history: {save_error}")
+            
+            messages.success(request, f"📧 Email sent successfully to {customer_email} on {email_sent_time.strftime('%B %d, %Y at %I:%M %p')}")
+        except Exception as e:
+            messages.error(request, f"❌ Failed to send email: {str(e)}")
+    
+    return redirect("home_cleaning_quote_detail", quote_id=quote_id)
+
+
+@login_required
+@user_passes_test(admin_check)
+def send_office_cleaning_quote_email(request, quote_id):
+    """Send email to customer with quote details and admin-provided information"""
+    from django.core.mail import EmailMultiAlternatives
+    from django.template.loader import render_to_string
+    from django.utils.html import strip_tags
+    from django.contrib.sites.shortcuts import get_current_site
+    import json
+    
+    office_cleaning_quote = get_object_or_404(OfficeQuote, pk=quote_id)
+    
+    if request.method == "POST":
+        try:
+            # Get form data
+            estimated_time = request.POST.get("estimated_time", "")
+            price = request.POST.get("price", "")
+            parking_fee = request.POST.get("parking_fee", "")
+            discount = request.POST.get("discount", "")
+            discount_type = request.POST.get("discount_type", "value")
+            payment_link = request.POST.get("payment_link", "")
+            note = request.POST.get("note", "")
+            
+            # Get editable customer details
+            customer_name = request.POST.get("customer_name", office_cleaning_quote.name)
+            customer_email = request.POST.get("customer_email", office_cleaning_quote.email)
+            customer_phone = request.POST.get("customer_phone", office_cleaning_quote.phone_number)
+            business_address = request.POST.get("business_address", office_cleaning_quote.business_address)
+            square_footage = request.POST.get("square_footage", office_cleaning_quote.square_footage)
+            job_description = request.POST.get("job_description", office_cleaning_quote.job_description)
+            
+            # Parse form data for schedule info
+            form_data = {}
+            if office_cleaning_quote.admin_notes:
+                try:
+                    form_data = json.loads(office_cleaning_quote.admin_notes)
+                    if not isinstance(form_data, dict):
+                        form_data = {}
+                except (json.JSONDecodeError, ValueError):
+                    form_data = {}
+            
+            service_date = request.POST.get("service_date", form_data.get("selected_date", ""))
+            service_time = request.POST.get("service_time", form_data.get("selected_time", ""))
+            cleaning_frequency = request.POST.get("cleaning_frequency", form_data.get("cleaning_frequency", ""))
+            business_type = request.POST.get("business_type", form_data.get("business_type", ""))
+            crew_size_hours = request.POST.get("crew_size_hours", form_data.get("crew_size_hours", ""))
+            
+            # Calculate total price
+            from decimal import Decimal
+            subtotal = Decimal("0.00")
+            discount_amount = Decimal("0.00")
+            discount_display = ""
+            sales_tax_rate = Decimal("8.875")  # 8.875%
+            sales_tax = Decimal("0.00")
+            total_price = Decimal("0.00")
+            
+            try:
+                if price:
+                    price_decimal = Decimal(str(price))
+                    subtotal += price_decimal
+                if parking_fee:
+                    subtotal += Decimal(str(parking_fee))
+                
+                # Calculate discount
+                if discount:
+                    discount_value = Decimal(str(discount))
+                    if discount_type == "percentage":
+                        # Calculate discount from subtotal
+                        if subtotal > 0:
+                            discount_amount = (subtotal * discount_value) / Decimal("100")
+                            discount_display = f"{discount}%"
+                        else:
+                            discount_amount = Decimal("0.00")
+                            discount_display = f"{discount}%"
+                    else:
+                        # Direct dollar amount
+                        discount_amount = discount_value
+                        discount_display = f"${discount}"
+                    subtotal -= discount_amount
+                
+                # Calculate sales tax (8.875% of subtotal after discount)
+                if subtotal > 0:
+                    sales_tax = (subtotal * sales_tax_rate) / Decimal("100")
+                
+                # Calculate total (subtotal + sales tax)
+                total_price = subtotal + sales_tax
+            except (ValueError, TypeError):
+                pass
+            
+            # Prepare email context
+            context = {
+                "quote": office_cleaning_quote,
+                "customer_name": customer_name,
+                "customer_email": customer_email,
+                "customer_phone": customer_phone,
+                "business_address": business_address,
+                "square_footage": square_footage,
+                "job_description": job_description,
+                "service_date": service_date,
+                "service_time": service_time,
+                "cleaning_frequency": cleaning_frequency,
+                "business_type": business_type,
+                "crew_size_hours": crew_size_hours,
+                "estimated_time": estimated_time,
+                "price": price,
+                "parking_fee": parking_fee,
+                "discount": discount,
+                "discount_type": discount_type,
+                "discount_amount": discount_amount,
+                "discount_display": discount_display,
+                "subtotal": subtotal,
+                "sales_tax_rate": sales_tax_rate,
+                "sales_tax": sales_tax,
+                "total_price": total_price,
+                "payment_link": payment_link,
+                "note": note,
+                "request_scheme": request.scheme,
+                "domain": get_current_site(request).domain,
+            }
+            
+            # Render email template
+            html_content = render_to_string("adminpanel/emails/office_cleaning_quote_email.html", context)
+            text_content = strip_tags(html_content)
+            
+            # Send email
+            subject = f"Your Office Cleaning Quote - #{office_cleaning_quote.id}"
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email="noreply@cleanhandy.com",
+                to=[customer_email],
+                bcc=["support@thecleanhandy.com"]
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+            
+            # Save email sending time and add to email history log
+            from django.utils import timezone
+            import json
+            email_sent_time = timezone.now()
+            
+            # Store email history in admin_notes as JSON
+            try:
+                email_entry = {
+                    'sent_at': email_sent_time.isoformat(),
+                    'customer_email': customer_email,
+                    'price': str(price) if price else None,
+                    'discount': str(discount) if discount else None,
+                    'discount_type': discount_type,
+                    'parking_fee': str(parking_fee) if parking_fee else None,
+                }
+                
+                # Get existing notes
+                existing_notes = office_cleaning_quote.admin_notes or ""
+                existing_data = {}
+                
+                # Try to parse existing JSON data
+                try:
+                    existing_data = json.loads(existing_notes)
+                    if not isinstance(existing_data, dict):
+                        existing_data = {}
+                except (json.JSONDecodeError, ValueError):
+                    # If admin_notes is not JSON, preserve it as admin_notes_text
+                    existing_data = {'admin_notes_text': existing_notes}
+                
+                # Initialize email_history array if it doesn't exist
+                if 'email_history' not in existing_data:
+                    existing_data['email_history'] = []
+                
+                # Add new email entry to history
+                existing_data['email_history'].append(email_entry)
+                
+                # Also keep latest email info for backward compatibility
+                existing_data['quote_email_sent_at'] = email_sent_time.isoformat()
+                existing_data['customer_email'] = customer_email
+                
+                # Save updated notes
+                office_cleaning_quote.admin_notes = json.dumps(existing_data, indent=2)
+                office_cleaning_quote.save(update_fields=['admin_notes'])
+            except Exception as save_error:
+                print(f"Warning: Could not save email history: {save_error}")
+            
+            messages.success(request, f"📧 Email sent successfully to {customer_email} on {email_sent_time.strftime('%B %d, %Y at %I:%M %p')}")
+        except Exception as e:
+            messages.error(request, f"❌ Failed to send email: {str(e)}")
+    
+    return redirect("office_cleaning_quote_detail", quote_id=quote_id)
+
+
+@login_required
+@require_POST
+def delete_office_cleaning_quote(request, quote_id):
+    """Delete an office cleaning quote"""
+    quote = get_object_or_404(OfficeQuote, id=quote_id)
+    quote.delete()
+    messages.success(request, "Office cleaning quote deleted successfully.")
+    return redirect("office_cleaning_quote_list")
+
+
+def export_office_cleaning_quotes_csv(request):
+    """Export office cleaning quotes to CSV"""
+    office_cleaning_quotes = OfficeQuote.objects.all().order_by('-created_at')
+    
+    # Apply filters if provided
+    status_filter = request.GET.get('status')
+    if status_filter:
+        office_cleaning_quotes = office_cleaning_quotes.filter(status=status_filter)
+    
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    
+    if from_date:
+        office_cleaning_quotes = office_cleaning_quotes.filter(created_at__date__gte=from_date)
+    if to_date:
+        office_cleaning_quotes = office_cleaning_quotes.filter(created_at__date__lte=to_date)
+    
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename=office_cleaning_quotes.csv'
+    
+    writer = csv.writer(response)
+    writer.writerow([
+        'ID', 'Name', 'Email', 'Phone', 'Business Address', 'Square Footage',
+        'Job Description', 'Status', 'Created At'
+    ])
+    
+    for quote in office_cleaning_quotes:
+        writer.writerow([
+            quote.id,
+            quote.name or '',
+            quote.email or '',
+            quote.phone_number or '',
+            quote.business_address or '',
+            quote.square_footage or '',
+            quote.job_description or '',
+            quote.status or '',
+            quote.created_at.strftime('%Y-%m-%d %H:%M:%S') if quote.created_at else '',
+        ])
+    
+    return response
+
+
+def export_home_cleaning_quotes_csv(request):
+    """Export home cleaning quotes to CSV"""
+    home_cleaning_quotes = HomeCleaningQuoteRequest.objects.all().order_by('-created_at')
+    
+    # Apply filters if provided
+    cleaning_type_filter = request.GET.get('cleaning_type')
+    if cleaning_type_filter:
+        home_cleaning_quotes = home_cleaning_quotes.filter(cleaning_type=cleaning_type_filter)
+    
+    frequency_filter = request.GET.get('frequency')
+    if frequency_filter:
+        home_cleaning_quotes = home_cleaning_quotes.filter(cleaning_frequency=frequency_filter)
+    
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    
+    if from_date:
+        home_cleaning_quotes = home_cleaning_quotes.filter(created_at__date__gte=from_date)
+    if to_date:
+        home_cleaning_quotes = home_cleaning_quotes.filter(created_at__date__lte=to_date)
+    
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename=home_cleaning_quotes.csv'
+    
+    writer = csv.writer(response)
+    writer.writerow([
+        'ID', 'Name', 'Email', 'Phone', 'Address', 'City', 'State', 'ZIP',
+        'Service', 'Home Type', 'Cleaning Type', 'Bath Count',
+        'Date', 'Hour', 'Frequency',
+        'Get In', 'Parking', 'Pet', 'Job Description', 'Created At'
+    ])
+    
+    for quote in home_cleaning_quotes:
+        writer.writerow([
+            quote.id,
+            quote.name or '',
+            quote.email or '',
+            quote.phone or '',
+            quote.address or '',
+            quote.city or '',
+            quote.state or '',
+            quote.zip_code or '',
+            quote.service.name if quote.service else '',
+            quote.home_types.name if quote.home_types else '',
+            quote.cleaning_type or '',
+            quote.bath_count or '',
+            quote.date.strftime('%Y-%m-%d') if quote.date else '',
+            quote.hour.strftime('%H:%M') if quote.hour else '',
+            quote.cleaning_frequency or '',
+            quote.get_in or '',
+            quote.parking or '',
+            quote.pet or '',
+            quote.job_description or '',
+            quote.created_at.strftime('%Y-%m-%d %H:%M:%S') if quote.created_at else '',
+        ])
+    
+    return response
 
 
 

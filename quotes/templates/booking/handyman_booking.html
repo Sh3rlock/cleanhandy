@@ -50,7 +50,7 @@
             </ul>
         </div>
         <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
-        <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+        <a class="btn-1" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
         {% for service in all_services %}
           {% if service.category.name|lower == 'post event cleaning' %}
             <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>

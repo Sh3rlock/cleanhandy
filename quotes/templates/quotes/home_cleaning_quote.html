@@ -1,0 +1,1051 @@
+{% extends "base.html" %}
+{% load static %}
+{% load form_tags %}
+{% block content %}
+<style>
+  .cmn-input {
+    border-radius: 8px;
+    border: 1px solid #F15A29;
+    background: var(--white-color);
+    width: 100%;
+    margin-bottom: 15px !important;
+    padding: 15px 10px !important;
+  }
+
+  /* Calendar Navigation Styles */
+  .calendar-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .nav-arrow {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .nav-arrow:hover {
+    background: #f8f9fa;
+    border-color: #F15A29;
+  }
+
+  .calendar-dates {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .date-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 60px;
+  }
+
+  .date-item:hover {
+    border-color: #F15A29;
+  }
+
+  .date-item.selected {
+    border-color: #F15A29;
+    background: #f8f8ff;
+  }
+
+  .date-day {
+    font-size: 12px;
+    color: #999;
+    font-weight: 500;
+  }
+
+  .date-number {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  /* Time Slots Styles */
+  .time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .time-slot {
+    padding: 10px 15px;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .time-slot:hover {
+    border-color: #F15A29;
+    color: #F15A29;
+  }
+
+  .time-slot.selected {
+    background: #F15A29;
+    color: white;
+    border-color: #F15A29;
+  }
+
+  .time-slot.unavailable {
+    background: #f8f9fa;
+    color: #999;
+    cursor: not-allowed;
+    border-color: #eee;
+  }
+
+  select.cmn-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #F15A29;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .field-error {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: red;
+  }
+
+  .is-invalid {
+    border-color: red !important;
+  }
+
+  /* Frequency Section Styles */
+  .frequency-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .frequency-btn {
+    padding: 12px 20px;
+    border: 1px solid #F15A29;
+    background: white;
+    color: #666;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    min-width: 200px;
+  }
+
+  .frequency-btn.active {
+    background: #F15A29;
+    color: white;
+    border-color: #F15A29;
+  }
+
+  .frequency-btn:hover {
+    border-color: #F15A29;
+    color: #F15A29;
+  }
+
+  .frequency-btn.active:hover {
+    background: #F15A29;
+    color: white;
+  }
+
+  /* Make form-check divs clickable */
+  .form-check.clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .form-check.clickable:hover {
+    background-color: #f8f9fa;
+    border-color: #F15A29;
+  }
+  
+  .form-check.clickable:has(input:checked) {
+    background-color: #e3f2fd;
+    border-color: #F15A29;
+  }
+</style>
+
+<!-- common banner -->
+<section class="common-banner" style="position: relative;">
+    <div class="bg-layer" style="background-image: url('{% static 'assets/images/background/common-banner-bg.jpg' %}');"></div>
+    <div class="common-banner-content">
+        <h3>Home Cleaning Quote</h3>
+        <div class="breadcrumb">
+            <ul>
+              <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+              <li class="breadcrumb-item"><i class="fa-solid fa-angles-right"></i> Home Cleaning Quote</li>
+            </ul>
+        </div>
+
+        {% if user.is_authenticated %}
+        <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+      {% else %}
+        <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+      {% endif %}
+        {% if user.is_authenticated %}
+          <a class="btn-1" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
+        {% else %}
+          <a class="btn-1" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
+        {% endif %}
+        {% for service in all_services %}
+          {% if service.category.name|lower == 'post event cleaning' %}
+            {% if user.is_authenticated %}
+              <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+            {% else %}
+              <a class="btn-1" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+    </div>
+</section>
+
+<section class="mb-4">
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+      <h3 class="mb-4 text-center">Request a Home Cleaning Quote</h3>
+      
+      <form method="post" id="quoteForm">
+        {% csrf_token %}
+        
+        <!-- Errors -->
+        {% if form.errors %}
+          <div class="alert alert-danger rounded shadow-sm">
+            <ul class="mb-0">
+              {% for field in form.visible_fields %}
+                {% for error in field.errors %}
+                  <li>{{ field.label }}: {{ error }}</li>
+                {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <!-- Django form fields for date and hour (hidden) -->
+        <div style="display: none;">
+          {{ form.date }}
+          {{ form.hour }}
+        </div>
+
+        <!-- Home Type -->
+        <div class="form-group">
+          <label for="id_home_types" class="form-label">Home Type *</label>
+          <select name="home_types" id="id_home_types" class="cmn-input" required>
+            <option value="">Select Home Type</option>
+            {% for option in form.fields.home_types.queryset %}
+              <option value="{{ option.id }}">{{ option.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Number of Bathrooms -->
+        <div class="form-group">
+          <label for="id_bath_count" class="form-label">Number of Bathrooms *</label>
+          {% if form.bath_count %}
+            {{ form.bath_count|add_class:"cmn-input" }}
+          {% else %}
+            <select name="bath_count" id="id_bath_count" class="cmn-input" required>
+              <option value="">Select Number of Bathrooms</option>
+              <option value="1">1 Bathroom</option>
+              <option value="2">2 Bathrooms</option>
+              <option value="3">3 Bathrooms</option>
+              <option value="4">4 Bathrooms</option>
+              <option value="5+">5+ Bathrooms</option>
+            </select>
+          {% endif %}
+        </div>
+
+        <!-- Cleaning Type -->
+        <div class="form-group">
+          <label for="id_cleaning_type" class="form-label">Cleaning Type *</label>
+          <select name="cleaning_type" id="id_cleaning_type" class="cmn-input" required>
+            <option value="">Select Cleaning Type</option>
+            <option value="Regular Cleaning" selected>Regular Cleaning</option>
+            <option value="Deep Cleaning">Deep Cleaning</option>
+            <option value="Move In/Out Cleaning">Move In/Out Cleaning</option>
+            <option value="Post Renovation">Post Renovation</option>
+          </select>
+        </div>
+
+        <!-- Schedule -->
+        <div class="form-group">
+          <h5 class="mb-3">Schedule</h5>
+          
+          <!-- Cleaning Frequency Section -->
+          <div class="frequency-section mb-4">
+            <h6>How often would you like us to clean?</h6>
+            
+            <div class="frequency-buttons">
+              <button type="button" class="frequency-btn active" data-frequency="one_time" data-discount="0">
+                One time
+              </button>
+              <button type="button" class="frequency-btn" data-frequency="weekly" data-discount="10">
+                Weekly - 10% Off
+              </button>
+              <button type="button" class="frequency-btn" data-frequency="bi_weekly" data-discount="5">
+                Bi Weekly - 5% Off
+              </button>
+              <button type="button" class="frequency-btn" data-frequency="monthly" data-discount="0">
+                Monthly
+              </button>
+            </div>
+            <input type="hidden" name="cleaning_frequency" id="cleaning_frequency" value="one_time">
+            <input type="hidden" name="frequency_discount" id="frequency_discount" value="0">
+          </div>
+
+          <!-- Date of Service Section -->
+          <div class="date-section mb-4">
+            <h6>Date of service *</h6>
+            <p class="text-muted mb-3">For recurring services, each one will commence on the same day and time as selected for the first service.</p>
+            
+            <!-- Calendar and Time Selection -->
+            <div class="calendar-section">
+              <div class="calendar-navigation mb-3">
+                <button type="button" class="nav-arrow" id="prev_week">
+                  <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <div class="calendar-dates" id="calendar_dates">
+                  <!-- Calendar dates will be populated by JavaScript -->
+                </div>
+                <button type="button" class="nav-arrow" id="next_week">
+                  <i class="fa-solid fa-chevron-right"></i>
+                </button>
+              </div>
+              
+              <div class="time-slots" id="time_slots" style="display: none;">
+                <!-- Time slots will be populated by JavaScript -->
+              </div>
+            </div>
+
+            <!-- Hidden form fields for compatibility -->
+            <input type="hidden" name="selected_date" id="selected_date">
+            <input type="hidden" name="selected_time" id="selected_time">
+            <input type="hidden" name="recurrence_pattern" id="recurrence_pattern" value="one_time">
+          </div>
+        </div>
+
+        <!-- Customer Information -->
+        <div class="form-group">
+          <h5 class="mb-3">Contact Information</h5>
+          
+          <div class="form-group">
+            <label for="name" class="form-label">Name *</label>
+            <input type="text" name="name" id="name" class="cmn-input" placeholder="Full Name" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="email" class="form-label">Email *</label>
+            <input type="email" name="email" id="email" class="cmn-input" placeholder="Email Address" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="phone" class="form-label">Phone *</label>
+            <input type="tel" name="phone" id="phone" class="cmn-input" placeholder="Phone Number" required>
+          </div>
+        </div>
+
+        <!-- Address Information -->
+        <div class="form-group">
+          <h5 class="mb-3">Address</h5>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="{{ form.address.id_for_label }}" class="form-label">Street Address *</label>
+                {{ form.address|add_class:"cmn-input" }}
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="{{ form.apartment.id_for_label }}" class="form-label">Apt/Suite</label>
+                {{ form.apartment|add_class:"cmn-input" }}
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="{{ form.zip_code.id_for_label }}" class="form-label">ZIP Code *</label>
+                {{ form.zip_code|add_class:"cmn-input" }}
+              </div>
+            </div>
+          </div>
+          
+          
+          
+          <!-- Hidden city and state fields (default to New York) -->
+          <div style="display: none;">
+            <input type="text" name="city" id="id_city" value="New York">
+            <input type="text" name="state" id="id_state" value="NY">
+          </div>
+        </div>
+
+        <!-- Property Access and Conditions -->
+        <div class="form-group">
+          <h5 class="mb-3">Property Access and Conditions</h5>
+          
+          <!-- How to get in -->
+          <div class="form-group">
+            <h6>How will we get into your home? *</h6>
+            <div class="row">
+              <div class="col-12 col-md-6 mb-2">
+                <div class="form-check p-3 border rounded shadow-sm h-100 clickable">
+                  <input class="form-check-input" type="radio" name="get_in" id="get_in_at_home" value="at_home">
+                  <label class="form-check-label ms-2" for="get_in_at_home">
+                    <i class="fa-solid fa-house me-2"></i>I'll be at home
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 mb-2">
+                <div class="form-check p-3 border rounded shadow-sm h-100 clickable">
+                  <input class="form-check-input" type="radio" name="get_in" id="get_in_doorman" value="doorman">
+                  <label class="form-check-label ms-2" for="get_in_doorman">
+                    <i class="fa-solid fa-door-open me-2"></i>The key is with doorman
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 mb-2">
+                <div class="form-check p-3 border rounded shadow-sm h-100 clickable">
+                  <input class="form-check-input" type="radio" name="get_in" id="get_in_lockbox" value="lockbox">
+                  <label class="form-check-label ms-2" for="get_in_lockbox">
+                    <i class="fa-solid fa-lock me-2"></i>Lockbox on premises
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 mb-2">
+                <div class="form-check p-3 border rounded shadow-sm h-100 clickable">
+                  <input class="form-check-input" type="radio" name="get_in" id="get_in_call" value="call_organize">
+                  <label class="form-check-label ms-2" for="get_in_call">
+                    <i class="fa-solid fa-phone me-2"></i>Call to organize
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 mb-2">
+                <div class="form-check p-3 border rounded shadow-sm h-100 clickable">
+                  <input class="form-check-input" type="radio" name="get_in" id="get_in_other" value="other">
+                  <label class="form-check-label ms-2" for="get_in_other">
+                    <i class="fa-solid fa-ellipsis me-2"></i>Other
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Parking instructions -->
+          <div class="form-group">
+            <label for="id_parking" class="form-label">Parking Instructions *</label>
+            <textarea name="parking" id="id_parking" class="cmn-input" rows="3" placeholder="Please provide parking instructions for our cleaning team..." required></textarea>
+          </div>
+
+          <!-- Pet information -->
+          <div class="form-group">
+            <h6 class="mt-4">Do you have any pets? *</h6>
+            <div class="row">
+              <div class="col-12 col-md-6 mb-2">
+                <div class="form-check p-3 border rounded shadow-sm h-100 clickable">
+                  <input class="form-check-input" type="radio" name="pet" id="pet_none" value="none">
+                  <label class="form-check-label ms-2" for="pet_none">
+                    <i class="fa-solid fa-xmark me-2"></i>None
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 mb-2">
+                <div class="form-check p-3 border rounded shadow-sm h-100 clickable">
+                  <input class="form-check-input" type="radio" name="pet" id="pet_cat" value="cat">
+                  <label class="form-check-label ms-2" for="pet_cat">
+                    <i class="fa-solid fa-cat me-2"></i>Cat
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 mb-2">
+                <div class="form-check p-3 border rounded shadow-sm h-100 clickable">
+                  <input class="form-check-input" type="radio" name="pet" id="pet_dog" value="dog">
+                  <label class="form-check-label ms-2" for="pet_dog">
+                    <i class="fa-solid fa-dog me-2"></i>Dog
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 mb-2">
+                <div class="form-check p-3 border rounded shadow-sm h-100 clickable">
+                  <input class="form-check-input" type="radio" name="pet" id="pet_both" value="both">
+                  <label class="form-check-label ms-2" for="pet_both">
+                    <i class="fa-solid fa-paw me-2"></i>Both
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 mb-2">
+                <div class="form-check p-3 border rounded shadow-sm h-100 clickable">
+                  <input class="form-check-input" type="radio" name="pet" id="pet_other" value="other">
+                  <label class="form-check-label ms-2" for="pet_other">
+                    <i class="fa-solid fa-ellipsis me-2"></i>Other
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job Description -->
+        <div class="form-group">
+          <label for="{{ form.job_description.id_for_label }}" class="form-label">Tell us about the job *</label>
+          {{ form.job_description|add_class:"cmn-input" }}
+        </div>
+
+        <!-- Terms -->
+       <div class="checkbox-wrap mt-4">
+        <input type="checkbox" id="terms" required>
+        <label for="terms">I agree with all the terms & conditions</label>
+      </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn-1 w-100 mb-4">Submit Quote Request</button>
+      </form>
+    </div>
+  </div>
+</div>
+</section>
+
+<script>
+// Calendar and Time Selection JavaScript
+(function() {
+  let currentWeekStart = new Date();
+  currentWeekStart.setDate(currentWeekStart.getDate() + 2);
+  let selectedDate = null;
+  let selectedTime = null;
+
+  function renderCalendar() {
+    const calendarDates = document.getElementById('calendar_dates');
+    if (!calendarDates) return;
+    
+    calendarDates.innerHTML = '';
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(currentWeekStart);
+      date.setDate(currentWeekStart.getDate() + i);
+      
+      const dayNames = ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa'];
+      const dayName = dayNames[date.getDay()];
+      const dateNumber = date.getDate();
+      const month = date.getMonth() + 1;
+      
+      const dateItem = document.createElement('div');
+      dateItem.className = 'date-item';
+      
+      // Check if this date is the selected date
+      if (selectedDate && date.toDateString() === selectedDate.toDateString()) {
+        dateItem.classList.add('selected');
+      }
+      
+      dateItem.innerHTML = `
+        <div class="date-icon">
+          <i class="fa-solid fa-calendar"></i>
+        </div>
+        <div class="date-day">${dayName}</div>
+        <div class="date-number">${month}/${dateNumber.toString().padStart(2, '0')}</div>
+      `;
+      
+      dateItem.addEventListener('click', function() {
+        selectDate(date, this);
+      });
+      
+      calendarDates.appendChild(dateItem);
+    }
+  }
+
+  function selectDate(date, clickedElement) {
+    selectedDate = date;
+    
+    document.querySelectorAll('.date-item').forEach(item => {
+      item.classList.remove('selected');
+    });
+    
+    if (clickedElement) {
+      clickedElement.classList.add('selected');
+    }
+    
+    const dateInput = document.getElementById('selected_date');
+    if (dateInput) {
+      dateInput.value = date.toISOString().split('T')[0];
+    }
+    const djangoDateInput = document.getElementById('id_date');
+    if (djangoDateInput) {
+      djangoDateInput.value = date.toISOString().split('T')[0];
+    }
+    
+    // Show time slots when date is selected
+    const timeSlots = document.getElementById('time_slots');
+    if (timeSlots) {
+      timeSlots.style.display = 'grid';
+    }
+    
+    loadTimeSlots(date);
+  }
+
+  function loadTimeSlots(date, retryCount = 0) {
+    const timeSlots = document.getElementById('time_slots');
+    if (!timeSlots) return;
+    
+    timeSlots.innerHTML = '';
+    
+    // Default hours requested for home cleaning
+    let hoursRequested = 2;
+    
+    // Fetch available hours from API
+    const selectedDate = date.toISOString().split('T')[0];
+    
+    timeSlots.innerHTML = '<div class="text-center text-muted">Loading available times...</div>';
+    
+    fetch(`{% url 'available_hours_api' %}?date=${selectedDate}&hours=${hoursRequested}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        timeSlots.innerHTML = '';
+        
+        if (!data.available_hours || data.available_hours.length === 0) {
+          timeSlots.innerHTML = '<div class="text-center text-muted">No available times for this date</div>';
+          return;
+        }
+        
+        // Create time slots from available hours
+        data.available_hours.forEach((timeStr, index) => {
+          const timeSlot = document.createElement('div');
+          timeSlot.className = 'time-slot';
+          
+          // Parse time string (e.g., "14:00" to "2:00 PM")
+          const [hour, minute] = timeStr.split(':').map(Number);
+          const ampm = hour < 12 ? 'am' : 'pm';
+          const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+          const displayTime = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+          
+          timeSlot.textContent = displayTime;
+          timeSlot.dataset.time = timeStr; // Store original time for form submission
+          
+          timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, hour, timeStr));
+          timeSlots.appendChild(timeSlot);
+        });
+        
+        // Select first available time slot by default
+        if (timeSlots.children.length > 0) {
+          selectTimeSlot(timeSlots.children[0], parseInt(data.available_hours[0].split(':')[0]), data.available_hours[0]);
+        }
+      })
+      .catch(error => {
+        console.error('❌ Failed to fetch available hours:', error);
+        
+        // Retry up to 2 times for network errors
+        if (retryCount < 2 && (error.message.includes('Failed to fetch') || error.message.includes('HTTP'))) {
+          setTimeout(() => loadTimeSlots(date, retryCount + 1), 1000);
+          return;
+        }
+        
+        timeSlots.innerHTML = '<div class="text-center text-muted p-3" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; color: #6c757d;"><i class="fa-solid fa-exclamation-triangle me-2"></i>Unable to load available times. Please try refreshing the page.</div>';
+      });
+  }
+
+  function selectTimeSlot(slot, hour, timeStr) {
+    selectedTime = hour;
+    
+    document.querySelectorAll('.time-slot').forEach(s => {
+      s.classList.remove('selected');
+    });
+    slot.classList.add('selected');
+    
+    const timeInput = document.getElementById('selected_time');
+    if (timeInput) {
+      timeInput.value = timeStr;
+    }
+    
+    // Set Django form fields
+    const djangoTimeInput = document.getElementById('id_hour');
+    if (djangoTimeInput) {
+      djangoTimeInput.value = timeStr;
+    }
+  }
+
+  // Navigation
+  // Navigation arrows
+  const prevWeekBtn = document.getElementById('prev_week');
+  const nextWeekBtn = document.getElementById('next_week');
+  
+  if (prevWeekBtn) {
+    prevWeekBtn.addEventListener('click', () => {
+      currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+      renderCalendar();
+    });
+  }
+
+  if (nextWeekBtn) {
+    nextWeekBtn.addEventListener('click', () => {
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      renderCalendar();
+    });
+  }
+  
+  // Initialize calendar
+  renderCalendar();
+
+  // Form validation
+  document.getElementById('quoteForm')?.addEventListener('submit', function(e) {
+    let isValid = true;
+    let errorMessages = [];
+
+    // Validate Home Type
+    const homeType = document.getElementById('id_home_types');
+    if (!homeType || !homeType.value) {
+      isValid = false;
+      errorMessages.push('Please select a Home Type');
+      if (homeType) homeType.classList.add('is-invalid');
+    } else {
+      if (homeType) homeType.classList.remove('is-invalid');
+    }
+
+    // Validate Number of Bathrooms
+    const bathCount = document.getElementById('id_bath_count');
+    if (!bathCount || !bathCount.value) {
+      isValid = false;
+      errorMessages.push('Please select Number of Bathrooms');
+      if (bathCount) bathCount.classList.add('is-invalid');
+    } else {
+      if (bathCount) bathCount.classList.remove('is-invalid');
+    }
+
+    // Validate Cleaning Type
+    const cleaningType = document.getElementById('id_cleaning_type');
+    if (!cleaningType || !cleaningType.value) {
+      isValid = false;
+      errorMessages.push('Please select a Cleaning Type');
+      if (cleaningType) cleaningType.classList.add('is-invalid');
+    } else {
+      if (cleaningType) cleaningType.classList.remove('is-invalid');
+    }
+
+    // Validate Date and Time
+    if (!selectedDate || selectedTime === null) {
+      isValid = false;
+      errorMessages.push('Please select a date and time for your service');
+    }
+
+    // Validate Name
+    const name = document.getElementById('name');
+    if (!name || !name.value.trim()) {
+      isValid = false;
+      errorMessages.push('Please enter your Name');
+      if (name) name.classList.add('is-invalid');
+    } else {
+      if (name) name.classList.remove('is-invalid');
+    }
+
+    // Validate Email
+    const email = document.getElementById('email');
+    if (!email || !email.value.trim()) {
+      isValid = false;
+      errorMessages.push('Please enter your Email');
+      if (email) email.classList.add('is-invalid');
+    } else {
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.value.trim())) {
+        isValid = false;
+        errorMessages.push('Please enter a valid Email address');
+        if (email) email.classList.add('is-invalid');
+      } else {
+        if (email) email.classList.remove('is-invalid');
+      }
+    }
+
+    // Validate Phone
+    const phone = document.getElementById('phone');
+    if (!phone || !phone.value.trim()) {
+      isValid = false;
+      errorMessages.push('Please enter your Phone number');
+      if (phone) phone.classList.add('is-invalid');
+    } else {
+      if (phone) phone.classList.remove('is-invalid');
+    }
+
+    // Validate Street Address
+    const address = document.getElementById('id_address');
+    if (!address || !address.value.trim()) {
+      isValid = false;
+      errorMessages.push('Please enter your Street Address');
+      if (address) address.classList.add('is-invalid');
+    } else {
+      if (address) address.classList.remove('is-invalid');
+    }
+
+    // Validate Zip Code
+    const zipCode = document.getElementById('id_zip_code');
+    if (!zipCode || !zipCode.value.trim()) {
+      isValid = false;
+      errorMessages.push('Please enter your ZIP Code');
+      if (zipCode) zipCode.classList.add('is-invalid');
+    } else {
+      if (zipCode) zipCode.classList.remove('is-invalid');
+    }
+
+    // Validate "How will we get into your home?"
+    const getInOptions = document.querySelectorAll('input[name="get_in"]');
+    let getInSelected = false;
+    getInOptions.forEach(option => {
+      if (option.checked) {
+        getInSelected = true;
+      }
+    });
+    if (!getInSelected) {
+      isValid = false;
+      errorMessages.push('Please select how we will get into your home');
+      // Highlight the container
+      document.querySelectorAll('.form-check.clickable').forEach(container => {
+        const radio = container.querySelector('input[name="get_in"]');
+        if (radio) {
+          container.style.borderColor = 'red';
+        }
+      });
+    } else {
+      document.querySelectorAll('.form-check.clickable').forEach(container => {
+        const radio = container.querySelector('input[name="get_in"]');
+        if (radio) {
+          container.style.borderColor = '';
+        }
+      });
+    }
+
+    // Validate Parking Instructions
+    const parking = document.getElementById('id_parking');
+    if (!parking || !parking.value.trim()) {
+      isValid = false;
+      errorMessages.push('Please provide Parking Instructions');
+      if (parking) parking.classList.add('is-invalid');
+    } else {
+      if (parking) parking.classList.remove('is-invalid');
+    }
+
+    // Validate "Do you have any pets?"
+    const petOptions = document.querySelectorAll('input[name="pet"]');
+    let petSelected = false;
+    petOptions.forEach(option => {
+      if (option.checked) {
+        petSelected = true;
+      }
+    });
+    if (!petSelected) {
+      isValid = false;
+      errorMessages.push('Please select if you have any pets');
+      // Highlight the pet containers
+      document.querySelectorAll('.form-check.clickable').forEach(container => {
+        const radio = container.querySelector('input[name="pet"]');
+        if (radio) {
+          container.style.borderColor = 'red';
+        }
+      });
+    } else {
+      document.querySelectorAll('.form-check.clickable').forEach(container => {
+        const radio = container.querySelector('input[name="pet"]');
+        if (radio) {
+          container.style.borderColor = '';
+        }
+      });
+    }
+
+    // Validate Job Description
+    const jobDescription = document.getElementById('id_job_description');
+    if (!jobDescription || !jobDescription.value.trim()) {
+      isValid = false;
+      errorMessages.push('Please tell us about the job');
+      if (jobDescription) jobDescription.classList.add('is-invalid');
+    } else {
+      if (jobDescription) jobDescription.classList.remove('is-invalid');
+    }
+
+    // Validate Terms checkbox
+    const terms = document.getElementById('terms');
+    if (!terms || !terms.checked) {
+      isValid = false;
+      errorMessages.push('Please agree to the terms & conditions');
+    }
+
+    if (!isValid) {
+      e.preventDefault();
+      alert('Please fix the following errors:\n\n' + errorMessages.join('\n'));
+      // Scroll to first error
+      const firstError = document.querySelector('.is-invalid');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstError.focus();
+      }
+      return false;
+    }
+  });
+  
+  // Initialize calendar
+  renderCalendar();
+
+  // Pre-fill contact information if user is logged in
+  {% if user.is_authenticated %}
+    {% if user.profile %}
+      const nameField = document.getElementById('name');
+      const emailField = document.getElementById('email');
+      const phoneField = document.getElementById('phone');
+      
+      if (nameField && !nameField.value && '{{ user.profile.full_name|default:"" }}') {
+        nameField.value = '{{ user.profile.full_name|default:"" }}';
+      }
+      if (emailField && !emailField.value && '{{ user.email|default:"" }}') {
+        emailField.value = '{{ user.email|default:"" }}';
+      }
+      if (phoneField && !phoneField.value && '{{ user.profile.phone|default:"" }}') {
+        phoneField.value = '{{ user.profile.phone|default:"" }}';
+      }
+    {% else %}
+      // If no profile, at least pre-fill email
+      const emailField = document.getElementById('email');
+      if (emailField && !emailField.value && '{{ user.email|default:"" }}') {
+        emailField.value = '{{ user.email|default:"" }}';
+      }
+    {% endif %}
+  {% endif %}
+
+  // === Frequency Button Logic ===
+  const frequencyButtons = document.querySelectorAll('.frequency-section .frequency-btn');
+  const frequencyInput = document.getElementById('cleaning_frequency');
+  const discountInput = document.getElementById('frequency_discount');
+
+  if (frequencyButtons.length > 0 && frequencyInput && discountInput) {
+    frequencyButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        frequencyButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        frequencyInput.value = this.dataset.frequency;
+        discountInput.value = this.dataset.discount;
+      });
+    });
+  }
+
+  // Make radio button containers clickable
+  document.querySelectorAll('.form-check.clickable').forEach(container => {
+    container.addEventListener('click', function(e) {
+      if (e.target.type !== 'radio') {
+        const radio = this.querySelector('input[type="radio"]');
+        if (radio) {
+          radio.checked = true;
+          radio.dispatchEvent(new Event('change'));
+          // Clear error state when option is selected
+          if (radio.name === 'get_in') {
+            document.querySelectorAll('.form-check.clickable').forEach(c => {
+              const r = c.querySelector('input[name="get_in"]');
+              if (r) {
+                c.style.borderColor = '';
+              }
+            });
+          } else if (radio.name === 'pet') {
+            document.querySelectorAll('.form-check.clickable').forEach(c => {
+              const r = c.querySelector('input[name="pet"]');
+              if (r) {
+                c.style.borderColor = '';
+              }
+            });
+          }
+        }
+      }
+    });
+  });
+
+  // Real-time validation - clear error state when user starts typing/selecting
+  const formFields = ['id_home_types', 'id_bath_count', 'id_cleaning_type', 'name', 'email', 'phone', 'id_address', 'id_zip_code', 'id_parking', 'id_job_description'];
+  formFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (field) {
+      field.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+      });
+      field.addEventListener('change', function() {
+        this.classList.remove('is-invalid');
+      });
+    }
+  });
+
+  // Clear error state for pet radio buttons when selected
+  document.querySelectorAll('input[name="pet"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      document.querySelectorAll('.form-check.clickable').forEach(container => {
+        const petRadio = container.querySelector('input[name="pet"]');
+        if (petRadio) {
+          container.style.borderColor = '';
+        }
+      });
+    });
+  });
+
+  // Update service based on cleaning type selection
+  const cleaningTypeSelect = document.getElementById('id_cleaning_type');
+  const serviceInput = document.getElementById('id_service');
+  
+  // Cleaning type to service ID mapping from backend
+  const cleaningTypeToService = {{ cleaning_type_to_service|safe }};
+  
+  if (cleaningTypeSelect && serviceInput) {
+    // Set initial service based on default selected cleaning type
+    const initialCleaningType = cleaningTypeSelect.value;
+    if (initialCleaningType && cleaningTypeToService[initialCleaningType]) {
+      serviceInput.value = cleaningTypeToService[initialCleaningType];
+    }
+    
+    // Update service when cleaning type changes
+    cleaningTypeSelect.addEventListener('change', function() {
+      const selectedCleaningType = this.value;
+      if (selectedCleaningType && cleaningTypeToService[selectedCleaningType]) {
+        serviceInput.value = cleaningTypeToService[selectedCleaningType];
+        console.log(`Service updated to ID: ${serviceInput.value} for cleaning type: ${selectedCleaningType}`);
+      }
+    });
+  }
+})();
+</script>
+
+{% endblock %}

@@ -1,7 +1,7 @@
 from django.urls import path
 from django.views.generic import TemplateView
 from django.http import JsonResponse
-from .views import about, contact, blog, blog_detail, quote_submitted, request_cleaning_quote, request_handyman_quote, available_hours_api, quote_submitted_handyman, subscribe_newsletter, request_cleaning_booking, request_handyman_booking, cleaning_booking, handyman_booking, office_cleaning_booking, office_quote_submit, terms, privacy, faq, download_office_cleaning_pdf, office_cleaning_quote_submitted, cleaning_services, commercial_services, handyman_quote_submit, booking_confirmation, request_post_event_cleaning_quote, post_event_cleaning_quote_submit, quote_submitted_post_event_cleaning
+from .views import about, contact, blog, blog_detail, quote_submitted, request_cleaning_quote, request_handyman_quote, available_hours_api, quote_submitted_handyman, subscribe_newsletter, request_cleaning_booking, request_handyman_booking, cleaning_booking, handyman_booking, office_cleaning_booking, office_cleaning_quote, office_quote_submit, terms, privacy, faq, download_office_cleaning_pdf, office_cleaning_quote_submitted, cleaning_services, commercial_services, handyman_quote_submit, booking_confirmation, request_post_event_cleaning_quote, post_event_cleaning_quote_submit, quote_submitted_post_event_cleaning, home_cleaning_quote, home_cleaning_quote_submitted
 from .stripe_views import create_payment_intent, stripe_webhook, webhook_test, manual_webhook_trigger, get_payment_status, create_checkout_session, check_and_fix_payment_status, fix_payment_intent_metadata, test_payment_link_webhook
 from .debug_views import debug_booking_calculation
 
@@ -30,14 +30,16 @@ urlpatterns = [
     path("blog-detail-2/", TemplateView.as_view(template_name="blog_detail_2.html"), name="blog_detail_2"),
     path("blog-detail-3/", TemplateView.as_view(template_name="blog_detail_3.html"), name="blog_detail_3"),
 
-    path("cleaning/booking/", cleaning_booking, name="cleaning_booking"),
+    path("cleaning/booking/", home_cleaning_quote, name="cleaning_booking"),  # Redirected to home_cleaning_quote
+    path("home/cleaning/quote/", home_cleaning_quote, name="home_cleaning_quote"),
     path("handyman/booking/", handyman_booking, name="handyman_booking"),
     path("office/cleaning/booking/", office_cleaning_booking, name="office_cleaning_booking"),
+    path("office/cleaning/quote/", office_cleaning_quote, name="office_cleaning_quote"),
     path("office/quote/submit/", office_quote_submit, name="office_quote_submit"),
     path("handyman/quote/submit/", handyman_quote_submit, name="handyman_quote_submit"),
     path("post-event-cleaning/quote/submit/", post_event_cleaning_quote_submit, name="post_event_cleaning_quote_submit"),
     path("office/cleaning/pdf/<int:booking_id>/", download_office_cleaning_pdf, name="download_office_cleaning_pdf"),
-    path("office/cleaning/submitted/<int:booking_id>/", office_cleaning_quote_submitted, name="office_cleaning_quote_submitted"),
+    path("office/cleaning/submitted/<int:quote_id>/", office_cleaning_quote_submitted, name="office_cleaning_quote_submitted"),
     path("booking/confirmation/<int:booking_id>/", booking_confirmation, name="booking_confirmation"),
 
     path("cleaning/request/<int:service_id>/", request_cleaning_quote, name="request_cleaning_quote"),
@@ -46,6 +48,7 @@ urlpatterns = [
     path("submitted/<int:quote_id>/", quote_submitted, name="quote_submitted"),
     path("submitted-handyman/<int:quote_id>/", quote_submitted_handyman, name="quote_submitted_handyman"),
     path("submitted-post-event-cleaning/<int:quote_id>/", quote_submitted_post_event_cleaning, name="quote_submitted_post_event_cleaning"),
+    path("submitted-home-cleaning/<int:quote_id>/", home_cleaning_quote_submitted, name="home_cleaning_quote_submitted"),
     path("api/available-hours/", available_hours_api, name="available_hours_api"),
 
     path('subscribe/', subscribe_newsletter, name='subscribe_newsletter'),

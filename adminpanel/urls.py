@@ -7,6 +7,10 @@ from .views import (
     giftcard_discount, subscriber_list, add_subscriber, export_subscribers_csv, office_quote_list, office_quote_detail, export_office_quotes_csv, send_office_quote_email, generate_office_quote_pdf,
     handyman_quote_list, handyman_quote_detail, update_handyman_quote_status, export_handyman_quotes_csv, send_handyman_quote_email, generate_handyman_quote_pdf, delete_handyman_quote,
     post_event_cleaning_quote_list, post_event_cleaning_quote_detail, update_post_event_cleaning_quote_status, export_post_event_cleaning_quotes_csv, send_post_event_cleaning_quote_email, generate_post_event_cleaning_quote_pdf, delete_post_event_cleaning_quote,
+    home_cleaning_quote_list, home_cleaning_quote_detail, delete_home_cleaning_quote, export_home_cleaning_quotes_csv,
+    send_home_cleaning_quote_email,
+    office_cleaning_quote_list, office_cleaning_quote_detail, delete_office_cleaning_quote, export_office_cleaning_quotes_csv,
+    send_office_cleaning_quote_email,
     send_payment_link
 )
 
@@ -104,6 +108,18 @@ urlpatterns = [
     path("post-event-cleaning-quotes/export-csv/", export_post_event_cleaning_quotes_csv, name="export_post_event_cleaning_quotes_csv"),
     path("post-event-cleaning-quotes/<int:quote_id>/send-email/", send_post_event_cleaning_quote_email, name="send_post_event_cleaning_quote_email"),
     path("post-event-cleaning-quotes/<int:quote_id>/generate-pdf/", generate_post_event_cleaning_quote_pdf, name="generate_post_event_cleaning_quote_pdf"),
+
+    # Home Cleaning Quotes Management
+    path("home-cleaning-quotes/", home_cleaning_quote_list, name="home_cleaning_quote_list"),
+    path("home-cleaning-quotes/<int:quote_id>/", home_cleaning_quote_detail, name="home_cleaning_quote_detail"),
+    path("home-cleaning-quotes/<int:quote_id>/delete/", delete_home_cleaning_quote, name="delete_home_cleaning_quote"),
+    path("home-cleaning-quotes/export-csv/", export_home_cleaning_quotes_csv, name="export_home_cleaning_quotes_csv"),
+
+    # Office Cleaning Quotes Management
+    path("office-cleaning-quotes/", office_cleaning_quote_list, name="office_cleaning_quote_list"),
+    path("office-cleaning-quotes/<int:quote_id>/", office_cleaning_quote_detail, name="office_cleaning_quote_detail"),
+    path("office-cleaning-quotes/<int:quote_id>/delete/", delete_office_cleaning_quote, name="delete_office_cleaning_quote"),
+    path("office-cleaning-quotes/export-csv/", export_office_cleaning_quotes_csv, name="export_office_cleaning_quotes_csv"),
 
     # Payment Link Management
     path("send-payment-link/", send_payment_link, name="send_payment_link"),

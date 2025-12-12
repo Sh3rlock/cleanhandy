@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from .models import (
     Quote, Service, ServiceCategory, CleaningExtra, HomeType, 
     SquareFeetOption, NewsletterSubscriber, Booking, Contact, 
-    Review, ContactInfo, AboutContent, HourlyRate, HandymanQuote, PostEventCleaningQuote
+    Review, ContactInfo, AboutContent, HourlyRate, HandymanQuote, PostEventCleaningQuote, HomeCleaningQuoteRequest
 )
 
 # ============================================================================
@@ -858,4 +858,174 @@ class PostEventCleaningQuoteAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         """Allow deleting post event cleaning quotes"""
         return True
+
+
+# ============================================================================
+# HOME CLEANING QUOTE REQUEST ADMIN
+# ============================================================================
+
+@admin.register(HomeCleaningQuoteRequest)
+class HomeCleaningQuoteRequestAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'get_name_display', 'get_email_display', 'get_phone_display',
+        'get_address_short', 'cleaning_type', 'get_frequency_display',
+        'date', 'hour', 'get_status_badge', 'created_at', 'actions_column'
+    ]
+    list_filter = ['cleaning_type', 'cleaning_frequency', 'created_at', 'date']
+    search_fields = ['name', 'email', 'phone', 'address', 'job_description']
+    readonly_fields = ['created_at']
+    list_per_page = 25
+    ordering = ['-created_at']
+    date_hierarchy = 'created_at'
+    
+    fieldsets = (
+        ('Customer Information', {
+            'fields': ('name', 'email', 'phone'),
+            'description': 'Customer contact details'
+        }),
+        ('Service Details', {
+            'fields': ('service', 'home_types', 'cleaning_type', 'bath_count'),
+            'description': 'Service configuration and requirements'
+        }),
+        ('Scheduling', {
+            'fields': ('date', 'hour', 'cleaning_frequency'),
+            'description': 'Service scheduling information'
+        }),
+        ('Location', {
+            'fields': ('address', 'apartment', 'city', 'state', 'zip_code'),
+            'description': 'Service location details'
+        }),
+        ('Property Access & Conditions', {
+            'fields': ('get_in', 'parking', 'pet'),
+            'description': 'Property access and special conditions',
+            'classes': ('collapse',)
+        }),
+        ('Job Description', {
+            'fields': ('job_description',),
+            'description': 'Additional job details and requirements'
+        }),
+        ('System Information', {
+            'fields': ('created_at',),
+            'classes': ('collapse',),
+            'description': 'Automatically managed timestamps'
+        }),
+    )
+    
+    def get_name_display(self, obj):
+        """Format name display with better styling"""
+        return format_html(
+            '<span style="color: #2E86AB; font-weight: bold;">{}</span>',
+            obj.name or 'N/A'
+        )
+    get_name_display.short_description = 'Customer Name'
+    get_name_display.admin_order_field = 'name'
+    
+    def get_email_display(self, obj):
+        """Format email display with better styling"""
+        return format_html(
+            '<span style="color: #6F42C1; font-weight: bold;">{}</span>',
+            obj.email or 'N/A'
+        )
+    get_email_display.short_description = 'Email'
+    get_email_display.admin_order_field = 'email'
+    
+    def get_phone_display(self, obj):
+        """Format phone display with better styling"""
+        return format_html(
+            '<span style="color: #17A2B8; font-weight: bold;">{}</span>',
+            obj.phone or 'N/A'
+        )
+    get_phone_display.short_description = 'Phone'
+    get_phone_display.admin_order_field = 'phone'
+    
+    def get_address_short(self, obj):
+        """Display shortened address"""
+        addr = obj.address or ''
+        if len(addr) > 50:
+            return format_html(
+                '<span style="color: #FD7E14;" title="{}">{}...</span>',
+                addr, addr[:50]
+            )
+        return format_html(
+            '<span style="color: #FD7E14;">{}</span>',
+            addr or 'N/A'
+        )
+    get_address_short.short_description = 'Address'
+    get_address_short.admin_order_field = 'address'
+    
+    def get_frequency_display(self, obj):
+        """Format frequency display with better styling"""
+        if obj.cleaning_frequency:
+            frequency_labels = {
+                'one_time': 'One Time',
+                'daily': 'Daily - 20% Off',
+                'weekly': 'Weekly - 15% Off',
+                'bi_weekly': 'Bi Weekly - 10% Off',
+                'monthly': 'Monthly - 5% Off'
+            }
+            label = frequency_labels.get(obj.cleaning_frequency, obj.cleaning_frequency)
+            return format_html(
+                '<span style="color: #FD7E14; font-weight: bold;">{}</span>',
+                label
+            )
+        return "One Time"
+    get_frequency_display.short_description = 'Frequency'
+    get_frequency_display.admin_order_field = 'cleaning_frequency'
+    
+    def get_status_badge(self, obj):
+        """Display status as a colored badge - always pending for quote requests"""
+        return format_html(
+            '<span style="background-color: #FFC107; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">⏳ Pending Review</span>'
+        )
+    get_status_badge.short_description = 'Status'
+    
+    def actions_column(self, obj):
+        """Display action buttons"""
+        return format_html(
+            '<div style="display: flex; gap: 5px;">'
+            '<a href="/admin/quotes/homecleaningquoterequest/{}/change/" style="color: #007BFF; text-decoration: none;" title="Edit">✏️</a>'
+            '<a href="/admin/quotes/homecleaningquoterequest/{}/delete/" style="color: #DC3545; text-decoration: none;" title="Delete">🗑️</a>'
+            '</div>',
+            obj.id, obj.id
+        )
+    actions_column.short_description = 'Actions'
+    
+    actions = ['export_quote_requests']
+    
+    def export_quote_requests(self, request, queryset):
+        """Export selected quote requests to CSV"""
+        import csv
+        from django.http import HttpResponse
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="home_cleaning_quote_requests.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'ID', 'Name', 'Email', 'Phone', 'Address', 'City', 'State', 'ZIP',
+            'Service', 'Home Type', 'Cleaning Type', 'Bath Count',
+            'Date', 'Hour', 'Frequency',
+            'Get In', 'Parking', 'Pet', 'Job Description', 'Created At'
+        ])
+
+        for quote in queryset:
+            writer.writerow([
+                quote.id, quote.name, quote.email, quote.phone,
+                quote.address, quote.city, quote.state, quote.zip_code,
+                quote.service.name if quote.service else '',
+                quote.home_types.name if quote.home_types else '',
+                quote.cleaning_type or '',
+                quote.bath_count or '',
+                quote.date.strftime('%Y-%m-%d') if quote.date else '',
+                quote.hour.strftime('%H:%M') if quote.hour else '',
+                quote.cleaning_frequency or '',
+                quote.get_in or '',
+                quote.parking or '',
+                quote.pet or '',
+                quote.job_description or '',
+                quote.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            ])
+
+        return response
+    export_quote_requests.short_description = 'Export selected quotes to CSV'
 

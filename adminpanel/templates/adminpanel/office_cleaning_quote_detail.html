@@ -1,0 +1,444 @@
+{% extends "accounts/partials/account_base.html" %}
+{% load static %}
+{% block account_content %}
+
+{% if messages %}
+<div class="container-fluid mb-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<style>
+     section {
+        z-index: unset !important;
+     }
+
+     .text-primary {
+        color: #F15A29 !important;
+      }
+
+      .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        background-color: #FFC107;
+        color: #000;
+      }
+
+      .quote-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-outline-orange {
+        color: #F15A29;
+        border: 1px solid #F15A29;
+        background-color: transparent;
+        transition: all 0.2s ease;
+      }
+      
+      .btn-outline-orange:hover {
+        background-color: #F15A29;
+        color: white;
+      }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="fa-solid fa-building me-2 text-primary"></i> Office Cleaning Quote Details</h2>
+    <div>
+        <a href="{% url 'office_cleaning_quote_list' %}" class="btn btn-outline-orange btn-sm">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quote Information -->
+    <div class="col-lg-8">
+        <div class="card quote-card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-file-invoice me-2 text-primary"></i>
+                    Quote #{{ office_cleaning_quote.id }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Customer Information</h6>
+                        <p><strong>Name:</strong> {{ office_cleaning_quote.name|default:"N/A" }}</p>
+                        <p><strong>Email:</strong> {{ office_cleaning_quote.email|default:"N/A" }}</p>
+                        <p><strong>Phone:</strong> {{ office_cleaning_quote.phone_number|default:"N/A" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Quote Details</h6>
+                        <p><strong>Status:</strong> 
+                            {% if office_cleaning_quote.status == 'pending' %}
+                                <span class="status-badge" style="background-color: #FFC107;">⏳ Pending</span>
+                            {% elif office_cleaning_quote.status == 'email_sent' %}
+                                <span class="status-badge" style="background-color: #17a2b8;">📧 Email Sent</span>
+                            {% elif office_cleaning_quote.status == 'accepted' %}
+                                <span class="status-badge" style="background-color: #28a745;">✅ Accepted</span>
+                            {% elif office_cleaning_quote.status == 'completed' %}
+                                <span class="status-badge" style="background-color: #6c757d;">✓ Completed</span>
+                            {% elif office_cleaning_quote.status == 'declined' %}
+                                <span class="status-badge" style="background-color: #dc3545;">❌ Declined</span>
+                            {% else %}
+                                <span class="status-badge">{{ office_cleaning_quote.get_status_display|default:"Pending" }}</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Created:</strong> {{ office_cleaning_quote.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Business Information</h6>
+                        <p><strong>Business Address:</strong> {{ office_cleaning_quote.business_address|default:"N/A" }}</p>
+                        <p><strong>Square Footage:</strong> {{ office_cleaning_quote.square_footage|default:"N/A" }}</p>
+                        {% if form_data and form_data.business_type_display %}
+                        <p><strong>Type of Business:</strong> {{ form_data.business_type_display }}</p>
+                        {% endif %}
+                        {% if form_data and form_data.crew_size_hours_display %}
+                        <p><strong>Crew/Size/Hours:</strong> {{ form_data.crew_size_hours_display }}</p>
+                        {% endif %}
+                        {% if form_data and form_data.hear_about_us_display %}
+                        <p><strong>How did you hear about us:</strong> {{ form_data.hear_about_us_display }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Service Details</h6>
+                        {% if form_data and form_data.cleaning_frequency_display %}
+                        <p><strong>Cleaning Frequency:</strong> {{ form_data.cleaning_frequency_display }}</p>
+                        {% endif %}
+                        {% if form_data and form_data.selected_date %}
+                        <p><strong>Selected Date:</strong> 
+                            {% if form_data.selected_date|date:"F d, Y" %}
+                                {{ form_data.selected_date|date:"F d, Y" }}
+                            {% else %}
+                                {{ form_data.selected_date }}
+                            {% endif %}
+                        </p>
+                        {% endif %}
+                        {% if form_data and form_data.selected_time %}
+                        <p><strong>Selected Time:</strong> 
+                            {% if form_data.selected_time|time:"g:i A" %}
+                                {{ form_data.selected_time|time:"g:i A" }}
+                            {% else %}
+                                {{ form_data.selected_time }}
+                            {% endif %}
+                        </p>
+                        {% endif %}
+                        {% if form_data and form_data.recurrence_pattern_display and form_data.recurrence_pattern != "one_time" %}
+                        <p><strong>Recurrence Pattern:</strong> {{ form_data.recurrence_pattern_display }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if office_cleaning_quote.job_description %}
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-2">Job Description</h6>
+                        <div class="bg-light p-3 rounded">
+                            {{ office_cleaning_quote.job_description|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!--{% if form_data.admin_notes_text or office_cleaning_quote.admin_notes %}
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-2">Admin Notes</h6>
+                        <div class="bg-light p-3 rounded">
+                            {% if form_data.admin_notes_text %}
+                                {{ form_data.admin_notes_text|linebreaks }}
+                            {% elif office_cleaning_quote.admin_notes %}
+                                {{ office_cleaning_quote.admin_notes|linebreaks }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %} -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="col-lg-4">
+        <div class="card quote-card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-cogs me-2 text-primary"></i>
+                    Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{% url 'office_cleaning_quote_detail' office_cleaning_quote.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Update Status</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="pending" {% if office_cleaning_quote.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="email_sent" {% if office_cleaning_quote.status == 'email_sent' %}selected{% endif %}>Email Sent</option>
+                            <option value="accepted" {% if office_cleaning_quote.status == 'accepted' %}selected{% endif %}>Accepted</option>
+                            <option value="completed" {% if office_cleaning_quote.status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="declined" {% if office_cleaning_quote.status == 'declined' %}selected{% endif %}>Declined</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mb-2">
+                        <i class="fa-solid fa-save me-2"></i> Update Status
+                    </button>
+                </form>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'office_cleaning_quote_list' %}" class="btn btn-outline-primary">
+                        <i class="fa-solid fa-list me-2"></i> Back to List
+                    </a>
+                    <form method="POST" action="{% url 'delete_office_cleaning_quote' office_cleaning_quote.id %}" onsubmit="return confirm('Are you sure you want to delete this quote?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="fa-solid fa-trash me-2"></i> Delete Quote
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Email Sent Status -->
+        {% if email_sent_at %}
+        <div class="card quote-card mb-4" style="border-left: 4px solid #28a745;">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-check-circle me-2" style="color: #28a745;"></i>
+                    Email Sent Successfully
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success mb-0" style="background-color: #d4edda; border-color: #c3e6cb;">
+                    <div class="d-flex align-items-start">
+                        <i class="fa-solid fa-envelope-circle-check me-2 mt-1" style="color: #28a745; font-size: 1.2em;"></i>
+                        <div>
+                            <strong>✓ Email sent to customer:</strong> {{ email_sent_to }}<br>
+                            <strong>Sent on:</strong> {{ email_sent_at|date:"F d, Y" }} at {{ email_sent_at|time:"g:i A" }}<br>
+                            <small class="text-muted">This email was sent from the admin panel and includes the quote details.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Send Email Form -->
+        <div class="card quote-card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-envelope me-2 text-primary"></i>
+                    {% if email_sent_at %}Resend{% else %}Send{% endif %} Quote Email to Customer
+                </h5>
+            </div>
+            <div class="card-body" style="max-height: 80vh; overflow-y: auto;">
+                <form method="POST" action="{% url 'office_cleaning_quote_detail' office_cleaning_quote.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="email_action" value="send_quote_email">
+                    
+                    <h6 class="text-muted mb-3">Customer Information</h6>
+                    <div class="mb-3">
+                        <label for="customer_name" class="form-label">Name</label>
+                        <input type="text" name="customer_name" id="customer_name" class="cmn-input" value="{{ office_cleaning_quote.name|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="customer_email" class="form-label">Email</label>
+                        <input type="email" name="customer_email" id="customer_email" class="cmn-input" value="{{ office_cleaning_quote.email|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="customer_phone" class="form-label">Phone</label>
+                        <input type="text" name="customer_phone" id="customer_phone" class="cmn-input" value="{{ office_cleaning_quote.phone_number|default:'' }}">
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="text-muted mb-3">Business Information</h6>
+                    <div class="mb-3">
+                        <label for="business_type" class="form-label">Type of Business</label>
+                        <input type="text" name="business_type" id="business_type" class="cmn-input" value="{% if form_data and form_data.business_type_display %}{{ form_data.business_type_display }}{% endif %}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="crew_size_hours" class="form-label">Crew/Size/Hours</label>
+                        <input type="text" name="crew_size_hours" id="crew_size_hours" class="cmn-input" value="{% if form_data and form_data.crew_size_hours_display %}{{ form_data.crew_size_hours_display }}{% endif %}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="business_address" class="form-label">Business Address</label>
+                        <textarea name="business_address" id="business_address" class="cmn-input" rows="2">{{ office_cleaning_quote.business_address|default:'' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="square_footage" class="form-label">Square Footage</label>
+                        <input type="text" name="square_footage" id="square_footage" class="cmn-input" value="{{ office_cleaning_quote.square_footage|default:'' }}">
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="text-muted mb-3">Service Details</h6>
+                    <div class="mb-3">
+                        <label for="cleaning_frequency" class="form-label">Cleaning Frequency</label>
+                        <input type="text" name="cleaning_frequency" id="cleaning_frequency" class="cmn-input" value="{% if form_data and form_data.cleaning_frequency_display %}{{ form_data.cleaning_frequency_display }}{% endif %}">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="service_date" class="form-label">Service Date</label>
+                            <input type="date" name="service_date" id="service_date" class="cmn-input" value="{% if form_data and form_data.selected_date %}{{ form_data.selected_date|date:'Y-m-d' }}{% endif %}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="service_time" class="form-label">Service Time</label>
+                            <input type="time" name="service_time" id="service_time" class="cmn-input" value="{% if form_data and form_data.selected_time %}{{ form_data.selected_time|time:'H:i' }}{% endif %}">
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="text-muted mb-3">Quote Information</h6>
+                    <div class="mb-3">
+                        <label for="estimated_time" class="form-label">Estimated Time</label>
+                        <input type="text" name="estimated_time" id="estimated_time" class="cmn-input" placeholder="e.g., 2-3 hours">
+                    </div>
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price ($)</label>
+                        <input type="number" step="0.01" name="price" id="price" class="cmn-input" placeholder="0.00">
+                    </div>
+                    <div class="mb-3">
+                        <label for="parking_fee" class="form-label">Parking Fee ($)</label>
+                        <input type="number" step="0.01" name="parking_fee" id="parking_fee" class="cmn-input" placeholder="0.00">
+                    </div>
+                    <div class="mb-3">
+                        <label for="discount_type" class="form-label">Discount Type</label>
+                        <select name="discount_type" id="discount_type" class="cmn-input" onchange="updateDiscountLabel()">
+                            <option value="value">Value ($)</option>
+                            <option value="percentage">Percentage (%)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="discount" class="form-label" id="discount_label">Discount ($)</label>
+                        <input type="number" step="0.01" name="discount" id="discount" class="cmn-input" placeholder="0.00">
+                    </div>
+                    <div class="mb-3">
+                        <label for="payment_link" class="form-label">Payment Link</label>
+                        <input type="url" name="payment_link" id="payment_link" class="cmn-input" placeholder="https://...">
+                    </div>
+                    <div class="mb-3">
+                        <label for="job_description" class="form-label">Job Description</label>
+                        <textarea name="job_description" id="job_description" class="cmn-input" rows="3">{{ office_cleaning_quote.job_description|default:'' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="note" class="form-label">Note to Customer</label>
+                        <textarea name="note" id="note" class="cmn-input" rows="3" placeholder="Additional message for the customer..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fa-solid fa-envelope me-2"></i> Send Email to Customer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateDiscountLabel() {
+    const discountType = document.getElementById('discount_type').value;
+    const discountLabel = document.getElementById('discount_label');
+    const discountInput = document.getElementById('discount');
+    
+    if (discountType === 'percentage') {
+        discountLabel.textContent = 'Discount (%)';
+        discountInput.placeholder = '0.00';
+        discountInput.step = '0.01';
+        discountInput.max = '100';
+    } else {
+        discountLabel.textContent = 'Discount ($)';
+        discountInput.placeholder = '0.00';
+        discountInput.step = '0.01';
+        discountInput.removeAttribute('max');
+    }
+}
+</script>
+
+<!-- Email History Log -->
+{% if email_history %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card quote-card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-envelope-open-text me-2 text-primary"></i>
+                    Email Sending History
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Sent To</th>
+                                <th>Date & Time</th>
+                                <th>Price</th>
+                                <th>Discount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for email in email_history %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <i class="fa-solid fa-envelope me-1 text-muted"></i>
+                                    {{ email.customer_email }}
+                                </td>
+                                <td>
+                                    <i class="fa-solid fa-clock me-1 text-muted"></i>
+                                    {{ email.sent_at|date:"F d, Y" }} at {{ email.sent_at|time:"g:i A" }}
+                                </td>
+                                <td>
+                                    {% if email.price %}
+                                        ${{ email.price }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if email.discount %}
+                                        {% if email.discount_type == 'percentage' %}
+                                            {{ email.discount }}%
+                                        {% else %}
+                                            ${{ email.discount }}
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

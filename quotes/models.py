@@ -247,9 +247,9 @@ class OfficeQuote(models.Model):
         max_length=20,
         choices=[
             ("pending", "Pending"),
-            ("reviewed", "Reviewed"),
-            ("quoted", "Quoted"),
+            ("email_sent", "Email Sent"),
             ("accepted", "Accepted"),
+            ("completed", "Completed"),
             ("declined", "Declined"),
         ],
         default="pending",
@@ -1196,6 +1196,64 @@ class PostEventCleaningQuote(models.Model):
         ordering = ['-created_at']
         verbose_name = "Post Event Cleaning Quote"
         verbose_name_plural = "Post Event Cleaning Quotes"
+
+
+class HomeCleaningQuoteRequest(models.Model):
+    """Lightweight model to capture home cleaning quote submissions"""
+
+    # Contact info
+    name = models.CharField(max_length=150, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+
+    # Service info
+    service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, blank=True)
+    home_types = models.ForeignKey(HomeType, on_delete=models.SET_NULL, null=True, blank=True)
+    cleaning_type = models.CharField(max_length=100, blank=True, null=True)
+    bath_count = models.CharField(max_length=10, blank=True, null=True)
+
+    # Scheduling
+    date = models.DateField(blank=True, null=True)
+    hour = models.TimeField(blank=True, null=True)
+
+    # Additional details
+    get_in = models.CharField(max_length=50, blank=True, null=True)
+    parking = models.TextField(blank=True, null=True)
+    pet = models.CharField(max_length=50, blank=True, null=True)
+    cleaning_frequency = models.CharField(max_length=50, blank=True, null=True)
+    job_description = models.TextField(blank=True, null=True)
+
+    # Address
+    address = models.CharField(max_length=255, blank=True, null=True)
+    apartment = models.CharField(max_length=50, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True, default="New York")
+    state = models.CharField(max_length=50, blank=True, null=True, default="NY")
+    zip_code = models.CharField(max_length=10, blank=True, null=True)
+
+    # Admin fields
+    admin_notes = models.TextField(blank=True, null=True, help_text="Stores admin notes and email history as JSON")
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("email_sent", "Email Sent"),
+            ("accepted", "Accepted"),
+            ("completed", "Completed"),
+            ("declined", "Declined"),
+        ],
+        default="pending",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Home Cleaning Quote"
+        verbose_name_plural = "Home Cleaning Quotes"
+
+    def __str__(self):
+        contact = self.name or self.email or self.phone or "Unknown"
+        return f"Home Quote #{self.id} - {contact}"
 
 
 

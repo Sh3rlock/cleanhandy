@@ -501,9 +501,9 @@
         <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
       {% endif %}
         {% if user.is_authenticated %}
-          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+          <a class="btn-1" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
         {% else %}
-          <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+          <a class="btn-1" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
         {% endif %}
         {% for service in all_services %}
           {% if service.category.name|lower == 'post event cleaning' %}
@@ -559,7 +559,7 @@
                       </a>
                       <ul class="dropdown-menu" aria-labelledby="bookNowDropdown">
                         <li><a class="dropdown-item" href="{% url 'cleaning_booking' %}">Cleaning</a></li>
-                        <li><a class="dropdown-item" href="{% url 'office_cleaning_booking' %}">Office Cleaning</a></li>
+                        <li><a class="dropdown-item" href="{% url 'office_cleaning_quote' %}">Office Cleaning</a></li>
                       </ul>
                     </li>
                     <li class="nav-item">

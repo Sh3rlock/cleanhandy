@@ -29,29 +29,35 @@
         <div class="card-body">
           <h5 class="card-title text-primary mb-3"><i class="fa-solid fa-compass me-2"></i>Quick Navigation</h5>
           <div class="row">
-            <div class="col-md-3 mb-2">
+            <!--<div class="col-md-3 mb-2">
               <a href="{% url 'booking_list' %}" class="btn btn-outline-orange btn-sm w-100">
                 <i class="fa-solid fa-calendar-days me-2"></i>Bookings
+              </a>
+            </div> -->
+            <div class="col-md-3 mb-2">
+              <a href="{% url 'home_cleaning_quote_list' %}" class="btn btn-outline-orange btn-sm w-100 p-2">
+                <i class="fa-solid fa-house me-2"></i>Home Cleaning Quotes
+              </a>
+            </div>
+            <div class="col-md-3 mb-2">
+              <a href="{% url 'office_cleaning_quote_list' %}" class="btn btn-outline-orange btn-sm w-100 p-2">
+                <i class="fa-solid fa-building me-2"></i>Office Cleaning Quotes
+              </a>
+            </div>
+            <div class="col-md-3 mb-2">
+              <a href="{% url 'handyman_quote_list' %}" class="btn btn-outline-orange btn-sm w-100 p-2">
+                <i class="fa-solid fa-hammer me-2"></i>Handyman Quotes
               </a>
             </div>
             
             <div class="col-md-3 mb-2">
-              <a href="{% url 'office_quote_list' %}" class="btn btn-outline-orange btn-sm w-100">
-                <i class="fa-solid fa-building me-2"></i>Office Quotes
-              </a>
-            </div>
-            <div class="col-md-3 mb-2">
-              <a href="{% url 'handyman_quote_list' %}" class="btn btn-outline-orange btn-sm w-100">
-                <i class="fa-solid fa-hammer me-2"></i>Handyman Quotes
-              </a>
-            </div>
-            <div class="col-md-3 mb-2">
-              <a href="{% url 'post_event_cleaning_quote_list' %}" class="btn btn-outline-orange btn-sm w-100">
+              <a href="{% url 'post_event_cleaning_quote_list' %}" class="btn btn-outline-orange btn-sm w-100 p-2">
                 <i class="fa-solid fa-broom me-2"></i>Post Event Cleaning Quotes
               </a>
             </div>
           </div>
           <div class="row mt-2">
+            
             <div class="col-md-3 mb-2">
               <a href="{% url 'customer_list' %}" class="btn btn-outline-orange btn-sm w-100">
                 <i class="fa-solid fa-users me-2"></i>Customers
@@ -79,71 +85,51 @@
     </div>
   </div>
 
-  <!-- Summary Cards -->
-  <div class="row">
-    <div class="col-md-3 mb-3">
-      <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
-        <div class="card-body">
-          <h5 class="card-title text-primary"><i class="fa-solid fa-calendar-days me-2 text-primary"></i> Total Bookings</h5>
-          <h3 class="card-text">{{ total_bookings }}</h3>
-          <a href="{% url 'booking_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Bookings</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-3 mb-3">
-      <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
-        <div class="card-body">
-          <h5 class="card-title text-primary"><i class="fa-solid fa-users me-2 text-primary"></i> Registered Customers</h5>
-          <h3 class="card-text">{{ total_customers }}</h3>
-          <a href="{% url 'customer_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Customers</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-3 mb-3">
-      <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
-        <div class="card-body">
-          <h5 class="card-title text-primary"><i class="fa-solid fa-coins me-2 text-primary"></i> Total Income</h5>
-          <h3 class="card-text">$1345</h3>
-          <a href="{% url 'booking_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Income</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-3 mb-3">
-      <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
-        <div class="card-body">
-          <h5 class="card-title text-primary"><i class="fa-solid fa-newspaper me-2 text-primary"></i> Total Subscribers</h5>
-          <h3 class="card-text">{{ total_subscribers }}</h3>
-          <a href="{% url 'subscriber_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Subscribers</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  
   <!-- Quote Summary Cards -->
   <div class="row">
     <div class="col-md-6 mb-3">
       <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
         <div class="card-body">
-          <h5 class="card-title text-primary"><i class="fa-solid fa-building me-2 text-primary"></i> Office Quotes</h5>
-          <h3 class="card-text">{{ total_office_quotes }}</h3>
+          <h5 class="card-title text-primary"><i class="fa-solid fa-house me-2 text-primary"></i> Home Cleaning Quotes</h5>
+          <h3 class="card-text">{{ total_home_cleaning_quotes }}</h3>
           <div class="row mt-2">
             <div class="col-6">
-              <small class="text-muted">Pending: {{ office_quote_status_counts.pending }}</small><br>
-              <small class="text-muted">Contacted: {{ office_quote_status_counts.contacted }}</small>
+              <small class="text-muted">Pending: {{ home_cleaning_quote_status_counts.pending }}</small><br>
+              <small class="text-muted">Reviewed: {{ home_cleaning_quote_status_counts.reviewed }}</small>
             </div>
             <div class="col-6">
-              <small class="text-muted">Quoted: {{ office_quote_status_counts.quoted }}</small><br>
-              <small class="text-muted">Completed: {{ office_quote_status_counts.completed }}</small>
+              <small class="text-muted">Quoted: {{ home_cleaning_quote_status_counts.quoted }}</small><br>
+              <small class="text-muted">Accepted: {{ home_cleaning_quote_status_counts.accepted }}</small>
             </div>
           </div>
-          <a href="{% url 'office_quote_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Office Quotes</a>
+          <a href="{% url 'home_cleaning_quote_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Home Cleaning Quotes</a>
         </div>
       </div>
     </div>
 
+    <div class="col-md-6 mb-3">
+      <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
+        <div class="card-body">
+          <h5 class="card-title text-primary"><i class="fa-solid fa-building me-2 text-primary"></i> Office Cleaning Quotes</h5>
+          <h3 class="card-text">{{ total_office_cleaning_quotes }}</h3>
+          <div class="row mt-2">
+            <div class="col-6">
+              <small class="text-muted">Pending: {{ office_cleaning_quote_status_counts.pending }}</small><br>
+              <small class="text-muted">Reviewed: {{ office_cleaning_quote_status_counts.reviewed }}</small>
+            </div>
+            <div class="col-6">
+              <small class="text-muted">Quoted: {{ office_cleaning_quote_status_counts.quoted }}</small><br>
+              <small class="text-muted">Accepted: {{ office_cleaning_quote_status_counts.accepted }}</small>
+            </div>
+          </div>
+          <a href="{% url 'office_cleaning_quote_list' %}" class="btn btn-outline-orange btn-sm mt-2">Manage Office Cleaning Quotes</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
     <div class="col-md-6 mb-3">
       <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
         <div class="card-body">
@@ -163,9 +149,6 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="row">
     <div class="col-md-6 mb-3">
       <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
         <div class="card-body">
@@ -187,256 +170,7 @@
     </div>
   </div>
 
-  <div class="row">
-    <!-- Latest Bookings - wider column -->
-    <div class="col-12 col-lg-7">
-      
-      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
-        <h4 class="mb-0">
-          <i class="fa-solid fa-calendar-plus me-2 text-primary"></i> Latest Bookings
-        </h4>
-        <a href="{% url 'booking_list' %}" class="btn btn-sm btn-outline-primary">
-          Manage
-        </a>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-striped align-middle">
-          <thead>
-            <tr>
-              <th>Customer</th>
-              <th>Service</th>
-              <th>Status</th>
-              <th>Created</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for booking in latest_bookings %}
-              <tr>
-                <td>{{ booking.name }}</td>
-                <td>{{ booking.service_cat }}</td>
-                <td>
-                  {% if booking.status == "confirmed" %}
-                    <span class="badge bg-success text-dark">{{ booking.status }}</span>
-                  {% else %}
-                    <span class="badge bg-warning text-dark">{{ booking.status }}</span>
-                  {% endif %}
-                </td>
-                <td>{{ booking.created_at|date:'M d, Y H:i' }}</td>
-                <td>
-                  {% if booking.service_cat.name == 'Handyman' %}
-                    <a href="{% url 'quote_detail' booking.id %}" class="btn btn-sm btn-outline-primary">View</a>
-                  {% else %}
-                    <a href="{% url 'booking_detail_admin' booking.id %}" class="btn btn-sm btn-outline-primary">View</a>
-                  {% endif %}
-                </td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="5" class="text-muted text-center">No recent bookings.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
 
-    <div class="col-12 col-lg-5">
-
-      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
-        <h4 class="mb-0">
-          <i class="fa-solid fa-tag me-2 text-primary"></i> Active Discounts
-        </h4>
-        <a href="{% url 'giftcard_discount' %}" class="btn btn-sm btn-outline-primary">
-          Manage
-        </a>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-striped align-middle">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Type</th>
-              <th>Value</th>
-              <th>Expires At</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for discount in discounts %}
-              <tr>
-                <td>{{ discount.code }}</td>
-                <td>{{ discount.discount_type }}</td>
-                <td>{{ discount.value }}</td>
-                <td>{{ discount.expires_at|date:"M d, Y" }}</td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="3" class="text-muted text-center">No active discount code.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
-        <h4 class="mb-0">
-          <i class="fa-solid fa-user me-2 text-primary"></i> Latest Customers
-        </h4>
-        <a href="{% url 'customer_list' %}" class="btn btn-sm btn-outline-primary">
-          View All
-        </a>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-striped align-middle">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for customer in latest_customers %}
-              <tr>
-                <td>{{ customer.username }}</td>
-                <td>{{ customer.email }}</td>
-                <td>{{ customer.profile.phone }}</td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="3" class="text-muted text-center">No recent customers.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
-        <h4 class="mb-0">
-          <i class="fa-solid fa-newspaper me-2 text-primary"></i> Latest Subscribers
-        </h4>
-        <a href="{% url 'subscriber_list' %}" class="btn btn-sm btn-outline-primary">
-          View All
-        </a>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-striped align-middle">
-          <thead>
-            <tr>
-              <th>Email</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for subrciber in latest_subscribers %}
-              <tr>
-                <td>{{ subrciber.email }}</td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="3" class="text-muted text-center">No subscribers.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
-        <h4 class="mb-0">
-          <i class="fa-solid fa-hammer me-2 text-primary"></i> Latest Handyman Quotes
-        </h4>
-        <a href="{% url 'handyman_quote_list' %}" class="btn btn-sm btn-outline-primary">
-          View All
-        </a>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-striped align-middle">
-          <thead>
-            <tr>
-              <th>Customer</th>
-              <th>Status</th>
-              <th>Created</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for quote in latest_handyman_quotes %}
-              <tr>
-                <td>
-                  <div>
-                    <strong>{{ quote.name }}</strong><br>
-                    <small class="text-muted">{{ quote.email }}</small>
-                  </div>
-                </td>
-                <td>
-                  {% if quote.status == 'pending' %}
-                    <span class="badge bg-warning">⏳ Pending</span>
-                  {% elif quote.status == 'contacted' %}
-                    <span class="badge bg-info">📞 Contacted</span>
-                  {% elif quote.status == 'quoted' %}
-                    <span class="badge bg-success">💰 Quoted</span>
-                  {% elif quote.status == 'completed' %}
-                    <span class="badge bg-primary">✅ Completed</span>
-                  {% elif quote.status == 'cancelled' %}
-                    <span class="badge bg-danger">❌ Cancelled</span>
-                  {% endif %}
-                </td>
-                <td>{{ quote.created_at|date:"M d, Y" }}</td>
-                <td>
-                  <a href="{% url 'handyman_quote_detail' quote.id %}" class="btn btn-sm btn-outline-primary">
-                    View
-                  </a>
-                </td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="4" class="text-muted text-center">No handyman quotes yet.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="d-flex justify-content-between align-items-center mt-5 mb-3">
-        <h4 class="mb-0">
-          <i class="fa-solid fa-credit-card me-2 text-primary"></i> Latest Active GiftCards
-        </h4>
-        <a href="{% url 'giftcard_discount' %}" class="btn btn-sm btn-outline-primary">
-          Manage
-        </a>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-striped align-middle">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Amount</th>
-              <th>Balance</th>
-              <th>Recipient Name</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for giftcard in giftcards %}
-              <tr>
-                <td>{{ giftcard.code }}</td>
-                <td>{{ giftcard.amount }}</td>
-                <td>{{ giftcard.balance }}</td>
-                <td>{{ giftcard.recipient_name }}</td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="3" class="text-muted text-center">No active giftcards.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-12 col-lg-7">
-      
-    </div>
-  </div>
 
 <script>
     function loadBookingDetails(bookingId) {

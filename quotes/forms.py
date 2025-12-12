@@ -1,5 +1,5 @@
 from django import forms
-from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber, Booking, Contact, Review, OfficeQuote, HandymanQuote, PostEventCleaningQuote
+from .models import Quote, Service, HomeType, SquareFeetOption, NewsletterSubscriber, Booking, Contact, Review, OfficeQuote, HandymanQuote, PostEventCleaningQuote, HomeCleaningQuoteRequest
 from datetime import time, datetime, timedelta
 from django.core.exceptions import ValidationError
 from giftcards.models import GiftCard, DiscountCode
@@ -826,6 +826,265 @@ class HandymanQuoteForm(forms.ModelForm):
         if description and len(description.strip()) < 20:
             raise forms.ValidationError("Job description must be at least 20 characters long.")
         return description.strip()
+
+
+class HomeCleaningQuoteRequestForm(forms.ModelForm):
+    # Custom fields that need specific handling
+    bath_count = forms.ChoiceField(
+        label="Number of Bathrooms",
+        choices=[
+            ("", "Select Number of Bathrooms"),
+            ("1", "1 Bathroom"),
+            ("2", "2 Bathrooms"),
+            ("3", "3 Bathrooms"),
+            ("4", "4 Bathrooms"),
+            ("5+", "5+ Bathrooms"),
+        ],
+        required=True,
+        widget=forms.Select(attrs={"class": "cmn-input"})
+    )
+    
+    cleaning_type = forms.ChoiceField(
+        label="Cleaning Type",
+        choices=[
+            ("", "Select Cleaning Type"),
+            ("Regular Cleaning", "Regular Cleaning"),
+            ("Deep Cleaning", "Deep Cleaning"),
+            ("Move In/Out Cleaning", "Move In/Out Cleaning"),
+            ("Post Renovation", "Post Renovation"),
+        ],
+        required=True,
+        widget=forms.Select(attrs={"class": "cmn-input"})
+    )
+    
+    get_in = forms.ChoiceField(
+        label="How will we get into your home?",
+        choices=[
+            ("at_home", "I'll be at home"),
+            ("doorman", "The key is with doorman"),
+            ("lockbox", "Lockbox on premises"),
+            ("call_organize", "Call to organize"),
+            ("other", "Other"),
+        ],
+        required=False,
+        widget=forms.RadioSelect(attrs={"class": "form-check-input"})
+    )
+    
+    pet = forms.ChoiceField(
+        label="Do you have any pets?",
+        choices=[
+            ("cat", "Cat"),
+            ("dog", "Dog"),
+            ("both", "Both"),
+            ("other", "Other"),
+        ],
+        required=False,
+        widget=forms.RadioSelect(attrs={"class": "form-check-input"})
+    )
+    
+    name = forms.CharField(
+        label="Name",
+        max_length=150,
+        required=True,
+        widget=forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Full Name"})
+    )
+    
+    email = forms.EmailField(
+        label="Email",
+        required=True,
+        widget=forms.EmailInput(attrs={"class": "cmn-input", "placeholder": "Email Address"})
+    )
+    
+    phone = forms.CharField(
+        label="Phone",
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Phone Number", "type": "tel"})
+    )
+    
+    class Meta:
+        model = HomeCleaningQuoteRequest
+        fields = [
+            "service",
+            "home_types",
+            "cleaning_type",
+            "bath_count",
+            "job_description",
+            "address",
+            "apartment",
+            "city",
+            "state",
+            "zip_code",
+            "date",
+            "hour",
+            "get_in",
+            "parking",
+            "pet",
+            "cleaning_frequency",
+            "name",
+            "email",
+            "phone",
+        ]
+        widgets = {
+            "service": forms.HiddenInput(),
+            "date": forms.HiddenInput(),
+            "hour": forms.HiddenInput(),
+            "city": forms.HiddenInput(),
+            "state": forms.HiddenInput(),
+            "job_description": forms.Textarea(attrs={"class": "cmn-input", "rows": 4, "placeholder": "Please describe the job in detail..."}),
+            "address": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Street Address"}),
+            "apartment": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "Apt/Suite"}),
+            "zip_code": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "ZIP Code"}),
+            "parking": forms.Textarea(attrs={"class": "cmn-input", "rows": 3, "placeholder": "Please provide parking instructions..."}),
+            "home_types": forms.Select(attrs={"class": "cmn-input"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make optional fields align with template usage
+        optional_fields = [
+            "get_in",
+            "parking",
+            "pet",
+            "cleaning_frequency",
+            "apartment",
+            "home_types",
+        ]
+        for fname in optional_fields:
+            if fname in self.fields:
+                self.fields[fname].required = False
+
+        # Required fields
+        required_fields = [
+            "name",
+            "email",
+            "phone",
+            "address",
+            "zip_code",
+            "bath_count",
+            "cleaning_type",
+        ]
+        for fname in required_fields:
+            if fname in self.fields:
+                self.fields[fname].required = True
+        
+        # Make job_description optional
+        if "job_description" in self.fields:
+            self.fields["job_description"].required = False
+
+        # Allow all services; validation handled in view and clean method
+        self.fields["service"].queryset = Service.objects.all()
+        self.fields["service"].required = False
+        # Don't validate queryset - we'll handle service selection in clean method
+        self.fields["service"].widget.attrs['data-allow-any'] = 'true'
+        
+        # Set default values for city and state
+        if not self.initial.get('city'):
+            self.initial['city'] = 'New York'
+        if not self.initial.get('state'):
+            self.initial['state'] = 'NY'
+
+    def clean_service(self):
+        """Automatically set service based on cleaning_type or default to Regular Cleaning"""
+        service = self.cleaned_data.get('service')
+        cleaning_type = self.data.get('cleaning_type') or self.cleaned_data.get('cleaning_type')
+        
+        # Get home category services
+        from .models import ServiceCategory
+        home_category = ServiceCategory.objects.filter(name__iexact='home').first()
+        if not home_category:
+            # Try alternative category names
+            home_category = ServiceCategory.objects.filter(name__iexact='cleaning').first()
+        
+        if home_category:
+            home_services = Service.objects.filter(category=home_category)
+        else:
+            home_services = Service.objects.all()
+        
+        # If service is valid and exists, return it
+        if service:
+            # Verify service still exists in database
+            if Service.objects.filter(id=service.id).exists():
+                return service
+            # If service doesn't exist, we'll set a new one below
+        
+        # Service is not set or invalid, set it based on cleaning_type
+        service_set = False
+        selected_service = None
+        
+        if cleaning_type:
+            # Map cleaning types to service names
+            service_name_mapping = {
+                'Regular Cleaning': ['Deep Cleaning', 'Regular Cleaning', 'Standard Cleaning'],
+                'Deep Cleaning': ['Deep Cleaning'],
+                'Move In/Out Cleaning': ['Move In/Out Cleaning', 'Move In Cleaning', 'Move Out Cleaning'],
+                'Post Renovation': ['Post Renovation Cleaning', 'Post Renovation']
+            }
+            
+            target_names = service_name_mapping.get(cleaning_type, [])
+            
+            # Try exact match first
+            for service_obj in home_services:
+                if service_obj.name in target_names:
+                    selected_service = service_obj
+                    service_set = True
+                    break
+            
+            # If no exact match, try partial matching
+            if not service_set:
+                for service_obj in home_services:
+                    service_name_lower = service_obj.name.lower()
+                    if cleaning_type == 'Regular Cleaning' and ('deep' in service_name_lower or 'regular' in service_name_lower or 'standard' in service_name_lower):
+                        selected_service = service_obj
+                        service_set = True
+                        break
+                    elif cleaning_type == 'Deep Cleaning' and 'deep' in service_name_lower:
+                        selected_service = service_obj
+                        service_set = True
+                        break
+                    elif cleaning_type == 'Move In/Out Cleaning' and ('move' in service_name_lower and ('in' in service_name_lower or 'out' in service_name_lower)):
+                        selected_service = service_obj
+                        service_set = True
+                        break
+                    elif cleaning_type == 'Post Renovation' and 'renovation' in service_name_lower:
+                        selected_service = service_obj
+                        service_set = True
+                        break
+        
+        # Default to first home service (Regular Cleaning equivalent) if still not set
+        if not service_set:
+            default_service = home_services.first()
+            if default_service:
+                selected_service = default_service
+            else:
+                # Last resort: get any service
+                any_service = Service.objects.first()
+                if any_service:
+                    selected_service = any_service
+        
+        # Return the selected service (or None if no services exist - will be handled in clean method)
+        return selected_service
+    
+    def clean(self):
+        """Ensure service is always set"""
+        cleaned_data = super().clean()
+        
+        # If service is still not set after clean_service, set a default
+        if not cleaned_data.get('service'):
+            from .models import ServiceCategory
+            home_category = ServiceCategory.objects.filter(name__iexact='home').first()
+            if not home_category:
+                home_category = ServiceCategory.objects.filter(name__iexact='cleaning').first()
+            
+            if home_category:
+                default_service = Service.objects.filter(category=home_category).first()
+            else:
+                default_service = Service.objects.first()
+            
+            if default_service:
+                cleaned_data['service'] = default_service
+        
+        return cleaned_data
 
 
 

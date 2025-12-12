@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber, Booking, Review, OfficeQuote, HandymanQuote, PostEventCleaningQuote
+from django.urls import reverse
+from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber, Booking, Review, OfficeQuote, HandymanQuote, PostEventCleaningQuote, HomeCleaningQuoteRequest
 from customers.models import Customer  # Import Customer from the correct app
-from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm, CleaningBookingForm, HandymanBookingForm, ContactForm, OfficeQuoteForm, OfficeCleaningBookingForm, HandymanQuoteForm, PostEventCleaningQuoteForm
+from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm, CleaningBookingForm, HandymanBookingForm, ContactForm, OfficeQuoteForm, OfficeCleaningBookingForm, HandymanQuoteForm, PostEventCleaningQuoteForm, HomeCleaningQuoteRequestForm
 from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 from .utils import get_available_hours_for_date, send_quote_email_cleaning, send_office_cleaning_booking_emails, send_email_with_timeout
@@ -13,6 +14,7 @@ from django.conf import settings
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 import os
+import json
 
 from django.http import HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404
@@ -160,6 +162,336 @@ def quote_submitted(request, quote_id):
     quote = get_object_or_404(Quote, id=quote_id)
     return render(request, "quotes/quote_submitted.html", {
         "quote": quote
+    })
+
+def home_cleaning_quote(request):
+    """Display and handle home cleaning quote form"""
+    # Get service category for home cleaning
+    service_cat = ServiceCategory.objects.filter(name__iexact='home').first()
+    if not service_cat:
+        # Fallback: try to get first home service
+        home_service = Service.objects.filter(category__name__iexact='home').first()
+        if home_service:
+            service_cat = home_service.category
+    
+    # Get related services for sidebar
+    home_category = ServiceCategory.objects.filter(name__iexact='home').first()
+    related_services = (
+        Service.objects.filter(category=home_category)
+        if home_category else Service.objects.none()
+    )
+    
+    # Initialize saved_addresses for authenticated users
+    saved_addresses = []
+    if request.user.is_authenticated and hasattr(request.user, "profile"):
+        saved_addresses = request.user.profile.addresses.all()
+    
+    if request.method == "POST":
+        # Handle date and time from calendar selection
+        selected_date = request.POST.get('selected_date')
+        selected_time = request.POST.get('selected_time')
+        
+        # Create a mutable copy of POST data
+        post_data = request.POST.copy()
+        
+        # Update form data with selected date and time if provided
+        if selected_date:
+            post_data['date'] = selected_date
+        if selected_time:
+            # Convert time string to time format
+            try:
+                if ':' in selected_time:
+                    hour, minute = map(int, selected_time.split(':'))
+                    time_str = f"{hour:02d}:{minute:02d}"
+                    post_data['hour'] = time_str
+            except:
+                pass
+        
+        # Set service based on cleaning_type if provided, otherwise use default
+        cleaning_type = post_data.get('cleaning_type', '')
+        service_set = False
+        
+        if cleaning_type:
+            # Try to find service based on cleaning type - match exact service names
+            home_services = Service.objects.filter(category__name__iexact='home')
+            if not home_services.exists() and service_cat:
+                home_services = Service.objects.filter(category=service_cat)
+            
+            # Map cleaning types to exact service names from database
+            service_name_mapping = {
+                'Regular Cleaning': 'Deep Cleaning',  # Use Deep Cleaning as default for Regular (no Regular Cleaning service exists)
+                'Deep Cleaning': 'Deep Cleaning',
+                'Move In/Out Cleaning': 'Move In/Out Cleaning',
+                'Post Renovation': 'Post Renovation Cleaning'
+            }
+            
+            target_service_name = service_name_mapping.get(cleaning_type)
+            
+            if target_service_name:
+                for service in home_services:
+                    if service.name == target_service_name:
+                        post_data['service'] = service.id  # Use integer, not string
+                        service_set = True
+                        print(f"✅ Set service to: {service.id} ({service.name}) for {cleaning_type}")
+                        break
+        
+        # Fallback to default home service if not set based on cleaning type
+        if not service_set and not post_data.get('service'):
+            # Get first Home category service
+            home_service = Service.objects.filter(category__name__iexact='home').first()
+            if not home_service and service_cat:
+                home_service = Service.objects.filter(category=service_cat).first()
+            if home_service:
+                post_data['service'] = home_service.id  # Use integer
+                print(f"✅ Set default service to: {home_service.id} ({home_service.name})")
+            else:
+                # Last resort: get any service
+                any_service = Service.objects.first()
+                if any_service:
+                    post_data['service'] = any_service.id  # Use integer
+                    print(f"✅ Set fallback service to: {any_service.id} ({any_service.name})")
+        
+        print(f"🔍 POST data service value: {post_data.get('service')} (type: {type(post_data.get('service'))})")
+        # Ensure service is an integer
+        if post_data.get('service'):
+            try:
+                post_data['service'] = int(post_data['service'])
+            except (ValueError, TypeError):
+                print(f"⚠️ Could not convert service to integer: {post_data.get('service')}")
+        
+        form = HomeCleaningQuoteRequestForm(post_data)
+        
+        print(f"🔍 Form validation check - is_valid(): {form.is_valid()}")
+        if not form.is_valid():
+            print(f"❌ Form validation failed!")
+            print(f"❌ Form errors: {form.errors}")
+            print(f"❌ Form non-field errors: {form.non_field_errors()}")
+        
+        if form.is_valid():
+            quote_request = form.save(commit=False)
+            
+            # Set service from post_data
+            service_id = post_data.get('service')
+            if service_id:
+                try:
+                    service = Service.objects.filter(id=int(service_id)).first()
+                    if service:
+                        quote_request.service = service
+                        print(f"✅ Set service: {service.id} ({service.name})")
+                except:
+                    pass
+            
+            # Ensure service is set
+            if not quote_request.service:
+                home_service = Service.objects.filter(category__name__iexact='home').first()
+                if not home_service and service_cat:
+                    home_service = Service.objects.filter(category=service_cat).first()
+                if home_service:
+                    quote_request.service = home_service
+                    print(f"✅ Set default service: {home_service.id} ({home_service.name})")
+            
+            # Handle date and time from calendar
+            if selected_date:
+                try:
+                    quote_request.date = datetime.strptime(selected_date, '%Y-%m-%d').date()
+                except:
+                    pass
+            if selected_time:
+                try:
+                    if ':' in selected_time:
+                        hour, minute = map(int, selected_time.split(':'))
+                        quote_request.hour = time(hour, minute)
+                except:
+                    pass
+            
+            # Set cleaning_frequency
+            cleaning_frequency = post_data.get('cleaning_frequency', 'one_time')
+            quote_request.cleaning_frequency = cleaning_frequency
+            
+            # Ensure required fields are set
+            if not quote_request.date:
+                quote_request.date = date.today() + timedelta(days=2)
+            if not quote_request.hour:
+                quote_request.hour = time(9, 0)
+            if not quote_request.city:
+                quote_request.city = 'New York'
+            if not quote_request.state:
+                quote_request.state = 'NY'
+            
+            # Save the quote request
+            try:
+                quote_request.save()
+                print(f"✅ Successfully saved HomeCleaningQuoteRequest with ID: {quote_request.id}")
+                print(f"✅ Saved data - Name: {quote_request.name}, Email: {quote_request.email}, Phone: {quote_request.phone}")
+            except Exception as e:
+                print(f"❌ ERROR saving HomeCleaningQuoteRequest: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                messages.error(request, f"An error occurred while saving your quote: {str(e)}")
+                # Re-render form with error
+                home_service = Service.objects.filter(category__name__iexact='home').first()
+                if not home_service and service_cat:
+                    home_service = Service.objects.filter(category=service_cat).first()
+                if not home_service:
+                    home_service = Service.objects.first()
+                
+                home_services = Service.objects.filter(category__name__iexact='home')
+                if not home_services.exists() and service_cat:
+                    home_services = Service.objects.filter(category=service_cat)
+                
+                cleaning_type_to_service = {}
+                for service in home_services:
+                    service_name_lower = service.name.lower()
+                    if 'regular' in service_name_lower or 'standard' in service_name_lower or 'basic' in service_name_lower:
+                        cleaning_type_to_service['Regular Cleaning'] = service.id
+                    elif 'deep' in service_name_lower:
+                        cleaning_type_to_service['Deep Cleaning'] = service.id
+                    elif 'move' in service_name_lower or 'in/out' in service_name_lower or 'in-out' in service_name_lower:
+                        cleaning_type_to_service['Move In/Out Cleaning'] = service.id
+                    elif 'renovation' in service_name_lower or 'post' in service_name_lower:
+                        cleaning_type_to_service['Post Renovation'] = service.id
+                
+                if home_service and not cleaning_type_to_service:
+                    for cleaning_type in ['Regular Cleaning', 'Deep Cleaning', 'Move In/Out Cleaning', 'Post Renovation']:
+                        cleaning_type_to_service[cleaning_type] = home_service.id
+                elif home_service:
+                    for cleaning_type in ['Regular Cleaning', 'Deep Cleaning', 'Move In/Out Cleaning', 'Post Renovation']:
+                        if cleaning_type not in cleaning_type_to_service:
+                            cleaning_type_to_service[cleaning_type] = home_service.id
+                
+                return render(request, "quotes/home_cleaning_quote.html", {
+                    "form": form,
+                    "service_cat": service_cat,
+                    "home_service": home_service,
+                    "related_services": related_services,
+                    "saved_addresses": saved_addresses,
+                    "cleaning_type_to_service": json.dumps(cleaning_type_to_service),
+                })
+            
+            # Redirect to a success page
+            messages.success(request, "Your home cleaning quote request has been submitted successfully!")
+            return redirect("home_cleaning_quote_submitted", quote_id=quote_request.id)
+        else:
+            print("❌ Form errors:", form.errors)
+            # Re-render form with errors
+            # Get home service for template
+            home_service = Service.objects.filter(category__name__iexact='home').first()
+            if not home_service and service_cat:
+                home_service = Service.objects.filter(category=service_cat).first()
+            if not home_service:
+                home_service = Service.objects.first()
+            
+            # Create mapping of cleaning types to services for error rendering
+            home_services = Service.objects.filter(category__name__iexact='home')
+            if not home_services.exists() and service_cat:
+                home_services = Service.objects.filter(category=service_cat)
+            
+            cleaning_type_to_service = {}
+            # Map cleaning types to exact service names from database
+            service_name_mapping = {
+                'Regular Cleaning': 'Deep Cleaning',  # Use Deep Cleaning as default for Regular
+                'Deep Cleaning': 'Deep Cleaning',
+                'Move In/Out Cleaning': 'Move In/Out Cleaning',
+                'Post Renovation': 'Post Renovation Cleaning'
+            }
+            
+            for cleaning_type, target_service_name in service_name_mapping.items():
+                for service in home_services:
+                    if service.name == target_service_name:
+                        cleaning_type_to_service[cleaning_type] = service.id
+                        break
+            
+            if home_service and not cleaning_type_to_service:
+                for cleaning_type in ['Regular Cleaning', 'Deep Cleaning', 'Move In/Out Cleaning', 'Post Renovation']:
+                    cleaning_type_to_service[cleaning_type] = home_service.id
+            elif home_service:
+                for cleaning_type in ['Regular Cleaning', 'Deep Cleaning', 'Move In/Out Cleaning', 'Post Renovation']:
+                    if cleaning_type not in cleaning_type_to_service:
+                        cleaning_type_to_service[cleaning_type] = home_service.id
+
+            return render(request, "quotes/home_cleaning_quote.html", {
+                "form": form,
+                "service_cat": service_cat,
+                "home_service": home_service,
+                "related_services": related_services,
+                "saved_addresses": saved_addresses,
+                "cleaning_type_to_service": json.dumps(cleaning_type_to_service),
+            })
+    else:
+        # Initialize form with user data if logged in
+        initial_data = {}
+        
+        # Set default service - always required, always Home category
+        home_service = Service.objects.filter(category__name__iexact='home').first()
+        if not home_service and service_cat:
+            home_service = Service.objects.filter(category=service_cat).first()
+        
+        if home_service:
+            initial_data['service'] = home_service.id
+        
+        if request.user.is_authenticated:
+            # Pre-fill contact information
+            initial_data['email'] = request.user.email
+            
+            if hasattr(request.user, "profile"):
+                profile = request.user.profile
+                if profile.full_name:
+                    initial_data['name'] = profile.full_name
+                if profile.phone:
+                    initial_data['phone'] = profile.phone
+                
+                # Pre-fill with first saved address if available
+                if saved_addresses.exists():
+                    default_address = saved_addresses.first()
+                    initial_data.update({
+                        "address": default_address.street_address,
+                        "apartment": default_address.apt_suite,
+                        "zip_code": default_address.zip_code,
+                    })
+        
+        form = HomeCleaningQuoteRequestForm(initial=initial_data)
+    
+    # Get default home service for template - always Home category
+    home_service = Service.objects.filter(category__name__iexact='home').first()
+    if not home_service and service_cat:
+        home_service = Service.objects.filter(category=service_cat).first()
+    
+    # Create mapping of cleaning types to services
+    # Get all home category services
+    home_services = Service.objects.filter(category__name__iexact='home')
+    if not home_services.exists() and service_cat:
+        home_services = Service.objects.filter(category=service_cat)
+    
+    # Map cleaning types to services
+    cleaning_type_to_service = {}
+    for service in home_services:
+        service_name_lower = service.name.lower()
+        if 'regular' in service_name_lower or 'standard' in service_name_lower or 'basic' in service_name_lower:
+            cleaning_type_to_service['Regular Cleaning'] = service.id
+        elif 'deep' in service_name_lower:
+            cleaning_type_to_service['Deep Cleaning'] = service.id
+        elif 'move' in service_name_lower or 'in/out' in service_name_lower or 'in-out' in service_name_lower:
+            cleaning_type_to_service['Move In/Out Cleaning'] = service.id
+        elif 'renovation' in service_name_lower or 'post' in service_name_lower:
+            cleaning_type_to_service['Post Renovation'] = service.id
+    
+    # If no specific matches, use the first home service as default for all
+    if home_service and not cleaning_type_to_service:
+        for cleaning_type in ['Regular Cleaning', 'Deep Cleaning', 'Move In/Out Cleaning', 'Post Renovation']:
+            cleaning_type_to_service[cleaning_type] = home_service.id
+    elif home_service:
+        # Fill in any missing mappings with default home service
+        for cleaning_type in ['Regular Cleaning', 'Deep Cleaning', 'Move In/Out Cleaning', 'Post Renovation']:
+            if cleaning_type not in cleaning_type_to_service:
+                cleaning_type_to_service[cleaning_type] = home_service.id
+    
+    return render(request, "quotes/home_cleaning_quote.html", {
+        "form": form,
+        "service_cat": service_cat,
+        "home_service": home_service,
+        "related_services": related_services,
+        "saved_addresses": saved_addresses,
+        "cleaning_type_to_service": json.dumps(cleaning_type_to_service),
     })
 
 def cleaning_services(request):
@@ -967,6 +1299,106 @@ def office_cleaning_booking(request):
     })
 
 
+def office_cleaning_quote(request):
+    """Display and handle office cleaning quote form"""
+    # Initialize saved_addresses for authenticated users
+    saved_addresses = []
+    if request.user.is_authenticated and hasattr(request.user, "profile"):
+        saved_addresses = request.user.profile.addresses.all()
+    
+    if request.method == "POST":
+        form = OfficeQuoteForm(request.POST)
+        if form.is_valid():
+            office_quote = form.save()
+            
+            # Store additional form data in admin_notes as JSON for later retrieval
+            additional_data = {
+                'business_type': request.POST.get('business_type', ''),
+                'crew_size_hours': request.POST.get('crew_size_hours', ''),
+                'hear_about_us': request.POST.get('hear_about_us', ''),
+                'cleaning_frequency': request.POST.get('cleaning_frequency', 'one_time'),
+                'frequency_discount': request.POST.get('frequency_discount', '0'),
+                'selected_date': request.POST.get('selected_date', ''),
+                'selected_time': request.POST.get('selected_time', ''),
+                'recurrence_pattern': request.POST.get('recurrence_pattern', 'one_time'),
+            }
+            
+            # Store in admin_notes as JSON (will be overwritten if admin adds notes later, but that's acceptable)
+            import json
+            if not office_quote.admin_notes:
+                office_quote.admin_notes = json.dumps(additional_data, indent=2)
+                office_quote.save()
+
+            # Send email notification to admin
+            try:
+                subject = f"New Office Cleaning Quote Request from {office_quote.name}"
+                message = f"""
+                New Office Cleaning Quote Request:
+
+                Name: {office_quote.name}
+                Email: {office_quote.email}
+                Phone: {office_quote.phone_number}
+                Business Address: {office_quote.business_address}
+                Square Footage: {office_quote.square_footage}
+                Job Description: {office_quote.job_description}
+
+                Submitted at: {office_quote.created_at}
+                """
+
+                send_mail(
+                    subject,
+                    message,
+                    "noreply@cleanhandy.com",
+                    ["support@thecleanhandy.com"],  # Admin email
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print(f"❌ Email send failed: {e}")
+
+            # Redirect to success page or return JSON for AJAX
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Your quote request has been submitted successfully! We will contact you soon.',
+                    'quote_id': office_quote.id,
+                    'redirect_url': reverse('office_cleaning_quote_submitted', args=[office_quote.id])
+                })
+            else:
+                # For non-AJAX requests, redirect to a success page
+                return redirect('office_cleaning_quote_submitted', quote_id=office_quote.id)
+    else:
+        # Initialize form with user data if logged in
+        initial_data = {}
+        
+        if request.user.is_authenticated:
+            # Pre-fill contact information
+            initial_data['email'] = request.user.email
+            
+            if hasattr(request.user, "profile"):
+                profile = request.user.profile
+                if profile.full_name:
+                    initial_data['name'] = profile.full_name
+                if profile.phone:
+                    initial_data['phone_number'] = profile.phone
+                
+                # Pre-fill with first saved address if available
+                if saved_addresses.exists():
+                    default_address = saved_addresses.first()
+                    # Store address data in initial_data for JavaScript to use
+                    initial_data['_address_street'] = default_address.street_address
+                    initial_data['_address_apt'] = default_address.apt_suite or ''
+                    initial_data['_address_zip'] = default_address.zip_code
+                    initial_data['_address_city'] = default_address.city or 'New York'
+                    initial_data['_address_state'] = default_address.state or 'NY'
+        
+        form = OfficeQuoteForm(initial=initial_data)
+
+    return render(request, "quotes/office_cleaning_quote.html", {
+        "form": form,
+        "saved_addresses": saved_addresses,
+        "user": request.user,
+    })
+
 def office_quote_submit(request):
     if request.method == "POST":
         form = OfficeQuoteForm(request.POST)
@@ -1077,14 +1509,24 @@ def download_office_cleaning_pdf(request, booking_id):
         )
 
 
-def office_cleaning_quote_submitted(request, booking_id):
+def office_cleaning_quote_submitted(request, quote_id):
     """
     Display the office cleaning quote submitted page
     """
     try:
-        booking = get_object_or_404(Booking, id=booking_id)
+        from quotes.models import OfficeQuote, ContactInfo
+        
+        office_quote = get_object_or_404(OfficeQuote, id=quote_id)
+        
+        # Get contact info for display
+        try:
+            contact_info = ContactInfo.objects.filter(is_active=True).first()
+        except:
+            contact_info = None
+        
         return render(request, "quotes/office_cleaning_quote_submitted.html", {
-            "booking": booking
+            "office_quote": office_quote,
+            "contact_info": contact_info,
         })
     except Exception as e:
         print(f"❌ Error in office_cleaning_quote_submitted: {e}")
@@ -1281,6 +1723,14 @@ def quote_submitted_post_event_cleaning(request, quote_id):
     """Display confirmation page after Post Event Cleaning quote submission"""
     quote = get_object_or_404(PostEventCleaningQuote, id=quote_id)
     return render(request, "quotes/quote_submitted_post_event_cleaning.html", {"quote": quote})
+
+
+def home_cleaning_quote_submitted(request, quote_id):
+    """Display confirmation page after Home Cleaning quote submission"""
+    quote_request = get_object_or_404(HomeCleaningQuoteRequest, id=quote_id)
+    return render(request, "quotes/quote_submitted.html", {
+        "quote": quote_request  # Pass as quote for template compatibility
+    })
 
 
 

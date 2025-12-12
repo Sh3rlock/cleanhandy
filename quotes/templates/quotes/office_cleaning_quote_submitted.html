@@ -1,135 +1,103 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<section class="contact-details">
-  <div class="container">
-    <h2>🎉 Office Cleaning Quote Submitted!</h2>
-    <p>Thank you for your office cleaning request! Here's a breakdown of your service:</p>
-
-    <div class="card mt-4">
-      <div class="card-body">
-        <h4>💰 Price Breakdown</h4>
-        <ul class="list-group list-group-flush">
-          
-          {% if booking.crew_size_hours %}
-            <li class="list-group-item">
-              <strong>Service Package:</strong> {{ booking.crew_size_hours|title }}
-            </li>
-          {% endif %}
-
-          {% if booking.num_cleaners and booking.hours_requested %}
-            <li class="list-group-item">
-              <strong>Labor Cost:</strong> {{ booking.num_cleaners }} cleaner(s) × {{ booking.hours_requested }} hour(s) × $75/hour
-            </li>
-          {% endif %}
-
-          {% if booking.cleaning_frequency and booking.cleaning_frequency != "one_time" %}
-            <li class="list-group-item">
-              <strong>Frequency Discount:</strong>
-              {% if booking.cleaning_frequency == "daily" %}
-                20% off (Daily Service)
-              {% elif booking.cleaning_frequency == "weekly" %}
-                15% off (Weekly Service)
-              {% elif booking.cleaning_frequency == "bi_weekly" %}
-                10% off (Bi-Weekly Service)
-              {% elif booking.cleaning_frequency == "monthly" %}
-                5% off (Monthly Service)
-              {% endif %}
-            </li>
-          {% endif %}
-
-          {% if booking.extras.all %}
-            <li class="list-group-item"><strong>Additional Services:</strong></li>
-            {% for extra in booking.extras.all %}
-              <li class="list-group-item ps-4">+ {{ extra.name }} — ${{ extra.price }}</li>
-            {% endfor %}
-          {% endif %}
-
-          <li class="list-group-item">
-            <strong>Subtotal:</strong> ${{ booking.price|floatformat:2 }}
-          </li>
-
-          <li class="list-group-item">
-            <strong>Sales Tax (8.875%):</strong> Calculated on final price
-          </li>
-
-          {% if booking.gift_card_discount %}
-            <li class="list-group-item">
-              <strong>Gift Card Discount:</strong> -${{ booking.gift_card_discount|floatformat:2 }}
-            </li>
-          {% endif %}
-        </ul>
-
-        <h5 class="mt-3">💵 Total Price: <strong>${{ booking.price|floatformat:2 }}</strong></h5>
-      </div>
-    </div>
-
-    <div class="card mt-4">
-      <div class="card-body">
-        <h4>📅 Scheduled Info</h4>
-        <p><strong>Date:</strong> {{ booking.date }}</p>
-        <p><strong>Time:</strong> {{ booking.hour }}</p>
-        <p><strong>Duration:</strong> {{ booking.hours_requested }} hour(s)</p>
-        <p><strong>Recurring:</strong> 
-          {% if booking.recurrence_pattern != "one_time" %}
-            {{ booking.get_recurrence_pattern_display }}
-          {% else %}
-            One-time
-          {% endif %}
-        </p>
-      </div>
-    </div>
-
-    <div class="card mt-4">
-      <div class="card-body">
-        <h4>🏢 Office Info</h4>
-        <p><strong>Business Type:</strong> {{ booking.get_business_type_display }}</p>
-        <p><strong>Service Package:</strong> {{ booking.crew_size_hours|title }}</p>
-        <p><strong>How you heard about us:</strong> {{ booking.get_hear_about_us_display|default:"Not specified" }}</p>
-        {% if booking.job_description %}
-          <p><strong>Job Description:</strong> {{ booking.job_description }}</p>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="card mt-4">
-      <div class="card-body">
-        <h4>📍 Location Info</h4>
-        <p><strong>Address:</strong> {{ booking.address }}{% if booking.apartment %}, Apt {{ booking.apartment }}{% endif %}</p>
-        <p><strong>City:</strong> {{ booking.city }}</p>
-        <p><strong>State:</strong> {{ booking.state }}</p>
-        <p><strong>ZIP:</strong> {{ booking.zip_code }}</p>
-      </div>
-    </div>
-
-    <div class="card mt-4">
-      <div class="card-body">
-        <h4>👤 Contact Info</h4>
-        <p><strong>Name:</strong> {{ booking.name }}</p>
-        <p><strong>Email:</strong> {{ booking.email }}</p>
-        {% if booking.phone %}
-          <p><strong>Phone:</strong> {{ booking.phone }}</p>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="card mt-4">
-      <div class="card-body">
-        <h4>📋 Next Steps</h4>
-        <ul>
-          <li>We'll review your request and confirm the appointment within 24 hours</li>
-          <li>You'll receive a confirmation email with all the details</li>
-          <li>Our team will arrive at the scheduled time with all necessary equipment</li>
-          <li>Payment will be collected after the service is completed</li>
-        </ul>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+        :root {
+            --primary-color: #F15A29;
+            --success-color: #28a745;
+    }
+    
+    .confirmation-container {
+        min-height: 60vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1rem;
+        }
         
-        <div class="mt-3">
-          <a href="{% url 'home' %}" class="btn btn-primary">Return to Home</a>
-          <button onclick="window.print()" class="btn btn-secondary">Print Quote</button>
-          <a href="{% url 'download_office_cleaning_pdf' booking.id %}" class="btn btn-success">Download PDF</a>
+        .confirmation-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 3rem;
+            text-align: center;
+        max-width: 600px;
+        margin: 0 auto;
+        }
+        
+        .success-icon {
+            animation: bounceIn 0.6s ease-out;
+        margin-bottom: 2rem;
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+    .confirmation-card h2 {
+        color: var(--success-color);
+        margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        
+    .confirmation-card p {
+        color: #6c757d;
+            font-size: 1.1rem;
+        line-height: 1.8;
+                margin-bottom: 2rem;
+            }
+            
+    .confirmation-card .btn {
+        margin-top: 1rem;
+        padding: 0.75rem 2rem;
+        }
+    </style>
+
+<div class="confirmation-container">
+    <div class="confirmation-card">
+        <div class="success-icon">
+            <i class="fas fa-check-circle fa-5x text-success"></i>
         </div>
-      </div>
+        <h2>Office Cleaning Quote Submitted Successfully!</h2>
+        <p>
+            Thank you for your interest in our office cleaning services. We have received your quote request and will review it shortly.
+        </p>
+        <p>
+            <strong>We will check your quote and contact you back soon by email.</strong>
+        </p>
+        <div class="contact-info mt-4" style="border-top: 1px solid #e9ecef; padding-top: 2rem; margin-top: 2rem;">
+            <p style="margin-bottom: 1rem; color: #6c757d;">If you have any questions, please contact us:</p>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; align-items: center;">
+                <div>
+                    <i class="fas fa-envelope text-primary me-2"></i>
+                    <a href="mailto:support@thecleanhandy.com" style="color: var(--primary-color); text-decoration: none;">
+                        support@thecleanhandy.com
+                    </a>
+                </div>
+                <div>
+                    <i class="fas fa-phone text-primary me-2"></i>
+                    {% if contact_info %}
+                        <a href="tel:{{ contact_info.phone }}" style="color: var(--primary-color); text-decoration: none;">
+                            {{ contact_info.phone }}
+                        </a>
+                    {% else %}
+                        <a href="tel:+15166193065" style="color: var(--primary-color); text-decoration: none;">
+                            +1 516 619 3065
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="mt-4">
+            <a href="{% url 'home' %}" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Back to Home
+            </a>
+        </div>
     </div>
-  </div>
-</section>
+</div>
 {% endblock %}

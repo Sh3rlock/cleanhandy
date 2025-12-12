@@ -188,7 +188,7 @@
                   <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
                 </div>
                 <div class="banner-search">
-                  <a class="btn-1" href="{% url 'office_cleaning_booking' %}">Book Office Cleaning</a>
+                  <a class="btn-1" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
                 </div>
                 {% for service in all_services %}
                   {% if service.category.name|lower == 'post event cleaning' %}
@@ -263,7 +263,7 @@
           <div class="row">
             {% for c_service in commercial_services %}
               <div class="col-lg-6 col-md-6">
-                <a href="{% url 'office_cleaning_booking' %}" class="categories-link">
+                <a href="{% url 'office_cleaning_quote' %}" class="categories-link">
                   <div class="categories-single">
                     <div class="categories-single-image">
                       {% if c_service.service_image %}
@@ -375,7 +375,7 @@
                       {% if service.category.name|lower == "cleaning" %}
                           <a href="{% url 'cleaning_booking' %}" class="btn-1">Book Now</a>
                       {% elif service.category.name|lower == "office cleaning" %}
-                          <a href="{% url 'office_cleaning_booking' %}" class="btn-1">Book Now</a>
+                          <a href="{% url 'office_cleaning_quote' %}" class="btn-1">Book Now</a>
                       {% elif service.category.name|lower == "post event cleaning" %}
                           <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="btn-1">Get a Quote</a>
                       {% elif service.category.name|lower == "handyman" %}
@@ -411,7 +411,7 @@
                       {% if service.category.name|lower == "cleaning" %}
                           <a href="{% url 'cleaning_booking' %}" class="btn-1">Book Now</a>
                       {% elif service.category.name|lower == "office cleaning" %}
-                          <a href="{% url 'office_cleaning_booking' %}" class="btn-1">Book Now</a>
+                          <a href="{% url 'office_cleaning_quote' %}" class="btn-1">Book Now</a>
                       {% elif service.category.name|lower == "post event cleaning" %}
                           <a href="{% url 'request_post_event_cleaning_quote' service.id %}" class="btn-1">Get a Quote</a>
                       {% elif service.category.name|lower == "handyman" %}

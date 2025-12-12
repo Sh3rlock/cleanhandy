@@ -539,23 +539,53 @@ document.addEventListener("DOMContentLoaded", function() {
                 info.el.style.borderRadius = "5px";
                 info.el.style.opacity = "0.95";
                 info.el.style.color = "white";  // Text color
-                info.el.style.backgroundColor = "#007bff";  // ✅ Bootstrap blue
+                info.el.style.backgroundColor = info.event.backgroundColor || "#007bff";  // Use event color
                 info.el.style.border = "none";  // Optional: remove default border
+
+                // Build tooltip content based on quote type
+                let tooltipContent = `
+                    <div style="font-size: 14px; padding: 8px; line-height: 1.6;">
+                        <b style="font-size: 16px; color: #007bff;">📅 Time Slot:</b> ${info.event.extendedProps.time_slots}<br>
+                        <b style="font-size: 16px; color: #28a745;">🛠️ Service:</b> ${info.event.extendedProps.service}<br>
+                        <b style="font-size: 15px; color: ${getStatusColor(info.event.extendedProps.status)};">📌 Status:</b> <strong>${info.event.extendedProps.status.toUpperCase()}</strong><br><hr>
+                        <b>🧑 Customer:</b> ${info.event.extendedProps.customer}<br>
+                `;
+
+                // Add type-specific fields
+                if (info.event.extendedProps.type === "home_cleaning_quote") {
+                    tooltipContent += `
+                        <b>📧 Email:</b> ${info.event.extendedProps.email}<br>
+                        <b>📞 Phone:</b> ${info.event.extendedProps.phone || "N/A"}<br>
+                        <b>📍 ZIP Code:</b> ${info.event.extendedProps.zip_code}<br>
+                        <b>🏠 Home Type:</b> ${info.event.extendedProps.home_type}<br>
+                        <b>🚿 Bathrooms:</b> ${info.event.extendedProps.bath_count}<br>
+                        <b>🧹 Cleaning Type:</b> ${info.event.extendedProps.cleaning_type}<br>
+                    `;
+                } else if (info.event.extendedProps.type === "office_cleaning_quote") {
+                    tooltipContent += `
+                        <b>📧 Email:</b> ${info.event.extendedProps.email}<br>
+                        <b>📞 Phone:</b> ${info.event.extendedProps.phone || "N/A"}<br>
+                        <b>🏢 Business Type:</b> ${info.event.extendedProps.business_type}<br>
+                        <b>👥 Crew/Size/Hours:</b> ${info.event.extendedProps.crew_size_hours}<br>
+                        <b>📐 Square Footage:</b> ${info.event.extendedProps.square_footage}<br>
+                    `;
+                } else {
+                    // Regular booking
+                    tooltipContent += `
+                        <b>📍 ZIP Code:</b> ${info.event.extendedProps.zip_code}<br>
+                        <b>📧 Email:</b> ${info.event.extendedProps.email}<br>
+                        <b>💰 Price:</b> ${info.event.extendedProps.price}<br>
+                    `;
+                }
+
+                tooltipContent += `
+                        <b>📝 Job Description:</b> ${info.event.extendedProps.job_description}<br>
+                    </div>
+                `;
 
                 // ✅ Improved tooltip styling
                 tippy(info.el, {
-                    content: `
-                        <div style="font-size: 14px; padding: 8px; line-height: 1.6;">
-                            <b style="font-size: 16px; color: #007bff;">📅 Time Slot:</b> ${info.event.extendedProps.time_slots}<br>
-                            <b style="font-size: 16px; color: #28a745;">🛠️ Service:</b> ${info.event.extendedProps.service}<br>
-                            <b style="font-size: 15px; color: ${getStatusColor(info.event.extendedProps.status)};">📌 Status:</b> <strong>${info.event.extendedProps.status.toUpperCase()}</strong><br><hr>
-                            <b>🧑 Customer:</b> ${info.event.extendedProps.customer}<br>
-                            <b>📍 ZIP Code:</b> ${info.event.extendedProps.zip_code}<br>
-                            <b>📧 Email:</b> ${info.event.extendedProps.email}<br>
-                            <b>📝 Job Description:</b> ${info.event.extendedProps.job_description}<br>
-                            <b>💰 Price:</b> ${info.event.extendedProps.price}
-                        </div>
-                    `,
+                    content: tooltipContent,
                     allowHTML: true,
                     placement: "top",
                     animation: "scale",
