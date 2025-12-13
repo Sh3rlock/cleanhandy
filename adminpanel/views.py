@@ -2537,7 +2537,9 @@ def send_office_cleaning_quote_email(request, quote_id):
                 
                 # Save updated notes
                 office_cleaning_quote.admin_notes = json.dumps(existing_data, indent=2)
-                office_cleaning_quote.save(update_fields=['admin_notes'])
+                # Update status to "email_sent" after sending email
+                office_cleaning_quote.status = "email_sent"
+                office_cleaning_quote.save(update_fields=['admin_notes', 'status'])
             except Exception as save_error:
                 print(f"Warning: Could not save email history: {save_error}")
             
