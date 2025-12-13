@@ -2,13 +2,10 @@ from datetime import time, timedelta, datetime, date
 from quotes.models import Quote, Booking
 
 # Try to import BlockedTimeSlot, but handle if it doesn't exist
-BlockedTimeSlot = None
 try:
-    from adminpanel.models import BlockedTimeSlot
-except Exception as e:
-    # If import fails for any reason, set to None and continue
+from adminpanel.models import BlockedTimeSlot
+except ImportError:
     BlockedTimeSlot = None
-    print(f"⚠️ Warning: BlockedTimeSlot model not available ({type(e).__name__}: {str(e)}) - continuing without it")
 from django.http import JsonResponse
 from .models import Customer
 from django.core.mail import EmailMultiAlternatives
@@ -105,20 +102,20 @@ def check_time_slot_conflict(date, hour, hours_requested, exclude_booking_id=Non
         
         # Check for conflicts with admin-blocked slots
         if BlockedTimeSlot is not None:
-            try:
-                blocked_slots = BlockedTimeSlot.objects.filter(date=date)
-                for block in blocked_slots:
-                    if block.all_day:
-                        print(f"❌ All day blocked on {date}")
+        try:
+            blocked_slots = BlockedTimeSlot.objects.filter(date=date)
+            for block in blocked_slots:
+                if block.all_day:
+                    print(f"❌ All day blocked on {date}")
+                    return True
+                elif block.start_time and block.end_time:
+                    block_start = datetime.combine(date, block.start_time)
+                    block_end = datetime.combine(date, block.end_time)
+                    if (start_datetime < block_end and end_datetime > block_start):
+                        print(f"❌ Conflict with blocked slot: {block.start_time} - {block.end_time}")
                         return True
-                    elif block.start_time and block.end_time:
-                        block_start = datetime.combine(date, block.start_time)
-                        block_end = datetime.combine(date, block.end_time)
-                        if (start_datetime < block_end and end_datetime > block_start):
-                            print(f"❌ Conflict with blocked slot: {block.start_time} - {block.end_time}")
-                            return True
-            except Exception as e:
-                print(f"⚠️ Warning: Could not check blocked time slots: {str(e)}")
+        except Exception as e:
+            print(f"⚠️ Warning: Could not check blocked time slots: {str(e)}")
                 import traceback
                 traceback.print_exc()
         
@@ -132,10 +129,6 @@ def check_time_slot_conflict(date, hour, hours_requested, exclude_booking_id=Non
         return True  # Return True to be safe and prevent booking
 
 def get_available_hours_for_date(date, hours_requested=2):
-    # Initialize variables outside try block to ensure they're accessible
-    all_slots = []
-    duration_minutes = max(hours_requested * 60, 120)  # Minimum 2 hours
-    
     try:
         print(f"🕐 get_available_hours_for_date called: date={date}, hours_requested={hours_requested}")
         
@@ -155,20 +148,22 @@ def get_available_hours_for_date(date, hours_requested=2):
             start_hour = 8
             end_hour = 18
             print(f"📅 Weekday hours: {start_hour}:00-{end_hour}:00")
-        
-        interval = 30  # minutes
-        
-        # Generate all potential 30-min slots
-        current = datetime.combine(date, time(hour=start_hour))
-        end = datetime.combine(date, time(hour=end_hour))
-        while current + timedelta(minutes=duration_minutes) <= end:
-            all_slots.append(current.time())
-            current += timedelta(minutes=interval)
     except Exception as e:
         print(f"❌ Error in get_available_hours_for_date: {str(e)}")
         import traceback
         traceback.print_exc()
         return []
+    
+    interval = 30  # minutes
+    duration_minutes = max(hours_requested * 60, 120)  # Minimum 2 hours
+
+    # Generate all potential 30-min slots
+    all_slots = []
+    current = datetime.combine(date, time(hour=start_hour))
+    end = datetime.combine(date, time(hour=end_hour))
+    while current + timedelta(minutes=duration_minutes) <= end:
+        all_slots.append(current.time())
+        current += timedelta(minutes=interval)
 
     # Collect unavailable time ranges
     unavailable_ranges = []
@@ -185,10 +180,10 @@ def get_available_hours_for_date(date, hours_requested=2):
             # Convert Decimal to float for timedelta
             duration_float = float(duration) if hasattr(duration, '__float__') else duration
             try:
-                start = datetime.combine(date, quote.hour)
-                end = start + timedelta(hours=duration_float)
-                unavailable_ranges.append((start.time(), end.time()))
-                print(f"🚫 Blocked: {quote.hour} - {end.time()}")
+            start = datetime.combine(date, quote.hour)
+            end = start + timedelta(hours=duration_float)
+            unavailable_ranges.append((start.time(), end.time()))
+            print(f"🚫 Blocked: {quote.hour} - {end.time()}")
             except (ValueError, TypeError) as e:
                 print(f"⚠️ Warning: Invalid hour value for booking {quote.id}: {quote.hour} - {str(e)}")
                 continue
@@ -200,16 +195,16 @@ def get_available_hours_for_date(date, hours_requested=2):
     
     # 3. Exclude admin-blocked slots
     if BlockedTimeSlot is not None:
-        try:
-            blocked_slots = BlockedTimeSlot.objects.filter(date=date)
-            for block in blocked_slots:
+    try:
+        blocked_slots = BlockedTimeSlot.objects.filter(date=date)
+        for block in blocked_slots:
                 if block.start_time and block.end_time:
-                    unavailable_ranges.append((block.start_time, block.end_time))
-        except Exception as e:
-            print(f"⚠️ Warning: Could not load blocked time slots: {str(e)}")
+            unavailable_ranges.append((block.start_time, block.end_time))
+    except Exception as e:
+        print(f"⚠️ Warning: Could not load blocked time slots: {str(e)}")
             import traceback
             traceback.print_exc()
-            # Continue without blocked slots if there's an error
+        # Continue without blocked slots if there's an error
     else:
         print("⚠️ Warning: BlockedTimeSlot model not available")
 

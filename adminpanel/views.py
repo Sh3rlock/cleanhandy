@@ -1068,7 +1068,8 @@ def quote_approval_view(request, quote_id, token):
         f"Phone: {quote.phone}\n"
         f"Job Description: {quote.job_description}"
     )
-    from_email = "noreply@cleanhandy.com"
+    from django.conf import settings
+    from_email = settings.DEFAULT_FROM_EMAIL
     recipients = [quote.email, "support@thecleanhandy.com"]
 
     send_mail(
@@ -1208,10 +1209,11 @@ def send_office_quote_email(request, quote_id):
         text_content = strip_tags(html_content)
         
         try:
+            from django.conf import settings
             email = EmailMultiAlternatives(
                 subject=subject,
                 body=text_content,
-                from_email="noreply@cleanhandy.com",
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[office_quote.email],
                 bcc=["support@thecleanhandy.com"]  # Admin copy
             )
@@ -1439,10 +1441,11 @@ def send_handyman_quote_email(request, quote_id):
         text_content = strip_tags(html_content)
         
         try:
+            from django.conf import settings
             email = EmailMultiAlternatives(
                 subject=subject,
                 body=text_content,
-                from_email="noreply@cleanhandy.com",
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[handyman_quote.email],
                 bcc=["support@thecleanhandy.com"]  # Admin copy
             )
@@ -1664,10 +1667,11 @@ def send_post_event_cleaning_quote_email(request, quote_id):
         CleanHandy Team
         """
         
+        from django.conf import settings
         send_mail(
             subject,
             message,
-            'noreply@cleanhandy.com',
+            settings.DEFAULT_FROM_EMAIL,
             [quote.email],
             fail_silently=False,
         )
@@ -2291,10 +2295,11 @@ def send_home_cleaning_quote_email(request, quote_id):
             
             # Send email
             subject = f"Your Home Cleaning Quote - #{home_cleaning_quote.id}"
+            from django.conf import settings
             email = EmailMultiAlternatives(
                 subject=subject,
                 body=text_content,
-                from_email="noreply@cleanhandy.com",
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[customer_email],
                 bcc=["support@thecleanhandy.com"]
             )
@@ -2479,10 +2484,11 @@ def send_office_cleaning_quote_email(request, quote_id):
             
             # Send email
             subject = f"Your Office Cleaning Quote - #{office_cleaning_quote.id}"
+            from django.conf import settings
             email = EmailMultiAlternatives(
                 subject=subject,
                 body=text_content,
-                from_email="noreply@cleanhandy.com",
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[customer_email],
                 bcc=["support@thecleanhandy.com"]
             )

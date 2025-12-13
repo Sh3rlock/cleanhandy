@@ -91,10 +91,11 @@ def contact(request):
             # Send email notification
             subject = f"New Contact Message: {contact.subject}"
             message = f"Name: {contact.name}\nEmail: {contact.email}\nSubject: {contact.subject}\n\nMessage:\n{contact.message}"
+            from django.conf import settings
             send_mail(
                 subject,
                 message,
-                "noreply@cleanhandy.com",
+                settings.DEFAULT_FROM_EMAIL,
                 ["support@thecleanhandy.com"],
                 fail_silently=False,
             )
@@ -407,10 +408,11 @@ Submitted at: {quote_request.created_at.strftime('%Y-%m-%d %H:%M:%S') if quote_r
 Quote ID: {quote_request.id}
 """
                 
+                from django.conf import settings
                 send_mail(
                     subject,
                     message,
-                    "noreply@cleanhandy.com",
+                    settings.DEFAULT_FROM_EMAIL,
                     ["support@thecleanhandy.com"],  # Admin email
                     fail_silently=False,
                 )
@@ -1427,10 +1429,11 @@ Submitted at: {office_quote.created_at.strftime('%Y-%m-%d %H:%M:%S') if office_q
 Quote ID: {office_quote.id}
 """
 
+                from django.conf import settings
                 send_mail(
                     subject,
                     message,
-                    "noreply@cleanhandy.com",
+                    settings.DEFAULT_FROM_EMAIL,
                     ["support@thecleanhandy.com"],  # Admin email
                     fail_silently=False,
                 )
@@ -1504,10 +1507,11 @@ def office_quote_submit(request):
                 Submitted at: {office_quote.created_at}
                 """
                 
+                from django.conf import settings
                 send_mail(
                     subject,
                     message,
-                    "noreply@cleanhandy.com",
+                    settings.DEFAULT_FROM_EMAIL,
                     ["support@thecleanhandy.com"],  # Admin email
                     fail_silently=False,
                 )
