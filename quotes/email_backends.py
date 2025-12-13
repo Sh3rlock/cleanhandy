@@ -121,10 +121,32 @@ class ResendEmailBackend(BaseEmailBackend):
                         "subject": message.subject,
                     }
                     
-                    # Add body content based on content type
-                    if message.content_subtype == "html":
-                        resend_message["html"] = message.body
-                    else:
+                    # Handle HTML content - check for alternatives first (EmailMultiAlternatives)
+                    html_content = None
+                    text_content = None
+                    
+                    # Check if message has alternatives (EmailMultiAlternatives)
+                    if hasattr(message, 'alternatives') and message.alternatives:
+                        for content, mimetype in message.alternatives:
+                            if mimetype == "text/html":
+                                html_content = content
+                            elif mimetype == "text/plain":
+                                text_content = content
+                    
+                    # If no alternatives, check content_subtype
+                    if not html_content:
+                        if message.content_subtype == "html":
+                            html_content = message.body
+                        else:
+                            text_content = message.body
+                    
+                    # Set HTML and text content for Resend
+                    if html_content:
+                        resend_message["html"] = html_content
+                    if text_content:
+                        resend_message["text"] = text_content
+                    elif not html_content:
+                        # Fallback: use body as text if no HTML found
                         resend_message["text"] = message.body
                     
                     # Handle attachments if any
