@@ -368,6 +368,57 @@ def home_cleaning_quote(request):
                     "cleaning_type_to_service": json.dumps(cleaning_type_to_service),
                 })
             
+            # Send email notification to admin
+            try:
+                subject = f"New Home Cleaning Quote Request from {quote_request.name or 'Customer'}"
+                message = f"""
+New Home Cleaning Quote Request:
+
+Name: {quote_request.name or 'N/A'}
+Email: {quote_request.email or 'N/A'}
+Phone: {quote_request.phone or 'N/A'}
+
+Service Details:
+- Home Type: {quote_request.home_types.name if quote_request.home_types else 'N/A'}
+- Cleaning Type: {quote_request.cleaning_type or 'N/A'}
+- Number of Bathrooms: {quote_request.bath_count or 'N/A'}
+- Cleaning Frequency: {quote_request.cleaning_frequency or 'N/A'}
+
+Scheduling:
+- Date: {quote_request.date.strftime('%Y-%m-%d') if quote_request.date else 'N/A'}
+- Time: {quote_request.hour.strftime('%H:%M') if quote_request.hour else 'N/A'}
+
+Address:
+- Street: {quote_request.address or 'N/A'}
+- Apartment: {quote_request.apartment or 'N/A'}
+- City: {quote_request.city or 'N/A'}
+- State: {quote_request.state or 'N/A'}
+- ZIP Code: {quote_request.zip_code or 'N/A'}
+
+Property Access:
+- How to get in: {quote_request.get_in or 'N/A'}
+- Parking Instructions: {quote_request.parking or 'N/A'}
+- Pets: {quote_request.pet or 'N/A'}
+
+Job Description:
+{quote_request.job_description or 'N/A'}
+
+Submitted at: {quote_request.created_at.strftime('%Y-%m-%d %H:%M:%S') if quote_request.created_at else 'N/A'}
+Quote ID: {quote_request.id}
+"""
+                
+                send_mail(
+                    subject,
+                    message,
+                    "noreply@cleanhandy.com",
+                    ["support@thecleanhandy.com"],  # Admin email
+                    fail_silently=False,
+                )
+                print(f"✅ Email notification sent to admin for Home Cleaning Quote #{quote_request.id}")
+            except Exception as e:
+                print(f"❌ Email send failed for Home Cleaning Quote #{quote_request.id}: {e}")
+                # Don't fail the request if email fails - just log the error
+            
             # Redirect to a success page
             messages.success(request, "Your home cleaning quote request has been submitted successfully!")
             return redirect("home_cleaning_quote_submitted", quote_id=quote_request.id)
@@ -1331,19 +1382,50 @@ def office_cleaning_quote(request):
 
             # Send email notification to admin
             try:
+                # Parse additional data from admin_notes for email
+                date_time_info = ""
+                if office_quote.admin_notes:
+                    try:
+                        additional_data = json.loads(office_quote.admin_notes)
+                        selected_date = additional_data.get('selected_date', '')
+                        selected_time = additional_data.get('selected_time', '')
+                        business_type = additional_data.get('business_type', '')
+                        crew_size_hours = additional_data.get('crew_size_hours', '')
+                        cleaning_frequency = additional_data.get('cleaning_frequency', '')
+                        
+                        if selected_date and selected_time:
+                            date_time_info = f"""
+Scheduling:
+- Date: {selected_date}
+- Time: {selected_time}
+- Cleaning Frequency: {cleaning_frequency or 'N/A'}
+"""
+                        if business_type:
+                            date_time_info += f"- Business Type: {business_type}\n"
+                        if crew_size_hours:
+                            date_time_info += f"- Crew/Size/Hours: {crew_size_hours}\n"
+                    except (json.JSONDecodeError, KeyError):
+                        pass
+                
                 subject = f"New Office Cleaning Quote Request from {office_quote.name}"
                 message = f"""
-                New Office Cleaning Quote Request:
+New Office Cleaning Quote Request:
 
-                Name: {office_quote.name}
-                Email: {office_quote.email}
-                Phone: {office_quote.phone_number}
-                Business Address: {office_quote.business_address}
-                Square Footage: {office_quote.square_footage}
-                Job Description: {office_quote.job_description}
+Contact Information:
+- Name: {office_quote.name}
+- Email: {office_quote.email}
+- Phone: {office_quote.phone_number}
 
-                Submitted at: {office_quote.created_at}
-                """
+Business Details:
+- Business Address: {office_quote.business_address}
+- Square Footage: {office_quote.square_footage}
+{date_time_info}
+Job Description:
+{office_quote.job_description}
+
+Submitted at: {office_quote.created_at.strftime('%Y-%m-%d %H:%M:%S') if office_quote.created_at else 'N/A'}
+Quote ID: {office_quote.id}
+"""
 
                 send_mail(
                     subject,
@@ -1352,8 +1434,9 @@ def office_cleaning_quote(request):
                     ["support@thecleanhandy.com"],  # Admin email
                     fail_silently=False,
                 )
+                print(f"✅ Email notification sent to admin for Office Cleaning Quote #{office_quote.id}")
             except Exception as e:
-                print(f"❌ Email send failed: {e}")
+                print(f"❌ Email send failed for Office Cleaning Quote #{office_quote.id}: {e}")
 
             # Redirect to success page or return JSON for AJAX
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
