@@ -1,0 +1,133 @@
+{% extends 'adminpanel/base_admin_with_nav.html' %}
+{% block page_title %}{{ action }} Price Variable{% endblock %}
+{% block breadcrumb %}{{ action }} Price Variable{% endblock %}
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">{{ action }} Price Variable</h2>
+            <p class="text-muted">{% if action == 'Add' %}Create a new price variable that can be used in quotes and bookings.{% else %}Update the price variable details.{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">
+                                Category <span class="text-danger">*</span>
+                            </label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.category.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Select a category for this price variable. 
+                                <a href="{% url 'price_variable_category_list' %}" target="_blank">Manage categories</a>
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.variable_name.id_for_label }}" class="form-label">
+                                Variable Name <span class="text-danger">*</span>
+                            </label>
+                            {{ form.variable_name }}
+                            {% if form.variable_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.variable_name.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">e.g., Studio, 1 Bathroom, 2 Bathrooms, Manhattan Parking fee</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.price.id_for_label }}" class="form-label">
+                                Price ($) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <!-- <span class="input-group-text">$</span> -->
+                                {{ form.price }}
+                            </div>
+                            {% if form.price.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.price.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Enter the price in dollars (e.g., 100.00)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.duration.id_for_label }}" class="form-label">
+                                Duration (minutes)
+                            </label>
+                            {{ form.duration }}
+                            {% if form.duration.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.duration.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Optional: Enter duration in minutes (e.g., 180 for 3 hours)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.description.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Optional: Add any additional notes or context</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Active
+                                </label>
+                            </div>
+                            {% if form.is_active.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.is_active.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Uncheck to disable this price variable without deleting it</small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                            <a href="{% url 'price_variable_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .input-group-text {
+        background-color: #f8f9fa;
+    }
+    .form-check-input {
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}

@@ -57,6 +57,13 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
+  .admin-navbar .nav-link.text-white.active {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: #fff !important;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
   .admin-navbar .nav-link.text-white:active {
     transform: translateY(0);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -197,6 +204,12 @@
                 <li class="nav-item">
                   <a href="{% url 'service_list' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'service_list' %}active{% endif %}">Service Management</a>
                 </li> -->
+                <li class="nav-item">
+                  <a href="{% url 'price_variable_list' %}" class="nav-link text-white {% if 'price_variable' in request.resolver_match.url_name %}active{% endif %}">Price Variables</a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'tax_settings' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'tax_settings' %}active{% endif %}">Tax Settings</a>
+                </li>
                 <li class="nav-item">
                   <a href="{% url 'profile' %}" class="nav-link text-white">User Profile</a>
                 </li>

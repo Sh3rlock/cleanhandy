@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber, Booking, Review, OfficeQuote, HandymanQuote, PostEventCleaningQuote, HomeCleaningQuoteRequest
+from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber, Booking, Review, OfficeQuote, HandymanQuote, PostEventCleaningQuote, HomeCleaningQuoteRequest, PriceVariable, PriceVariableCategory
 from customers.models import Customer  # Import Customer from the correct app
 from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm, CleaningBookingForm, HandymanBookingForm, ContactForm, OfficeQuoteForm, OfficeCleaningBookingForm, HandymanQuoteForm, PostEventCleaningQuoteForm, HomeCleaningQuoteRequestForm
 from django.core.mail import send_mail
@@ -174,18 +174,42 @@ def home_cleaning_quote(request):
         home_service = Service.objects.filter(category__name__iexact='home').first()
         if home_service:
             service_cat = home_service.category
-    
+
     # Get related services for sidebar
     home_category = ServiceCategory.objects.filter(name__iexact='home').first()
     related_services = (
         Service.objects.filter(category=home_category)
         if home_category else Service.objects.none()
     )
-    
+
     # Initialize saved_addresses for authenticated users
     saved_addresses = []
     if request.user.is_authenticated and hasattr(request.user, "profile"):
         saved_addresses = request.user.profile.addresses.all()
+    
+    # Get PriceVariables for dropdowns
+    home_type_category = PriceVariableCategory.objects.filter(name__iexact="Home Type", is_active=True).first()
+    if home_type_category:
+        # Order by variable_name, but put "Studio" first using Case/When
+        from django.db.models import Case, When, Value, IntegerField
+        home_type_variables = PriceVariable.objects.filter(category=home_type_category, is_active=True).annotate(
+            sort_order=Case(
+                When(variable_name__iexact='studio', then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        ).order_by('sort_order', 'variable_name')
+    else:
+        home_type_variables = PriceVariable.objects.none()
+    
+    bathroom_category = PriceVariableCategory.objects.filter(name__iexact="Bathroom", is_active=True).first()
+    bathroom_variables = PriceVariable.objects.filter(category=bathroom_category, is_active=True).order_by('variable_name') if bathroom_category else PriceVariable.objects.none()
+    
+    cleaning_type_category = PriceVariableCategory.objects.filter(name__iexact="Cleaning Type", is_active=True).first()
+    cleaning_type_variables = PriceVariable.objects.filter(category=cleaning_type_category, is_active=True).order_by('variable_name') if cleaning_type_category else PriceVariable.objects.none()
+    
+    parking_category = PriceVariableCategory.objects.filter(name__iexact="Parking", is_active=True).first()
+    parking_variables = PriceVariable.objects.filter(category=parking_category, is_active=True).order_by('variable_name') if parking_category else PriceVariable.objects.none()
     
     if request.method == "POST":
         # Handle date and time from calendar selection
@@ -271,6 +295,18 @@ def home_cleaning_quote(request):
         if form.is_valid():
             quote_request = form.save(commit=False)
             
+            # IMPORTANT: home_types field now contains PriceVariable ID, not HomeType ID
+            # Clear the home_types ForeignKey to prevent saving wrong HomeType
+            # We'll store the PriceVariable ID in admin_notes instead
+            home_type_price_var_id = None
+            if post_data.get('home_types'):
+                try:
+                    home_type_price_var_id = int(post_data.get('home_types'))
+                    # Clear the home_types ForeignKey since we're using PriceVariable now
+                    quote_request.home_types = None
+                except (ValueError, TypeError):
+                    pass
+            
             # Set service from post_data
             service_id = post_data.get('service')
             if service_id:
@@ -308,6 +344,38 @@ def home_cleaning_quote(request):
             # Set cleaning_frequency
             cleaning_frequency = post_data.get('cleaning_frequency', 'one_time')
             quote_request.cleaning_frequency = cleaning_frequency
+            
+            # Set cleaning_supply
+            cleaning_supply = post_data.get('cleaning_supply', 'no')
+            quote_request.cleaning_supply = cleaning_supply
+            
+            # Store PriceVariable IDs in admin_notes for later calculation
+            price_variable_data = {}
+            if home_type_price_var_id:
+                price_variable_data['home_type_id'] = home_type_price_var_id
+            if post_data.get('bath_count'):
+                try:
+                    price_variable_data['bath_count_id'] = int(post_data.get('bath_count'))
+                except (ValueError, TypeError):
+                    pass
+            if post_data.get('parking_option'):
+                try:
+                    price_variable_data['parking_option_id'] = int(post_data.get('parking_option'))
+                except (ValueError, TypeError):
+                    pass
+            
+            # Store in admin_notes as JSON (append to existing notes if any)
+            if price_variable_data:
+                existing_notes = quote_request.admin_notes or "{}"
+                try:
+                    existing_data = json.loads(existing_notes) if existing_notes else {}
+                    if isinstance(existing_data, dict):
+                        existing_data.update(price_variable_data)
+                        quote_request.admin_notes = json.dumps(existing_data, indent=2)
+                    else:
+                        quote_request.admin_notes = json.dumps(price_variable_data, indent=2)
+                except (json.JSONDecodeError, ValueError):
+                    quote_request.admin_notes = json.dumps(price_variable_data, indent=2)
             
             # Ensure required fields are set
             if not quote_request.date:
@@ -366,6 +434,10 @@ def home_cleaning_quote(request):
                     "home_service": home_service,
                     "related_services": related_services,
                     "saved_addresses": saved_addresses,
+                    "home_type_variables": home_type_variables,
+                    "bathroom_variables": bathroom_variables,
+                    "cleaning_type_variables": cleaning_type_variables,
+                    "parking_variables": parking_variables,
                     "cleaning_type_to_service": json.dumps(cleaning_type_to_service),
                 })
             
@@ -468,6 +540,10 @@ Quote ID: {quote_request.id}
                 "home_service": home_service,
                 "related_services": related_services,
                 "saved_addresses": saved_addresses,
+                "home_type_variables": home_type_variables,
+                "bathroom_variables": bathroom_variables,
+                "cleaning_type_variables": cleaning_type_variables,
+                "parking_variables": parking_variables,
                 "cleaning_type_to_service": json.dumps(cleaning_type_to_service),
             })
     else:
@@ -544,6 +620,10 @@ Quote ID: {quote_request.id}
         "home_service": home_service,
         "related_services": related_services,
         "saved_addresses": saved_addresses,
+        "home_type_variables": home_type_variables,
+        "bathroom_variables": bathroom_variables,
+        "cleaning_type_variables": cleaning_type_variables,
+        "parking_variables": parking_variables,
         "cleaning_type_to_service": json.dumps(cleaning_type_to_service),
     })
 
@@ -1359,6 +1439,10 @@ def office_cleaning_quote(request):
     if request.user.is_authenticated and hasattr(request.user, "profile"):
         saved_addresses = request.user.profile.addresses.all()
     
+    # Get Office Type category and related price variables
+    office_type_category = PriceVariableCategory.objects.filter(name__iexact="Office Type", is_active=True).first()
+    office_type_variables = PriceVariable.objects.filter(category=office_type_category, is_active=True).order_by('variable_name') if office_type_category else PriceVariable.objects.none()
+    
     if request.method == "POST":
         form = OfficeQuoteForm(request.POST)
         if form.is_valid():
@@ -1483,6 +1567,7 @@ Quote ID: {office_quote.id}
         "form": form,
         "saved_addresses": saved_addresses,
         "user": request.user,
+        "office_type_variables": office_type_variables,
     })
 
 def office_quote_submit(request):

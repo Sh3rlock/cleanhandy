@@ -105,10 +105,14 @@
                         <h6 class="text-muted mb-2">Service Details</h6>
                        
                         <p><strong>Cleaning Type:</strong> {{ home_cleaning_quote.cleaning_type|default:"N/A" }}</p>
-                        {% if home_cleaning_quote.home_types %}
+                        {% if home_type_display_name %}
+                        <p><strong>Home Type:</strong> {{ home_type_display_name }}</p>
+                        {% elif home_cleaning_quote.home_types %}
                         <p><strong>Home Type:</strong> {{ home_cleaning_quote.home_types.name }}</p>
                         {% endif %}
-                        {% if home_cleaning_quote.bath_count %}
+                        {% if bathroom_display_name %}
+                        <p><strong>Bathrooms:</strong> {{ bathroom_display_name }}</p>
+                        {% elif home_cleaning_quote.bath_count %}
                         <p><strong>Bathrooms:</strong> {{ home_cleaning_quote.bath_count }}</p>
                         {% endif %}
                         {% if home_cleaning_quote.num_cleaners %}
@@ -152,7 +156,7 @@
                     </div>
                 </div>
                 
-                {% if home_cleaning_quote.get_in or home_cleaning_quote.parking or home_cleaning_quote.pet %}
+                {% if home_cleaning_quote.get_in or home_cleaning_quote.parking or home_cleaning_quote.pet or home_cleaning_quote.cleaning_supply %}
                 <hr>
                 
                 <div class="row">
@@ -166,6 +170,9 @@
                         {% endif %}
                         {% if home_cleaning_quote.pet %}
                         <p><strong>Pets:</strong> {{ home_cleaning_quote.pet }}</p>
+                        {% endif %}
+                        {% if home_cleaning_quote.cleaning_supply %}
+                        <p><strong>Cleaning Supply:</strong> {{ home_cleaning_quote.cleaning_supply|title }}</p>
                         {% endif %}
                     </div>
                 </div>
@@ -333,15 +340,24 @@
                     <h6 class="text-muted mb-3">Quote Information</h6>
                     <div class="mb-3">
                         <label for="estimated_time" class="form-label">Estimated Time</label>
-                        <input type="text" name="estimated_time" id="estimated_time" class="cmn-input" placeholder="e.g., 2-3 hours">
+                        <input type="text" name="estimated_time" id="estimated_time" class="cmn-input" placeholder="e.g., 2-3 hours" value="{{ calculated_estimated_time|default:'' }}">
+                        {% if calculated_estimated_time %}
+                        <small class="form-text text-muted">Auto-calculated from selected Home Type, Bathrooms, and Cleaning Type</small>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="price" class="form-label">Price ($)</label>
-                        <input type="number" step="0.01" name="price" id="price" class="cmn-input" placeholder="0.00">
+                        <input type="number" step="0.01" name="price" id="price" class="cmn-input" placeholder="0.00" value="{% if calculated_price %}{{ calculated_price|floatformat:2 }}{% endif %}">
+                        {% if calculated_price %}
+                        <small class="form-text text-muted">Auto-calculated from selected Home Type, Bathrooms, and Cleaning Type</small>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="parking_fee" class="form-label">Parking Fee ($)</label>
-                        <input type="number" step="0.01" name="parking_fee" id="parking_fee" class="cmn-input" placeholder="0.00">
+                        <input type="number" step="0.01" name="parking_fee" id="parking_fee" class="cmn-input" placeholder="0.00" value="{% if calculated_parking_fee %}{{ calculated_parking_fee|floatformat:2 }}{% endif %}">
+                        {% if calculated_parking_fee %}
+                        <small class="form-text text-muted">Auto-calculated from selected Parking option</small>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="discount_type" class="form-label">Discount Type</label>
@@ -352,7 +368,10 @@
                     </div>
                     <div class="mb-3">
                         <label for="discount" class="form-label" id="discount_label">Discount ($)</label>
-                        <input type="number" step="0.01" name="discount" id="discount" class="cmn-input" placeholder="0.00">
+                        <input type="number" step="0.01" name="discount" id="discount" class="cmn-input" placeholder="0.00" value="{% if calculated_discount %}{{ calculated_discount|floatformat:2 }}{% endif %}">
+                        {% if calculated_discount %}
+                        <small class="form-text text-muted">Auto-calculated from cleaning frequency (Weekly: 10%, Bi Weekly: 5%)</small>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="payment_link" class="form-label">Payment Link</label>

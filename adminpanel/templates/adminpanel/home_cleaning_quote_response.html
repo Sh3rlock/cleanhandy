@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+    .quote-response-section {
+        min-height: 60vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 60px 20px;
+        background: linear-gradient(135deg, #F15A29 0%, #2196F3 100%);
+    }
+    .quote-response-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 600px;
+        width: 100%;
+        padding: 50px 40px;
+        text-align: center;
+    }
+    .icon {
+        font-size: 80px;
+        margin-bottom: 25px;
+        display: block;
+    }
+    .success-icon {
+        color: #F15A29;
+    }
+    .decline-icon {
+        color: #2196F3;
+    }
+    .quote-response-container h1 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 36px;
+        font-weight: bold;
+    }
+    .message {
+        color: #666;
+        font-size: 18px;
+        line-height: 1.8;
+        margin-bottom: 35px;
+    }
+    .quote-info {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+        border-radius: 15px;
+        padding: 25px;
+        margin: 35px 0;
+        text-align: left;
+        border-left: 4px solid #F15A29;
+    }
+    .quote-info p {
+        margin: 12px 0;
+        color: #333;
+        font-size: 16px;
+    }
+    .quote-info strong {
+        color: #F15A29;
+        font-weight: 600;
+    }
+    .contact-info {
+        margin-top: 35px;
+        padding-top: 30px;
+        border-top: 2px solid #e0e0e0;
+        color: #666;
+    }
+    .contact-info p {
+        margin: 10px 0;
+        font-size: 16px;
+    }
+    .contact-info a {
+        color: #2196F3;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+    .contact-info a:hover {
+        color: #F15A29;
+        text-decoration: underline;
+    }
+    .btn-home {
+        display: inline-block;
+        margin-top: 25px;
+        padding: 12px 30px;
+        background-color: #F15A29;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+    .btn-home:hover {
+        background-color: #d44f24;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(241, 90, 41, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+</style>
+
+<section class="quote-response-section">
+    <div class="quote-response-container">
+        {% if action == "accepted" %}
+        <div class="icon success-icon">✅</div>
+        <h1>Quote Accepted!</h1>
+        {% else %}
+        <div class="icon decline-icon">❌</div>
+        <h1>Quote Declined</h1>
+        {% endif %}
+        
+        <p class="message">{{ message }}</p>
+        
+        <div class="quote-info">
+            <p><strong>Quote #{{ quote.id }}</strong></p>
+            {% if quote.name %}
+            <p><strong>Customer:</strong> {{ quote.name }}</p>
+            {% endif %}
+            {% if quote.email %}
+            <p><strong>Email:</strong> {{ quote.email }}</p>
+            {% endif %}
+            {% if quote.date %}
+            <p><strong>Service Date:</strong> {{ quote.date|date:"F d, Y" }}</p>
+            {% endif %}
+            {% if quote.hour %}
+            <p><strong>Service Time:</strong> {{ quote.hour|time:"g:i A" }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="contact-info">
+            <p>If you have any questions, please contact us:</p>
+            <p>📧 Email: <a href="mailto:support@thecleanhandy.com">support@thecleanhandy.com</a></p>
+            <p>📞 Phone: <a href="tel:+13476526165">(347) 652-6165</a></p>
+        </div>
+        
+        <a href="{% url 'home' %}" class="btn-home">Return to Home</a>
+    </div>
+</section>
+{% endblock %}

@@ -315,11 +315,20 @@
                     <h6 class="text-muted mb-3">Quote Information</h6>
                     <div class="mb-3">
                         <label for="estimated_time" class="form-label">Estimated Time</label>
-                        <input type="text" name="estimated_time" id="estimated_time" class="cmn-input" placeholder="e.g., 2-3 hours">
+                        <input type="text" name="estimated_time" id="estimated_time" class="cmn-input" placeholder="e.g., 2-3 hours" value="{{ calculated_estimated_time|default:'' }}">
+                        {% if calculated_estimated_time %}
+                        <small class="form-text text-muted">Auto-calculated from selected Crew/Size/Hours</small>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="price" class="form-label">Price ($)</label>
-                        <input type="number" step="0.01" name="price" id="price" class="cmn-input" placeholder="0.00">
+                        <input type="number" step="0.01" name="price" id="price" class="cmn-input" placeholder="0.00" value="{% if calculated_price %}{{ calculated_price|floatformat:2 }}{% endif %}">
+                        {% if calculated_price %}
+                        <small class="form-text text-muted">
+                            Auto-calculated from selected Crew/Size/Hours 
+                            {% if price_source == 'variable' %}(from price variable){% else %}(from hourly rate){% endif %}
+                        </small>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="parking_fee" class="form-label">Parking Fee ($)</label>
@@ -328,13 +337,21 @@
                     <div class="mb-3">
                         <label for="discount_type" class="form-label">Discount Type</label>
                         <select name="discount_type" id="discount_type" class="cmn-input" onchange="updateDiscountLabel()">
-                            <option value="value">Value ($)</option>
+                            <option value="value" selected>Value ($)</option>
                             <option value="percentage">Percentage (%)</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="discount" class="form-label" id="discount_label">Discount ($)</label>
-                        <input type="number" step="0.01" name="discount" id="discount" class="cmn-input" placeholder="0.00">
+                        <input type="number" step="0.01" name="discount" id="discount" class="cmn-input" placeholder="0.00" value="{% if calculated_discount %}{{ calculated_discount|floatformat:2 }}{% endif %}">
+                        {% if calculated_discount %}
+                        <small class="form-text text-muted">
+                            Auto-calculated from cleaning frequency 
+                            {% if form_data.cleaning_frequency == 'weekly' %}(Weekly - 10% discount)
+                            {% elif form_data.cleaning_frequency == 'bi_weekly' %}(Bi Weekly - 5% discount)
+                            {% else %}(No discount){% endif %}
+                        </small>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="payment_link" class="form-label">Payment Link</label>

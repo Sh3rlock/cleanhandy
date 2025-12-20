@@ -40,6 +40,13 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
+  .admin-navbar .nav-link.text-white.active {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: #fff !important;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
   .admin-navbar .nav-link.text-white:active {
     transform: translateY(0);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -114,22 +121,34 @@
               <a href="/django-admin/" class="nav-link text-white">Django Admin</a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'admin_dashboard' %}" class="nav-link text-white">Admin Dashboard</a>
+              <a href="{% url 'admin_dashboard' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">Admin Dashboard</a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'booking_calendar' %}" class="nav-link text-white">Booking Calendar</a>
+              <a href="{% url 'booking_calendar' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'booking_calendar' %}active{% endif %}">Booking Calendar</a>
             </li>
-            <!--<<li class="nav-item">
-              <a href="{% url 'booking_list' %}" class="nav-link text-white">Booking List</a>
-            </li>
-            <li class="nav-item">
-              <a href="{% url 'quote_list' %}" class="nav-link text-white">Quote List</a>
+            <!--<li class="nav-item">
+              <a href="{% url 'booking_list' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'booking_list' %}active{% endif %}">Booking List</a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'customer_list' %}" class="nav-link text-white">Customers</a>
+              <a href="{% url 'quote_list' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'quote_list' %}active{% endif %}">Quote Listt</a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'customer_list' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'customer_list' %}active{% endif %}">Customers</a>
             </li> -->
             <li class="nav-item">
+              <a href="{% url 'price_variable_list' %}" class="nav-link text-white {% if 'price_variable' in request.resolver_match.url_name %}active{% endif %}">Price Variables</a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'tax_settings' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'tax_settings' %}active{% endif %}">Tax Settings</a>
+            </li>
+            <li class="nav-item">
               <a href="{% url 'profile' %}" class="nav-link text-white">User Profile</a>
+            </li>
+            <li class="nav-item">
+              <form action="{% url 'logout' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="nav-link text-white bg-transparent border-0 p-0">Logout</button>
+              </form>
             </li>
           </ul>
         </div>

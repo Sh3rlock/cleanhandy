@@ -282,16 +282,13 @@
             <label for="crew_size_hours" style="display: block; margin-bottom: 10px; font-weight: 500;">Crew/Size/Hours *</label>
             <select name="crew_size_hours" id="crew_size_hours" class="cmn-input" required>
               <option value="">Select Crew/Size/Hours</option>
-              <option value="1_cleaner_2_hours_500">1 Cleaner Total 2 Hours (<500 Sq Ft)</option>
-              <option value="1_cleaner_3_hours_1000">1 Cleaner Total 3 Hours (<1000 Sq Ft)</option>
-              <option value="1_cleaner_4_hours_1500">1 Cleaner Total 4 Hours (<1500 Sq Ft)</option>
-              <option value="2_cleaners_2.5_hours_2000">2 Cleaners Total 2.5 Hours (<2000 Sq Ft)</option>
-              <option value="2_cleaners_3_hours_2500">2 Cleaners Total 3 Hours (<2500 Sq Ft)</option>
-              <option value="2_cleaners_4_hours_3000">2 Cleaners Total 4 Hours (<3000 Sq Ft)</option>
-              <option value="2_cleaners_5_hours_3500">2 Cleaners Total 5 Hours (<3500 Sq Ft)</option>
-              <option value="2_cleaners_6_hours_4000">2 Cleaners Total 6 Hours (<4000 Sq Ft)</option>
-              <option value="2_cleaners_7_hours_5000">2 Cleaners Total 7 Hours (<5000 Sq Ft)</option>
-              <option value="custom_cleaning">Customized Cleaning (>5000 Sq Ft) Please Email</option>
+              {% for var in office_type_variables %}
+                <option value="{{ var.id }}" data-price="{{ var.price }}" data-duration="{{ var.duration|default:'' }}">
+                  {{ var.variable_name }}
+                </option>
+              {% empty %}
+                <option value="">No options available</option>
+              {% endfor %}
             </select>
           </div>
 

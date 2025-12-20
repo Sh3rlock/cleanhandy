@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from .models import (
     Quote, Service, ServiceCategory, CleaningExtra, HomeType, 
     SquareFeetOption, NewsletterSubscriber, Booking, Contact, 
-    Review, ContactInfo, AboutContent, HourlyRate, HandymanQuote, PostEventCleaningQuote, HomeCleaningQuoteRequest
+    Review, ContactInfo, AboutContent, HourlyRate, HandymanQuote, PostEventCleaningQuote, HomeCleaningQuoteRequest, PriceVariable, PriceVariableCategory, TaxSettings
 )
 
 # ============================================================================
@@ -47,6 +47,9 @@ admin.site.register(CleaningExtra)
 admin.site.register(HomeType)
 admin.site.register(SquareFeetOption)
 admin.site.register(Review)
+admin.site.register(PriceVariableCategory)
+admin.site.register(PriceVariable)
+admin.site.register(TaxSettings)
 
 # ============================================================================
 # HOURLY RATE ADMIN - CONFIGURABLE PRICING

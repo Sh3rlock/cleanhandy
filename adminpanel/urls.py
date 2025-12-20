@@ -3,12 +3,14 @@ from .views import (
     admin_dashboard, update_quote_status, update_quote_detail_status, quote_list, quote_detail, booking_list, booking_detail_admin, customer_list, customer_detail, 
     service_list, add_service_category, edit_service_category, delete_service_category,
     add_service, edit_service, delete_service, booking_calendar, get_upcoming_quotes, quote_approval_view, quote_decline_view, block_time_slot,
+    price_variable_list, add_price_variable, edit_price_variable, delete_price_variable,
+    price_variable_category_list, add_price_variable_category, edit_price_variable_category, delete_price_variable_category, tax_settings,
     get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv, delete_quote, send_quote_email_view, get_booking_detail,
     giftcard_discount, subscriber_list, add_subscriber, export_subscribers_csv, office_quote_list, office_quote_detail, export_office_quotes_csv, send_office_quote_email, generate_office_quote_pdf,
     handyman_quote_list, handyman_quote_detail, update_handyman_quote_status, export_handyman_quotes_csv, send_handyman_quote_email, generate_handyman_quote_pdf, delete_handyman_quote,
     post_event_cleaning_quote_list, post_event_cleaning_quote_detail, update_post_event_cleaning_quote_status, export_post_event_cleaning_quotes_csv, send_post_event_cleaning_quote_email, generate_post_event_cleaning_quote_pdf, delete_post_event_cleaning_quote,
     home_cleaning_quote_list, home_cleaning_quote_detail, delete_home_cleaning_quote, export_home_cleaning_quotes_csv,
-    send_home_cleaning_quote_email,
+    send_home_cleaning_quote_email, home_cleaning_quote_accept, home_cleaning_quote_decline,
     office_cleaning_quote_list, office_cleaning_quote_detail, delete_office_cleaning_quote, export_office_cleaning_quotes_csv,
     send_office_cleaning_quote_email,
     send_payment_link
@@ -46,6 +48,21 @@ urlpatterns = [
     path("services/add/", add_service, name="add_service"),
     path("services/edit/<int:service_id>/", edit_service, name="edit_service"),
     path("services/delete/<int:service_id>/", delete_service, name="delete_service"),
+
+    # Price Variable Categories Management
+    path("price-variable-categories/", price_variable_category_list, name="price_variable_category_list"),
+    path("price-variable-categories/add/", add_price_variable_category, name="add_price_variable_category"),
+    path("price-variable-categories/edit/<int:category_id>/", edit_price_variable_category, name="edit_price_variable_category"),
+    path("price-variable-categories/delete/<int:category_id>/", delete_price_variable_category, name="delete_price_variable_category"),
+
+    # Price Variables Management
+    path("price-variables/", price_variable_list, name="price_variable_list"),
+    path("price-variables/add/", add_price_variable, name="add_price_variable"),
+    path("price-variables/edit/<int:price_variable_id>/", edit_price_variable, name="edit_price_variable"),
+    path("price-variables/delete/<int:price_variable_id>/", delete_price_variable, name="delete_price_variable"),
+
+    # Tax Settings Management
+    path("tax-settings/", tax_settings, name="tax_settings"),
 
     path("bookings/calendar/", booking_calendar, name="booking_calendar"),
 
@@ -114,6 +131,8 @@ urlpatterns = [
     path("home-cleaning-quotes/<int:quote_id>/", home_cleaning_quote_detail, name="home_cleaning_quote_detail"),
     path("home-cleaning-quotes/<int:quote_id>/delete/", delete_home_cleaning_quote, name="delete_home_cleaning_quote"),
     path("home-cleaning-quotes/export-csv/", export_home_cleaning_quotes_csv, name="export_home_cleaning_quotes_csv"),
+    path("home-cleaning-quote/<int:quote_id>/accept/<str:token>/", home_cleaning_quote_accept, name="home_cleaning_quote_accept"),
+    path("home-cleaning-quote/<int:quote_id>/decline/<str:token>/", home_cleaning_quote_decline, name="home_cleaning_quote_decline"),
 
     # Office Cleaning Quotes Management
     path("office-cleaning-quotes/", office_cleaning_quote_list, name="office_cleaning_quote_list"),

@@ -830,29 +830,16 @@ class HandymanQuoteForm(forms.ModelForm):
 
 class HomeCleaningQuoteRequestForm(forms.ModelForm):
     # Custom fields that need specific handling
-    bath_count = forms.ChoiceField(
+    # bath_count is now dynamic from PriceVariable, so use CharField to accept any value (PriceVariable ID)
+    bath_count = forms.CharField(
         label="Number of Bathrooms",
-        choices=[
-            ("", "Select Number of Bathrooms"),
-            ("1", "1 Bathroom"),
-            ("2", "2 Bathrooms"),
-            ("3", "3 Bathrooms"),
-            ("4", "4 Bathrooms"),
-            ("5+", "5+ Bathrooms"),
-        ],
         required=True,
         widget=forms.Select(attrs={"class": "cmn-input"})
     )
     
-    cleaning_type = forms.ChoiceField(
+    # cleaning_type is now dynamic from PriceVariable (variable_name), so use CharField to accept any value
+    cleaning_type = forms.CharField(
         label="Cleaning Type",
-        choices=[
-            ("", "Select Cleaning Type"),
-            ("Regular Cleaning", "Regular Cleaning"),
-            ("Deep Cleaning", "Deep Cleaning"),
-            ("Move In/Out Cleaning", "Move In/Out Cleaning"),
-            ("Post Renovation", "Post Renovation"),
-        ],
         required=True,
         widget=forms.Select(attrs={"class": "cmn-input"})
     )
@@ -873,6 +860,7 @@ class HomeCleaningQuoteRequestForm(forms.ModelForm):
     pet = forms.ChoiceField(
         label="Do you have any pets?",
         choices=[
+            ("none", "None"),
             ("cat", "Cat"),
             ("dog", "Dog"),
             ("both", "Both"),

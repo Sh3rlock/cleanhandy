@@ -1,0 +1,100 @@
+{% extends 'adminpanel/base_admin_with_nav.html' %}
+{% block page_title %}Tax Settings{% endblock %}
+{% block breadcrumb %}Tax Settings{% endblock %}
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Tax Settings</h2>
+            <p class="text-muted">Configure the global tax rate that will be applied to all quotes and bookings.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.tax_rate.id_for_label }}" class="form-label">
+                                Tax Rate (%) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                {{ form.tax_rate }}
+                                <!-- <span class="input-group-text">%</span> -->
+                            </div>
+                            {% if form.tax_rate.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.tax_rate.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Enter the tax rate as a percentage (e.g., 8.750 for 8.750%)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.description.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Optional: Add a description (e.g., 'NYC Sales Tax')</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Tax Active
+                                </label>
+                            </div>
+                            {% if form.is_active.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.is_active.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Uncheck to disable tax calculation without deleting the setting</small>
+                        </div>
+
+                        {% if tax_settings %}
+                        <div class="alert alert-info">
+                            <strong>Current Settings:</strong><br>
+                            Tax Rate: <strong>{{ tax_settings.tax_rate }}%</strong><br>
+                            {% if tax_settings.description %}
+                                Description: {{ tax_settings.description }}<br>
+                            {% endif %}
+                            Status: {% if tax_settings.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}<br>
+                            Last Updated: {{ tax_settings.updated_at|date:"M d, Y H:i" }}
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Tax Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .input-group-text {
+        background-color: #f8f9fa;
+    }
+    .form-check-input {
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}

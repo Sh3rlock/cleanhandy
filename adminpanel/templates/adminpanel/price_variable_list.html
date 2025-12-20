@@ -1,0 +1,252 @@
+{% extends 'adminpanel/base_admin_with_nav.html' %}
+{% block page_title %}Price Variables Management{% endblock %}
+{% block breadcrumb %}Price Variables Management{% endblock %}
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Variables Management</h2>
+            <!--<p class="text-muted">Manage configurable price variables for quotes and bookings (e.g., Studio, Bathrooms, Parking fees, etc.)</p>-->
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12 d-flex gap-2">
+            <a href="{% url 'add_price_variable' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Price Variable
+            </a>
+            <a href="{% url 'price_variable_category_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-tags"></i> Manage Categories
+            </a>
+            <a href="{% url 'tax_settings' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-percent"></i> Manage Tax Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters and Sort -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" name="search" id="search" class="cmn-input" placeholder="Search by name..." value="{{ search_query|default:'' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="category" class="form-label">Category</label>
+                            <select name="category" id="category" class="cmn-input">
+                                <option value="">All Categories</option>
+                                {% for cat in all_categories %}
+                                    <option value="{{ cat.id }}" {% if category_filter == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                                {% endfor %}
+                                <option value="none" {% if category_filter == 'none' %}selected{% endif %}>No Category</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="cmn-input">
+                                <option value="">All Statuses</option>
+                                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="sort_by" class="form-label">Sort By</label>
+                            <select name="sort_by" id="sort_by" class="cmn-input">
+                                <option value="category" {% if sort_by == 'category' %}selected{% endif %}>Category</option>
+                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
+                                <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Price</option>
+                                <option value="created" {% if sort_by == 'created' %}selected{% endif %}>Created Date</option>
+                                <option value="updated" {% if sort_by == 'updated' %}selected{% endif %}>Updated Date</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sort_order" class="form-label">Order</label>
+                            <select name="sort_order" id="sort_order" class="cmn-input">
+                                <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Ascending</option>
+                                <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Descending</option>
+                            </select>
+                        </div>
+                        {% if search_query or category_filter or status_filter %}
+                        <div class="col-12">
+                            <a href="{% url 'price_variable_list' %}" class="btn btn-outline-secondary btn-sm" style="margin-top: -20px;"> 
+                                <i class="fas fa-times"></i> Clear Filters
+                            </a>
+                        </div>
+                        {% endif %}
+                    </form>
+                    <script>
+                        // Auto-submit form when filter values change
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const filterForm = document.querySelector('form[method="GET"]');
+                            if (filterForm) {
+                                const filterInputs = filterForm.querySelectorAll('select, input[type="text"]');
+                                filterInputs.forEach(function(input) {
+                                    input.addEventListener('change', function() {
+                                        filterForm.submit();
+                                    });
+                                    // For search input, submit on Enter key or after a short delay
+                                    if (input.type === 'text' && input.id === 'search') {
+                                        let searchTimeout;
+                                        input.addEventListener('input', function() {
+                                            clearTimeout(searchTimeout);
+                                            // Submit after 500ms of no typing (debounce)
+                                            searchTimeout = setTimeout(function() {
+                                                filterForm.submit();
+                                            }, 500);
+                                        });
+                                        input.addEventListener('keypress', function(e) {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                clearTimeout(searchTimeout);
+                                                filterForm.submit();
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    {% if price_variables %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>
+                                        Category
+                                        {% if sort_by == 'category' %}
+                                            <i class="fas fa-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                        {% endif %}
+                                    </th>
+                                    <th>
+                                        Variable Name
+                                        {% if sort_by == 'name' %}
+                                            <i class="fas fa-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                        {% endif %}
+                                    </th>
+                                    <th>
+                                        Price
+                                        {% if sort_by == 'price' %}
+                                            <i class="fas fa-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                        {% endif %}
+                                    </th>
+                                    <th>Duration</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>
+                                        Created
+                                        {% if sort_by == 'created' %}
+                                            <i class="fas fa-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                        {% endif %}
+                                    </th>
+                                    <th>
+                                        Updated
+                                        {% if sort_by == 'updated' %}
+                                            <i class="fas fa-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                        {% endif %}
+                                    </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pv in price_variables %}
+                                <tr>
+                                    <td>
+                                        {% if pv.category %}
+                                            <span class="badge bg-primary">{{ pv.category.name }}</span>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><strong>{{ pv.variable_name }}</strong></td>
+                                    <td><span class="badge bg-success">${{ pv.price }}</span></td>
+                                    <td>
+                                        {% if pv.duration %}
+                                            <span class="badge bg-info">{{ pv.duration }} min</span>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if pv.description %}
+                                            <small class="text-muted">{{ pv.description|truncatewords:10 }}</small>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if pv.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><small class="text-muted">{{ pv.created_at|date:"M d, Y" }}</small></td>
+                                    <td><small class="text-muted">{{ pv.updated_at|date:"M d, Y" }}</small></td>
+                                    <td>
+                                        <a href="{% url 'edit_price_variable' pv.id %}" class="btn btn-sm btn-info" title="Edit">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <a href="{% url 'delete_price_variable' pv.id %}" class="btn btn-sm btn-danger" title="Delete">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        {% if search_query or category_filter or status_filter %}
+                            No price variables found matching your filters. 
+                            <a href="{% url 'price_variable_list' %}">Clear filters</a> or 
+                        {% else %}
+                            No price variables found. 
+                        {% endif %}
+                        <a href="{% url 'add_price_variable' %}">Add your first price variable</a>.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table th {
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    .badge {
+        font-size: 0.9em;
+        padding: 0.4em 0.6em;
+    }
+    .btn-sm {
+        margin-right: 5px;
+    }
+    .table th i {
+        margin-left: 5px;
+        font-size: 0.8em;
+        color: #6c757d;
+    }
+    .card-body .row.g-3 {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}

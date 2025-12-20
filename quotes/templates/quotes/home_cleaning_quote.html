@@ -272,6 +272,20 @@
         </div>
 
         <!-- Home Type -->
+        {% if home_type_variables %}
+        <div class="form-group">
+          <label for="id_home_types" class="form-label">Home Type *</label>
+          <select name="home_types" id="id_home_types" class="cmn-input" required>
+            <option value="">Select Home Type</option>
+            {% for var in home_type_variables %}
+              <option value="{{ var.id }}" data-price="{{ var.price }}" data-duration="{{ var.duration|default:'' }}">
+                {{ var.variable_name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% else %}
+        <!-- Fallback to form field if no PriceVariables -->
         <div class="form-group">
           <label for="id_home_types" class="form-label">Home Type *</label>
           <select name="home_types" id="id_home_types" class="cmn-input" required>
@@ -281,35 +295,37 @@
             {% endfor %}
           </select>
         </div>
+        {% endif %}
 
         <!-- Number of Bathrooms -->
+        {% if bathroom_variables %}
         <div class="form-group">
           <label for="id_bath_count" class="form-label">Number of Bathrooms *</label>
-          {% if form.bath_count %}
-            {{ form.bath_count|add_class:"cmn-input" }}
-          {% else %}
-            <select name="bath_count" id="id_bath_count" class="cmn-input" required>
-              <option value="">Select Number of Bathrooms</option>
-              <option value="1">1 Bathroom</option>
-              <option value="2">2 Bathrooms</option>
-              <option value="3">3 Bathrooms</option>
-              <option value="4">4 Bathrooms</option>
-              <option value="5+">5+ Bathrooms</option>
-            </select>
-          {% endif %}
+          <select name="bath_count" id="id_bath_count" class="cmn-input" required>
+            <option value="">Select Number of Bathrooms</option>
+            {% for var in bathroom_variables %}
+              <option value="{{ var.id }}" data-price="{{ var.price }}" data-duration="{{ var.duration|default:'' }}">
+                {{ var.variable_name }}
+              </option>
+            {% endfor %}
+          </select>
         </div>
+        {% endif %}
 
         <!-- Cleaning Type -->
+        {% if cleaning_type_variables %}
         <div class="form-group">
           <label for="id_cleaning_type" class="form-label">Cleaning Type *</label>
           <select name="cleaning_type" id="id_cleaning_type" class="cmn-input" required>
             <option value="">Select Cleaning Type</option>
-            <option value="Regular Cleaning" selected>Regular Cleaning</option>
-            <option value="Deep Cleaning">Deep Cleaning</option>
-            <option value="Move In/Out Cleaning">Move In/Out Cleaning</option>
-            <option value="Post Renovation">Post Renovation</option>
+            {% for var in cleaning_type_variables %}
+              <option value="{{ var.variable_name }}" data-price="{{ var.price }}" data-duration="{{ var.duration|default:'' }}">
+                {{ var.variable_name }}
+              </option>
+            {% endfor %}
           </select>
         </div>
+        {% endif %}
 
         <!-- Schedule -->
         <div class="form-group">
@@ -473,10 +489,25 @@
             </div>
           </div>
 
+          <!-- Parking option -->
+          {% if parking_variables %}
+          <div class="form-group">
+            <label for="id_parking_option" class="form-label">Parking</label>
+            <select name="parking_option" id="id_parking_option" class="cmn-input">
+              <option value="">Select Parking Option</option>
+              {% for var in parking_variables %}
+                <option value="{{ var.id }}" data-price="{{ var.price }}" data-duration="{{ var.duration|default:'' }}">
+                  {{ var.variable_name }}{% if var.price %} + ${{ var.price }}{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
           <!-- Parking instructions -->
           <div class="form-group">
-            <label for="id_parking" class="form-label">Parking Instructions *</label>
-            <textarea name="parking" id="id_parking" class="cmn-input" rows="3" placeholder="Please provide parking instructions for our cleaning team..." required></textarea>
+            <label for="id_parking" class="form-label">Parking Instructions</label>
+            <textarea name="parking" id="id_parking" class="cmn-input" rows="3" placeholder="Please provide parking instructions for our cleaning team (optional)..."></textarea>
           </div>
 
           <!-- Pet information -->
@@ -525,6 +556,32 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Cleaning Supply Question -->
+        <div class="form-group">
+          <h6 class="mt-4">Do you need cleaning supply? *</h6>
+          <div class="row">
+            <div class="col-12 col-md-6 mb-2">
+              <div class="form-check p-3 border rounded shadow-sm h-100 clickable">
+                <input class="form-check-input" type="radio" name="cleaning_supply" id="cleaning_supply_yes" value="yes" required>
+                <label class="form-check-label ms-2" for="cleaning_supply_yes">
+                  <i class="fa-solid fa-check me-2"></i>Yes
+                </label>
+              </div>
+            </div>
+            <div class="col-12 col-md-6 mb-2">
+              <div class="form-check p-3 border rounded shadow-sm h-100 clickable">
+                <input class="form-check-input" type="radio" name="cleaning_supply" id="cleaning_supply_no" value="no" required>
+                <label class="form-check-label ms-2" for="cleaning_supply_no">
+                  <i class="fa-solid fa-xmark me-2"></i>No
+                </label>
+              </div>
+            </div>
+          </div>
+          <p class="text-muted mt-2 mb-0">
+            <i class="fa-solid fa-info-circle me-1"></i>Vacuum Delivery +$100
+          </p>
         </div>
 
         <!-- Job Description -->
@@ -745,24 +802,28 @@
       if (homeType) homeType.classList.remove('is-invalid');
     }
 
-    // Validate Number of Bathrooms
+    // Validate Number of Bathrooms (only if field exists)
     const bathCount = document.getElementById('id_bath_count');
-    if (!bathCount || !bathCount.value) {
-      isValid = false;
-      errorMessages.push('Please select Number of Bathrooms');
-      if (bathCount) bathCount.classList.add('is-invalid');
-    } else {
-      if (bathCount) bathCount.classList.remove('is-invalid');
+    if (bathCount) {
+      if (!bathCount.value) {
+        isValid = false;
+        errorMessages.push('Please select Number of Bathrooms');
+        bathCount.classList.add('is-invalid');
+      } else {
+        bathCount.classList.remove('is-invalid');
+      }
     }
 
-    // Validate Cleaning Type
+    // Validate Cleaning Type (only if field exists)
     const cleaningType = document.getElementById('id_cleaning_type');
-    if (!cleaningType || !cleaningType.value) {
-      isValid = false;
-      errorMessages.push('Please select a Cleaning Type');
-      if (cleaningType) cleaningType.classList.add('is-invalid');
-    } else {
-      if (cleaningType) cleaningType.classList.remove('is-invalid');
+    if (cleaningType) {
+      if (!cleaningType.value) {
+        isValid = false;
+        errorMessages.push('Please select a Cleaning Type');
+        cleaningType.classList.add('is-invalid');
+      } else {
+        cleaningType.classList.remove('is-invalid');
+      }
     }
 
     // Validate Date and Time
@@ -856,15 +917,7 @@
       });
     }
 
-    // Validate Parking Instructions
-    const parking = document.getElementById('id_parking');
-    if (!parking || !parking.value.trim()) {
-      isValid = false;
-      errorMessages.push('Please provide Parking Instructions');
-      if (parking) parking.classList.add('is-invalid');
-    } else {
-      if (parking) parking.classList.remove('is-invalid');
-    }
+    // Parking Instructions is now optional, so no validation needed
 
     // Validate "Do you have any pets?"
     const petOptions = document.querySelectorAll('input[name="pet"]');
@@ -887,6 +940,33 @@
     } else {
       document.querySelectorAll('.form-check.clickable').forEach(container => {
         const radio = container.querySelector('input[name="pet"]');
+        if (radio) {
+          container.style.borderColor = '';
+        }
+      });
+    }
+
+    // Validate "Do you need cleaning supply?"
+    const cleaningSupplyOptions = document.querySelectorAll('input[name="cleaning_supply"]');
+    let cleaningSupplySelected = false;
+    cleaningSupplyOptions.forEach(option => {
+      if (option.checked) {
+        cleaningSupplySelected = true;
+      }
+    });
+    if (!cleaningSupplySelected) {
+      isValid = false;
+      errorMessages.push('Please select if you need cleaning supply');
+      // Highlight the cleaning supply containers
+      document.querySelectorAll('.form-check.clickable').forEach(container => {
+        const radio = container.querySelector('input[name="cleaning_supply"]');
+        if (radio) {
+          container.style.borderColor = 'red';
+        }
+      });
+    } else {
+      document.querySelectorAll('.form-check.clickable').forEach(container => {
+        const radio = container.querySelector('input[name="cleaning_supply"]');
         if (radio) {
           container.style.borderColor = '';
         }
@@ -990,6 +1070,13 @@
                 c.style.borderColor = '';
               }
             });
+          } else if (radio.name === 'cleaning_supply') {
+            document.querySelectorAll('.form-check.clickable').forEach(c => {
+              const r = c.querySelector('input[name="cleaning_supply"]');
+              if (r) {
+                c.style.borderColor = '';
+              }
+            });
           }
         }
       }
@@ -997,7 +1084,14 @@
   });
 
   // Real-time validation - clear error state when user starts typing/selecting
-  const formFields = ['id_home_types', 'id_bath_count', 'id_cleaning_type', 'name', 'email', 'phone', 'id_address', 'id_zip_code', 'id_parking', 'id_job_description'];
+  // Build form fields array conditionally based on what fields exist
+  const formFields = ['id_home_types', 'name', 'email', 'phone', 'id_address', 'id_zip_code', 'id_job_description'];
+  if (document.getElementById('id_bath_count')) {
+    formFields.push('id_bath_count');
+  }
+  if (document.getElementById('id_cleaning_type')) {
+    formFields.push('id_cleaning_type');
+  }
   formFields.forEach(fieldId => {
     const field = document.getElementById(fieldId);
     if (field) {
@@ -1022,7 +1116,19 @@
     });
   });
 
-  // Update service based on cleaning type selection
+  // Clear error state for cleaning supply radio buttons when selected
+  document.querySelectorAll('input[name="cleaning_supply"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      document.querySelectorAll('.form-check.clickable').forEach(container => {
+        const cleaningSupplyRadio = container.querySelector('input[name="cleaning_supply"]');
+        if (cleaningSupplyRadio) {
+          container.style.borderColor = '';
+        }
+      });
+    });
+  });
+
+  // Update service based on cleaning type selection (only if field exists)
   const cleaningTypeSelect = document.getElementById('id_cleaning_type');
   const serviceInput = document.getElementById('id_service');
   

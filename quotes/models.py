@@ -117,6 +117,70 @@ class SquareFeetOption(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+class PriceVariableCategory(models.Model):
+    """Category model for price variables (e.g., Crew/Size/Hours, Home type, Number of Bathrooms, etc.)"""
+    name = models.CharField(max_length=100, unique=True, help_text="Category name (e.g., 'Crew/Size/Hours', 'Home type', 'Number of Bathrooms')")
+    description = models.TextField(blank=True, help_text="Optional description of this category")
+    is_active = models.BooleanField(default=True, help_text="Whether this category is currently active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = "Price Variable Category"
+        verbose_name_plural = "Price Variable Categories"
+
+    def __str__(self):
+        return self.name
+
+class PriceVariable(models.Model):
+    """Model to store configurable price variables for quotes and bookings"""
+    category = models.ForeignKey("PriceVariableCategory", on_delete=models.CASCADE, null=True, blank=True, help_text="Category for this price variable")
+    variable_name = models.CharField(max_length=200, help_text="Name of the variable (e.g., 'Studio', '1 Bathroom', 'Manhattan Parking fee')")
+    price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Price in dollars")
+    duration = models.PositiveIntegerField(null=True, blank=True, help_text="Duration in minutes (optional)")
+    description = models.TextField(blank=True, help_text="Optional description or notes")
+    is_active = models.BooleanField(default=True, help_text="Whether this price variable is currently active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['category', 'variable_name']
+        verbose_name = "Price Variable"
+        verbose_name_plural = "Price Variables"
+        unique_together = [['category', 'variable_name']]
+
+    def __str__(self):
+        if self.category:
+            return f"{self.category.name} - {self.variable_name} - ${self.price}"
+        return f"{self.variable_name} - ${self.price}"
+
+class TaxSettings(models.Model):
+    """Global tax rate settings - singleton model"""
+    tax_rate = models.DecimalField(max_digits=6, decimal_places=3, default=0.000, help_text="Tax rate as percentage (e.g., 8.750 for 8.750%)")
+    description = models.CharField(max_length=255, blank=True, help_text="Optional description (e.g., 'NYC Sales Tax')")
+    is_active = models.BooleanField(default=True, help_text="Whether tax is currently active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Tax Settings"
+        verbose_name_plural = "Tax Settings"
+
+    def __str__(self):
+        return f"Tax Rate: {self.tax_rate}%"
+
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists (singleton pattern)
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_tax_rate(cls):
+        """Get the current tax rate, creating default if it doesn't exist"""
+        obj, created = cls.objects.get_or_create(pk=1, defaults={'tax_rate': 0.000})
+        return obj.tax_rate
+
 class Quote(models.Model):
     customer = models.ForeignKey("accounts.CustomerProfile", on_delete=models.CASCADE, null=True, blank=True)
     service = models.ForeignKey("quotes.Service", on_delete=models.CASCADE)
@@ -1220,6 +1284,7 @@ class HomeCleaningQuoteRequest(models.Model):
     get_in = models.CharField(max_length=50, blank=True, null=True)
     parking = models.TextField(blank=True, null=True)
     pet = models.CharField(max_length=50, blank=True, null=True)
+    cleaning_supply = models.CharField(max_length=10, blank=True, null=True, help_text="Whether customer needs cleaning supply (yes/no)")
     cleaning_frequency = models.CharField(max_length=50, blank=True, null=True)
     job_description = models.TextField(blank=True, null=True)
 

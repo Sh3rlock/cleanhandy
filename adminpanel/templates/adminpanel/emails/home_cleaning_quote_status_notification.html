@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quote {{ action|title }} Notification</title>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td {font-family: Arial, sans-serif !important;}
+    </style>
+    <![endif]-->
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f4f4f4;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background-color: {% if action == 'accepted' %}#28a745{% else %}#dc3545{% endif %}; padding: 30px; text-align: center;">
+                            <h1 style="margin: 0; font-size: 24px; color: #ffffff; font-weight: bold;">
+                                {% if action == "accepted" %}
+                                    ✅ Quote Accepted
+                                {% else %}
+                                    ❌ Quote Declined
+                                {% endif %}
+                            </h1>
+                            <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 16px;">Quote #{{ quote.id }}</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 30px;">
+                            <p style="margin: 0 0 15px 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                                {% if action == "accepted" %}
+                                    Great news! The customer has <strong>accepted</strong> the quote.
+                                {% else %}
+                                    The customer has <strong>declined</strong> the quote.
+                                {% endif %}
+                            </p>
+                            
+                            <!-- Quote Information -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 25px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid {% if action == 'accepted' %}#28a745{% else %}#dc3545{% endif %};">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h3 style="margin: 0 0 15px 0; color: {% if action == 'accepted' %}#28a745{% else %}#dc3545{% endif %}; font-size: 18px; font-weight: bold;">📋 Quote Details</h3>
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 40%;">Quote ID:</td>
+                                                            <td style="color: #333333;">#{{ quote.id }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% if quote.name %}
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 40%;">Customer Name:</td>
+                                                            <td style="color: #333333;">{{ quote.name }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if quote.email %}
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 40%;">Email:</td>
+                                                            <td style="color: #333333;"><a href="mailto:{{ quote.email }}" style="color: #F15A29; text-decoration: none;">{{ quote.email }}</a></td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if quote.phone %}
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 40%;">Phone:</td>
+                                                            <td style="color: #333333;"><a href="tel:{{ quote.phone }}" style="color: #F15A29; text-decoration: none;">{{ quote.phone }}</a></td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if quote.date %}
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 40%;">Service Date:</td>
+                                                            <td style="color: #333333;">{{ quote.date|date:"F d, Y" }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if quote.hour %}
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 40%;">Service Time:</td>
+                                                            <td style="color: #333333;">{{ quote.hour|time:"g:i A" }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if quote.address %}
+                                            <tr>
+                                                <td style="padding: 8px 0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 40%;">Address:</td>
+                                                            <td style="color: #333333;">{{ quote.address }}{% if quote.apartment %}, Apt {{ quote.apartment }}{% endif %}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Action Required -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 20px 0; background-color: {% if action == 'accepted' %}#d4edda{% else %}#f8d7da{% endif %}; border-left: 4px solid {% if action == 'accepted' %}#28a745{% else %}#dc3545{% endif %}; border-radius: 4px;">
+                                <tr>
+                                    <td style="padding: 15px;">
+                                        <p style="margin: 0; font-weight: bold; color: #333333; font-size: 16px;">
+                                            {% if action == "accepted" %}
+                                                📌 Next Steps: Please contact the customer to confirm the booking details and proceed with scheduling.
+                                            {% else %}
+                                                📌 Note: The customer has declined this quote. You may want to follow up to understand their concerns or offer alternatives.
+                                            {% endif %}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="margin: 25px 0 15px 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                                You can view the full quote details in the admin panel.
+                            </p>
+                            
+                            <p style="margin: 0; color: #333333; font-size: 16px; line-height: 1.6;">Best regards,<br>
+                            <strong>TheCleanHandy System</strong></p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="text-align: center; padding: 20px; background-color: #f8f9fa; color: #666666; font-size: 14px;">
+                            <p style="margin: 0; line-height: 1.6;">TheCleanHandy Services<br>
+                            Email: support@thecleanhandy.com<br>
+                            Phone: (347) 652-6165</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

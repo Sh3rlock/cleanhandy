@@ -329,7 +329,11 @@
                   </div>
                   <div class="header-right-btn-area">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">My Profile</a>
+                        {% if user.is_superuser %}
+                            <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-primary">Admin</a>
+                        {% else %}
+                            <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">My Profile</a>
+                        {% endif %}
                     {% else %}
                     <!-- Example buttons to trigger the modals -->
                     <a href="{% url 'login' %}" class="btn btn-sm btn-outline-primary" >Sign In</a>
@@ -373,7 +377,11 @@
                   <div class="header-right-column d-flex align-items-center" style="flex-shrink: 0;">
                     <div class="header-right-btn-area d-flex gap-1">
                       {% if user.is_authenticated %}
-                          <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Profile</a>
+                          {% if user.is_superuser %}
+                              <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Admin</a>
+                          {% else %}
+                              <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Profile</a>
+                          {% endif %}
                       {% else %}
                       <a href="{% url 'login' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Sign In</a>
                       <a href="{% url 'register' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Sign Up</a>
@@ -487,7 +495,11 @@
                     <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
                   {% endif %}
                 {% endfor %}
-                <a class="btn btn-sm btn-outline-primary d-block" style="margin-left: 25px; margin-right: 25px;" href="{% url 'profile' %}">My Profile</a>
+                {% if user.is_superuser %}
+                    <a class="btn btn-sm btn-outline-primary d-block" style="margin-left: 25px; margin-right: 25px;" href="{% url 'admin_dashboard' %}">Admin</a>
+                {% else %}
+                    <a class="btn btn-sm btn-outline-primary d-block" style="margin-left: 25px; margin-right: 25px;" href="{% url 'profile' %}">My Profile</a>
+                {% endif %}
               {% else %}
                 <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
                 <!-- <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'handyman_booking' %}">Book Handyman</a> -->

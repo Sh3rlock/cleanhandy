@@ -2,13 +2,13 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.db import models
 from django.core.paginator import Paginator
-from quotes.models import Quote, Service, ServiceCategory, Booking, NewsletterSubscriber, OfficeQuote, HandymanQuote, PostEventCleaningQuote, HomeCleaningQuoteRequest
+from quotes.models import Quote, Service, ServiceCategory, Booking, NewsletterSubscriber, OfficeQuote, HandymanQuote, PostEventCleaningQuote, HomeCleaningQuoteRequest, PriceVariable, PriceVariableCategory, TaxSettings
 from giftcards.models import GiftCard, DiscountCode
 from quotes.forms import CleaningQuoteForm, HandymanQuoteForm
 from customers.models import Customer
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, get_object_or_404, redirect
-from .forms import ServiceForm, ServiceCategoryForm
+from .forms import ServiceForm, ServiceCategoryForm, PriceVariableForm, PriceVariableCategoryForm, TaxSettingsForm
 
 from django.http import JsonResponse
 import json
@@ -466,6 +466,205 @@ def delete_service(request, service_id):
     service = get_object_or_404(Service, id=service_id)
     service.delete()
     return redirect("service_list")
+
+# 📌 Price Variable Category Management Views
+def price_variable_category_list(request):
+    categories = PriceVariableCategory.objects.all()
+    
+    # Filter by status
+    status_filter = request.GET.get('status', '')
+    if status_filter == 'active':
+        categories = categories.filter(is_active=True)
+    elif status_filter == 'inactive':
+        categories = categories.filter(is_active=False)
+    
+    # Search filter
+    search_query = request.GET.get('search', '')
+    if search_query:
+        categories = categories.filter(name__icontains=search_query)
+    
+    # Sort options
+    sort_by = request.GET.get('sort_by', 'name')
+    sort_order = request.GET.get('sort_order', 'asc')
+    
+    # For count sorting, we need to annotate with the count
+    if sort_by == 'count':
+        from django.db.models import Count
+        categories = categories.annotate(var_count=Count('pricevariable'))
+        order_field = 'var_count'
+    elif sort_by == 'name':
+        order_field = 'name'
+    elif sort_by == 'created':
+        order_field = 'created_at'
+    elif sort_by == 'updated':
+        order_field = 'updated_at'
+    else:
+        order_field = 'name'
+    
+    if sort_order == 'desc':
+        order_field = f'-{order_field}'
+    
+    categories = categories.order_by(order_field)
+    
+    return render(request, "adminpanel/price_variable_category_list.html", {
+        "categories": categories,
+        "status_filter": status_filter,
+        "search_query": search_query,
+        "sort_by": sort_by,
+        "sort_order": sort_order,
+    })
+
+# 📌 Add a New Price Variable Category
+def add_price_variable_category(request):
+    if request.method == "POST":
+        form = PriceVariableCategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Price variable category added successfully!")
+            return redirect("price_variable_category_list")
+    else:
+        form = PriceVariableCategoryForm()
+    return render(request, "adminpanel/price_variable_category_form.html", {"form": form, "action": "Add"})
+
+# 📌 Edit an Existing Price Variable Category
+def edit_price_variable_category(request, category_id):
+    category = get_object_or_404(PriceVariableCategory, id=category_id)
+    if request.method == "POST":
+        form = PriceVariableCategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Price variable category updated successfully!")
+            return redirect("price_variable_category_list")
+    else:
+        form = PriceVariableCategoryForm(instance=category)
+    return render(request, "adminpanel/price_variable_category_form.html", {"form": form, "action": "Edit", "category": category})
+
+# 📌 Delete a Price Variable Category
+def delete_price_variable_category(request, category_id):
+    category = get_object_or_404(PriceVariableCategory, id=category_id)
+    if request.method == "POST":
+        # Check if there are any price variables using this category
+        if PriceVariable.objects.filter(category=category).exists():
+            messages.error(request, f"Cannot delete category '{category.name}' because it has associated price variables. Please remove or reassign those variables first.")
+            return redirect("price_variable_category_list")
+        category.delete()
+        messages.success(request, "Price variable category deleted successfully!")
+        return redirect("price_variable_category_list")
+    return render(request, "adminpanel/price_variable_category_confirm_delete.html", {"category": category})
+
+# 📌 Price Variable Management Views
+def price_variable_list(request):
+    price_variables = PriceVariable.objects.all()
+    
+    # Filter by category
+    category_filter = request.GET.get('category', '')
+    if category_filter:
+        if category_filter == 'none':
+            # Filter for variables with no category
+            price_variables = price_variables.filter(category__isnull=True)
+        else:
+            try:
+                category_id = int(category_filter)
+                price_variables = price_variables.filter(category_id=category_id)
+            except (ValueError, TypeError):
+                pass
+    
+    # Filter by status
+    status_filter = request.GET.get('status', '')
+    if status_filter == 'active':
+        price_variables = price_variables.filter(is_active=True)
+    elif status_filter == 'inactive':
+        price_variables = price_variables.filter(is_active=False)
+    
+    # Search filter
+    search_query = request.GET.get('search', '')
+    if search_query:
+        price_variables = price_variables.filter(variable_name__icontains=search_query)
+    
+    # Sort options
+    sort_by = request.GET.get('sort_by', 'category')
+    sort_order = request.GET.get('sort_order', 'asc')
+    
+    if sort_by == 'category':
+        order_field = 'category__name'
+    elif sort_by == 'name':
+        order_field = 'variable_name'
+    elif sort_by == 'price':
+        order_field = 'price'
+    elif sort_by == 'created':
+        order_field = 'created_at'
+    elif sort_by == 'updated':
+        order_field = 'updated_at'
+    else:
+        order_field = 'category__name'
+    
+    if sort_order == 'desc':
+        order_field = f'-{order_field}'
+    
+    price_variables = price_variables.order_by(order_field)
+    
+    # Get all categories for the filter dropdown
+    all_categories = PriceVariableCategory.objects.filter(is_active=True).order_by('name')
+    
+    return render(request, "adminpanel/price_variable_list.html", {
+        "price_variables": price_variables,
+        "all_categories": all_categories,
+        "category_filter": category_filter,
+        "status_filter": status_filter,
+        "search_query": search_query,
+        "sort_by": sort_by,
+        "sort_order": sort_order,
+    })
+
+# 📌 Add a New Price Variable
+def add_price_variable(request):
+    if request.method == "POST":
+        form = PriceVariableForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Price variable added successfully!")
+            return redirect("price_variable_list")
+    else:
+        form = PriceVariableForm()
+    return render(request, "adminpanel/price_variable_form.html", {"form": form, "action": "Add"})
+
+# 📌 Edit an Existing Price Variable
+def edit_price_variable(request, price_variable_id):
+    price_variable = get_object_or_404(PriceVariable, id=price_variable_id)
+    if request.method == "POST":
+        form = PriceVariableForm(request.POST, instance=price_variable)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Price variable updated successfully!")
+            return redirect("price_variable_list")
+    else:
+        form = PriceVariableForm(instance=price_variable)
+    return render(request, "adminpanel/price_variable_form.html", {"form": form, "action": "Edit", "price_variable": price_variable})
+
+# 📌 Delete a Price Variable
+def delete_price_variable(request, price_variable_id):
+    price_variable = get_object_or_404(PriceVariable, id=price_variable_id)
+    if request.method == "POST":
+        price_variable.delete()
+        messages.success(request, "Price variable deleted successfully!")
+        return redirect("price_variable_list")
+    return render(request, "adminpanel/price_variable_confirm_delete.html", {"price_variable": price_variable})
+
+# 📌 Tax Settings Management View
+def tax_settings(request):
+    # Get or create the singleton tax settings instance
+    tax_settings_obj, created = TaxSettings.objects.get_or_create(pk=1, defaults={'tax_rate': 0.000})
+    
+    if request.method == "POST":
+        form = TaxSettingsForm(request.POST, instance=tax_settings_obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Tax settings updated successfully!")
+            return redirect("tax_settings")
+    else:
+        form = TaxSettingsForm(instance=tax_settings_obj)
+    
+    return render(request, "adminpanel/tax_settings.html", {"form": form, "tax_settings": tax_settings_obj})
 
 def format_time_slot(quote):
     start = datetime.combine(quote.date, quote.hour)
@@ -1879,6 +2078,9 @@ def home_cleaning_quote_list(request):
 @user_passes_test(admin_check)
 def home_cleaning_quote_detail(request, quote_id):
     """View home cleaning quote details"""
+    from decimal import Decimal
+    from quotes.utils import get_hourly_rate
+    
     home_cleaning_quote = get_object_or_404(HomeCleaningQuoteRequest, pk=quote_id)
 
     if request.method == "POST":
@@ -1898,7 +2100,6 @@ def home_cleaning_quote_detail(request, quote_id):
     email_sent_at = None
     email_sent_to = None
     email_history = []
-    import json
     if hasattr(home_cleaning_quote, 'admin_notes') and home_cleaning_quote.admin_notes:
         try:
             notes_data = json.loads(home_cleaning_quote.admin_notes)
@@ -1940,11 +2141,186 @@ def home_cleaning_quote_detail(request, quote_id):
                 'discount_type': None,
             })
     
+    # Calculate estimated time, price, and parking fee based on selected PriceVariables
+    calculated_estimated_time = ""
+    calculated_price = None
+    calculated_parking_fee = None
+    selected_variables = []
+    
+    # Check admin_notes for stored PriceVariable IDs (similar to office quotes)
+    form_data = {}
+    if hasattr(home_cleaning_quote, 'admin_notes') and home_cleaning_quote.admin_notes:
+        try:
+            notes_data = json.loads(home_cleaning_quote.admin_notes)
+            if isinstance(notes_data, dict):
+                form_data = notes_data
+        except (json.JSONDecodeError, ValueError):
+            pass
+    
+    # Get PriceVariable IDs from form_data (stored in admin_notes) or direct fields
+    home_type_id = form_data.get('home_type_id') or form_data.get('home_types_id')
+    bath_count_id = form_data.get('bath_count_id')
+    cleaning_type_name = home_cleaning_quote.cleaning_type
+    parking_option_id = form_data.get('parking_option_id') or form_data.get('parking_option')
+    
+    # Fallback: Check bath_count field directly - could be PriceVariable ID (numeric string) or old format
+    if not bath_count_id and home_cleaning_quote.bath_count:
+        try:
+            bath_count_id = int(home_cleaning_quote.bath_count)
+        except (ValueError, TypeError):
+            # Old format string or not a number, skip PriceVariable lookup
+            pass
+    
+    # Also try to get home_type_id from form_data if home_types field is numeric
+    if not home_type_id and form_data.get('home_types'):
+        try:
+            home_type_id = int(form_data['home_types'])
+        except (ValueError, TypeError):
+            pass
+    
+    # Look up PriceVariables
+    if home_type_id:
+        try:
+            home_type_var = PriceVariable.objects.get(id=home_type_id, is_active=True)
+            selected_variables.append(home_type_var)
+        except PriceVariable.DoesNotExist:
+            pass
+    
+    if bath_count_id:
+        try:
+            bath_var = PriceVariable.objects.get(id=bath_count_id, is_active=True)
+            selected_variables.append(bath_var)
+        except PriceVariable.DoesNotExist:
+            pass
+    
+    if cleaning_type_name:
+        try:
+            cleaning_type_var = PriceVariable.objects.filter(
+                variable_name=cleaning_type_name, 
+                category__name__iexact="Cleaning Type",
+                is_active=True
+            ).first()
+            if cleaning_type_var:
+                selected_variables.append(cleaning_type_var)
+        except Exception:
+            pass
+    
+    if parking_option_id:
+        try:
+            parking_var = PriceVariable.objects.get(id=parking_option_id, is_active=True)
+            calculated_parking_fee = float(parking_var.price) if parking_var.price else None
+        except (PriceVariable.DoesNotExist, ValueError, TypeError):
+            pass
+    
+    # Calculate total duration and price from selected variables
+    if selected_variables:
+        total_duration_minutes = sum(var.duration for var in selected_variables if var.duration)
+        total_price = sum(float(var.price) for var in selected_variables if var.price)
+        
+        # Convert duration to hours for display
+        if total_duration_minutes:
+            if total_duration_minutes >= 60:
+                hours = total_duration_minutes / 60.0
+                # Format nicely: show whole number if it's a whole number, otherwise 1 decimal place
+                if hours == int(hours):
+                    calculated_estimated_time = f"{int(hours)} hour{'s' if int(hours) != 1 else ''}"
+                else:
+                    calculated_estimated_time = f"{hours:.1f} hours"
+            else:
+                calculated_estimated_time = f"{total_duration_minutes} minute{'s' if total_duration_minutes != 1 else ''}"
+        
+        # Calculate price - use sum of prices if available, otherwise calculate from hourly rate
+        if total_price > 0:
+            calculated_price = total_price
+        elif total_duration_minutes:
+            # Calculate from hourly rate
+            try:
+                hourly_rate = get_hourly_rate('home_cleaning')
+                if hourly_rate:
+                    duration_hours = Decimal(total_duration_minutes) / Decimal('60')
+                    calculated_price = float(hourly_rate * duration_hours)
+            except Exception as e:
+                print(f"Error calculating price from hourly rate: {e}")
+    
+    # Add cleaning supply price if cleaning_supply is "yes"
+    if home_cleaning_quote.cleaning_supply and home_cleaning_quote.cleaning_supply.lower() == 'yes':
+        try:
+            # Find PriceVariable where category is "Extras" and variable_name contains "Cleaning Supply"
+            extras_category = PriceVariableCategory.objects.filter(name__iexact="Extras", is_active=True).first()
+            if extras_category:
+                cleaning_supply_var = PriceVariable.objects.filter(
+                    category=extras_category,
+                    variable_name__icontains="Cleaning Supply",
+                    is_active=True
+                ).first()
+                if cleaning_supply_var and cleaning_supply_var.price:
+                    cleaning_supply_price = float(cleaning_supply_var.price)
+                    if calculated_price:
+                        calculated_price += cleaning_supply_price
+                    else:
+                        calculated_price = cleaning_supply_price
+        except Exception as e:
+            print(f"Error adding cleaning supply price: {e}")
+    
+    # Calculate discount based on cleaning_frequency
+    calculated_discount = None
+    cleaning_frequency = home_cleaning_quote.cleaning_frequency or form_data.get('cleaning_frequency', 'one_time')
+    if calculated_price and cleaning_frequency:
+        try:
+            if cleaning_frequency == 'weekly':
+                # 10% discount for weekly
+                calculated_discount = float(Decimal(str(calculated_price)) * Decimal('0.10'))
+            elif cleaning_frequency == 'bi_weekly':
+                # 5% discount for bi-weekly
+                calculated_discount = float(Decimal(str(calculated_price)) * Decimal('0.05'))
+            else:
+                # No discount for one_time or monthly
+                calculated_discount = 0.0
+        except (ValueError, TypeError, Exception) as e:
+            print(f"Error calculating discount: {e}")
+            calculated_discount = None
+    
+    # Get home type variable name for display (instead of using the old ForeignKey)
+    home_type_display_name = None
+    if home_type_id:
+        try:
+            home_type_var = PriceVariable.objects.filter(id=home_type_id, is_active=True).first()
+            if home_type_var:
+                home_type_display_name = home_type_var.variable_name
+        except Exception:
+            pass
+    
+    # Get bathroom variable name for display (instead of just the ID)
+    bathroom_display_name = None
+    if bath_count_id:
+        try:
+            bath_var = PriceVariable.objects.filter(id=bath_count_id, is_active=True).first()
+            if bath_var:
+                bathroom_display_name = bath_var.variable_name
+        except Exception:
+            pass
+    
+    # Fallback: if bath_count is stored as a string that's not a valid ID, try to use it as-is
+    if not bathroom_display_name and home_cleaning_quote.bath_count:
+        # If it's not a number (PriceVariable ID), use it as display name
+        try:
+            int(home_cleaning_quote.bath_count)
+            # It's a number, so we already tried to look it up above
+        except (ValueError, TypeError):
+            # It's not a number, use as display name (for backward compatibility)
+            bathroom_display_name = home_cleaning_quote.bath_count
+    
     return render(request, "adminpanel/home_cleaning_quote_detail.html", {
         "home_cleaning_quote": home_cleaning_quote,
         "email_sent_at": email_sent_at,
         "email_sent_to": email_sent_to or home_cleaning_quote.email,
         "email_history": email_history,
+        "calculated_estimated_time": calculated_estimated_time,
+        "calculated_price": calculated_price,
+        "calculated_parking_fee": calculated_parking_fee,
+        "calculated_discount": calculated_discount,
+        "home_type_display_name": home_type_display_name,
+        "bathroom_display_name": bathroom_display_name,
     })
 
 
@@ -1956,6 +2332,149 @@ def delete_home_cleaning_quote(request, quote_id):
     quote.delete()
     messages.success(request, "Home cleaning quote deleted successfully.")
     return redirect("home_cleaning_quote_list")
+
+
+def home_cleaning_quote_accept(request, quote_id, token):
+    """Handle quote acceptance from email link"""
+    from django.core.signing import Signer, BadSignature
+    from django.http import HttpResponse, HttpResponseForbidden
+    from urllib.parse import unquote
+    
+    home_cleaning_quote = get_object_or_404(HomeCleaningQuoteRequest, pk=quote_id)
+    
+    # Decode the token in case it was URL-encoded (handle double encoding)
+    token = unquote(token)
+    # Handle double encoding (if token contains %3A instead of :)
+    if '%' in token:
+        token = unquote(token)
+    
+    # Verify token
+    signer = Signer()
+    try:
+        signed_value = signer.unsign(token)
+        if str(home_cleaning_quote.id) != signed_value:
+            return HttpResponseForbidden("Invalid token")
+    except BadSignature:
+        return HttpResponseForbidden("Invalid token")
+    
+    # Update status to accepted
+    status_changed = False
+    if home_cleaning_quote.status != "accepted":
+        home_cleaning_quote.status = "accepted"
+        home_cleaning_quote.save(update_fields=['status'])
+        status_changed = True
+    
+    # Send admin notification email if status was changed
+    if status_changed:
+        try:
+            from django.core.mail import EmailMultiAlternatives
+            from django.template.loader import render_to_string
+            from django.utils.html import strip_tags
+            from django.conf import settings
+            
+            # Prepare email context
+            admin_context = {
+                "quote": home_cleaning_quote,
+                "action": "accepted",
+                "customer_name": home_cleaning_quote.name or "Customer",
+                "quote_id": home_cleaning_quote.id,
+            }
+            
+            # Render email template
+            html_content = render_to_string("adminpanel/emails/home_cleaning_quote_status_notification.html", admin_context)
+            text_content = strip_tags(html_content)
+            
+            # Send email to admin
+            subject = f"✅ Quote #{home_cleaning_quote.id} Accepted by Customer"
+            admin_email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=["support@thecleanhandy.com"],
+            )
+            admin_email.attach_alternative(html_content, "text/html")
+            admin_email.send()
+        except Exception as e:
+            print(f"Warning: Could not send admin notification email: {e}")
+    
+    # Render success page
+    return render(request, "adminpanel/home_cleaning_quote_response.html", {
+        "quote": home_cleaning_quote,
+        "action": "accepted",
+        "message": "Thank you! Your quote has been accepted. We will contact you shortly to confirm the details."
+    })
+
+
+def home_cleaning_quote_decline(request, quote_id, token):
+    """Handle quote decline from email link"""
+    from django.core.signing import Signer, BadSignature
+    from django.http import HttpResponseForbidden
+    from urllib.parse import unquote
+    
+    home_cleaning_quote = get_object_or_404(HomeCleaningQuoteRequest, pk=quote_id)
+    
+    # Decode the token in case it was URL-encoded (handle double encoding)
+    token = unquote(token)
+    # Handle double encoding (if token contains %3A instead of :)
+    if '%' in token:
+        token = unquote(token)
+    
+    # Verify token
+    signer = Signer()
+    try:
+        signed_value = signer.unsign(token)
+        expected_value = f"decline_{home_cleaning_quote.id}"
+        if expected_value != signed_value:
+            return HttpResponseForbidden("Invalid token")
+    except BadSignature:
+        return HttpResponseForbidden("Invalid token")
+    
+    # Update status to declined
+    status_changed = False
+    if home_cleaning_quote.status != "declined":
+        home_cleaning_quote.status = "declined"
+        home_cleaning_quote.save(update_fields=['status'])
+        status_changed = True
+    
+    # Send admin notification email if status was changed
+    if status_changed:
+        try:
+            from django.core.mail import EmailMultiAlternatives
+            from django.template.loader import render_to_string
+            from django.utils.html import strip_tags
+            from django.conf import settings
+            
+            # Prepare email context
+            admin_context = {
+                "quote": home_cleaning_quote,
+                "action": "declined",
+                "customer_name": home_cleaning_quote.name or "Customer",
+                "quote_id": home_cleaning_quote.id,
+            }
+            
+            # Render email template
+            html_content = render_to_string("adminpanel/emails/home_cleaning_quote_status_notification.html", admin_context)
+            text_content = strip_tags(html_content)
+            
+            # Send email to admin
+            subject = f"❌ Quote #{home_cleaning_quote.id} Declined by Customer"
+            admin_email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=["support@thecleanhandy.com"],
+            )
+            admin_email.attach_alternative(html_content, "text/html")
+            admin_email.send()
+        except Exception as e:
+            print(f"Warning: Could not send admin notification email: {e}")
+    
+    # Render success page
+    return render(request, "adminpanel/home_cleaning_quote_response.html", {
+        "quote": home_cleaning_quote,
+        "action": "declined",
+        "message": "We're sorry to see you decline this offer. If you change your mind or have any questions, please don't hesitate to contact us."
+    })
 
 
 @login_required
@@ -2086,14 +2605,38 @@ def office_cleaning_quote_detail(request, quote_id):
         if form_data.get('business_type'):
             form_data['business_type_display'] = form_data['business_type'].replace('_', ' ').title()
         
-        # Format crew_size_hours
-        if form_data.get('crew_size_hours'):
-            crew_display = form_data['crew_size_hours'].replace('_', ' ')
-            # Make it more readable
-            crew_display = crew_display.replace('cleaner', 'Cleaner').replace('cleaners', 'Cleaners')
-            crew_display = crew_display.replace('hours', 'Hours').replace('hour', 'Hour')
-            crew_display = crew_display.replace('sq ft', 'Sq Ft').replace('sqft', 'Sq Ft')
-            form_data['crew_size_hours_display'] = crew_display
+        # Format crew_size_hours - check if it's a PriceVariable ID (numeric) or old string format
+        crew_size_hours_value = form_data.get('crew_size_hours', '')
+        if crew_size_hours_value:
+            # Check if it's a numeric ID (new format with PriceVariable)
+            try:
+                price_variable_id = int(crew_size_hours_value)
+                # Try to get the PriceVariable
+                try:
+                    price_var = PriceVariable.objects.get(id=price_variable_id, is_active=True)
+                    form_data['crew_size_hours_display'] = price_var.variable_name
+                    form_data['price_variable'] = price_var
+                    # Store price variable data for template
+                    form_data['selected_price_variable'] = {
+                        'id': price_var.id,
+                        'name': price_var.variable_name,
+                        'price': float(price_var.price) if price_var.price else None,
+                        'duration_minutes': price_var.duration if price_var.duration else None,
+                    }
+                except PriceVariable.DoesNotExist:
+                    # Fall back to old string format display
+                    crew_display = str(crew_size_hours_value).replace('_', ' ')
+                    crew_display = crew_display.replace('cleaner', 'Cleaner').replace('cleaners', 'Cleaners')
+                    crew_display = crew_display.replace('hours', 'Hours').replace('hour', 'Hour')
+                    crew_display = crew_display.replace('sq ft', 'Sq Ft').replace('sqft', 'Sq Ft')
+                    form_data['crew_size_hours_display'] = crew_display
+            except (ValueError, TypeError):
+                # Old string format
+                crew_display = str(crew_size_hours_value).replace('_', ' ')
+                crew_display = crew_display.replace('cleaner', 'Cleaner').replace('cleaners', 'Cleaners')
+                crew_display = crew_display.replace('hours', 'Hours').replace('hour', 'Hour')
+                crew_display = crew_display.replace('sq ft', 'Sq Ft').replace('sqft', 'Sq Ft')
+                form_data['crew_size_hours_display'] = crew_display
         
         # Format hear_about_us
         if form_data.get('hear_about_us'):
@@ -2168,12 +2711,75 @@ def office_cleaning_quote_detail(request, quote_id):
         except (json.JSONDecodeError, ValueError, TypeError):
             pass
     
+    # Calculate estimated time and price based on selected PriceVariable
+    calculated_estimated_time = ""
+    calculated_price = None
+    price_source = None  # Track if price came from variable or hourly rate
+    calculated_discount = None
+    
+    if form_data.get('selected_price_variable'):
+        price_var_data = form_data['selected_price_variable']
+        
+        # Calculate estimated time from duration (convert minutes to hours)
+        if price_var_data.get('duration_minutes'):
+            duration_minutes = price_var_data['duration_minutes']
+            if duration_minutes >= 60:
+                hours = duration_minutes // 60
+                minutes = duration_minutes % 60
+                if minutes > 0:
+                    # Convert to decimal hours (e.g., 120 min = 2.0 hours, 150 min = 2.5 hours)
+                    decimal_hours = round(duration_minutes / 60.0, 1)
+                    calculated_estimated_time = f"{decimal_hours} hours"
+                else:
+                    calculated_estimated_time = f"{hours} hour{'s' if hours != 1 else ''}"
+            else:
+                calculated_estimated_time = f"{duration_minutes} minute{'s' if duration_minutes != 1 else ''}"
+        
+        # Calculate price: use PriceVariable price if available, otherwise calculate from hourly rate
+        if price_var_data.get('price'):
+            calculated_price = price_var_data['price']
+            price_source = 'variable'
+        else:
+            # Calculate from hourly rate and duration
+            try:
+                from quotes.utils import get_hourly_rate
+                from decimal import Decimal
+                hourly_rate = get_hourly_rate('office_cleaning')
+                if hourly_rate and price_var_data.get('duration_minutes'):
+                    duration_hours = Decimal(price_var_data['duration_minutes']) / Decimal('60')
+                    calculated_price = float(hourly_rate * duration_hours)
+                    price_source = 'hourly_rate'
+            except Exception as e:
+                print(f"Error calculating price from hourly rate: {e}")
+    
+    # Calculate discount based on cleaning frequency
+    cleaning_frequency = form_data.get('cleaning_frequency', 'one_time')
+    if calculated_price and cleaning_frequency:
+        try:
+            from decimal import Decimal
+            if cleaning_frequency == 'weekly':
+                # 10% discount for weekly
+                calculated_discount = float(Decimal(str(calculated_price)) * Decimal('0.10'))
+            elif cleaning_frequency == 'bi_weekly':
+                # 5% discount for bi-weekly
+                calculated_discount = float(Decimal(str(calculated_price)) * Decimal('0.05'))
+            else:
+                # No discount for one_time or monthly
+                calculated_discount = 0.0
+        except (ValueError, TypeError) as e:
+            print(f"Error calculating discount: {e}")
+            calculated_discount = None
+    
     return render(request, "adminpanel/office_cleaning_quote_detail.html", {
         "office_cleaning_quote": office_cleaning_quote,
         "form_data": form_data,
         "email_sent_at": email_sent_at,
         "email_sent_to": email_sent_to or office_cleaning_quote.email,
         "email_history": email_history,
+        "calculated_estimated_time": calculated_estimated_time,
+        "calculated_price": calculated_price,
+        "price_source": price_source,
+        "calculated_discount": calculated_discount,
     })
 
 
@@ -2256,6 +2862,17 @@ def send_home_cleaning_quote_email(request, quote_id):
             except (ValueError, TypeError):
                 pass
             
+            # Generate secure tokens for accept/decline actions
+            from django.core.signing import Signer
+            signer = Signer()
+            accept_token = signer.sign(str(home_cleaning_quote.id))
+            decline_token = signer.sign(f"decline_{home_cleaning_quote.id}")
+            
+            # Build accept/decline URLs (Django's reverse will handle URL encoding automatically)
+            current_site = get_current_site(request)
+            accept_url = f"{request.scheme}://{current_site.domain}{reverse('home_cleaning_quote_accept', args=[home_cleaning_quote.id, accept_token])}"
+            decline_url = f"{request.scheme}://{current_site.domain}{reverse('home_cleaning_quote_decline', args=[home_cleaning_quote.id, decline_token])}"
+            
             # Prepare email context
             context = {
                 "quote": home_cleaning_quote,
@@ -2287,6 +2904,8 @@ def send_home_cleaning_quote_email(request, quote_id):
                 "note": note,
                 "request_scheme": request.scheme,
                 "domain": get_current_site(request).domain,
+                "accept_url": accept_url,
+                "decline_url": decline_url,
             }
             
             # Render email template

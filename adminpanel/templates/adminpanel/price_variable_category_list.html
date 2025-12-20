@@ -1,0 +1,228 @@
+{% extends 'adminpanel/base_admin_with_nav.html' %}
+{% block page_title %}Price Variable Categories Management{% endblock %}
+{% block breadcrumb %}Price Variable Categories Management{% endblock %}
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Price Variable Categories Management</h2>
+            <p class="text-muted">Manage categories for price variables (e.g., Crew/Size/Hours, Home type, Number of Bathrooms, Cleaning type, Parking, etc.)</p>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12 d-flex gap-2">
+            <a href="{% url 'add_price_variable_category' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Category
+            </a>
+            <a href="{% url 'price_variable_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-list"></i> View Price Variables
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters and Sort -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" name="search" id="search" class="cmn-input" placeholder="Search by name..." value="{{ search_query|default:'' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="cmn-input">
+                                <option value="">All Statuses</option>
+                                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sort_by" class="form-label">Sort By</label>
+                            <select name="sort_by" id="sort_by" class="cmn-input">
+                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
+                                <option value="created" {% if sort_by == 'created' %}selected{% endif %}>Created Date</option>
+                                <option value="updated" {% if sort_by == 'updated' %}selected{% endif %}>Updated Date</option>
+                                <option value="count" {% if sort_by == 'count' %}selected{% endif %}>Price Variables Count</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sort_order" class="form-label">Order</label>
+                            <select name="sort_order" id="sort_order" class="cmn-input">
+                                <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Ascending</option>
+                                <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Descending</option>
+                            </select>
+                        </div>
+                        {% if search_query or status_filter %}
+                        <div class="col-12">
+                            <a href="{% url 'price_variable_category_list' %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-times"></i> Clear Filters
+                            </a>
+                        </div>
+                        {% endif %}
+                    </form>
+                    <script>
+                        // Auto-submit form when filter values change
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const filterForm = document.querySelector('form[method="GET"]');
+                            if (filterForm) {
+                                const filterInputs = filterForm.querySelectorAll('select, input[type="text"]');
+                                filterInputs.forEach(function(input) {
+                                    input.addEventListener('change', function() {
+                                        filterForm.submit();
+                                    });
+                                    // For search input, submit on Enter key or after a short delay
+                                    if (input.type === 'text' && input.id === 'search') {
+                                        let searchTimeout;
+                                        input.addEventListener('input', function() {
+                                            clearTimeout(searchTimeout);
+                                            // Submit after 500ms of no typing (debounce)
+                                            searchTimeout = setTimeout(function() {
+                                                filterForm.submit();
+                                            }, 500);
+                                        });
+                                        input.addEventListener('keypress', function(e) {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                clearTimeout(searchTimeout);
+                                                filterForm.submit();
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    {% if categories %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>
+                                        Category Name
+                                        {% if sort_by == 'name' %}
+                                            <i class="fas fa-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                        {% endif %}
+                                    </th>
+                                    <th>Description</th>
+                                    <th>
+                                        Status
+                                        {% if sort_by == 'status' %}
+                                            <i class="fas fa-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                        {% endif %}
+                                    </th>
+                                    <th>
+                                        Price Variables Count
+                                        {% if sort_by == 'count' %}
+                                            <i class="fas fa-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                        {% endif %}
+                                    </th>
+                                    <th>
+                                        Created
+                                        {% if sort_by == 'created' %}
+                                            <i class="fas fa-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                        {% endif %}
+                                    </th>
+                                    <th>
+                                        Updated
+                                        {% if sort_by == 'updated' %}
+                                            <i class="fas fa-sort-{% if sort_order == 'asc' %}up{% else %}down{% endif %}"></i>
+                                        {% endif %}
+                                    </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                <tr>
+                                    <td><strong>{{ category.name }}</strong></td>
+                                    <td>
+                                        {% if category.description %}
+                                            <small class="text-muted">{{ category.description|truncatewords:10 }}</small>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if category.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if sort_by == 'count' %}
+                                            <span class="badge bg-info">{{ category.var_count }}</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{{ category.pricevariable_set.count }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><small class="text-muted">{{ category.created_at|date:"M d, Y" }}</small></td>
+                                    <td><small class="text-muted">{{ category.updated_at|date:"M d, Y" }}</small></td>
+                                    <td>
+                                        <a href="{% url 'edit_price_variable_category' category.id %}" class="btn btn-sm btn-info" title="Edit">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <a href="{% url 'delete_price_variable_category' category.id %}" class="btn btn-sm btn-danger" title="Delete">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        {% if search_query or status_filter %}
+                            No categories found matching your filters. 
+                            <a href="{% url 'price_variable_category_list' %}">Clear filters</a> or 
+                        {% else %}
+                            No categories found. 
+                        {% endif %}
+                        <a href="{% url 'add_price_variable_category' %}">Add your first category</a>.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table th {
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    .badge {
+        font-size: 0.9em;
+        padding: 0.4em 0.6em;
+    }
+    .btn-sm {
+        margin-right: 5px;
+    }
+    .table th i {
+        margin-left: 5px;
+        font-size: 0.8em;
+        color: #6c757d;
+    }
+    .card-body .row.g-3 {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}

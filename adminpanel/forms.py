@@ -1,5 +1,5 @@
 from django import forms
-from quotes.models import Service, ServiceCategory, Quote
+from quotes.models import Service, ServiceCategory, Quote, PriceVariable, PriceVariableCategory, TaxSettings
 from datetime import datetime, timedelta, date
 
 class ServiceCategoryForm(forms.ModelForm):
@@ -89,4 +89,51 @@ class AdminQuoteForm(forms.ModelForm):
         self.instance.hour = start
         self.instance.hours_requested = duration
         return super().save(commit)
+
+class PriceVariableCategoryForm(forms.ModelForm):
+    class Meta:
+        model = PriceVariableCategory
+        fields = ["name", "description", "is_active"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "e.g., Crew/Size/Hours, Home type, Number of Bathrooms"}),
+            "description": forms.Textarea(attrs={"class": "cmn-input", "rows": 3, "placeholder": "Optional description"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set is_active to True by default when creating a new instance
+        if not self.instance.pk:
+            self.fields["is_active"].initial = True
+
+class PriceVariableForm(forms.ModelForm):
+    class Meta:
+        model = PriceVariable
+        fields = ["category", "variable_name", "price", "duration", "description", "is_active"]
+        widgets = {
+            "category": forms.Select(attrs={"class": "cmn-input"}),
+            "variable_name": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "e.g., Studio, 1 Bathroom, Manhattan Parking fee"}),
+            "price": forms.NumberInput(attrs={"class": "cmn-input", "step": "0.01", "min": "0"}),
+            "duration": forms.NumberInput(attrs={"class": "cmn-input", "min": "0", "placeholder": "Duration in minutes (optional)"}),
+            "description": forms.Textarea(attrs={"class": "cmn-input", "rows": 3, "placeholder": "Optional description or notes"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filter to only show active categories
+        self.fields["category"].queryset = PriceVariableCategory.objects.filter(is_active=True).order_by("name")
+        # Set is_active to True by default when creating a new instance
+        if not self.instance.pk:
+            self.fields["is_active"].initial = True
+
+class TaxSettingsForm(forms.ModelForm):
+    class Meta:
+        model = TaxSettings
+        fields = ["tax_rate", "description", "is_active"]
+        widgets = {
+            "tax_rate": forms.NumberInput(attrs={"class": "cmn-input", "step": "0.001", "min": "0", "placeholder": "e.g., 8.750 for 8.750%"}),
+            "description": forms.TextInput(attrs={"class": "cmn-input", "placeholder": "e.g., NYC Sales Tax"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
 

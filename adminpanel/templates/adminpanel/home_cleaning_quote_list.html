@@ -30,6 +30,7 @@
         font-weight: 500;
         background-color: #FFC107;
         color: #000;
+        display: inline-block;
       }
 </style>
 
@@ -104,6 +105,7 @@
                         <th>Service Details</th>
                         <th>Schedule</th>
                         <th>Location</th>
+                        <th>Status</th>
                         <th>Created</th>
                         <th>Actions</th>
                     </tr>
@@ -155,6 +157,21 @@
                                 {% endif %}
                             </div>
                         </td>
+                        <td>
+                            {% if quote.status == 'pending' %}
+                                <span class="status-badge" style="background-color: #FFC107;">⏳ Pending</span>
+                            {% elif quote.status == 'email_sent' %}
+                                <span class="status-badge" style="background-color: #17a2b8;">📧 Email Sent</span>
+                            {% elif quote.status == 'accepted' %}
+                                <span class="status-badge" style="background-color: #28a745;">✅ Accepted</span>
+                            {% elif quote.status == 'completed' %}
+                                <span class="status-badge" style="background-color: #6c757d;">✓ Completed</span>
+                            {% elif quote.status == 'declined' %}
+                                <span class="status-badge" style="background-color: #dc3545;">❌ Declined</span>
+                            {% else %}
+                                <span class="status-badge">{{ quote.get_status_display|default:"N/A" }}</span>
+                            {% endif %}
+                        </td>
                         <td>{{ quote.created_at|date:"M d, Y H:i" }}</td>
                         <td>
                             <div class="btn-group" role="group">
@@ -172,7 +189,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
+                        <td colspan="9" class="text-center text-muted py-4">
                             <i class="fa-solid fa-inbox fa-2x mb-2"></i><br>
                             No home cleaning quotes found.
                         </td>
