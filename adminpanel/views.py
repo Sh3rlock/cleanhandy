@@ -2528,6 +2528,49 @@ def office_cleaning_quote_list(request):
         ('declined', 'Declined'),
     ]
     
+    # Extract square footage from admin_notes (form_data) for each quote
+    import json
+    import re
+    from quotes.models import PriceVariable
+    
+    for quote in office_cleaning_quotes:
+        square_footage_display = None
+        if quote.admin_notes:
+            try:
+                form_data = json.loads(quote.admin_notes)
+                if isinstance(form_data, dict):
+                    # First check if crew_size_hours_display already exists in form_data
+                    crew_size_hours_display = form_data.get('crew_size_hours_display', '')
+                    
+                    # If not, try to get it from PriceVariable if crew_size_hours is an ID
+                    if not crew_size_hours_display:
+                        crew_size_hours_value = form_data.get('crew_size_hours', '')
+                        if crew_size_hours_value:
+                            try:
+                                price_variable_id = int(crew_size_hours_value)
+                                try:
+                                    price_var = PriceVariable.objects.get(id=price_variable_id, is_active=True)
+                                    crew_size_hours_display = price_var.variable_name
+                                except PriceVariable.DoesNotExist:
+                                    pass
+                            except (ValueError, TypeError):
+                                pass
+                    
+                    # Extract square footage from crew_size_hours_display
+                    if crew_size_hours_display:
+                        square_footage_match = re.search(r'\(([^)]*[Ss]q[.\s]*[Ff]t[^)]*)\)', crew_size_hours_display)
+                        if square_footage_match:
+                            square_footage_display = square_footage_match.group(1).strip()
+                    
+                    # If still not found, check if square_footage is directly in form_data
+                    if not square_footage_display and form_data.get('square_footage'):
+                        square_footage_display = form_data['square_footage']
+            except (json.JSONDecodeError, ValueError, TypeError):
+                pass
+        
+        # Attach the extracted square footage to the quote object
+        quote.display_square_footage = square_footage_display if square_footage_display else quote.square_footage
+    
     context = {
         'office_cleaning_quotes': office_cleaning_quotes,
         'status_choices': status_choices,

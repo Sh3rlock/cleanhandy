@@ -120,7 +120,7 @@
                             </div>
                         </td>
                         <td>
-                            <small>{{ quote.square_footage|default:"N/A" }}</small>
+                            <small>{% if quote.display_square_footage %}{{ quote.display_square_footage }}{% else %}{{ quote.square_footage|default:"N/A" }}{% endif %}</small>
                         </td>
                         <td>
                             <span class="status-badge">{{ quote.get_status_display|default:"Pending" }}</span>
