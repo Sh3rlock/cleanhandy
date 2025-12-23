@@ -295,17 +295,23 @@ def home_cleaning_quote(request):
         if form.is_valid():
             quote_request = form.save(commit=False)
             
-            # IMPORTANT: home_types field now contains PriceVariable ID, not HomeType ID
-            # Clear the home_types ForeignKey to prevent saving wrong HomeType
-            # We'll store the PriceVariable ID in admin_notes instead
+            # Handle home_types field - it may be either a HomeType ID or PriceVariable ID
+            # If clean_home_types returned a HomeType instance, keep it
+            # If it returned None, it's a PriceVariable ID - store in admin_notes
             home_type_price_var_id = None
             if post_data.get('home_types'):
-                try:
-                    home_type_price_var_id = int(post_data.get('home_types'))
-                    # Clear the home_types ForeignKey since we're using PriceVariable now
-                    quote_request.home_types = None
-                except (ValueError, TypeError):
+                # Check if form already set a HomeType (from clean_home_types)
+                if quote_request.home_types:
+                    # It's a valid HomeType, keep it
                     pass
+                else:
+                    # It's likely a PriceVariable ID, store it in admin_notes
+                    try:
+                        home_type_price_var_id = int(post_data.get('home_types'))
+                        # Ensure home_types is None since we're using PriceVariable
+                        quote_request.home_types = None
+                    except (ValueError, TypeError):
+                        pass
             
             # Set service from post_data
             service_id = post_data.get('service')

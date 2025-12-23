@@ -966,12 +966,64 @@ class HomeCleaningQuoteRequestForm(forms.ModelForm):
         # Don't validate queryset - we'll handle service selection in clean method
         self.fields["service"].widget.attrs['data-allow-any'] = 'true'
         
+        # Handle home_types field - it may receive PriceVariable IDs instead of HomeType IDs
+        # Convert to IntegerField to accept any ID, then validate in clean_home_types
+        if "home_types" in self.fields:
+            from .models import HomeType
+            # Store the original field type info
+            original_field = self.fields["home_types"]
+            # Replace with IntegerField to accept any integer value
+            self.fields["home_types"] = forms.IntegerField(
+                required=False,
+                widget=forms.HiddenInput() if isinstance(original_field.widget, forms.HiddenInput) else forms.Select(attrs={"class": "cmn-input"})
+            )
+        
         # Set default values for city and state
         if not self.initial.get('city'):
             self.initial['city'] = 'New York'
         if not self.initial.get('state'):
             self.initial['state'] = 'NY'
 
+    def clean_home_types(self):
+        """
+        Handle home_types field which may receive either:
+        - HomeType ID (legacy)
+        - PriceVariable ID (new system)
+        
+        If it's a PriceVariable ID, return None and let the view handle it.
+        If it's a HomeType ID, validate and return it.
+        """
+        home_types_value = self.cleaned_data.get('home_types')
+        
+        # If no value provided, return None (field is optional)
+        if not home_types_value:
+            return None
+        
+        # Now home_types_value is an integer (from IntegerField)
+        from .models import HomeType, PriceVariable
+        
+        # First, check if it's a valid HomeType ID
+        try:
+            home_type = HomeType.objects.filter(id=home_types_value).first()
+            if home_type:
+                return home_type
+        except (ValueError, TypeError):
+            pass
+        
+        # If not a HomeType, check if it's a PriceVariable ID
+        try:
+            price_var = PriceVariable.objects.filter(id=home_types_value).first()
+            if price_var:
+                # This is a PriceVariable ID, not a HomeType ID
+                # Return None and let the view handle it (view stores it in admin_notes)
+                return None
+        except (ValueError, TypeError):
+            pass
+        
+        # If we can't determine what it is, return None to avoid validation error
+        # The view will handle it
+        return None
+    
     def clean_service(self):
         """Automatically set service based on cleaning_type or default to Regular Cleaning"""
         service = self.cleaned_data.get('service')
