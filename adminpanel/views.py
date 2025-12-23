@@ -2623,6 +2623,13 @@ def office_cleaning_quote_detail(request, quote_id):
                         'price': float(price_var.price) if price_var.price else None,
                         'duration_minutes': price_var.duration if price_var.duration else None,
                     }
+                    # Extract square footage from PriceVariable name if it contains parentheses
+                    # Example: "1 Cleaner Total 2 Hours (<500 Sq Ft)" -> "<500 Sq Ft"
+                    import re
+                    square_footage_match = re.search(r'\(([^)]*[Ss]q[.\s]*[Ff]t[^)]*)\)', price_var.variable_name)
+                    if square_footage_match:
+                        extracted_sqft = square_footage_match.group(1).strip()
+                        form_data['square_footage_display'] = extracted_sqft
                 except PriceVariable.DoesNotExist:
                     # Fall back to old string format display
                     crew_display = str(crew_size_hours_value).replace('_', ' ')
@@ -2637,6 +2644,18 @@ def office_cleaning_quote_detail(request, quote_id):
                 crew_display = crew_display.replace('hours', 'Hours').replace('hour', 'Hour')
                 crew_display = crew_display.replace('sq ft', 'Sq Ft').replace('sqft', 'Sq Ft')
                 form_data['crew_size_hours_display'] = crew_display
+        
+        # Extract square footage from crew_size_hours_display if it contains parentheses
+        # Example: "1 Cleaner Total 2 Hours (<500 Sq Ft)" -> "<500 Sq Ft"
+        # Only extract if square_footage_display wasn't already set from PriceVariable above
+        if 'square_footage_display' not in form_data and form_data.get('crew_size_hours_display'):
+            import re
+            crew_display_text = form_data['crew_size_hours_display']
+            # Extract content within parentheses that contains "Sq Ft" or similar
+            square_footage_match = re.search(r'\(([^)]*[Ss]q[.\s]*[Ff]t[^)]*)\)', crew_display_text)
+            if square_footage_match:
+                extracted_sqft = square_footage_match.group(1).strip()
+                form_data['square_footage_display'] = extracted_sqft
         
         # Format hear_about_us
         if form_data.get('hear_about_us'):

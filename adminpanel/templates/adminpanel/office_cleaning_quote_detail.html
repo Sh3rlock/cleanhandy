@@ -48,6 +48,22 @@
         background-color: #F15A29;
         color: white;
       }
+      
+      .quote-card p strong + span,
+      .quote-card p strong + * {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        display: inline !important;
+      }
+      
+      .quote-card .square-footage-value {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        display: inline !important;
+        color: inherit !important;
+      }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -106,7 +122,7 @@
                     <div class="col-md-6">
                         <h6 class="text-muted mb-2">Business Information</h6>
                         <p><strong>Business Address:</strong> {{ office_cleaning_quote.business_address|default:"N/A" }}</p>
-                        <p><strong>Square Footage:</strong> {{ office_cleaning_quote.square_footage|default:"N/A" }}</p>
+                        <p><strong>Square Footage:</strong> <span class="square-footage-value">{% if form_data and form_data.square_footage_display %}{{ form_data.square_footage_display }}{% elif form_data and form_data.square_footage %}{{ form_data.square_footage }}{% else %}{{ office_cleaning_quote.square_footage|default:"N/A" }}{% endif %}</span></p>
                         {% if form_data and form_data.business_type_display %}
                         <p><strong>Type of Business:</strong> {{ form_data.business_type_display }}</p>
                         {% endif %}
@@ -289,7 +305,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="square_footage" class="form-label">Square Footage</label>
-                        <input type="text" name="square_footage" id="square_footage" class="cmn-input" value="{{ office_cleaning_quote.square_footage|default:'' }}">
+                        <input type="text" name="square_footage" id="square_footage" class="cmn-input" value="{% if form_data and form_data.square_footage_display %}{{ form_data.square_footage_display }}{% elif form_data and form_data.square_footage %}{{ form_data.square_footage }}{% else %}{{ office_cleaning_quote.square_footage|default:'' }}{% endif %}">
                     </div>
                     
                     <hr>
