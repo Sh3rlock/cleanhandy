@@ -181,84 +181,12 @@ class BookingDetailView(LoginRequiredMixin, DetailView):
 
 
 def home_cleaning_booking(request):
-    """Home cleaning booking form - show the comprehensive cleaning_booking.html template"""
-    from quotes.models import ServiceCategory, SquareFeetOption, HomeType, CleaningExtra
-    from quotes.forms import CleaningBookingForm
-    
-    try:
-        # Get the cleaning service category
-        service_cat = ServiceCategory.objects.filter(name__icontains='cleaning').first()
-        
-        # Get all required data for the comprehensive form
-        square_feet_options = SquareFeetOption.objects.all()
-        home_types = HomeType.objects.all()
-        cleaning_extras = CleaningExtra.objects.all()
-        
-        # Create the form
-        form = CleaningBookingForm()
-        
-        # Get all services for the banner
-        all_services = []
-        try:
-            from quotes.models import Service
-            all_services = Service.objects.all()
-        except:
-            pass
-        
-        return render(request, 'booking/cleaning_booking.html', {
-            'form': form,
-            'service_cat': service_cat,
-            'square_feet_options': square_feet_options,
-            'home_types': home_types,
-            'cleaning_extras': cleaning_extras,
-            'saved_addresses': [],  # Empty list since CustomerAddress doesn't exist
-            'all_services': all_services,
-            'STRIPE_PUBLISHABLE_KEY': settings.STRIPE_PUBLISHABLE_KEY,
-        })
-    except Exception as e:
-        messages.error(request, f'There was an issue loading the booking form: {str(e)}')
-        return redirect('bookings:booking_home')
+    """Redirect to home cleaning quote form"""
+    from quotes.views import home_cleaning_quote
+    return home_cleaning_quote(request)
 
 
 def office_cleaning_booking(request):
-    """Complete Office Cleaning booking in one form"""
-    try:
-        if request.method == 'POST':
-            form = OfficeCleaningForm(request.POST)
-            if form.is_valid():
-                # Create the booking
-                booking = form.save(commit=False)
-                
-                # Calculate pricing
-                booking.base_price = calculate_base_price(booking)
-                booking.extra_services_total = calculate_extra_services_price(booking)
-                booking.calculate_total_price()
-                booking.save()
-                
-                # Add extra services
-                if form.cleaned_data.get('extra_services'):
-                    booking.extra_services.set(form.cleaned_data['extra_services'])
-                
-                messages.success(request, 'Office Cleaning booking created successfully! You will receive a confirmation email shortly.')
-                return redirect('bookings:booking_confirmation', booking_id=booking.id)
-        else:
-            try:
-                form = OfficeCleaningForm()
-            except Exception as form_error:
-                # If the form can't be created, create a simple message form
-                messages.error(request, f'There was an issue loading the booking form: {str(form_error)}')
-                return redirect('bookings:booking_home')
-        
-        try:
-            extra_services = ExtraService.objects.all()
-        except:
-            extra_services = []
-        
-        return render(request, 'bookings/office_cleaning_booking.html', {
-            'form': form,
-            'extra_services': extra_services
-        })
-    except Exception as e:
-        # If there's an issue with the form (e.g., ExtraService model doesn't exist)
-        messages.error(request, f'There was an issue loading the booking form: {str(e)}')
-        return redirect('bookings:booking_home')
+    """Redirect to office cleaning quote form"""
+    from quotes.views import office_cleaning_quote
+    return office_cleaning_quote(request)
