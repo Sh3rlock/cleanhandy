@@ -189,6 +189,43 @@
                                 </tr>
                             </table>
                             
+                            <!-- Parking Information -->
+                            {% if parking_option_display or parking_instructions %}
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 25px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #F15A29;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h3 style="margin: 0 0 15px 0; color: #F15A29; font-size: 18px; font-weight: bold;">🅿️ Parking Information</h3>
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                            {% if parking_option_display %}
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 50%;">Parking Option:</td>
+                                                            <td style="color: #333333;">{{ parking_option_display }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if parking_instructions %}
+                                            <tr>
+                                                <td style="padding: 8px 0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 50%;">Parking Instructions:</td>
+                                                            <td style="color: #333333;">{{ parking_instructions }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            {% endif %}
+                            
                             <!-- Pricing -->
                             {% if price or parking_fee or discount %}
                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 25px; background-color: #fff3e0; border: 2px solid #F15A29; border-radius: 8px;">

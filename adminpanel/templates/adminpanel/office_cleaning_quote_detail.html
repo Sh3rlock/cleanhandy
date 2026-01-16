@@ -132,6 +132,14 @@
                         {% if form_data and form_data.hear_about_us_display %}
                         <p><strong>How did you hear about us:</strong> {{ form_data.hear_about_us_display }}</p>
                         {% endif %}
+                        {% if form_data and form_data.parking_option_display %}
+                        <p><strong>Parking Option:</strong> {{ form_data.parking_option_display }}</p>
+                        {% elif form_data and form_data.parking_option_id %}
+                        <p><strong>Parking Option:</strong> {{ form_data.parking_option_id }}</p>
+                        {% endif %}
+                        {% if form_data and form_data.parking %}
+                        <p><strong>Parking Instructions:</strong> {{ form_data.parking }}</p>
+                        {% endif %}
                     </div>
                     <div class="col-md-6">
                         <h6 class="text-muted mb-2">Service Details</h6>
@@ -161,6 +169,28 @@
                         {% endif %}
                     </div>
                 </div>
+                
+                {% if form_data.parking_option or form_data.parking %}
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-2">Parking Information</h6>
+                        {% if form_data.parking_option %}
+                        <p><strong>Parking Option:</strong> 
+                            {% if form_data.parking_option_display %}
+                                {{ form_data.parking_option_display }}
+                            {% else %}
+                                {{ form_data.parking_option }}
+                            {% endif %}
+                        </p>
+                        {% endif %}
+                        {% if form_data.parking %}
+                        <p><strong>Parking Instructions:</strong> {{ form_data.parking }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
                 
                 {% if office_cleaning_quote.job_description %}
                 <hr>
@@ -348,7 +378,10 @@
                     </div>
                     <div class="mb-3">
                         <label for="parking_fee" class="form-label">Parking Fee ($)</label>
-                        <input type="number" step="0.01" name="parking_fee" id="parking_fee" class="cmn-input" placeholder="0.00">
+                        <input type="number" step="0.01" name="parking_fee" id="parking_fee" class="cmn-input" placeholder="0.00" value="{% if calculated_parking_fee %}{{ calculated_parking_fee|floatformat:2 }}{% endif %}">
+                        {% if calculated_parking_fee %}
+                        <small class="form-text text-muted">Auto-calculated from selected Parking option</small>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="discount_type" class="form-label">Discount Type</label>
@@ -371,7 +404,28 @@
                     </div>
                     <div class="mb-3">
                         <label for="payment_link" class="form-label">Payment Link</label>
-                        <input type="url" name="payment_link" id="payment_link" class="cmn-input" placeholder="https://...">
+                        <div class="input-group">
+                            <input type="url" name="payment_link" id="payment_link" class="cmn-input" 
+                                   placeholder="https://..." 
+                                   value="{% if payment_link %}{{ payment_link }}{% endif %}">
+                            <button type="button" class="btn btn-outline-primary" id="generate_payment_link_btn" 
+                                    onclick="generatePaymentLink()">
+                                <i class="fa-solid fa-link me-1"></i> Generate Link
+                            </button>
+                        </div>
+                        {% if calculated_total %}
+                        <small class="form-text text-muted">
+                            Calculated Total: ${{ calculated_total|floatformat:2 }}
+                            {% if calculated_price %}(Price: ${{ calculated_price|floatformat:2 }}{% endif %}
+                            {% if calculated_parking_fee %} + Parking: ${{ calculated_parking_fee|floatformat:2 }}{% endif %}
+                            {% if calculated_discount %} - Discount: ${{ calculated_discount|floatformat:2 }}{% endif %}
+                            {% if calculated_price %} + Tax: {{ tax_rate_percentage|floatformat:3 }}%){% endif %}
+                        </small>
+                        {% elif calculated_price %}
+                        <small class="form-text text-muted">
+                            Enter price, parking fee, and discount to calculate total and generate payment link.
+                        </small>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="job_description" class="form-label">Job Description</label>
@@ -409,6 +463,112 @@ function updateDiscountLabel() {
         discountInput.removeAttribute('max');
     }
 }
+
+function calculateTotal() {
+    const price = parseFloat(document.getElementById('price').value) || 0;
+    const parkingFee = parseFloat(document.getElementById('parking_fee').value) || 0;
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const discountType = document.getElementById('discount_type').value;
+    
+    let subtotal = price + parkingFee;
+    
+    // Apply discount
+    if (discount > 0) {
+        if (discountType === 'percentage') {
+            subtotal -= (subtotal * discount / 100);
+        } else {
+            subtotal -= discount;
+        }
+    }
+    
+    // Add sales tax using rate from TaxSettings model
+    const taxRateDecimal = {{ tax_rate_decimal|default:0.08875 }};
+    const salesTax = subtotal * taxRateDecimal;
+    const total = subtotal + salesTax;
+    
+    return Math.max(0, total);
+}
+
+function generatePaymentLink() {
+    const total = calculateTotal();
+    if (total <= 0) {
+        alert('Please enter a valid price first.');
+        return;
+    }
+    
+    const quoteId = {{ office_cleaning_quote.id }};
+    const btn = document.getElementById('generate_payment_link_btn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Generating...';
+    
+    // Get CSRF token
+    const csrfTokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfTokenElement) {
+        alert('CSRF token not found. Please refresh the page and try again.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        return;
+    }
+    const csrfToken = csrfTokenElement.value;
+    
+    // Make AJAX call to generate payment link
+    fetch(`/admin/office-cleaning-quotes/${quoteId}/generate-payment-link/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            total_price: total
+        })
+    })
+    .then(response => {
+        // Check if response is OK and is JSON
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`Server error: ${response.status} - ${text.substring(0, 100)}`);
+            });
+        }
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return response.text().then(text => {
+                throw new Error('Server returned non-JSON response. This might be an authentication error.');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success && data.payment_link_url) {
+            document.getElementById('payment_link').value = data.payment_link_url;
+            alert('Payment link generated successfully!');
+        } else {
+            alert('Failed to generate payment link: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error generating payment link: ' + error.message + '. Please check the console for details.');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+// Auto-calculate total when price fields change
+document.addEventListener('DOMContentLoaded', function() {
+    ['price', 'parking_fee', 'discount', 'discount_type'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', function() {
+                const total = calculateTotal();
+                // You can optionally display the total somewhere
+                console.log('Calculated total:', total);
+            });
+        }
+    });
+});
 </script>
 
 <!-- Email History Log -->

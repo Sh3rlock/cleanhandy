@@ -10,9 +10,9 @@ from .views import (
     handyman_quote_list, handyman_quote_detail, update_handyman_quote_status, export_handyman_quotes_csv, send_handyman_quote_email, generate_handyman_quote_pdf, delete_handyman_quote,
     post_event_cleaning_quote_list, post_event_cleaning_quote_detail, update_post_event_cleaning_quote_status, export_post_event_cleaning_quotes_csv, send_post_event_cleaning_quote_email, generate_post_event_cleaning_quote_pdf, delete_post_event_cleaning_quote,
     home_cleaning_quote_list, home_cleaning_quote_detail, delete_home_cleaning_quote, export_home_cleaning_quotes_csv,
-    send_home_cleaning_quote_email, home_cleaning_quote_accept, home_cleaning_quote_decline,
+    send_home_cleaning_quote_email, home_cleaning_quote_accept, home_cleaning_quote_decline, generate_home_cleaning_payment_link,
     office_cleaning_quote_list, office_cleaning_quote_detail, delete_office_cleaning_quote, export_office_cleaning_quotes_csv,
-    send_office_cleaning_quote_email,
+    send_office_cleaning_quote_email, generate_office_cleaning_payment_link,
     send_payment_link
 )
 
@@ -133,12 +133,14 @@ urlpatterns = [
     path("home-cleaning-quotes/export-csv/", export_home_cleaning_quotes_csv, name="export_home_cleaning_quotes_csv"),
     path("home-cleaning-quote/<int:quote_id>/accept/<str:token>/", home_cleaning_quote_accept, name="home_cleaning_quote_accept"),
     path("home-cleaning-quote/<int:quote_id>/decline/<str:token>/", home_cleaning_quote_decline, name="home_cleaning_quote_decline"),
+    path("home-cleaning-quotes/<int:quote_id>/generate-payment-link/", generate_home_cleaning_payment_link, name="generate_home_cleaning_payment_link"),
 
     # Office Cleaning Quotes Management
     path("office-cleaning-quotes/", office_cleaning_quote_list, name="office_cleaning_quote_list"),
     path("office-cleaning-quotes/<int:quote_id>/", office_cleaning_quote_detail, name="office_cleaning_quote_detail"),
     path("office-cleaning-quotes/<int:quote_id>/delete/", delete_office_cleaning_quote, name="delete_office_cleaning_quote"),
     path("office-cleaning-quotes/export-csv/", export_office_cleaning_quotes_csv, name="export_office_cleaning_quotes_csv"),
+    path("office-cleaning-quotes/<int:quote_id>/generate-payment-link/", generate_office_cleaning_payment_link, name="generate_office_cleaning_payment_link"),
 
     # Payment Link Management
     path("send-payment-link/", send_payment_link, name="send_payment_link"),

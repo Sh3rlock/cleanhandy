@@ -156,20 +156,23 @@
                     </div>
                 </div>
                 
-                {% if home_cleaning_quote.get_in or home_cleaning_quote.parking or home_cleaning_quote.pet or home_cleaning_quote.cleaning_supply %}
+                {% if home_cleaning_quote.get_in or home_cleaning_quote.parking or parking_option_display or form_data.parking_option_id or form_data.parking or home_cleaning_quote.pet or home_cleaning_quote.cleaning_supply %}
                 <hr>
                 
                 <div class="row">
                     <div class="col-12">
                         <h6 class="text-muted mb-2">Property Access & Conditions</h6>
-                        {% if home_cleaning_quote.get_in %}
-                        <p><strong>Access Method:</strong> {{ home_cleaning_quote.get_in }}</p>
+                        {% if access_method_display %}
+                        <p><strong>Access Method:</strong> {{ access_method_display }}</p>
                         {% endif %}
-                        {% if home_cleaning_quote.parking %}
-                        <p><strong>Parking Instructions:</strong> {{ home_cleaning_quote.parking }}</p>
+                        {% if parking_option_display %}
+                        <p><strong>Parking Option:</strong> {{ parking_option_display }}</p>
                         {% endif %}
-                        {% if home_cleaning_quote.pet %}
-                        <p><strong>Pets:</strong> {{ home_cleaning_quote.pet }}</p>
+                        {% if home_cleaning_quote.parking or form_data.parking %}
+                        <p><strong>Parking Instructions:</strong> {{ home_cleaning_quote.parking|default:form_data.parking }}</p>
+                        {% endif %}
+                        {% if pets_display %}
+                        <p><strong>Pets:</strong> {{ pets_display }}</p>
                         {% endif %}
                         {% if home_cleaning_quote.cleaning_supply %}
                         <p><strong>Cleaning Supply:</strong> {{ home_cleaning_quote.cleaning_supply|title }}</p>
@@ -375,7 +378,28 @@
                     </div>
                     <div class="mb-3">
                         <label for="payment_link" class="form-label">Payment Link</label>
-                        <input type="url" name="payment_link" id="payment_link" class="cmn-input" placeholder="https://...">
+                        <div class="input-group">
+                            <input type="url" name="payment_link" id="payment_link" class="cmn-input" 
+                                   placeholder="https://..." 
+                                   value="{% if payment_link %}{{ payment_link }}{% endif %}">
+                            <button type="button" class="btn btn-outline-primary" id="generate_payment_link_btn" 
+                                    onclick="generatePaymentLink()">
+                                <i class="fa-solid fa-link me-1"></i> Generate Link
+                            </button>
+                        </div>
+                        {% if calculated_total %}
+                        <small class="form-text text-muted">
+                            Calculated Total: ${{ calculated_total|floatformat:2 }}
+                            {% if calculated_price %}(Price: ${{ calculated_price|floatformat:2 }}{% endif %}
+                            {% if calculated_parking_fee %} + Parking: ${{ calculated_parking_fee|floatformat:2 }}{% endif %}
+                            {% if calculated_discount %} - Discount: ${{ calculated_discount|floatformat:2 }}{% endif %}
+                            {% if calculated_price %} + Tax: {{ tax_rate_percentage|floatformat:3 }}%){% endif %}
+                        </small>
+                        {% elif calculated_price %}
+                        <small class="form-text text-muted">
+                            Enter price, parking fee, and discount to calculate total and generate payment link.
+                        </small>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="job_description" class="form-label">Job Description</label>
@@ -414,6 +438,112 @@ function updateDiscountLabel() {
         discountInput.removeAttribute('max');
     }
 }
+
+function calculateTotal() {
+    const price = parseFloat(document.getElementById('price').value) || 0;
+    const parkingFee = parseFloat(document.getElementById('parking_fee').value) || 0;
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const discountType = document.getElementById('discount_type').value;
+    
+    let subtotal = price + parkingFee;
+    
+    // Apply discount
+    if (discount > 0) {
+        if (discountType === 'percentage') {
+            subtotal -= (subtotal * discount / 100);
+        } else {
+            subtotal -= discount;
+        }
+    }
+    
+    // Add sales tax using rate from TaxSettings model
+    const taxRateDecimal = {{ tax_rate_decimal|default:0.08875 }};
+    const salesTax = subtotal * taxRateDecimal;
+    const total = subtotal + salesTax;
+    
+    return Math.max(0, total);
+}
+
+function generatePaymentLink() {
+    const total = calculateTotal();
+    if (total <= 0) {
+        alert('Please enter a valid price first.');
+        return;
+    }
+    
+    const quoteId = {{ home_cleaning_quote.id }};
+    const btn = document.getElementById('generate_payment_link_btn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Generating...';
+    
+    // Get CSRF token
+    const csrfTokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfTokenElement) {
+        alert('CSRF token not found. Please refresh the page and try again.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        return;
+    }
+    const csrfToken = csrfTokenElement.value;
+    
+    // Make AJAX call to generate payment link
+    fetch(`/admin/home-cleaning-quotes/${quoteId}/generate-payment-link/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            total_price: total
+        })
+    })
+    .then(response => {
+        // Check if response is OK and is JSON
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`Server error: ${response.status} - ${text.substring(0, 100)}`);
+            });
+        }
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return response.text().then(text => {
+                throw new Error('Server returned non-JSON response. This might be an authentication error.');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success && data.payment_link_url) {
+            document.getElementById('payment_link').value = data.payment_link_url;
+            alert('Payment link generated successfully!');
+        } else {
+            alert('Failed to generate payment link: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error generating payment link: ' + error.message + '. Please check the console for details.');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+// Auto-calculate total when price fields change
+document.addEventListener('DOMContentLoaded', function() {
+    ['price', 'parking_fee', 'discount', 'discount_type'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', function() {
+                const total = calculateTotal();
+                // You can optionally display the total somewhere
+                console.log('Calculated total:', total);
+            });
+        }
+    });
+});
 </script>
 
 <!-- Email History Log -->

@@ -1449,6 +1449,10 @@ def office_cleaning_quote(request):
     office_type_category = PriceVariableCategory.objects.filter(name__iexact="Office Type", is_active=True).first()
     office_type_variables = PriceVariable.objects.filter(category=office_type_category, is_active=True).order_by('variable_name') if office_type_category else PriceVariable.objects.none()
     
+    # Get Parking category and related price variables
+    parking_category = PriceVariableCategory.objects.filter(name__iexact="Parking", is_active=True).first()
+    parking_variables = PriceVariable.objects.filter(category=parking_category, is_active=True).order_by('variable_name') if parking_category else PriceVariable.objects.none()
+    
     if request.method == "POST":
         form = OfficeQuoteForm(request.POST)
         if form.is_valid():
@@ -1464,6 +1468,8 @@ def office_cleaning_quote(request):
                 'selected_date': request.POST.get('selected_date', ''),
                 'selected_time': request.POST.get('selected_time', ''),
                 'recurrence_pattern': request.POST.get('recurrence_pattern', 'one_time'),
+                'parking_option': request.POST.get('parking_option', ''),
+                'parking': request.POST.get('parking', ''),
             }
             
             # Store in admin_notes as JSON (will be overwritten if admin adds notes later, but that's acceptable)
@@ -1574,6 +1580,7 @@ Quote ID: {office_quote.id}
         "saved_addresses": saved_addresses,
         "user": request.user,
         "office_type_variables": office_type_variables,
+        "parking_variables": parking_variables,
     })
 
 def office_quote_submit(request):

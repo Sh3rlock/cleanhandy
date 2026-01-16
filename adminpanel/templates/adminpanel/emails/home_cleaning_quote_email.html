@@ -177,92 +177,183 @@
                                 </tr>
                             </table>
                             
-                            <!-- Cleaning Service Checklist -->
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 25px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;">
+                            <!-- Property Access & Conditions -->
+                            {% if access_method or parking_option_display or parking_instructions or pets %}
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 25px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #F15A29;">
                                 <tr>
                                     <td style="padding: 20px;">
-                                        <h2 style="margin: 0 0 20px 0; text-align: center; color: #333333; font-size: 20px; font-weight: bold;">Our TheCleanHandy Cleaning Service Checklist</h2>
+                                        <h3 style="margin: 0 0 15px 0; color: #F15A29; font-size: 18px; font-weight: bold;">🔑 Property Access & Conditions</h3>
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                            {% if access_method %}
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 50%;">Access Method:</td>
+                                                            <td style="color: #333333;">{{ access_method }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if parking_option_display %}
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 50%;">Parking Option:</td>
+                                                            <td style="color: #333333;">{{ parking_option_display }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if parking_instructions %}
+                                            <tr>
+                                                <td style="padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 50%;">Parking Instructions:</td>
+                                                            <td style="color: #333333;">{{ parking_instructions }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if pets %}
+                                            <tr>
+                                                <td style="padding: 8px 0;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-weight: bold; color: #666666; width: 50%;">Pets:</td>
+                                                            <td style="color: #333333;">{{ pets }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            {% endif %}
+                            
+                            <!-- Cleaning Service Checklist -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 0;">
+                                        <h2 style="margin: 0 0 25px 0; text-align: center; color: #333333; font-size: 22px; font-weight: bold; letter-spacing: -0.5px;">Our TheCleanHandy Cleaning Service Checklist</h2>
                                         
-                                        <!-- 5-Column Table -->
-                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border-collapse: collapse;">
+                                        <!-- 5-Column Table with Card Design -->
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border-collapse: separate; border-spacing: 12px;">
                                             <tr>
                                                 <!-- Column 1: Bedrooms & Living Spaces -->
-                                                <td valign="top" style="width: 20%; padding: 10px; border-right: 1px solid #e0e0e0; vertical-align: top;">
-                                                    <h3 style="margin: 0 0 8px 0; color: #333333; font-size: 14px; font-weight: bold;">Bedrooms & Living Spaces</h3>
-                                                    <p style="margin: 0 0 12px 0; color: #666666; font-size: 11px; line-height: 1.4;">Flat Rate Bedroom Checklist</p>
-                                                    <ul style="margin: 0; padding-left: 18px; color: #333333; font-size: 11px; line-height: 1.6;">
-                                                        <li style="margin-bottom: 6px;">Tidy up beds and replace linens if provided</li>
-                                                        <li style="margin-bottom: 6px;">Dust and clean all reachable surfaces</li>
-                                                        <li style="margin-bottom: 6px;">Sanitize handles, switches, and high-touch areas</li>
-                                                        <li style="margin-bottom: 6px;">Clean mirrors and glass accents</li>
-                                                        <li style="margin-bottom: 6px;">Swiffer or mop the floors</li>
-                                                        <li style="margin-bottom: 0;">Empty trash and recycling bins</li>
-                                                    </ul>
+                                                <td valign="top" style="width: 20%; padding: 0; vertical-align: top;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; border-top: 3px solid #4CAF50; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                                        <tr>
+                                                            <td style="padding: 18px 15px;">
+                                                                <h3 style="margin: 0 0 6px 0; color: #2c3e50; font-size: 15px; font-weight: bold; letter-spacing: -0.3px;">🛏️ Bedrooms & Living Spaces</h3>
+                                                                <p style="margin: 0 0 14px 0; color: #7f8c8d; font-size: 11px; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.5px;">Flat Rate Checklist</p>
+                                                                <ul style="margin: 0; padding-left: 20px; color: #34495e; font-size: 12px; line-height: 1.7; list-style: none;">
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Tidy up beds and replace linens if provided</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Dust and clean all reachable surfaces</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Sanitize handles, switches, and high-touch areas</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Clean mirrors and glass accents</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Swiffer or mop the floors</li>
+                                                                    <li style="margin-bottom: 0; padding-left: 8px; position: relative;">• Empty trash and recycling bins</li>
+                                                                </ul>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
                                                 </td>
                                                 
                                                 <!-- Column 2: Bathrooms -->
-                                                <td valign="top" style="width: 20%; padding: 10px; border-right: 1px solid #e0e0e0; vertical-align: top;">
-                                                    <h3 style="margin: 0 0 8px 0; color: #333333; font-size: 14px; font-weight: bold;">Bathrooms</h3>
-                                                    <p style="margin: 0 0 12px 0; color: #666666; font-size: 11px; line-height: 1.4;">Flat Rate Bathroom Cleaning Checklist</p>
-                                                    <ul style="margin: 0; padding-left: 18px; color: #333333; font-size: 11px; line-height: 1.6;">
-                                                        <li style="margin-bottom: 6px;">Disinfect and clean toilet, shower, and sink areas</li>
-                                                        <li style="margin-bottom: 6px;">Dust and wipe down all accessible surfaces</li>
-                                                        <li style="margin-bottom: 6px;">Sanitize doorknobs and light switches</li>
-                                                        <li style="margin-bottom: 6px;">Polish mirrors and any glass elements</li>
-                                                        <li style="margin-bottom: 6px;">Sweep and mop the floors with Swiffer</li>
-                                                        <li style="margin-bottom: 0;">Remove garbage and recyclables</li>
-                                                    </ul>
+                                                <td valign="top" style="width: 20%; padding: 0; vertical-align: top;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; border-top: 3px solid #2196F3; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                                        <tr>
+                                                            <td style="padding: 18px 15px;">
+                                                                <h3 style="margin: 0 0 6px 0; color: #2c3e50; font-size: 15px; font-weight: bold; letter-spacing: -0.3px;">🚿 Bathrooms</h3>
+                                                                <p style="margin: 0 0 14px 0; color: #7f8c8d; font-size: 11px; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.5px;">Flat Rate Checklist</p>
+                                                                <ul style="margin: 0; padding-left: 20px; color: #34495e; font-size: 12px; line-height: 1.7; list-style: none;">
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Disinfect and clean toilet, shower, and sink areas</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Dust and wipe down all accessible surfaces</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Sanitize doorknobs and light switches</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Polish mirrors and any glass elements</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Sweep and mop the floors with Swiffer</li>
+                                                                    <li style="margin-bottom: 0; padding-left: 8px; position: relative;">• Remove garbage and recyclables</li>
+                                                                </ul>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
                                                 </td>
                                                 
                                                 <!-- Column 3: Kitchen -->
-                                                <td valign="top" style="width: 20%; padding: 10px; border-right: 1px solid #e0e0e0; vertical-align: top;">
-                                                    <h3 style="margin: 0 0 8px 0; color: #333333; font-size: 14px; font-weight: bold;">Kitchen</h3>
-                                                    <p style="margin: 0 0 12px 0; color: #666666; font-size: 11px; line-height: 1.4;">Flat Rate Kitchen Cleaning Checklist</p>
-                                                    <ul style="margin: 0; padding-left: 18px; color: #333333; font-size: 11px; line-height: 1.6;">
-                                                        <li style="margin-bottom: 6px;">Clean and scrub the sink thoroughly</li>
-                                                        <li style="margin-bottom: 6px;">Wipe down cabinet fronts and appliance exteriors</li>
-                                                        <li style="margin-bottom: 6px;">Sanitize inside and outside of the microwave</li>
-                                                        <li style="margin-bottom: 6px;">Clean and disinfect all countertop surfaces</li>
-                                                        <li style="margin-bottom: 6px;">Swiffer floors to remove dirt and debris</li>
-                                                        <li style="margin-bottom: 6px;">Dust and wipe down all accessible surfaces</li>
-                                                        <li style="margin-bottom: 6px;">Sanitize light switches and door handles</li>
-                                                        <li style="margin-bottom: 6px;">Polish glass and mirror surfaces</li>
-                                                        <li style="margin-bottom: 0;">Take out trash and recycling</li>
-                                                    </ul>
+                                                <td valign="top" style="width: 20%; padding: 0; vertical-align: top;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; border-top: 3px solid #FF9800; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                                        <tr>
+                                                            <td style="padding: 18px 15px;">
+                                                                <h3 style="margin: 0 0 6px 0; color: #2c3e50; font-size: 15px; font-weight: bold; letter-spacing: -0.3px;">🍳 Kitchen</h3>
+                                                                <p style="margin: 0 0 14px 0; color: #7f8c8d; font-size: 11px; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.5px;">Flat Rate Checklist</p>
+                                                                <ul style="margin: 0; padding-left: 20px; color: #34495e; font-size: 12px; line-height: 1.7; list-style: none;">
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Clean and scrub the sink thoroughly</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Wipe down cabinet fronts and appliance exteriors</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Sanitize inside and outside of the microwave</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Clean and disinfect all countertop surfaces</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Swiffer floors to remove dirt and debris</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Dust and wipe down all accessible surfaces</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Sanitize light switches and door handles</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Polish glass and mirror surfaces</li>
+                                                                    <li style="margin-bottom: 0; padding-left: 8px; position: relative;">• Take out trash and recycling</li>
+                                                                </ul>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
                                                 </td>
                                                 
                                                 <!-- Column 4: Extra Services -->
-                                                <td valign="top" style="width: 20%; padding: 10px; border-right: 1px solid #e0e0e0; vertical-align: top;">
-                                                    <h3 style="margin: 0 0 8px 0; color: #333333; font-size: 14px; font-weight: bold;">Extra Services</h3>
-                                                    <p style="margin: 0 0 12px 0; color: #666666; font-size: 11px; line-height: 1.4;">Extra Services Not Included in Flat Rate Cleanings</p>
-                                                    <ul style="margin: 0; padding-left: 18px; color: #333333; font-size: 11px; line-height: 1.6;">
-                                                        <li style="margin-bottom: 6px;">Clean Inside The Fridge <strong style="color: #F15A29;">+$30</strong></li>
-                                                        <li style="margin-bottom: 6px;">Clean Inside The Cabinets <strong style="color: #F15A29;">+$40</strong></li>
-                                                        <li style="margin-bottom: 6px;">Clean Inside The Oven <strong style="color: #F15A29;">+$30</strong></li>
-                                                        <li style="margin-bottom: 6px;">Clean Baseboards <strong style="color: #F15A29;">+$40</strong></li>
-                                                        <li style="margin-bottom: 6px;">Clean Interior Windows <strong style="color: #F15A29;">+$40</strong></li>
-                                                        <li style="margin-bottom: 6px;">Clean Interior Walls <strong style="color: #F15A29;">+$100</strong></li>
-                                                        <li style="margin-bottom: 6px;">Load(s) of Laundry <strong style="color: #F15A29;">+$45/load</strong></li>
-                                                        <li style="margin-bottom: 6px;">Hour(s) of Organizing <strong style="color: #F15A29;">+$70/hr</strong></li>
-                                                        <li style="margin-bottom: 6px;">Dishes <strong style="color: #F15A29;">+$25</strong></li>
-                                                        <li style="margin-bottom: 0;">Pet Hair Clean-up <strong style="color: #F15A29;">+$30</strong></li>
-                                                    </ul>
+                                                <td valign="top" style="width: 20%; padding: 0; vertical-align: top;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #fff3e0; border-radius: 8px; border-top: 3px solid #F15A29; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                                        <tr>
+                                                            <td style="padding: 18px 15px;">
+                                                                <h3 style="margin: 0 0 6px 0; color: #2c3e50; font-size: 15px; font-weight: bold; letter-spacing: -0.3px;">⭐ Extra Services</h3>
+                                                                <p style="margin: 0 0 14px 0; color: #7f8c8d; font-size: 11px; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.5px;">Additional Options</p>
+                                                                <ul style="margin: 0; padding-left: 20px; color: #34495e; font-size: 12px; line-height: 1.7; list-style: none;">
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Clean Inside The Fridge <strong style="color: #F15A29; font-weight: 600;">+$30</strong></li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Clean Inside The Cabinets <strong style="color: #F15A29; font-weight: 600;">+$40</strong></li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Clean Inside The Oven <strong style="color: #F15A29; font-weight: 600;">+$30</strong></li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Clean Baseboards <strong style="color: #F15A29; font-weight: 600;">+$40</strong></li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Clean Interior Windows <strong style="color: #F15A29; font-weight: 600;">+$40</strong></li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Clean Interior Walls <strong style="color: #F15A29; font-weight: 600;">+$100</strong></li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Load(s) of Laundry <strong style="color: #F15A29; font-weight: 600;">+$45/load</strong></li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Hour(s) of Organizing <strong style="color: #F15A29; font-weight: 600;">+$70/hr</strong></li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Dishes <strong style="color: #F15A29; font-weight: 600;">+$25</strong></li>
+                                                                    <li style="margin-bottom: 0; padding-left: 8px; position: relative;">• Pet Hair Clean-up <strong style="color: #F15A29; font-weight: 600;">+$30</strong></li>
+                                                                </ul>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
                                                 </td>
                                                 
                                                 <!-- Column 5: What We Can't Clean -->
-                                                <td valign="top" style="width: 20%; padding: 10px; vertical-align: top;">
-                                                    <h3 style="margin: 0 0 8px 0; color: #333333; font-size: 14px; font-weight: bold;">What We Can't Clean</h3>
-                                                    <p style="margin: 0 0 12px 0; color: #666666; font-size: 11px; line-height: 1.4;">Services We Do Not Provide</p>
-                                                    <ul style="margin: 0; padding-left: 18px; color: #333333; font-size: 11px; line-height: 1.6;">
-                                                        <li style="margin-bottom: 6px;">Exterior Windows</li>
-                                                        <li style="margin-bottom: 6px;">Carpet cleaning</li>
-                                                        <li style="margin-bottom: 6px;">Animal waste</li>
-                                                        <li style="margin-bottom: 6px;">Mold Removal</li>
-                                                        <li style="margin-bottom: 6px;">Industrial Cleaning</li>
-                                                        <li style="margin-bottom: 6px;">Lifting of Heavy Items</li>
-                                                        <li style="margin-bottom: 6px;">Surfaces Above Arms Reach, We Can Use A 3-Step Stool</li>
-                                                        <li style="margin-bottom: 0;">High Ceiling Fans</li>
-                                                    </ul>
+                                                <td valign="top" style="width: 20%; padding: 0; vertical-align: top;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; border-top: 3px solid #9E9E9E; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                                        <tr>
+                                                            <td style="padding: 18px 15px;">
+                                                                <h3 style="margin: 0 0 6px 0; color: #2c3e50; font-size: 15px; font-weight: bold; letter-spacing: -0.3px;">🚫 What We Can't Clean</h3>
+                                                                <p style="margin: 0 0 14px 0; color: #7f8c8d; font-size: 11px; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.5px;">Not Included</p>
+                                                                <ul style="margin: 0; padding-left: 20px; color: #7f8c8d; font-size: 12px; line-height: 1.7; list-style: none;">
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Exterior Windows</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Carpet cleaning</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Animal waste</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Mold Removal</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Industrial Cleaning</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Lifting of Heavy Items</li>
+                                                                    <li style="margin-bottom: 8px; padding-left: 8px; position: relative;">• Surfaces Above Arms Reach, We Can Use A 3-Step Stool</li>
+                                                                    <li style="margin-bottom: 0; padding-left: 8px; position: relative;">• High Ceiling Fans</li>
+                                                                </ul>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
                                                 </td>
                                             </tr>
                                         </table>

@@ -30,6 +30,7 @@ from django.utils.timezone import localtime
 
 # Import payment link functions
 from quotes.stripe_views import create_final_payment_link, send_final_payment_email
+import stripe
 
 from django.core.mail import send_mail
 from django.contrib import messages
@@ -2205,10 +2206,21 @@ def home_cleaning_quote_detail(request, quote_id):
         except Exception:
             pass
     
+    # Get parking option display name and calculate parking fee
+    parking_option_display = None
     if parking_option_id:
         try:
-            parking_var = PriceVariable.objects.get(id=parking_option_id, is_active=True)
-            calculated_parking_fee = float(parking_var.price) if parking_var.price else None
+            # Handle both numeric ID (string or int) and try to convert
+            if isinstance(parking_option_id, str) and parking_option_id.isdigit():
+                parking_option_id = int(parking_option_id)
+            elif isinstance(parking_option_id, str):
+                # If it's a string that's not a digit, skip PriceVariable lookup
+                parking_option_id = None
+            
+            if parking_option_id:
+                parking_var = PriceVariable.objects.get(id=parking_option_id, is_active=True)
+                calculated_parking_fee = float(parking_var.price) if parking_var.price else None
+                parking_option_display = parking_var.variable_name
         except (PriceVariable.DoesNotExist, ValueError, TypeError):
             pass
     
@@ -2310,6 +2322,43 @@ def home_cleaning_quote_detail(request, quote_id):
             # It's not a number, use as display name (for backward compatibility)
             bathroom_display_name = home_cleaning_quote.bath_count
     
+    # Format access method for display (replace underscores with spaces and title case)
+    access_method_display = None
+    if home_cleaning_quote.get_in:
+        access_method_display = home_cleaning_quote.get_in.replace('_', ' ').title()
+    
+    # Format pets for display (capitalize first letter)
+    pets_display = None
+    if home_cleaning_quote.pet:
+        pets_display = home_cleaning_quote.pet.capitalize()
+    
+    # Get tax rate from TaxSettings
+    tax_rate = TaxSettings.get_tax_rate()
+    tax_rate_decimal = float(tax_rate) / 100.0  # Convert percentage to decimal for calculations
+    
+    # Calculate total price (price + parking - discount + tax)
+    calculated_total = None
+    if calculated_price is not None:
+        from decimal import Decimal
+        total = Decimal(str(calculated_price))
+        if calculated_parking_fee:
+            total += Decimal(str(calculated_parking_fee))
+        if calculated_discount:
+            total -= Decimal(str(calculated_discount))
+        # Add sales tax using tax rate from TaxSettings
+        sales_tax = total * Decimal(str(tax_rate_decimal))
+        calculated_total = float(total + sales_tax)
+    
+    # Get existing payment link from admin_notes if available
+    payment_link = None
+    if hasattr(home_cleaning_quote, 'admin_notes') and home_cleaning_quote.admin_notes:
+        try:
+            notes_data = json.loads(home_cleaning_quote.admin_notes)
+            if isinstance(notes_data, dict):
+                payment_link = notes_data.get('stripe_payment_link')
+        except (json.JSONDecodeError, ValueError):
+            pass
+    
     return render(request, "adminpanel/home_cleaning_quote_detail.html", {
         "home_cleaning_quote": home_cleaning_quote,
         "email_sent_at": email_sent_at,
@@ -2319,8 +2368,16 @@ def home_cleaning_quote_detail(request, quote_id):
         "calculated_price": calculated_price,
         "calculated_parking_fee": calculated_parking_fee,
         "calculated_discount": calculated_discount,
+        "calculated_total": calculated_total,
         "home_type_display_name": home_type_display_name,
         "bathroom_display_name": bathroom_display_name,
+        "parking_option_display": parking_option_display,
+        "access_method_display": access_method_display,
+        "pets_display": pets_display,
+        "form_data": form_data,
+        "payment_link": payment_link,
+        "tax_rate_decimal": tax_rate_decimal,
+        "tax_rate_percentage": float(tax_rate),
     })
 
 
@@ -2721,6 +2778,27 @@ def office_cleaning_quote_detail(request, quote_id):
         # Format recurrence_pattern
         if form_data.get('recurrence_pattern'):
             form_data['recurrence_pattern_display'] = form_data['recurrence_pattern'].replace('_', ' ').title()
+        
+        # Format parking_option - check if it's a PriceVariable ID (numeric) or old string format
+        parking_option_value = form_data.get('parking_option')
+        if parking_option_value:
+            try:
+                parking_option_id = int(parking_option_value)
+                # Try to get the PriceVariable
+                try:
+                    parking_var = PriceVariable.objects.get(id=parking_option_id, is_active=True)
+                    form_data['parking_option_display'] = parking_var.variable_name
+                    form_data['parking_option_id'] = parking_option_id
+                except PriceVariable.DoesNotExist:
+                    pass
+            except (ValueError, TypeError):
+                # Old string format or not a number
+                pass
+        
+        # Extract parking instructions if available
+        if form_data.get('parking'):
+            # parking instructions are already in form_data as 'parking'
+            pass
     
     # Parse dates and times if they exist
     if form_data.get('selected_date'):
@@ -2832,6 +2910,52 @@ def office_cleaning_quote_detail(request, quote_id):
             print(f"Error calculating discount: {e}")
             calculated_discount = None
     
+    # Calculate parking fee from parking_option_id if available
+    calculated_parking_fee = None
+    parking_option_id = form_data.get('parking_option_id') or form_data.get('parking_option')
+    if parking_option_id:
+        try:
+            # Handle both numeric ID (string or int) and try to convert
+            if isinstance(parking_option_id, str) and parking_option_id.isdigit():
+                parking_option_id = int(parking_option_id)
+            elif isinstance(parking_option_id, str):
+                # If it's a string that's not a digit, skip PriceVariable lookup
+                parking_option_id = None
+            
+            if parking_option_id:
+                parking_var = PriceVariable.objects.get(id=parking_option_id, is_active=True)
+                calculated_parking_fee = float(parking_var.price) if parking_var.price else None
+        except (PriceVariable.DoesNotExist, ValueError, TypeError) as e:
+            print(f"Error calculating parking fee: {e}")
+            calculated_parking_fee = None
+    
+    # Get tax rate from TaxSettings
+    tax_rate = TaxSettings.get_tax_rate()
+    tax_rate_decimal = float(tax_rate) / 100.0  # Convert percentage to decimal for calculations
+    
+    # Calculate total price (price + parking - discount + tax)
+    calculated_total = None
+    if calculated_price is not None:
+        from decimal import Decimal
+        total = Decimal(str(calculated_price))
+        if calculated_parking_fee:
+            total += Decimal(str(calculated_parking_fee))
+        if calculated_discount:
+            total -= Decimal(str(calculated_discount))
+        # Add sales tax using tax rate from TaxSettings
+        sales_tax = total * Decimal(str(tax_rate_decimal))
+        calculated_total = float(total + sales_tax)
+    
+    # Get existing payment link from admin_notes if available
+    payment_link = None
+    if hasattr(office_cleaning_quote, 'admin_notes') and office_cleaning_quote.admin_notes:
+        try:
+            notes_data = json.loads(office_cleaning_quote.admin_notes)
+            if isinstance(notes_data, dict):
+                payment_link = notes_data.get('stripe_payment_link')
+        except (json.JSONDecodeError, ValueError):
+            pass
+    
     return render(request, "adminpanel/office_cleaning_quote_detail.html", {
         "office_cleaning_quote": office_cleaning_quote,
         "form_data": form_data,
@@ -2841,8 +2965,183 @@ def office_cleaning_quote_detail(request, quote_id):
         "calculated_estimated_time": calculated_estimated_time,
         "calculated_price": calculated_price,
         "price_source": price_source,
+        "calculated_parking_fee": calculated_parking_fee,
         "calculated_discount": calculated_discount,
+        "calculated_total": calculated_total,
+        "tax_rate_decimal": tax_rate_decimal,
+        "tax_rate_percentage": float(tax_rate),
+        "payment_link": payment_link,
     })
+
+
+def create_office_cleaning_payment_link(office_cleaning_quote, total_price, customer_name, customer_email):
+    """Create a Stripe Payment Link for office cleaning quote payment"""
+    try:
+        from django.utils import timezone
+        from django.conf import settings
+        
+        # Check if Stripe is configured
+        if not hasattr(settings, 'STRIPE_SECRET_KEY') or not settings.STRIPE_SECRET_KEY:
+            error_msg = "Stripe secret key is not configured"
+            print(f"❌ {error_msg}")
+            return {'error': error_msg}
+        
+        # Configure Stripe
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        
+        # Convert total price to cents
+        try:
+            amount_cents = int(float(total_price) * 100)
+        except (ValueError, TypeError) as e:
+            error_msg = f"Invalid total price: {total_price}"
+            print(f"❌ {error_msg}: {e}")
+            return {'error': error_msg}
+        
+        if amount_cents <= 0:
+            error_msg = f"Total price must be greater than 0, got: {amount_cents} cents"
+            print(f"❌ {error_msg}")
+            return {'error': error_msg}
+        
+        # Get SITE_URL for redirect
+        site_url = getattr(settings, 'SITE_URL', 'https://thecleanhandy.com')
+        redirect_url = f'{site_url}/admin/office-cleaning-quotes/{office_cleaning_quote.id}/'
+        
+        # Create Stripe Payment Link
+        try:
+            payment_link = stripe.PaymentLink.create(
+                line_items=[{
+                    'price_data': {
+                        'currency': getattr(settings, 'STRIPE_CURRENCY', 'usd'),
+                        'product_data': {
+                            'name': f'Office Cleaning Quote #{office_cleaning_quote.id}',
+                            'description': f'Payment for office cleaning service - Quote #{office_cleaning_quote.id}',
+                        },
+                        'unit_amount': amount_cents,
+                    },
+                    'quantity': 1,
+                }],
+                metadata={
+                    'quote_id': str(office_cleaning_quote.id),
+                    'quote_type': 'office_cleaning',
+                    'customer_name': customer_name or 'Customer',
+                    'customer_email': customer_email or '',
+                },
+                after_completion={
+                    'type': 'redirect',
+                    'redirect': {
+                        'url': redirect_url,
+                    },
+                },
+                allow_promotion_codes=True,
+                billing_address_collection='required',
+                phone_number_collection={
+                    'enabled': True,
+                },
+            )
+            
+            print(f"✅ Created payment link for office quote {office_cleaning_quote.id}: {payment_link.url}")
+            
+            return {
+                'payment_link_id': payment_link.id,
+                'payment_link_url': payment_link.url,
+            }
+            
+        except stripe.error.StripeError as e:
+            error_msg = f"Stripe API error: {str(e)}"
+            print(f"❌ Stripe error creating payment link for office quote {office_cleaning_quote.id}: {e}")
+            return {'error': error_msg}
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        error_msg = f"Unexpected error: {str(e)}"
+        print(f"❌ Error creating payment link for office quote {office_cleaning_quote.id}: {error_trace}")
+        return {'error': error_msg}
+
+
+def create_home_cleaning_payment_link(home_cleaning_quote, total_price, customer_name, customer_email):
+    """Create a Stripe Payment Link for home cleaning quote payment"""
+    try:
+        from django.utils import timezone
+        from django.conf import settings
+        
+        # Check if Stripe is configured
+        if not hasattr(settings, 'STRIPE_SECRET_KEY') or not settings.STRIPE_SECRET_KEY:
+            error_msg = "Stripe secret key is not configured"
+            print(f"❌ {error_msg}")
+            return {'error': error_msg}
+        
+        # Configure Stripe
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        
+        # Convert total price to cents
+        try:
+            amount_cents = int(float(total_price) * 100)
+        except (ValueError, TypeError) as e:
+            error_msg = f"Invalid total price: {total_price}"
+            print(f"❌ {error_msg}: {e}")
+            return {'error': error_msg}
+        
+        if amount_cents <= 0:
+            error_msg = f"Total price must be greater than 0, got: {amount_cents} cents"
+            print(f"❌ {error_msg}")
+            return {'error': error_msg}
+        
+        # Get SITE_URL for redirect
+        site_url = getattr(settings, 'SITE_URL', 'https://thecleanhandy.com')
+        redirect_url = f'{site_url}/admin/home-cleaning-quotes/{home_cleaning_quote.id}/'
+        
+        # Create Stripe Payment Link
+        try:
+            payment_link = stripe.PaymentLink.create(
+                line_items=[{
+                    'price_data': {
+                        'currency': getattr(settings, 'STRIPE_CURRENCY', 'usd'),
+                        'product_data': {
+                            'name': f'Home Cleaning Quote #{home_cleaning_quote.id}',
+                            'description': f'Payment for home cleaning service - Quote #{home_cleaning_quote.id}',
+                        },
+                        'unit_amount': amount_cents,
+                    },
+                    'quantity': 1,
+                }],
+                metadata={
+                    'quote_id': str(home_cleaning_quote.id),
+                    'quote_type': 'home_cleaning',
+                    'customer_name': customer_name or 'Customer',
+                    'customer_email': customer_email or '',
+                },
+                after_completion={
+                    'type': 'redirect',
+                    'redirect': {
+                        'url': redirect_url,
+                    },
+                },
+                allow_promotion_codes=True,
+                billing_address_collection='required',
+                phone_number_collection={
+                    'enabled': True,
+                },
+            )
+            
+            print(f"✅ Created payment link for quote {home_cleaning_quote.id}: {payment_link.url}")
+            
+            return {
+                'payment_link_id': payment_link.id,
+                'payment_link_url': payment_link.url,
+            }
+            
+        except stripe.error.StripeError as e:
+            error_msg = f"Stripe API error: {str(e)}"
+            print(f"❌ Stripe error creating payment link for quote {home_cleaning_quote.id}: {e}")
+            return {'error': error_msg}
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        error_msg = f"Unexpected error: {str(e)}"
+        print(f"❌ Error creating payment link for quote {home_cleaning_quote.id}: {error_trace}")
+        return {'error': error_msg}
 
 
 @login_required
@@ -2882,12 +3181,41 @@ def send_home_cleaning_quote_email(request, quote_id):
             cleaning_frequency = request.POST.get("cleaning_frequency", home_cleaning_quote.cleaning_frequency or "")
             job_description = request.POST.get("job_description", home_cleaning_quote.job_description or "")
             
+            # Get parking information
+            parking_instructions = home_cleaning_quote.parking or ""
+            parking_option_display = None
+            # Try to get parking option from form_data if available
+            import json
+            form_data = {}
+            if hasattr(home_cleaning_quote, 'admin_notes') and home_cleaning_quote.admin_notes:
+                try:
+                    form_data = json.loads(home_cleaning_quote.admin_notes)
+                    if isinstance(form_data, dict):
+                        parking_option_id = form_data.get('parking_option_id') or form_data.get('parking_option')
+                        if parking_option_id:
+                            try:
+                                if isinstance(parking_option_id, str) and parking_option_id.isdigit():
+                                    parking_option_id = int(parking_option_id)
+                                if isinstance(parking_option_id, int):
+                                    from quotes.models import PriceVariable
+                                    parking_var = PriceVariable.objects.filter(id=parking_option_id, is_active=True).first()
+                                    if parking_var:
+                                        parking_option_display = parking_var.variable_name
+                            except (ValueError, TypeError):
+                                pass
+                        if form_data.get('parking') and not parking_instructions:
+                            parking_instructions = form_data.get('parking', '')
+                except (json.JSONDecodeError, ValueError):
+                    pass
+            
             # Calculate total price
             from decimal import Decimal
             subtotal = Decimal("0.00")
             discount_amount = Decimal("0.00")
             discount_display = ""
-            sales_tax_rate = Decimal("8.875")  # 8.875%
+            # Get tax rate from TaxSettings
+            tax_rate = TaxSettings.get_tax_rate()
+            sales_tax_rate = Decimal(str(tax_rate))  # Tax rate as percentage
             sales_tax = Decimal("0.00")
             total_price = Decimal("0.00")
             
@@ -2915,7 +3243,7 @@ def send_home_cleaning_quote_email(request, quote_id):
                         discount_display = f"${discount}"
                     subtotal -= discount_amount
                 
-                # Calculate sales tax (8.875% of subtotal after discount)
+                # Calculate sales tax using rate from TaxSettings
                 if subtotal > 0:
                     sales_tax = (subtotal * sales_tax_rate) / Decimal("100")
                 
@@ -2923,6 +3251,19 @@ def send_home_cleaning_quote_email(request, quote_id):
                 total_price = subtotal + sales_tax
             except (ValueError, TypeError):
                 pass
+            
+            # Automatically create Stripe payment link if total_price is available and no manual link provided
+            payment_link_id = None
+            if total_price > 0 and not payment_link:
+                payment_link_result = create_home_cleaning_payment_link(
+                    home_cleaning_quote, 
+                    total_price, 
+                    customer_name, 
+                    customer_email
+                )
+                if payment_link_result and payment_link_result.get('payment_link_url'):
+                    payment_link = payment_link_result['payment_link_url']
+                    payment_link_id = payment_link_result.get('payment_link_id')
             
             # Generate secure tokens for accept/decline actions
             from django.core.signing import Signer
@@ -2964,6 +3305,10 @@ def send_home_cleaning_quote_email(request, quote_id):
                 "total_price": total_price,
                 "payment_link": payment_link,
                 "note": note,
+                "parking_option_display": parking_option_display,
+                "parking_instructions": parking_instructions,
+                "access_method": home_cleaning_quote.get_in.replace('_', ' ').title() if home_cleaning_quote.get_in else "",
+                "pets": home_cleaning_quote.pet.capitalize() if home_cleaning_quote.pet else "",
                 "request_scheme": request.scheme,
                 "domain": get_current_site(request).domain,
                 "accept_url": accept_url,
@@ -3024,6 +3369,11 @@ def send_home_cleaning_quote_email(request, quote_id):
                 existing_notes['quote_email_sent_at'] = email_sent_time.isoformat()
                 existing_notes['customer_email'] = customer_email
                 
+                # Save payment link if it was generated
+                if payment_link and payment_link_id:
+                    existing_notes['stripe_payment_link'] = payment_link
+                    existing_notes['stripe_payment_link_id'] = payment_link_id
+                
                 # Save updated notes
                 home_cleaning_quote.admin_notes = json.dumps(existing_notes, indent=2)
                 # Update status to "email_sent" after sending email
@@ -3037,6 +3387,108 @@ def send_home_cleaning_quote_email(request, quote_id):
             messages.error(request, f"❌ Failed to send email: {str(e)}")
     
     return redirect("home_cleaning_quote_detail", quote_id=quote_id)
+
+
+@login_required
+@user_passes_test(admin_check)
+@require_POST
+def generate_home_cleaning_payment_link(request, quote_id):
+    """Generate Stripe payment link for home cleaning quote via AJAX"""
+    import json
+    from django.http import JsonResponse
+    
+    try:
+        home_cleaning_quote = get_object_or_404(HomeCleaningQuoteRequest, pk=quote_id)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Quote not found: {str(e)}'}, status=404)
+    
+    try:
+        # Parse request body
+        if not request.body:
+            return JsonResponse({'success': False, 'error': 'No data provided'}, status=400)
+        
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError as e:
+            return JsonResponse({'success': False, 'error': f'Invalid JSON: {str(e)}'}, status=400)
+        
+        total_price = data.get('total_price')
+        
+        if not total_price:
+            return JsonResponse({'success': False, 'error': 'Total price is required'}, status=400)
+        
+        try:
+            total_price = float(total_price)
+        except (ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': 'Invalid total price format'}, status=400)
+        
+        if total_price <= 0:
+            return JsonResponse({'success': False, 'error': 'Total price must be greater than 0'}, status=400)
+        
+        customer_name = home_cleaning_quote.name or 'Customer'
+        customer_email = home_cleaning_quote.email or ''
+        
+        payment_link_result = create_home_cleaning_payment_link(
+            home_cleaning_quote,
+            total_price,
+            customer_name,
+            customer_email
+        )
+        
+        # Check for errors in the result
+        if payment_link_result and payment_link_result.get('error'):
+            return JsonResponse({
+                'success': False, 
+                'error': payment_link_result.get('error')
+            }, status=500)
+        
+        # Check for errors in the result
+        if not payment_link_result:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Payment link creation returned no result. Please check server logs.'
+            }, status=500)
+        
+        if payment_link_result.get('error'):
+            return JsonResponse({
+                'success': False, 
+                'error': payment_link_result.get('error')
+            }, status=500)
+        
+        if payment_link_result.get('payment_link_url'):
+            # Save payment link to admin_notes
+            try:
+                existing_notes = {}
+                if hasattr(home_cleaning_quote, 'admin_notes') and home_cleaning_quote.admin_notes:
+                    try:
+                        existing_notes = json.loads(home_cleaning_quote.admin_notes)
+                        if not isinstance(existing_notes, dict):
+                            existing_notes = {}
+                    except:
+                        existing_notes = {}
+                existing_notes['stripe_payment_link'] = payment_link_result['payment_link_url']
+                existing_notes['stripe_payment_link_id'] = payment_link_result.get('payment_link_id')
+                home_cleaning_quote.admin_notes = json.dumps(existing_notes, indent=2)
+                home_cleaning_quote.save(update_fields=['admin_notes'])
+            except Exception as e:
+                print(f"Warning: Could not save payment link: {e}")
+            
+            return JsonResponse({
+                'success': True,
+                'payment_link_url': payment_link_result['payment_link_url'],
+                'payment_link_id': payment_link_result.get('payment_link_id')
+            })
+        else:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Payment link creation failed. No payment link URL was returned. Please check Stripe configuration and server logs.'
+            }, status=500)
+            
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in generate_home_cleaning_payment_link: {error_trace}")
+        return JsonResponse({'success': False, 'error': f'Server error: {str(e)}'}, status=500)
 
 
 @login_required
@@ -3086,14 +3538,33 @@ def send_office_cleaning_quote_email(request, quote_id):
             business_type = request.POST.get("business_type", form_data.get("business_type", ""))
             crew_size_hours = request.POST.get("crew_size_hours", form_data.get("crew_size_hours", ""))
             
+            # Get parking information
+            parking_instructions = form_data.get("parking", "")
+            parking_option_display = None
+            parking_option_id = form_data.get('parking_option_id') or form_data.get('parking_option')
+            if parking_option_id:
+                try:
+                    if isinstance(parking_option_id, str) and parking_option_id.isdigit():
+                        parking_option_id = int(parking_option_id)
+                    if isinstance(parking_option_id, int):
+                        from quotes.models import PriceVariable
+                        parking_var = PriceVariable.objects.filter(id=parking_option_id, is_active=True).first()
+                        if parking_var:
+                            parking_option_display = parking_var.variable_name
+                except (ValueError, TypeError):
+                    pass
+            
             # Calculate total price
             from decimal import Decimal
             subtotal = Decimal("0.00")
             discount_amount = Decimal("0.00")
             discount_display = ""
-            sales_tax_rate = Decimal("8.875")  # 8.875%
+            # Get tax rate from TaxSettings
+            tax_rate = TaxSettings.get_tax_rate()
+            sales_tax_rate = Decimal(str(tax_rate))  # Tax rate as percentage
             sales_tax = Decimal("0.00")
             total_price = Decimal("0.00")
+            payment_link_id = None
             
             try:
                 if price:
@@ -3119,7 +3590,7 @@ def send_office_cleaning_quote_email(request, quote_id):
                         discount_display = f"${discount}"
                     subtotal -= discount_amount
                 
-                # Calculate sales tax (8.875% of subtotal after discount)
+                # Calculate sales tax using rate from TaxSettings
                 if subtotal > 0:
                     sales_tax = (subtotal * sales_tax_rate) / Decimal("100")
                 
@@ -3127,6 +3598,18 @@ def send_office_cleaning_quote_email(request, quote_id):
                 total_price = subtotal + sales_tax
             except (ValueError, TypeError):
                 pass
+            
+            # Automatically create Stripe payment link if total_price is available and no manual link provided
+            if total_price > 0 and not payment_link:
+                payment_link_result = create_office_cleaning_payment_link(
+                    office_cleaning_quote, 
+                    total_price, 
+                    customer_name, 
+                    customer_email
+                )
+                if payment_link_result and payment_link_result.get('payment_link_url'):
+                    payment_link = payment_link_result['payment_link_url']
+                    payment_link_id = payment_link_result.get('payment_link_id')
             
             # Prepare email context
             context = {
@@ -3155,6 +3638,8 @@ def send_office_cleaning_quote_email(request, quote_id):
                 "total_price": total_price,
                 "payment_link": payment_link,
                 "note": note,
+                "parking_option_display": parking_option_display,
+                "parking_instructions": parking_instructions,
                 "request_scheme": request.scheme,
                 "domain": get_current_site(request).domain,
             }
@@ -3216,6 +3701,11 @@ def send_office_cleaning_quote_email(request, quote_id):
                 existing_data['quote_email_sent_at'] = email_sent_time.isoformat()
                 existing_data['customer_email'] = customer_email
                 
+                # Save payment link if it was generated
+                if payment_link and payment_link_id:
+                    existing_data['stripe_payment_link'] = payment_link
+                    existing_data['stripe_payment_link_id'] = payment_link_id
+                
                 # Save updated notes
                 office_cleaning_quote.admin_notes = json.dumps(existing_data, indent=2)
                 # Update status to "email_sent" after sending email
@@ -3229,6 +3719,101 @@ def send_office_cleaning_quote_email(request, quote_id):
             messages.error(request, f"❌ Failed to send email: {str(e)}")
     
     return redirect("office_cleaning_quote_detail", quote_id=quote_id)
+
+
+@login_required
+@user_passes_test(admin_check)
+@require_POST
+def generate_office_cleaning_payment_link(request, quote_id):
+    """Generate Stripe payment link for office cleaning quote via AJAX"""
+    import json
+    from django.http import JsonResponse
+    
+    try:
+        office_cleaning_quote = get_object_or_404(OfficeQuote, pk=quote_id)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Quote not found: {str(e)}'}, status=404)
+    
+    try:
+        # Parse request body
+        if not request.body:
+            return JsonResponse({'success': False, 'error': 'No data provided'}, status=400)
+        
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError as e:
+            return JsonResponse({'success': False, 'error': f'Invalid JSON: {str(e)}'}, status=400)
+        
+        total_price = data.get('total_price')
+        
+        if not total_price:
+            return JsonResponse({'success': False, 'error': 'Total price is required'}, status=400)
+        
+        try:
+            total_price = float(total_price)
+        except (ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': 'Invalid total price format'}, status=400)
+        
+        if total_price <= 0:
+            return JsonResponse({'success': False, 'error': 'Total price must be greater than 0'}, status=400)
+        
+        customer_name = office_cleaning_quote.name or 'Customer'
+        customer_email = office_cleaning_quote.email or ''
+        
+        payment_link_result = create_office_cleaning_payment_link(
+            office_cleaning_quote,
+            total_price,
+            customer_name,
+            customer_email
+        )
+        
+        # Check for errors in the result
+        if not payment_link_result:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Payment link creation returned no result. Please check server logs.'
+            }, status=500)
+        
+        if payment_link_result.get('error'):
+            return JsonResponse({
+                'success': False, 
+                'error': payment_link_result.get('error')
+            }, status=500)
+        
+        if payment_link_result.get('payment_link_url'):
+            # Save payment link to admin_notes
+            try:
+                existing_notes = {}
+                if hasattr(office_cleaning_quote, 'admin_notes') and office_cleaning_quote.admin_notes:
+                    try:
+                        existing_notes = json.loads(office_cleaning_quote.admin_notes)
+                        if not isinstance(existing_notes, dict):
+                            existing_notes = {}
+                    except:
+                        existing_notes = {}
+                existing_notes['stripe_payment_link'] = payment_link_result['payment_link_url']
+                existing_notes['stripe_payment_link_id'] = payment_link_result.get('payment_link_id')
+                office_cleaning_quote.admin_notes = json.dumps(existing_notes, indent=2)
+                office_cleaning_quote.save(update_fields=['admin_notes'])
+            except Exception as e:
+                print(f"Warning: Could not save payment link: {e}")
+            
+            return JsonResponse({
+                'success': True,
+                'payment_link_url': payment_link_result['payment_link_url'],
+                'payment_link_id': payment_link_result.get('payment_link_id')
+            })
+        else:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Payment link creation failed. No payment link URL was returned. Please check Stripe configuration and server logs.'
+            }, status=500)
+            
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in generate_office_cleaning_payment_link: {error_trace}")
+        return JsonResponse({'success': False, 'error': f'Server error: {str(e)}'}, status=500)
 
 
 @login_required

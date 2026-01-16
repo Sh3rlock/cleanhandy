@@ -387,6 +387,32 @@
           </script>
         </div>
 
+        <!-- Parking Information -->
+        <div class="form-group">
+          <h5 class="mb-3">Parking Information</h5>
+          
+          <!-- Parking option -->
+          {% if parking_variables %}
+          <div class="form-group">
+            <label for="id_parking_option" class="form-label">Parking</label>
+            <select name="parking_option" id="id_parking_option" class="cmn-input">
+              <option value="">Select Parking Option</option>
+              {% for var in parking_variables %}
+                <option value="{{ var.id }}" data-price="{{ var.price }}" data-duration="{{ var.duration|default:'' }}">
+                  {{ var.variable_name }}{% if var.price %} + ${{ var.price }}{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
+          <!-- Parking instructions -->
+          <div class="form-group">
+            <label for="id_parking" class="form-label">Parking Instructions</label>
+            <textarea name="parking" id="id_parking" class="cmn-input" rows="3" placeholder="Please provide parking instructions for our cleaning team (optional)..."></textarea>
+          </div>
+        </div>
+
         <!-- Schedule -->
         <div class="form-group">
           <h5 class="mb-3">Schedule</h5>
