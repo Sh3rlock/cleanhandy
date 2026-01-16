@@ -156,7 +156,7 @@
                     </div>
                 </div>
                 
-                {% if home_cleaning_quote.get_in or home_cleaning_quote.parking or parking_option_display or form_data.parking_option_id or form_data.parking or home_cleaning_quote.pet or home_cleaning_quote.cleaning_supply %}
+                {% if home_cleaning_quote.get_in or home_cleaning_quote.parking or parking_option_display or form_data.parking_option_id or home_cleaning_quote.pet or home_cleaning_quote.cleaning_supply %}
                 <hr>
                 
                 <div class="row">
@@ -168,8 +168,8 @@
                         {% if parking_option_display %}
                         <p><strong>Parking Option:</strong> {{ parking_option_display }}</p>
                         {% endif %}
-                        {% if home_cleaning_quote.parking or form_data.parking %}
-                        <p><strong>Parking Instructions:</strong> {{ home_cleaning_quote.parking|default:form_data.parking }}</p>
+                        {% if home_cleaning_quote.parking %}
+                        <p><strong>Parking Instructions:</strong> {{ home_cleaning_quote.parking }}</p>
                         {% endif %}
                         {% if pets_display %}
                         <p><strong>Pets:</strong> {{ pets_display }}</p>
