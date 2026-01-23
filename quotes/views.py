@@ -190,12 +190,18 @@ def home_cleaning_quote(request):
     # Get PriceVariables for dropdowns
     home_type_category = PriceVariableCategory.objects.filter(name__iexact="Home Type", is_active=True).first()
     if home_type_category:
-        # Order by variable_name, but put "Studio" first using Case/When
+        # Order home types in specific order: Studio, One Bedroom Home, Two Bedroom Home, etc.
         from django.db.models import Case, When, Value, IntegerField
         home_type_variables = PriceVariable.objects.filter(category=home_type_category, is_active=True).annotate(
             sort_order=Case(
                 When(variable_name__iexact='studio', then=Value(0)),
-                default=Value(1),
+                When(variable_name__iexact='one bedroom home', then=Value(1)),
+                When(variable_name__iexact='two bedroom home', then=Value(2)),
+                When(variable_name__iexact='three bedroom home', then=Value(3)),
+                When(variable_name__iexact='four bedroom home', then=Value(4)),
+                When(variable_name__iexact='five bedroom home', then=Value(5)),
+                When(variable_name__iexact='six bedroom home', then=Value(6)),
+                default=Value(99),  # Put any other types at the end
                 output_field=IntegerField(),
             )
         ).order_by('sort_order', 'variable_name')
@@ -585,6 +591,24 @@ Quote ID: {quote_request.id}
                     })
         
         form = HomeCleaningQuoteRequestForm(initial=initial_data)
+    
+    # Order home_types queryset in the form if it exists (fallback case)
+    if hasattr(form, 'fields') and 'home_types' in form.fields:
+        from .models import HomeType
+        from django.db.models import Case, When, Value, IntegerField
+        form.fields['home_types'].queryset = HomeType.objects.all().annotate(
+            sort_order=Case(
+                When(name__iexact='studio', then=Value(0)),
+                When(name__iexact='one bedroom home', then=Value(1)),
+                When(name__iexact='two bedroom home', then=Value(2)),
+                When(name__iexact='three bedroom home', then=Value(3)),
+                When(name__iexact='four bedroom home', then=Value(4)),
+                When(name__iexact='five bedroom home', then=Value(5)),
+                When(name__iexact='six bedroom home', then=Value(6)),
+                default=Value(99),  # Put any other types at the end
+                output_field=IntegerField(),
+            )
+        ).order_by('sort_order', 'name')
     
     # Get default home service for template - always Home category
     home_service = Service.objects.filter(category__name__iexact='home').first()
@@ -1506,6 +1530,7 @@ Scheduling:
                         pass
                 
                 subject = f"New Office Cleaning Quote Request from {office_quote.name}"
+                job_desc = office_quote.job_description.strip() if office_quote.job_description else "(Not provided)"
                 message = f"""
 New Office Cleaning Quote Request:
 
@@ -1519,7 +1544,7 @@ Business Details:
 - Square Footage: {office_quote.square_footage}
 {date_time_info}
 Job Description:
-{office_quote.job_description}
+{job_desc}
 
 Submitted at: {office_quote.created_at.strftime('%Y-%m-%d %H:%M:%S') if office_quote.created_at else 'N/A'}
 Quote ID: {office_quote.id}

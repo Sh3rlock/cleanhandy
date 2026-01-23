@@ -3,6 +3,7 @@ from .views import (
     admin_dashboard, update_quote_status, update_quote_detail_status, quote_list, quote_detail, booking_list, booking_detail_admin, customer_list, customer_detail, 
     service_list, add_service_category, edit_service_category, delete_service_category,
     add_service, edit_service, delete_service, booking_calendar, get_upcoming_quotes, quote_approval_view, quote_decline_view, block_time_slot,
+    time_slot_management, create_blocked_time_slot, edit_blocked_time_slot, delete_blocked_time_slot,
     price_variable_list, add_price_variable, edit_price_variable, delete_price_variable,
     price_variable_category_list, add_price_variable_category, edit_price_variable_category, delete_price_variable_category, tax_settings,
     get_quote_details, add_quote, get_quotes_for_calendar, book_quote, get_event_details, decline_quote, ajax_filtered_quotes, export_quotes_csv, delete_quote, send_quote_email_view, get_booking_detail,
@@ -80,6 +81,12 @@ urlpatterns = [
     path("quote/<int:quote_id>/decline/<str:token>/", quote_decline_view, name="quote_decline_link"),
 
     path("admin/block-time-slot/", block_time_slot, name="block_time_slot"),
+
+    # Time Slot Management
+    path("time-slot-management/", time_slot_management, name="time_slot_management"),
+    path("time-slot-management/create/", create_blocked_time_slot, name="create_blocked_time_slot"),
+    path("time-slot-management/<int:slot_id>/edit/", edit_blocked_time_slot, name="edit_blocked_time_slot"),
+    path("time-slot-management/<int:slot_id>/delete/", delete_blocked_time_slot, name="delete_blocked_time_slot"),
 
     path("giftcard-discount/", giftcard_discount, name="giftcard_discount"),
 

@@ -305,7 +305,7 @@ class OfficeQuote(models.Model):
     phone_number = models.CharField(max_length=20)
     business_address = models.TextField()
     square_footage = models.CharField(max_length=50, help_text="Estimated square footage")
-    job_description = models.TextField()
+    job_description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=20,
@@ -317,6 +317,14 @@ class OfficeQuote(models.Model):
             ("declined", "Declined"),
         ],
         default="pending",
+    )
+    payment_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("unpaid", "Unpaid"),
+            ("paid", "Paid"),
+        ],
+        default="unpaid",
     )
     admin_notes = models.TextField(blank=True, null=True)
     
@@ -1307,6 +1315,14 @@ class HomeCleaningQuoteRequest(models.Model):
             ("declined", "Declined"),
         ],
         default="pending",
+    )
+    payment_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("unpaid", "Unpaid"),
+            ("paid", "Paid"),
+        ],
+        default="unpaid",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

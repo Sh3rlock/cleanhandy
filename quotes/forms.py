@@ -226,7 +226,7 @@ class OfficeQuoteForm(forms.ModelForm):
     
     job_description = forms.CharField(
         label="Description about the job",
-        required=True,
+        required=False,
         widget=forms.Textarea(attrs={
             "class": "cmn-input",
             "placeholder": "Please describe the cleaning job in detail...",
@@ -244,6 +244,12 @@ class OfficeQuoteForm(forms.ModelForm):
             "square_footage",
             "job_description"
         ]
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make job_description optional
+        if "job_description" in self.fields:
+            self.fields["job_description"].required = False
 
 class NewsletterForm(forms.ModelForm):
     class Meta:

@@ -334,14 +334,14 @@
             <label for="startTimeSelect">Start Time *</label>
             <select name="start_time" id="startTimeSelect" class="cmn-input" required>
               {% for t in time_choices %}
-                <option value="{{ t }}">{{ t }}</option>
+                <option value="{{ t }}" {% if t == "08:00" %}selected{% endif %}>{{ t }}</option>
               {% endfor %}
             </select>
           </div>
 
           <div class="form-group">
             <label for="endTimeSelect">End Time *</label>
-            <select name="end_time" id="endTimeSelect" class="fcmn-input" required>
+            <select name="end_time" id="endTimeSelect" class="cmn-input" required>
               {% for t in time_choices %}
                 <option value="{{ t }}">{{ t }}</option>
               {% endfor %}
@@ -663,18 +663,6 @@ function declineQuote(quoteId) {
     });
 }
 </script>
-<script>
-    eventDidMount: function(info) {
-        if (info.event.extendedProps.time_slots) {
-            tippy(info.el, {
-                content: info.event.extendedProps.time_slots,
-                placement: "top",
-                animation: "scale",
-                theme: "light-border"
-            });
-        }
-    }
-</script>       
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -724,8 +712,15 @@ function declineQuote(quoteId) {
         const startTimeSelect = document.getElementById("startTimeSelect");
         const endTimeSelect = document.getElementById("endTimeSelect");
         const allDayCheckbox = document.getElementById("allDayCheckbox");
+        const dateField = document.getElementById("blockDate");
 
-        // Only validate if not all-day
+        // Validate date is selected
+        if (!dateField.value) {
+            alert("Please select a date.");
+            return;
+        }
+
+        // Only validate time fields if not all-day
         if (!allDayCheckbox.checked) {
             const startTime = startTimeSelect.value;
             const endTime = endTimeSelect.value;
@@ -748,6 +743,12 @@ function declineQuote(quoteId) {
                 alert("⚠️ Time slot must be at least 30 minutes long.");
                 return;
             }
+        }
+
+        // Temporarily remove required attributes if all-day to prevent HTML5 validation
+        if (allDayCheckbox.checked) {
+            startTimeSelect.removeAttribute("required");
+            endTimeSelect.removeAttribute("required");
         }
 
         // Submit the form
@@ -779,9 +780,15 @@ function declineQuote(quoteId) {
             startTimeSelect.disabled = isAllDay;
             endTimeSelect.disabled = isAllDay;
 
+            // Remove or add required attribute based on All Day checkbox
             if (isAllDay) {
+                startTimeSelect.removeAttribute("required");
+                endTimeSelect.removeAttribute("required");
                 startTimeSelect.value = "";
                 endTimeSelect.value = "";
+            } else {
+                startTimeSelect.setAttribute("required", "required");
+                endTimeSelect.setAttribute("required", "required");
             }
         }
 

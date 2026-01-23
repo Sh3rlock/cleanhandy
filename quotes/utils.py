@@ -165,6 +165,21 @@ def get_available_hours_for_date(date, hours_requested=2):
         all_slots.append(current.time())
         current += timedelta(minutes=interval)
 
+    # Check for all-day blocks first - if any exist, return empty list immediately
+    if BlockedTimeSlot is not None:
+        try:
+            all_day_blocks = BlockedTimeSlot.objects.filter(date=date, all_day=True)
+            if all_day_blocks.exists():
+                print(f"❌ All day blocked on {date} - no available hours")
+                return []
+        except Exception as e:
+            print(f"⚠️ Warning: Could not check all-day blocks: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            # Continue if there's an error checking all-day blocks
+    else:
+        print("⚠️ Warning: BlockedTimeSlot model not available")
+    
     # Collect unavailable time ranges
     unavailable_ranges = []
     try:
@@ -193,20 +208,19 @@ def get_available_hours_for_date(date, hours_requested=2):
         traceback.print_exc()
         # Continue without existing bookings if there's an error
     
-    # 3. Exclude admin-blocked slots
+    # 3. Exclude admin-blocked time slots (only time-specific blocks, not all-day)
     if BlockedTimeSlot is not None:
         try:
-            blocked_slots = BlockedTimeSlot.objects.filter(date=date)
+            blocked_slots = BlockedTimeSlot.objects.filter(date=date, all_day=False)
             for block in blocked_slots:
                 if block.start_time and block.end_time:
                     unavailable_ranges.append((block.start_time, block.end_time))
+                    print(f"🚫 Blocked time slot: {block.start_time} - {block.end_time}")
         except Exception as e:
             print(f"⚠️ Warning: Could not load blocked time slots: {str(e)}")
             import traceback
             traceback.print_exc()
             # Continue without blocked slots if there's an error
-    else:
-        print("⚠️ Warning: BlockedTimeSlot model not available")
 
     # Check if each slot fits entirely in available range
     valid_slots = []

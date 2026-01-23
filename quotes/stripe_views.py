@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from decimal import Decimal
-from .models import Booking
+from .models import Booking, HomeCleaningQuoteRequest, OfficeQuote
 from .payment_models import Payment, PaymentSplit
 from django.urls import reverse
 
@@ -357,10 +357,28 @@ def stripe_webhook(request):
     # Handle the event
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
-        # Check if this is a payment link completion
+        # Check if this is a quote payment (home_cleaning or office_cleaning)
         metadata = session.get('metadata', {})
-        if metadata.get('payment_type') in ['final', 'full']:
-            # This is a payment link completion
+        quote_type = metadata.get('quote_type')
+        quote_id = metadata.get('quote_id')
+        
+        # If metadata not in session, try to get it from payment link
+        if not quote_type or not quote_id:
+            payment_link_id = session.get('payment_link')
+            if payment_link_id:
+                try:
+                    payment_link = stripe.PaymentLink.retrieve(payment_link_id)
+                    payment_link_metadata = payment_link.get('metadata', {})
+                    quote_type = quote_type or payment_link_metadata.get('quote_type')
+                    quote_id = quote_id or payment_link_metadata.get('quote_id')
+                except stripe.error.StripeError as e:
+                    print(f"⚠️ Could not retrieve payment link {payment_link_id}: {e}")
+        
+        if quote_type and quote_id:
+            # This is a quote payment
+            handle_quote_payment_success(session, quote_type, quote_id)
+        elif metadata.get('payment_type') in ['final', 'full']:
+            # This is a payment link completion for booking
             handle_payment_link_success(session)
         else:
             # This is a regular checkout session
@@ -538,6 +556,53 @@ def handle_payment_cancellation(payment_intent):
             
     except Exception as e:
         print(f"Error handling payment cancellation: {e}")
+
+
+def handle_quote_payment_success(session, quote_type, quote_id):
+    """Handle successful payment for home cleaning or office cleaning quotes"""
+    try:
+        session_id = session['id']
+        payment_intent_id = session.get('payment_intent')
+        
+        print(f"🔍 Processing quote payment success for session {session_id}")
+        print(f"🔍 Quote Type: {quote_type}, Quote ID: {quote_id}")
+        
+        # Get the payment intent to get the amount
+        try:
+            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+            amount = Decimal(payment_intent['amount']) / 100  # Convert from cents
+        except stripe.error.StripeError as e:
+            print(f"❌ Error retrieving payment intent {payment_intent_id}: {e}")
+            return
+        
+        # Update the appropriate quote model
+        try:
+            if quote_type == 'home_cleaning':
+                quote = HomeCleaningQuoteRequest.objects.get(id=quote_id)
+            elif quote_type == 'office_cleaning':
+                quote = OfficeQuote.objects.get(id=quote_id)
+            else:
+                print(f"❌ Unknown quote type: {quote_type}")
+                return
+            
+            # Update payment status to paid
+            quote.payment_status = 'paid'
+            quote.save(update_fields=['payment_status'])
+            print(f"✅ Quote {quote_type} #{quote_id} payment status updated to: paid")
+            print(f"✅ Payment amount: ${amount}")
+            
+        except (HomeCleaningQuoteRequest.DoesNotExist, OfficeQuote.DoesNotExist) as e:
+            print(f"❌ Quote {quote_type} #{quote_id} not found: {e}")
+            return
+        except Exception as e:
+            print(f"❌ Error updating quote payment status: {e}")
+            import traceback
+            traceback.print_exc()
+            
+    except Exception as e:
+        print(f"❌ Error handling quote payment success: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def handle_payment_link_success(session):

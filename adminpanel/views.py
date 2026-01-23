@@ -675,7 +675,7 @@ def format_time_slot(quote):
     end = (start + duration).time()
     return f"{quote.hour.strftime('%H:%M')} - {end.strftime('%H:%M')}"
 
-def generate_time_choices(start="09:00", end="17:00", step_minutes=30):
+def generate_time_choices(start="08:00", end="17:00", step_minutes=30):
     times = []
     t = datetime.strptime(start, "%H:%M")
     end_time = datetime.strptime(end, "%H:%M")
@@ -1317,6 +1317,117 @@ def block_time_slot(request):
     )
     messages.success(request, "⛔ Time slot blocked.")
     return redirect("booking_calendar")
+
+
+def time_slot_management(request):
+    """Time Slot Management page - list all blocked time slots"""
+    blocked_slots = BlockedTimeSlot.objects.all().order_by('-date', '-created_at')
+    time_choices = generate_time_choices()
+    
+    return render(request, "adminpanel/time_slot_management.html", {
+        "blocked_slots": blocked_slots,
+        "time_choices": time_choices,
+    })
+
+
+@require_POST
+def create_blocked_time_slot(request):
+    """Create a new blocked time slot"""
+    date = request.POST.get("date")
+    start_time = request.POST.get("start_time")
+    end_time = request.POST.get("end_time")
+    reason = request.POST.get("reason", "")
+    all_day = request.POST.get("all_day") == "on"
+
+    if not date:
+        messages.error(request, "Date is required.")
+        return redirect("time_slot_management")
+
+    if all_day:
+        start_time = None
+        end_time = None
+    else:
+        if not start_time or not end_time:
+            messages.error(request, "Start time and end time are required for time-specific blocks.")
+            return redirect("time_slot_management")
+        
+        # Validate time range
+        if start_time >= end_time:
+            messages.error(request, "End time must be after start time.")
+            return redirect("time_slot_management")
+
+    BlockedTimeSlot.objects.create(
+        date=date,
+        start_time=start_time,
+        end_time=end_time,
+        reason=reason,
+        all_day=all_day
+    )
+    messages.success(request, "⛔ Time slot blocked successfully.")
+    return redirect("time_slot_management")
+
+
+def edit_blocked_time_slot(request, slot_id):
+    """Edit an existing blocked time slot"""
+    try:
+        blocked_slot = BlockedTimeSlot.objects.get(id=slot_id)
+    except BlockedTimeSlot.DoesNotExist:
+        messages.error(request, "Blocked time slot not found.")
+        return redirect("time_slot_management")
+    
+    time_choices = generate_time_choices()
+    
+    if request.method == "POST":
+        date = request.POST.get("date")
+        start_time = request.POST.get("start_time")
+        end_time = request.POST.get("end_time")
+        reason = request.POST.get("reason", "")
+        all_day = request.POST.get("all_day") == "on"
+
+        if not date:
+            messages.error(request, "Date is required.")
+            return redirect("time_slot_management")
+
+        if all_day:
+            start_time = None
+            end_time = None
+        else:
+            if not start_time or not end_time:
+                messages.error(request, "Start time and end time are required for time-specific blocks.")
+                return redirect("time_slot_management")
+            
+            # Validate time range
+            if start_time >= end_time:
+                messages.error(request, "End time must be after start time.")
+                return redirect("time_slot_management")
+
+        blocked_slot.date = date
+        blocked_slot.start_time = start_time
+        blocked_slot.end_time = end_time
+        blocked_slot.reason = reason
+        blocked_slot.all_day = all_day
+        blocked_slot.save()
+        
+        messages.success(request, "✅ Blocked time slot updated successfully.")
+        return redirect("time_slot_management")
+    
+    return render(request, "adminpanel/edit_blocked_time_slot.html", {
+        "blocked_slot": blocked_slot,
+        "time_choices": time_choices,
+    })
+
+
+@require_POST
+def delete_blocked_time_slot(request, slot_id):
+    """Delete a blocked time slot"""
+    try:
+        blocked_slot = BlockedTimeSlot.objects.get(id=slot_id)
+        blocked_slot.delete()
+        messages.success(request, "✅ Blocked time slot deleted successfully.")
+    except BlockedTimeSlot.DoesNotExist:
+        messages.error(request, "Blocked time slot not found.")
+    
+    return redirect("time_slot_management")
 
 
 def giftcard_discount(request):

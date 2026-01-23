@@ -1,0 +1,341 @@
+{% extends 'adminpanel/base_admin_with_nav.html' %}
+{% load static %}
+{% block page_title %}Time Slot Management{% endblock %}
+{% block breadcrumb %}Time Slot Management{% endblock %}
+{% block admin_content %}
+
+<style>
+    .text-primary {
+        color: #F15A29 !important;
+    }
+    
+    .btn-outline-orange {
+        color: #F15A29;
+        border: 1px solid #F15A29;
+        background-color: transparent;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-outline-orange:hover {
+        background-color: #F15A29;
+        color: white;
+    }
+    
+    .cmn-input {
+        border-radius: 8px;
+        border: 1px solid #F15A29;
+        background: var(--white-color);
+        width: 100%;
+        margin-bottom: 15px !important;
+        padding: 15px 10px !important;
+    }
+    
+    select.cmn-input {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-color: #fff;
+        color: #333;
+        border: 1px solid #F15A29;
+        border-radius: 8px;
+        font-size: 1rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 1rem;
+        padding-right: 2.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .form-check {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .form-check-input {
+        margin-right: 0.5rem;
+    }
+    
+    .form-check-label {
+        font-weight: 500;
+        color: #333;
+        cursor: pointer;
+    }
+    
+    .btn-1 {
+        background: #F15A29;
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .btn-1:hover {
+        background: #d14a1f;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(241, 90, 41, 0.3);
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+    }
+    
+    .badge {
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+        font-weight: 700;
+        border-radius: 0.25rem;
+    }
+    
+    .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .badge-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .badge-info {
+        background-color: #17a2b8;
+        color: white;
+    }
+</style>
+
+<a href="{% url 'admin_dashboard' %}" class="text-primary mb-2"><i class="fa fa-arrow-left" aria-hidden="true"></i> Back to dashboard</a>
+
+<h2><i class="fa-solid fa-clock me-2 text-primary"></i>Time Slot Management</h2>
+
+<div class="row mt-4">
+    <!-- Create New Block Form -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
+            <div class="card-header" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 3px solid #F15A29;">
+                <h5 class="mb-0 text-primary"><i class="fa-solid fa-plus me-2"></i>Block New Time Slot</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{% url 'create_blocked_time_slot' %}" id="blockSlotForm">
+                    {% csrf_token %}
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="all_day" id="allDayCheckbox">
+                        <label class="form-check-label" for="allDayCheckbox">All Day Block</label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="blockDate">Date *</label>
+                        <input type="date" name="date" id="blockDate" class="cmn-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="startTimeSelect">Start Time *</label>
+                        <select name="start_time" id="startTimeSelect" class="cmn-input" required>
+                            {% for t in time_choices %}
+                                <option value="{{ t }}" {% if t == "08:00" %}selected{% endif %}>{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="endTimeSelect">End Time *</label>
+                        <select name="end_time" id="endTimeSelect" class="cmn-input" required>
+                            {% for t in time_choices %}
+                                <option value="{{ t }}">{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="blockReason">Reason (Optional)</label>
+                        <input type="text" name="reason" id="blockReason" class="cmn-input" placeholder="Optional reason (e.g. Maintenance)">
+                    </div>
+                    
+                    <button type="submit" class="btn-1 w-100">Block Time Slot</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- List of Blocked Time Slots -->
+    <div class="col-md-8">
+        <div class="card border-1 shadow-sm" style="border: 1px solid #F15A29; background-color: #fff;">
+            <div class="card-header" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 3px solid #F15A29;">
+                <h5 class="mb-0 text-primary"><i class="fa-solid fa-list me-2"></i>Blocked Time Slots</h5>
+            </div>
+            <div class="card-body">
+                {% if blocked_slots %}
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time Range</th>
+                                    <th>Reason</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for slot in blocked_slots %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ slot.date|date:"M d, Y" }}</strong>
+                                            {% if slot.all_day %}
+                                                <span class="badge badge-danger ms-2">All Day</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if slot.all_day %}
+                                                <span class="text-muted">All Day</span>
+                                            {% else %}
+                                                {{ slot.start_time|time:"g:i A" }} - {{ slot.end_time|time:"g:i A" }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ slot.reason|default:"—" }}</td>
+                                        <td>{{ slot.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'edit_blocked_time_slot' slot.id %}" class="btn btn-secondary btn-sm me-1">
+                                                <i class="fa-solid fa-edit"></i> Edit
+                                            </a>
+                                            <form method="POST" action="{% url 'delete_blocked_time_slot' slot.id %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this blocked time slot?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="fa-solid fa-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-4">No blocked time slots yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const startTimeSelect = document.getElementById("startTimeSelect");
+        const endTimeSelect = document.getElementById("endTimeSelect");
+        const allDayCheckbox = document.getElementById("allDayCheckbox");
+        const form = document.getElementById("blockSlotForm");
+
+        // Toggle time inputs based on All Day checkbox
+        function toggleTimeInputs() {
+            const isAllDay = allDayCheckbox.checked;
+            startTimeSelect.disabled = isAllDay;
+            endTimeSelect.disabled = isAllDay;
+
+            if (isAllDay) {
+                startTimeSelect.removeAttribute("required");
+                endTimeSelect.removeAttribute("required");
+                startTimeSelect.value = "";
+                endTimeSelect.value = "";
+            } else {
+                startTimeSelect.setAttribute("required", "required");
+                endTimeSelect.setAttribute("required", "required");
+            }
+        }
+
+        // Initial state
+        toggleTimeInputs();
+
+        // React to checkbox change
+        allDayCheckbox.addEventListener("change", toggleTimeInputs);
+
+        // Form validation
+        form.addEventListener("submit", function(e) {
+            const dateField = document.getElementById("blockDate");
+            
+            if (!dateField.value) {
+                e.preventDefault();
+                alert("Please select a date.");
+                return;
+            }
+
+            if (!allDayCheckbox.checked) {
+                const startTime = startTimeSelect.value;
+                const endTime = endTimeSelect.value;
+
+                if (!startTime || !endTime) {
+                    e.preventDefault();
+                    alert("Please select both start and end time.");
+                    return;
+                }
+
+                if (startTime >= endTime) {
+                    e.preventDefault();
+                    alert("❌ End time must be after start time.");
+                    return;
+                }
+
+                const start = parseTime(startTime);
+                const end = parseTime(endTime);
+                const diffMinutes = (end - start) / (1000 * 60);
+
+                if (diffMinutes < 30) {
+                    e.preventDefault();
+                    alert("⚠️ Time slot must be at least 30 minutes long.");
+                    return;
+                }
+            }
+        });
+
+        function parseTime(timeStr) {
+            const [hours, minutes] = timeStr.split(":").map(Number);
+            const now = new Date();
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+        }
+    });
+</script>
+
+{% endblock %}

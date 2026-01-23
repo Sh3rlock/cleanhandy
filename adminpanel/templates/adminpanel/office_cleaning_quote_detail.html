@@ -49,8 +49,8 @@
         color: white;
       }
       
-      .quote-card p strong + span,
-      .quote-card p strong + * {
+      .quote-card p strong + span:not(.status-badge),
+      .quote-card p strong + *:not(.status-badge) {
         border: none !important;
         background: transparent !important;
         padding: 0 !important;
@@ -64,10 +64,38 @@
         display: inline !important;
         color: inherit !important;
       }
+      
+      /* Ensure status badges maintain their styling - override the general rule */
+      .quote-card .status-badge,
+      .quote-card p strong + .status-badge {
+        border: none !important;
+        /* Don't override background-color - let inline styles work */
+        padding: 0.5rem 1rem !important;
+        display: inline-block !important;
+        /* Don't override color - let inline styles work */
+        border-radius: 0.375rem !important;
+        font-size: 0.875rem !important;
+        font-weight: 600 !important;
+      }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0"><i class="fa-solid fa-building me-2 text-primary"></i> Office Cleaning Quote Details</h2>
+    <div>
+        <h2 class="mb-0"><i class="fa-solid fa-building me-2 text-primary"></i> Office Cleaning Quote Details</h2>
+        {% if office_cleaning_quote.payment_status == 'paid' %}
+        <div class="mt-2">
+            <span class="badge" style="background-color: #28a745; color: white; font-size: 1rem; padding: 0.5rem 1rem;">
+                <i class="fa-solid fa-check-circle me-1"></i> PAYMENT RECEIVED
+            </span>
+        </div>
+        {% else %}
+        <div class="mt-2">
+            <span class="badge" style="background-color: #dc3545; color: white; font-size: 1rem; padding: 0.5rem 1rem;">
+                <i class="fa-solid fa-exclamation-circle me-1"></i> PAYMENT PENDING
+            </span>
+        </div>
+        {% endif %}
+    </div>
     <div>
         <a href="{% url 'office_cleaning_quote_list' %}" class="btn btn-outline-orange btn-sm">
             <i class="fa-solid fa-arrow-left me-1"></i> Back to List
@@ -97,17 +125,28 @@
                         <h6 class="text-muted mb-2">Quote Details</h6>
                         <p><strong>Status:</strong> 
                             {% if office_cleaning_quote.status == 'pending' %}
-                                <span class="status-badge" style="background-color: #FFC107;">⏳ Pending</span>
+                                <span class="status-badge" style="background-color: #FFC107; color: #000;">⏳ Pending</span>
                             {% elif office_cleaning_quote.status == 'email_sent' %}
-                                <span class="status-badge" style="background-color: #17a2b8;">📧 Email Sent</span>
+                                <span class="status-badge" style="background-color: #17a2b8; color: white;">📧 Email Sent</span>
                             {% elif office_cleaning_quote.status == 'accepted' %}
-                                <span class="status-badge" style="background-color: #28a745;">✅ Accepted</span>
+                                <span class="status-badge" style="background-color: #28a745; color: white;">✅ Accepted</span>
                             {% elif office_cleaning_quote.status == 'completed' %}
-                                <span class="status-badge" style="background-color: #6c757d;">✓ Completed</span>
+                                <span class="status-badge" style="background-color: #6c757d; color: white;">✓ Completed</span>
                             {% elif office_cleaning_quote.status == 'declined' %}
-                                <span class="status-badge" style="background-color: #dc3545;">❌ Declined</span>
+                                <span class="status-badge" style="background-color: #dc3545; color: white;">❌ Declined</span>
                             {% else %}
-                                <span class="status-badge">{{ office_cleaning_quote.get_status_display|default:"Pending" }}</span>
+                                <span class="status-badge" style="background-color: #FFC107; color: #000;">{{ office_cleaning_quote.get_status_display|default:"Pending" }}</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Payment Status:</strong> 
+                            {% if office_cleaning_quote.payment_status == 'paid' %}
+                                <span class="status-badge" style="background-color: #28a745; color: white; font-weight: bold;">
+                                    <i class="fa-solid fa-check-circle me-1"></i> PAID
+                                </span>
+                            {% else %}
+                                <span class="status-badge" style="background-color: #dc3545; color: white; font-weight: bold;">
+                                    <i class="fa-solid fa-times-circle me-1"></i> UNPAID
+                                </span>
                             {% endif %}
                         </p>
                         <p><strong>Created:</strong> {{ office_cleaning_quote.created_at|date:"M d, Y H:i" }}</p>

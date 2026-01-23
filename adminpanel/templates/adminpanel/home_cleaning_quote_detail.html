@@ -51,7 +51,22 @@
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0"><i class="fa-solid fa-house me-2 text-primary"></i> Home Cleaning Quote Details</h2>
+    <div>
+        <h2 class="mb-0"><i class="fa-solid fa-house me-2 text-primary"></i> Home Cleaning Quote Details</h2>
+        {% if home_cleaning_quote.payment_status == 'paid' %}
+        <div class="mt-2">
+            <span class="badge" style="background-color: #28a745; color: white; font-size: 1rem; padding: 0.5rem 1rem;">
+                <i class="fa-solid fa-check-circle me-1"></i> PAYMENT RECEIVED
+            </span>
+        </div>
+        {% else %}
+        <div class="mt-2">
+            <span class="badge" style="background-color: #dc3545; color: white; font-size: 1rem; padding: 0.5rem 1rem;">
+                <i class="fa-solid fa-exclamation-circle me-1"></i> PAYMENT PENDING
+            </span>
+        </div>
+        {% endif %}
+    </div>
     <div>
         <a href="{% url 'home_cleaning_quote_list' %}" class="btn btn-outline-orange btn-sm">
             <i class="fa-solid fa-arrow-left me-1"></i> Back to List
@@ -92,6 +107,17 @@
                                 <span class="status-badge" style="background-color: #dc3545;">❌ Declined</span>
                             {% else %}
                                 <span class="status-badge">{{ home_cleaning_quote.get_status_display }}</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Payment Status:</strong> 
+                            {% if home_cleaning_quote.payment_status == 'paid' %}
+                                <span class="status-badge" style="background-color: #28a745; color: white; font-weight: bold;">
+                                    <i class="fa-solid fa-check-circle me-1"></i> PAID
+                                </span>
+                            {% else %}
+                                <span class="status-badge" style="background-color: #dc3545; color: white; font-weight: bold;">
+                                    <i class="fa-solid fa-times-circle me-1"></i> UNPAID
+                                </span>
                             {% endif %}
                         </p>
                         <p><strong>Created:</strong> {{ home_cleaning_quote.created_at|date:"M d, Y H:i" }}</p>
