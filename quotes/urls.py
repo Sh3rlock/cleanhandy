@@ -29,6 +29,7 @@ urlpatterns = [
     path("blog-detail-1/", TemplateView.as_view(template_name="blog_detail_1.html"), name="blog_detail_1"),
     path("blog-detail-2/", TemplateView.as_view(template_name="blog_detail_2.html"), name="blog_detail_2"),
     path("blog-detail-3/", TemplateView.as_view(template_name="blog_detail_3.html"), name="blog_detail_3"),
+    path("blog-detail-4/", TemplateView.as_view(template_name="blog_detail_4.html"), name="blog_detail_4"),
 
     path("cleaning/booking/", home_cleaning_quote, name="cleaning_booking"),  # Redirected to home_cleaning_quote
     path("home/cleaning/quote/", home_cleaning_quote, name="home_cleaning_quote"),
