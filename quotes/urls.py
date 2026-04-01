@@ -25,7 +25,7 @@ urlpatterns = [
     path("about", about, name="about"),
     path("contact", contact, name="contact"),
     path("blog", blog, name="blog"),
-    path("blog-detail", blog_detail, name="blog_detail"),
+    path("blog-detail", blog_detail, name="legacy_blog_detail"),
     path("blog-detail-1/", TemplateView.as_view(template_name="blog_detail_1.html"), name="blog_detail_1"),
     path("blog-detail-2/", TemplateView.as_view(template_name="blog_detail_2.html"), name="blog_detail_2"),
     path("blog-detail-3/", TemplateView.as_view(template_name="blog_detail_3.html"), name="blog_detail_3"),
@@ -57,6 +57,7 @@ urlpatterns = [
     path("terms", terms, name="terms"),
     path("privacy", privacy, name="privacy"),
     path("faq", faq, name="faq"),
+    path("commercial-services", commercial_services, name="commercial_services"),
     
     # Stripe payment URLs
     path("api/create-payment-intent/", create_payment_intent, name="create_payment_intent"),

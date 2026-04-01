@@ -3,19 +3,109 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>TheCleanHandy</title>
-
+    {% if seo %}
+    <title>{{ seo.title }}</title>
+    <meta name="description" content="{{ seo.meta_description|default:''|truncatechars:320 }}" />
+    {% if seo.meta_keywords %}<meta name="keywords" content="{{ seo.meta_keywords }}" />{% endif %}
+    <meta name="author" content="TheCleanHandy" />
+    <link rel="canonical" href="{{ seo.canonical_url }}" />
+    <meta name="robots" content="{{ seo.robots }}" />
+    <meta property="og:title" content="{{ seo.og_title }}" />
+    <meta property="og:description" content="{{ seo.og_description|default:''|truncatechars:320 }}" />
+    <meta property="og:url" content="{{ seo.og_url }}" />
+    <meta property="og:type" content="{{ seo.og_type|default:'website' }}" />
+    {% if seo.og_image %}<meta property="og:image" content="{{ seo.og_image }}" />{% endif %}
+    <meta property="og:site_name" content="TheCleanHandy" />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="{{ seo.twitter_card|default:'summary_large_image' }}" />
+    <meta name="twitter:title" content="{{ seo.twitter_title }}" />
+    <meta name="twitter:description" content="{{ seo.twitter_description|default:''|truncatechars:320 }}" />
+    {% if seo.twitter_image %}<meta name="twitter:image" content="{{ seo.twitter_image }}" />{% endif %}
+    {% else %}
+    <!-- Primary Meta Tags (fallback when `seo` context is missing) -->
+    <title>{% block seo_title %}{{ seo_title|default:"TheCleanHandy - Professional Cleaning & Handyman Services" }}{% endblock %}</title>
+    <meta name="title" content="{% block meta_title %}{{ seo_title|default:"TheCleanHandy - Professional Cleaning & Handyman Services" }}{% endblock %}" />
+    <meta name="description" content="{% block seo_description %}{{ seo_description|default:"Professional cleaning and handyman services. Book home cleaning, office cleaning, and handyman services online. Reliable, high-quality service in New York." }}{% endblock %}" />
+    <meta name="keywords" content="{% block seo_keywords %}{{ seo_keywords|default:"cleaning services, handyman services, home cleaning, office cleaning, professional cleaning, TheCleanHandy, New York cleaning services" }}{% endblock %}" />
+    <meta name="author" content="TheCleanHandy" />
+    <meta name="robots" content="{% block robots %}index, follow{% endblock %}" />
+    <link rel="canonical" href="{% block canonical_url %}{{ seo_url|default:"https://thecleanhandy.com" }}{{ request.path }}{% endblock %}" />
+    <meta property="og:type" content="{% block og_type %}{{ seo_og_type|default:"website" }}{% endblock %}" />
+    <meta property="og:url" content="{% block og_url %}{{ seo_url|default:"https://thecleanhandy.com" }}{{ request.path }}{% endblock %}" />
+    <meta property="og:title" content="{% block og_title %}{{ seo_title|default:"TheCleanHandy - Professional Cleaning & Handyman Services" }}{% endblock %}" />
+    <meta property="og:description" content="{% block og_description %}{{ seo_description|default:"Professional cleaning and handyman services. Book home cleaning, office cleaning, and handyman services online. Reliable, high-quality service in New York." }}{% endblock %}" />
+    <meta property="og:image" content="{% block og_image %}{{ seo_image|default:"https://thecleanhandy.com/static/assets/images/logo_1.png" }}{% endblock %}" />
+    <meta property="og:site_name" content="TheCleanHandy" />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="{% block twitter_url %}{{ seo_url|default:"https://thecleanhandy.com" }}{{ request.path }}{% endblock %}" />
+    <meta name="twitter:title" content="{% block twitter_title %}{{ seo_title|default:"TheCleanHandy - Professional Cleaning & Handyman Services" }}{% endblock %}" />
+    <meta name="twitter:description" content="{% block twitter_description %}{{ seo_description|default:"Professional cleaning and handyman services. Book home cleaning, office cleaning, and handyman services online. Reliable, high-quality service in New York." }}{% endblock %}" />
+    <meta name="twitter:image" content="{% block twitter_image %}{{ seo_image|default:"https://thecleanhandy.com/static/assets/images/logo_1.png" }}{% endblock %}" />
+    {% endif %}
+    
+    <!-- Additional Meta Tags -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#F15A29" />
+    
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static '/assets/images/favicon.png' %}" type="image/x-icon" />
+    <link rel="icon" href="{% static '/assets/images/favicon.png' %}" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="{% static '/assets/images/favicon.png' %}" />
+    
     <!-- Stylesheets -->
     <link href="{% static 'assets/css/style.css' %}" rel="stylesheet" />
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-    <link rel="shortcut icon" href="{% static '/assets/images/favicon.png' %}" type="image/x-icon" />
-    <link rel="icon" href="{% static '/assets/images/favicon.png' %}" type="image/x-icon" />
-
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Structured Data (JSON-LD) -->
+    {% block structured_data %}
+    {% if seo and seo.json_ld_script %}
+    <script type="application/ld+json">{{ seo.json_ld_script|safe }}</script>
+    {% else %}
+    <!-- Default Organization and LocalBusiness Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "TheCleanHandy",
+      "url": "https://thecleanhandy.com",
+      "logo": "https://thecleanhandy.com/static/assets/images/logo_1.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+1-347-286-1466",
+        "contactType": "customer service",
+        "email": "support@thecleanhandy.com",
+        "areaServed": "US",
+        "availableLanguage": "English"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "TheCleanHandy",
+      "description": "Professional cleaning and handyman services. We provide reliable, high-quality home cleaning, office cleaning, and handyman services.",
+      "url": "https://thecleanhandy.com",
+      "telephone": "+1-347-286-1466",
+      "email": "support@thecleanhandy.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "31-85 Crescent St",
+        "addressLocality": "Astoria",
+        "addressRegion": "NY",
+        "postalCode": "11106",
+        "addressCountry": "US"
+      },
+      "priceRange": "$$",
+      "image": "https://thecleanhandy.com/static/assets/images/logo_1.png"
+    }
+    </script>
+    {% endif %}
+    {% endblock %}
   </head>
 
   <body>
@@ -279,11 +369,7 @@
                 </div>
                 <div class="header-right-btn-area">
                   {% if user.is_authenticated %}
-                      {% if user.is_superuser %}
-                          <a href="{% url 'admin_dashboard' %}" class="btn-1">Admin</a>
-                      {% else %}
-                          <a href="{% url 'profile' %}" class="btn-1">My Profile</a>
-                      {% endif %}
+                      <a href="{% url 'profile' %}" class="btn-1">My Profile</a>
                   {% else %}
                     <a href="{% url 'login' %}" class="btn-1" >Sign In</a>
                     <a href="{% url 'register' %}" class="btn-1" >Sign Up</a>
@@ -329,11 +415,7 @@
                   </div>
                   <div class="header-right-btn-area">
                     {% if user.is_authenticated %}
-                        {% if user.is_superuser %}
-                            <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-primary">Admin</a>
-                        {% else %}
-                            <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">My Profile</a>
-                        {% endif %}
+                        <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">My Profile</a>
                     {% else %}
                     <!-- Example buttons to trigger the modals -->
                     <a href="{% url 'login' %}" class="btn btn-sm btn-outline-primary" >Sign In</a>
@@ -377,11 +459,7 @@
                   <div class="header-right-column d-flex align-items-center" style="flex-shrink: 0;">
                     <div class="header-right-btn-area d-flex gap-1">
                       {% if user.is_authenticated %}
-                          {% if user.is_superuser %}
-                              <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Admin</a>
-                          {% else %}
-                              <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Profile</a>
-                          {% endif %}
+                          <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Profile</a>
                       {% else %}
                       <a href="{% url 'login' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Sign In</a>
                       <a href="{% url 'register' %}" class="btn btn-sm btn-outline-primary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Sign Up</a>
@@ -415,9 +493,9 @@
                   
                   <div class="d-flex flex-wrap justify-content-center">
                   {% if user.is_authenticated %}
-                    <a class="btn btn-sm btn-outline-primary" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'home_cleaning_quote' %}">Book Home Cleaning</a>
                   {% else %}
-                    <a class="btn btn-sm btn-outline-primary" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'home_cleaning_quote' %}">Book Home Cleaning</a>
                   {% endif %}
 
                   <!-- {% if user.is_authenticated %}
@@ -487,7 +565,7 @@
 
             <div class="mobile-menu-buttons mt-4 text-center">
               {% if user.is_authenticated %}
-                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'home_cleaning_quote' %}">Book Home Cleaning</a>
                 <!-- <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'request_handyman_booking' %}">Book Handyman</a> -->
                 <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
                 {% for service in all_services %}
@@ -495,13 +573,9 @@
                     <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'request_post_event_cleaning_quote' service.id %}">Post Event Cleaning</a>
                   {% endif %}
                 {% endfor %}
-                {% if user.is_superuser %}
-                    <a class="btn btn-sm btn-outline-primary d-block" style="margin-left: 25px; margin-right: 25px;" href="{% url 'admin_dashboard' %}">Admin</a>
-                {% else %}
-                    <a class="btn btn-sm btn-outline-primary d-block" style="margin-left: 25px; margin-right: 25px;" href="{% url 'profile' %}">My Profile</a>
-                {% endif %}
+                <a class="btn btn-sm btn-outline-primary d-block" style="margin-left: 25px; margin-right: 25px;" href="{% url 'profile' %}">My Profile</a>
               {% else %}
-                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+                <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'home_cleaning_quote' %}">Book Home Cleaning</a>
                 <!-- <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'handyman_booking' %}">Book Handyman</a> -->
                 <a class="btn btn-sm btn-outline-primary d-block mb-2" style="margin-left: 25px; margin-right: 25px;" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
                 {% for service in all_services %}
@@ -588,9 +662,9 @@
                         <a href="{% url 'about' %}">About Us</a>
                       </li>
                       <li>
-                        <a href="{% url 'blog' %}">Blog</a>
+                        <a href="blog.html">Blog</a>
                       </li>
-          
+            
                       <li>
                         <a href="{% url 'contact' %}">Contact</a>
                       </li>
@@ -660,7 +734,7 @@
                           <a href="mailto:info@thecleanhandy.com"><i class="fa-light fa-envelope"></i> info@thecleanhandy.com</a>
                           <a href="mailto:support@thecleanhandy.com"><i class="fa-light fa-envelope"></i> support@thecleanhandy.com</a>
                         {% else %}
-                          <a href="#0"><i class="fa-light fa-location-dot"></i>31-85 Crescent Street, Astoria, NY 11106</a>
+                          <a href="#0"><i class="fa-light fa-location-dot"></i>31-85 Crescent St, Astoria, NY 11106</a>
                           <a href="mailto:info@thecleanhandy.com"><i class="fa-light fa-envelope"></i> info@thecleanhandy.com</a>
                           <a href="mailto:support@thecleanhandy.com"><i class="fa-light fa-envelope"></i> support@thecleanhandy.com</a>
                         {% endif %}
@@ -676,7 +750,7 @@
           <div class="container">
             <div class="footer-copyright-content">
               <p>
-                &copy; 2026 | All rights reserved By <a href="#0">TheCleanHandy</a>
+                &copy; 2025 | Alrights reserved By <a href="#0">TheCleanHandy</a>
               </p>
               <div class="footer-terms">
                 <a href="{% url 'privacy' %}">Privacy Policy</a>

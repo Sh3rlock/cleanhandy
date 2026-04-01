@@ -8,8 +8,21 @@ from django.conf import settings
 from accounts.forms import StyledPasswordResetForm, StyledSetPasswordForm
 
 from django.http import HttpResponse
+from django.contrib.sitemaps.views import sitemap
+
+from seo.sitemaps import BlogPostSitemap, ServiceSitemap, StaticViewSitemap
+from seo.views import robots_txt
+
+
 def healthcheck(request):
     return HttpResponse("OK")
+
+
+SITEMAPS = {
+    "static": StaticViewSitemap,
+    "services": ServiceSitemap,
+    "blog": BlogPostSitemap,
+}
 
 urlpatterns = [
     path("", home, name="home"),
@@ -36,6 +49,8 @@ urlpatterns = [
     path("reset/done/", auth_views.PasswordResetCompleteView.as_view(
         template_name="accounts/password_reset_complete.html"), name="password_reset_complete"),
 
+    path("sitemap.xml", sitemap, {"sitemaps": SITEMAPS}, name="sitemap"),
+    path("robots.txt", robots_txt),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

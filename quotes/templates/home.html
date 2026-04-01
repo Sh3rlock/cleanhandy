@@ -1,5 +1,24 @@
 {% extends 'base.html' %}
 {% load static %}
+
+{% block structured_data %}
+{{ block.super }}
+<!-- Home Page Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "TheCleanHandy",
+  "url": "https://thecleanhandy.com",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://thecleanhandy.com/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+{% endblock %}
+
 {% block content %}
   <style>
     .categories-single-image {
@@ -27,7 +46,7 @@
       text-align: center;
     }
 
-    .banner-content-box-inner h2 {
+    .banner-content-box-inner h1 {
       color: #fff;
       font-size: 48px;
       font-weight: 700;
@@ -185,7 +204,7 @@
               
               <div class="banner-form justify-content-center">
                 <div class="banner-search">
-                  <a class="btn-1" href="{% url 'cleaning_booking' %}">Book Home Cleaning</a>
+                  <a class="btn-1" href="{% url 'home_cleaning_quote' %}">Book Home Cleaning</a>
                 </div>
                 <div class="banner-search">
                   <a class="btn-1" href="{% url 'office_cleaning_quote' %}">Book Office Cleaning</a>
@@ -373,7 +392,7 @@
                   </div>
                   <div class="featured-single-info">
                       {% if service.category.name|lower == "cleaning" %}
-                          <a href="{% url 'cleaning_booking' %}" class="btn-1">Book Now</a>
+                          <a href="{% url 'home_cleaning_quote' %}" class="btn-1">Book Now</a>
                       {% elif service.category.name|lower == "office cleaning" %}
                           <a href="{% url 'office_cleaning_quote' %}" class="btn-1">Book Now</a>
                       {% elif service.category.name|lower == "post event cleaning" %}
@@ -409,7 +428,7 @@
                   </div>
                   <div class="featured-single-info">
                       {% if service.category.name|lower == "cleaning" %}
-                          <a href="{% url 'cleaning_booking' %}" class="btn-1">Book Now</a>
+                          <a href="{% url 'home_cleaning_quote' %}" class="btn-1">Book Now</a>
                       {% elif service.category.name|lower == "office cleaning" %}
                           <a href="{% url 'office_cleaning_quote' %}" class="btn-1">Book Now</a>
                       {% elif service.category.name|lower == "post event cleaning" %}
@@ -445,28 +464,11 @@
         <div class="col-lg-4 col-md-6">
           <div class="blog-single">
             <div class="blog-single-title">
-              <a href="{% url 'blog_detail_4' %}">Office Cleaning in 2026: Smart Workspaces and Workplace Hygiene</a>
-            </div>
-             <div class="blog-single-info">
-              <p>Office Cleaning</p>
-              <span>March 5, 2026</span>
-            </div>
-            <div class="blog-single-image">
-              <img src="{% static 'assets/images/blog/blog_office_cleaning_1.png' %}" alt="Office Cleaning 2026" />
-            </div>
-            <div class="blog-single-content">
-              <p>Discover how smart offices, hybrid work, better air quality, and sustainable cleaning practices are reshaping workplace hygiene in 2026.</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 col-md-6">
-          <div class="blog-single">
-            <div class="blog-single-title">
               <a href="{% url 'blog_detail_1' %}">Top Cleaning Trends in NYC for 2025: What Every Homeowner Should Know</a>
             </div>
             <div class="blog-single-info">
               <p>Cleaning</p>
-              <span>January 10, 2025</span>
+              <span>March 10, 2025</span>
             </div>
             <div class="blog-single-image">
               <img src="{% static 'assets/images/blog/blog_cleaning_2.png' %}" alt="Cleaning Trends 2025" />
@@ -476,7 +478,23 @@
             </div>
           </div>
         </div>
-        
+        <div class="col-lg-4 col-md-6">
+          <div class="blog-single">
+            <div class="blog-single-title">
+              <a href="{% url 'blog_detail_2' %}">Handyman Services in NYC: Top Trends to Watch in 2025</a>
+            </div>
+             <div class="blog-single-info">
+              <p>Handyman</p>
+              <span>April 5, 2025</span>
+            </div>
+            <div class="blog-single-image">
+              <img src="{% static 'assets/images/blog/blog_handyman_1.png' %}" alt="Handyman Trends 2025" />
+            </div>
+            <div class="blog-single-content">
+              <p>Explore the latest handyman trends in NYC, from smart home installations to eco-friendly repairs and on-demand emergency services. See what’s new for 2025!</p>
+            </div>
+          </div>
+        </div>
         <div class="col-lg-4 col-md-6">
           <div class="blog-single">
             <div class="blog-single-title">
@@ -484,7 +502,7 @@
             </div>
             <div class="blog-single-info">
               <p>Booking</p>
-              <span>February 15, 2025</span>
+              <span>May 20, 2025</span>
             </div>
             <div class="blog-single-image">
               <img src="{% static 'assets/images/blog/blog_booking_1.png' %}" alt="Booking Systems 2025" />

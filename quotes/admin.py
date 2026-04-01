@@ -41,8 +41,58 @@ admin.site.get_app_list = custom_get_app_list
 # BASIC MODEL REGISTRATIONS
 # ============================================================================
 
-admin.site.register(Service)
 admin.site.register(ServiceCategory)
+
+
+@admin.register(Service)
+class ServiceAdmin(admin.ModelAdmin):
+    list_display = [
+        "name",
+        "slug",
+        "category",
+        "robots_index",
+        "updated_at",
+        "view_count",
+    ]
+    list_filter = ["category", "robots_index", "robots_follow"]
+    search_fields = ["name", "description", "slug"]
+    prepopulated_fields = {"slug": ("name",)}
+    readonly_fields = ("updated_at", "view_count")
+    fieldsets = (
+        (
+            "Service",
+            {
+                "fields": (
+                    "category",
+                    "name",
+                    "slug",
+                    "description",
+                    "base_price",
+                    "service_image",
+                    "service_detail_image",
+                )
+            },
+        ),
+        (
+            "SEO",
+            {
+                "fields": (
+                    "seo_title",
+                    "meta_description",
+                    "meta_keywords",
+                    "og_title",
+                    "og_description",
+                    "og_image",
+                    "canonical_url",
+                    "robots_index",
+                    "robots_follow",
+                    "schema_type",
+                ),
+                "description": "Search and social previews. Leave blank to use sensible defaults.",
+            },
+        ),
+        ("Stats", {"fields": ("view_count", "updated_at")}),
+    )
 admin.site.register(CleaningExtra)
 admin.site.register(HomeType)
 admin.site.register(SquareFeetOption)
@@ -539,15 +589,22 @@ class ContactInfoAdmin(admin.ModelAdmin):
 
 @admin.register(AboutContent)
 class AboutContentAdmin(admin.ModelAdmin):
-    list_display = ['title', 'subtitle', 'get_status_badge', 'created_at', 'updated_at']
-    list_filter = ['is_active', 'created_at']
-    search_fields = ['title', 'subtitle', 'content']
+    list_display = ['title', 'subtitle', 'robots_index', 'get_status_badge', 'created_at', 'updated_at']
+    list_filter = ['is_active', 'robots_index', 'created_at']
+    search_fields = ['title', 'subtitle', 'content', 'seo_title', 'meta_description']
     readonly_fields = ['created_at', 'updated_at']
     
     fieldsets = (
         ('Content Information', {
             'fields': ('title', 'subtitle', 'content'),
             'description': 'About page content details'
+        }),
+        ('SEO', {
+            'fields': (
+                'seo_title', 'meta_description', 'meta_keywords',
+                'og_title', 'og_description', 'og_image',
+                'canonical_url', 'robots_index', 'robots_follow', 'schema_type',
+            ),
         }),
         ('Status', {
             'fields': ('is_active',),

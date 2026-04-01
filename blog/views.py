@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from seo.utils import build_seo_context
 from .models import BlogPost, Tag
 from .forms import CommentForm
 from django.core.paginator import Paginator
@@ -23,7 +24,8 @@ def blog_list(request):
         'posts': posts,
         'page_obj': page_obj,
         'tags': tags,
-        'active_tag': tag_slug
+        'active_tag': tag_slug,
+        **build_seo_context(request, page_key='blog_index'),
     })
 
 
@@ -40,6 +42,7 @@ def blog_detail(request, slug):
         'post': post,
         'comments': comments,
         'form': form,
+        **build_seo_context(request, obj=post, fallback_content=post.content),
     }
 
     return render(request, 'blog/blog_detail.html', context)

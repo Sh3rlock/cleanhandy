@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber, Booking, Review, OfficeQuote, HandymanQuote, PostEventCleaningQuote, HomeCleaningQuoteRequest, PriceVariable, PriceVariableCategory
+from seo.utils import build_seo_context
+from .models import Quote, Service, CleaningExtra, ServiceCategory, NewsletterSubscriber, Booking, Review, OfficeQuote, HandymanQuote, PostEventCleaningQuote, HomeCleaningQuoteRequest, PriceVariable, PriceVariableCategory, AboutContent
 from customers.models import Customer  # Import Customer from the correct app
 from .forms import CleaningQuoteForm, HandymanQuoteForm, NewsletterForm, CleaningBookingForm, HandymanBookingForm, ContactForm, OfficeQuoteForm, OfficeCleaningBookingForm, HandymanQuoteForm, PostEventCleaningQuoteForm, HomeCleaningQuoteRequestForm
 from django.core.mail import send_mail
@@ -75,9 +76,20 @@ def home(request):
 
 def about(request):
     services = Service.objects.all()
-    return render(request, "about.html", {
-        "services": services,
-    })
+    ac = AboutContent.get_active()
+    ctx = {"services": services}
+    if ac:
+        ctx.update(
+            build_seo_context(
+                request,
+                page_key="about",
+                obj=ac,
+                fallback_content=ac.content,
+            )
+        )
+    else:
+        ctx.update(build_seo_context(request, page_key="about"))
+    return render(request, "about.html", ctx)
 
 def contact(request):
     from .forms import ContactForm
@@ -103,7 +115,11 @@ def contact(request):
             form = ContactForm()  # Reset form after success
     else:
         form = ContactForm()
-    return render(request, "contact.html", {"form": form, "success": success})
+    return render(
+        request,
+        "contact.html",
+        {"form": form, "success": success, **build_seo_context(request, page_key="contact")},
+    )
 
 def blog(request):
     return render(request, "blog.html")
@@ -122,14 +138,15 @@ def request_cleaning_quote(request, service_id):
         if home_category else Service.objects.none()
     )
 
-    # Track service view count
+    # Track service view count (full save so SEO slug stays consistent)
     service.view_count += 1
-    service.save(update_fields=["view_count"])
+    service.save()
 
     return render(request, "quotes/request_cleaning_quote.html", {
         "service": service,
         "all_services": all_services,
         "related_services": related_services,
+        **build_seo_context(request, obj=service, fallback_content=service.description),
     })
 
 
@@ -144,7 +161,7 @@ def request_handyman_quote(request, service_id):
 
     # Increment the view count for the service
     service.view_count += 1
-    service.save(update_fields=["view_count"])
+    service.save()
 
     if request.method == "POST":
         form = HandymanQuoteForm(request.POST)
@@ -153,7 +170,12 @@ def request_handyman_quote(request, service_id):
             return redirect("quote_submitted_handyman", quote_id=quote.id)
     else:
         form = HandymanQuoteForm(initial={'service': service.id})
-    return render(request, "quotes/request_handyman_quote.html", {"form": form, "service": service, "related_services": related_services})
+    return render(request, "quotes/request_handyman_quote.html", {
+        "form": form,
+        "service": service,
+        "related_services": related_services,
+        **build_seo_context(request, obj=service, fallback_content=service.description),
+    })
 
 def quote_submitted_handyman(request, quote_id):
     quote = get_object_or_404(Booking, id=quote_id)
@@ -659,15 +681,27 @@ Quote ID: {quote_request.id}
 
 def cleaning_services(request):
     services = Service.objects.filter(category__name="Home")
-    return render(request, "quotes/cleaning_services.html", {"services": services})
+    return render(
+        request,
+        "quotes/cleaning_services.html",
+        {"services": services, **build_seo_context(request, page_key="cleaning_services")},
+    )
 
 def commercial_services(request):
     services = Service.objects.filter(category__name="Commercial")
-    return render(request, "quotes/commercial_services.html", {"services": services})
+    return render(
+        request,
+        "quotes/commercial_services.html",
+        {"services": services, **build_seo_context(request, page_key="commercial_services")},
+    )
 
 def handyman_services(request):
     services = Service.objects.filter(category__name="Handyman")
-    return render(request, "quotes/handyman_services.html", {"services": services})
+    return render(
+        request,
+        "quotes/handyman_services.html",
+        {"services": services, **build_seo_context(request, page_key="handyman_services")},
+    )
 
 def available_hours_api(request):
     try:
@@ -1845,6 +1879,7 @@ def request_post_event_cleaning_quote(request, service_id):
     return render(request, "quotes/request_post_event_cleaning_quote.html", {
         "service": service,
         "related_services": related_services,
+        **build_seo_context(request, obj=service, fallback_content=service.description),
     })
 
 

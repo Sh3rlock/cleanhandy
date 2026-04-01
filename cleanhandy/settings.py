@@ -119,7 +119,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'django.contrib.sitemaps',
     'whitenoise.runserver_nostatic',
+    "seo",
     "quotes",
     "bookings",
     "customers",
@@ -128,6 +131,8 @@ INSTALLED_APPS = [
     "accounts",
     "giftcards",
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -158,6 +163,7 @@ TEMPLATES = [
                 'quotes.context_processors.contact_info',
                 'quotes.context_processors.about_content',
                 'quotes.context_processors.newsletter_form',
+                'seo.context_processors.seo',
             ],
         },
     },
@@ -248,6 +254,26 @@ STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
 
 # Site Configuration
 SITE_URL = os.getenv('SITE_URL', 'https://thecleanhandy.com')
+
+# SEO defaults (override in production via env or admin Site page SEO / per-model fields)
+SEO_SITE_NAME = os.getenv('SEO_SITE_NAME', 'The CleanHandy')
+SEO_TITLE_SUFFIX = os.getenv('SEO_TITLE_SUFFIX', ' | The CleanHandy')
+SEO_DEFAULT_META_DESCRIPTION = os.getenv(
+    'SEO_DEFAULT_META_DESCRIPTION',
+    'Professional cleaning and handyman services in New York. Book home, office, and specialty cleaning with The CleanHandy.',
+)
+# Absolute URL or site-relative path served under STATIC_URL in production
+SEO_DEFAULT_OG_IMAGE = os.getenv('SEO_DEFAULT_OG_IMAGE', '/static/assets/images/logo_1.png')
+SEO_TWITTER_CARD = os.getenv('SEO_TWITTER_CARD', 'summary_large_image')
+SEO_BUSINESS_NAME = os.getenv('SEO_BUSINESS_NAME', 'The CleanHandy')
+SEO_BUSINESS_LOGO_URL = os.getenv('SEO_BUSINESS_LOGO_URL', '')
+SEO_BUSINESS_PHONE = os.getenv('SEO_BUSINESS_PHONE', '')
+SEO_BUSINESS_EMAIL = os.getenv('SEO_BUSINESS_EMAIL', 'support@thecleanhandy.com')
+SEO_BUSINESS_STREET = os.getenv('SEO_BUSINESS_STREET', '')
+SEO_BUSINESS_CITY = os.getenv('SEO_BUSINESS_CITY', 'New York')
+SEO_BUSINESS_REGION = os.getenv('SEO_BUSINESS_REGION', 'NY')
+SEO_BUSINESS_POSTAL = os.getenv('SEO_BUSINESS_POSTAL', '')
+SEO_BUSINESS_COUNTRY = os.getenv('SEO_BUSINESS_COUNTRY', 'US')
 
 # Under Construction Mode
 # Set to True to enable the under construction page for all visitors

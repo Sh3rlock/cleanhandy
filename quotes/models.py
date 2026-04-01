@@ -1,4 +1,6 @@
 from django.db import models
+from django.urls import reverse
+from django.utils.text import slugify
 from customers.models import Customer  # Import the correct Customer model
 from giftcards.models import GiftCard
 from datetime import datetime, timedelta
@@ -6,23 +8,53 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
+from seo.models import SEOFields, SEOSchemaType
+
+
 class ServiceCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
 
-class Service(models.Model):
+
+class Service(SEOFields):
     category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, related_name="services")
     name = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=120, blank=True, null=True, unique=True, db_index=True)
     description = models.TextField(blank=True)
     base_price = models.DecimalField(max_digits=8, decimal_places=2, default=0.0)
     service_image = models.ImageField(upload_to='service_images/', blank=True, null=True)
     service_detail_image = models.ImageField(upload_to='service_detail_images/', blank=True, null=True)
     view_count = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+    schema_type = models.CharField(
+        max_length=32,
+        choices=SEOSchemaType.choices,
+        default=SEOSchemaType.SERVICE,
+    )
 
     def __str__(self):
         return f"{self.name}"
+
+    def save(self, *args, **kwargs):
+        if not self.slug and self.name:
+            base = slugify(self.name)
+            slug = base
+            n = 1
+            while Service.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base}-{n}"
+                n += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        cat = (self.category.name or "").lower()
+        if "handyman" in cat:
+            return reverse("request_handyman_quote", kwargs={"service_id": self.pk})
+        if "post event" in cat:
+            return reverse("request_post_event_cleaning_quote", kwargs={"service_id": self.pk})
+        return reverse("request_cleaning_quote", kwargs={"service_id": self.pk})
 
 class HourlyRate(models.Model):
     """Model to manage hourly rates for different service types"""
@@ -1148,13 +1180,18 @@ class ContactInfo(models.Model):
 
 
 
-class AboutContent(models.Model):
+class AboutContent(SEOFields):
     title = models.CharField(max_length=200)
     subtitle = models.CharField(max_length=200)
     content = models.TextField(help_text="HTML content for the about page")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    schema_type = models.CharField(
+        max_length=32,
+        choices=SEOSchemaType.choices,
+        default=SEOSchemaType.LOCAL_BUSINESS,
+    )
 
     class Meta:
         verbose_name = "About Content"
@@ -1167,6 +1204,9 @@ class AboutContent(models.Model):
     def get_active(cls):
         """Get the active about content"""
         return cls.objects.filter(is_active=True).first()
+
+    def get_absolute_url(self):
+        return reverse("about")
 
 
 class HandymanQuote(models.Model):

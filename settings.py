@@ -20,6 +20,9 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# HTML templates live under this package: cleanhandy/quotes/templates/ (not repo-root quotes/)
+TEMPLATES_DIR = Path(__file__).resolve().parent / "quotes" / "templates"
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -119,8 +122,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'django.contrib.sitemaps',
     'whitenoise.runserver_nostatic',
+    "seo",
     "quotes",
     "bookings",
     "customers",
@@ -129,6 +134,8 @@ INSTALLED_APPS = [
     "accounts",
     "giftcards",
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -147,7 +154,7 @@ ROOT_URLCONF = 'cleanhandy.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'quotes' / 'templates'],
+        'DIRS': [TEMPLATES_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -159,7 +166,7 @@ TEMPLATES = [
                 'quotes.context_processors.contact_info',
                 'quotes.context_processors.about_content',
                 'quotes.context_processors.newsletter_form',
-                'quotes.context_processors.seo_defaults',
+                'seo.context_processors.seo',
             ],
         },
     },
@@ -250,6 +257,25 @@ STRIPE_CURRENCY = 'usd'
 
 # Site Configuration
 SITE_URL = os.getenv('SITE_URL', 'https://thecleanhandy.com')
+
+# SEO defaults (override via env, Django admin Site page SEO, or per-model SEO fields)
+SEO_SITE_NAME = os.getenv('SEO_SITE_NAME', 'The CleanHandy')
+SEO_TITLE_SUFFIX = os.getenv('SEO_TITLE_SUFFIX', ' | The CleanHandy')
+SEO_DEFAULT_META_DESCRIPTION = os.getenv(
+    'SEO_DEFAULT_META_DESCRIPTION',
+    'Professional cleaning and handyman services in New York. Book home, office, and specialty cleaning with The CleanHandy.',
+)
+SEO_DEFAULT_OG_IMAGE = os.getenv('SEO_DEFAULT_OG_IMAGE', '/static/assets/images/logo_1.png')
+SEO_TWITTER_CARD = os.getenv('SEO_TWITTER_CARD', 'summary_large_image')
+SEO_BUSINESS_NAME = os.getenv('SEO_BUSINESS_NAME', 'The CleanHandy')
+SEO_BUSINESS_LOGO_URL = os.getenv('SEO_BUSINESS_LOGO_URL', '')
+SEO_BUSINESS_PHONE = os.getenv('SEO_BUSINESS_PHONE', '')
+SEO_BUSINESS_EMAIL = os.getenv('SEO_BUSINESS_EMAIL', 'support@thecleanhandy.com')
+SEO_BUSINESS_STREET = os.getenv('SEO_BUSINESS_STREET', '')
+SEO_BUSINESS_CITY = os.getenv('SEO_BUSINESS_CITY', 'New York')
+SEO_BUSINESS_REGION = os.getenv('SEO_BUSINESS_REGION', 'NY')
+SEO_BUSINESS_POSTAL = os.getenv('SEO_BUSINESS_POSTAL', '')
+SEO_BUSINESS_COUNTRY = os.getenv('SEO_BUSINESS_COUNTRY', 'US')
 
 # Under Construction Mode
 # Set to True to enable the under construction page for all visitors
