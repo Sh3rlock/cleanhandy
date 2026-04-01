@@ -54,6 +54,14 @@ else
     echo "⚠️  Migrations failed, but continuing..."
 fi
 
+# Idempotent SEO defaults for Site page SEO (skips rows that already exist)
+echo "📋 Seeding site page SEO..."
+if python manage.py seed_site_page_seo; then
+    echo "✅ Site page SEO seed finished."
+else
+    echo "⚠️  SEO seed failed, but continuing..."
+fi
+
 # Create superuser if it doesn't exist
 echo "👤 Checking for superuser..."
 python -c "
