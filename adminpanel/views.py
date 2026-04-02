@@ -3255,6 +3255,50 @@ def create_home_cleaning_payment_link(home_cleaning_quote, total_price, customer
         return {'error': error_msg}
 
 
+def _normalize_estimated_time(value):
+    """
+    Normalize admin-provided `estimated_time` for customer emails.
+
+    If the value is a bare number (e.g. "20") instead of a formatted duration
+    (e.g. "20 minutes" / "2 hours"), the input is sometimes mis-scaled.
+    We normalize it so the customer email always receives a readable duration,
+    and never below the minimum estimated duration of 2 hours.
+    """
+    raw = (value or "").strip()
+    if not raw:
+        return ""
+
+    # If it already contains letters (e.g. "20 minutes", "2-3 hours"), keep it.
+    if any(ch.isalpha() for ch in raw):
+        return raw
+
+    try:
+        minutes = float(raw)
+    except (ValueError, TypeError):
+        return raw
+
+    # In our system the minimum estimated booking duration is 2 hours.
+    # That means if admins accidentally submit a bare number smaller than 120,
+    # it's very likely not "minutes" but a mis-scaled hours value.
+    # Heuristic:
+    # - >= 120: treat as minutes
+    # - < 120: treat as "tenths of hours" (e.g. "20" => 2.0 hours)
+    if minutes < 120:
+        hours = minutes / 10.0  # "20" -> 2.0 hours
+        if hours < 2:
+            hours = 2
+    else:
+        hours = minutes / 60.0
+        if hours < 2:
+            hours = 2
+
+    # Format hours nicely
+    if abs(hours - round(hours)) < 1e-9:
+        h = int(round(hours))
+        return f"{h} hour{'s' if h != 1 else ''}"
+    return f"{hours:.1f} hours"
+
+
 @login_required
 @user_passes_test(admin_check)
 def send_home_cleaning_quote_email(request, quote_id):
@@ -3269,7 +3313,7 @@ def send_home_cleaning_quote_email(request, quote_id):
     if request.method == "POST":
         try:
             # Get form data
-            estimated_time = request.POST.get("estimated_time", "")
+            estimated_time = _normalize_estimated_time(request.POST.get("estimated_time", ""))
             price = request.POST.get("price", "")
             parking_fee = request.POST.get("parking_fee", "")
             discount = request.POST.get("discount", "")
@@ -3617,7 +3661,7 @@ def send_office_cleaning_quote_email(request, quote_id):
     if request.method == "POST":
         try:
             # Get form data
-            estimated_time = request.POST.get("estimated_time", "")
+            estimated_time = _normalize_estimated_time(request.POST.get("estimated_time", ""))
             price = request.POST.get("price", "")
             parking_fee = request.POST.get("parking_fee", "")
             discount = request.POST.get("discount", "")
