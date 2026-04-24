@@ -46,7 +46,7 @@
       text-align: center;
     }
 
-    .banner-content-box-inner h1 {
+    .banner-content-box-inner h2 {
       color: #fff;
       font-size: 48px;
       font-weight: 700;
@@ -54,7 +54,7 @@
       margin-bottom: 20px;
     }
 
-    .banner-content-box-inner p {
+    .banner-content-box-inner .banner-subtitle-legacy {
       color: #fff;
       font-size: 18px;
       margin-bottom: 30px;
@@ -66,6 +66,28 @@
       text-decoration: none;
       margin-bottom: 30px;
       display: inline-block;
+    }
+
+    .banner-content-box-inner h1 .hero-job-highlight {
+      color: var(--primary-color);
+      position: relative;
+      display: inline-block;
+    }
+
+    .banner-content-box-inner h1 .hero-job-highlight img {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+    }
+
+    .banner-section-one .banner-content-box-inner h1 {
+      color: var(--black-color);
+      font-size: clamp(42px, 6vw, 72px);
+      line-height: clamp(50px, 6.8vw, 82px);
+      font-weight: 800;
+      text-align: center;
+      margin: 0 auto 24px;
     }
 
       .banner-form {
@@ -114,9 +136,11 @@
 
     .banner-section .banner-content-box {
       margin-right: 0px !important;
+      justify-content: center;
+      width: 100%;
     }
 
-    .banner-section .banner-content-box h2 {
+    .banner-section .banner-content-box h1 {
         opacity: 1 !important;
     }
       
@@ -196,8 +220,8 @@
         <div class="col-lg-8 col-md-10">
           <div class="banner-content-box text-center">
             <div class="banner-content-box-inner">
-              <h2 style="margin-left: 100px;">Choose Experts to Complete Your <span>Job <img src="{% static '/assets/images/shape/banner-title-shape.png' %}" alt="shape" /></span> Done</h2>
-              <p style="margin-left: 100px;">Check availability, and book services with confidence.</p>
+              <h1>Choose Experts to<br>Complete Your <span class="hero-job-highlight">Job <img src="{% static '/assets/images/shape/banner-title-shape.png' %}" alt="shape" /></span> Done</h1>
+              <p>Check availability, and book services with confidence.</p>
               <div class="banner-location">
                 <h4><i class="fa-sharp fa-solid fa-location-dot"></i> New York </h4>
               </div>

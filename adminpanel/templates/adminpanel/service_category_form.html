@@ -1,7 +1,7 @@
 {% extends "adminpanel/base_admin.html" %}
 
 {% block content %}
-<h2>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Service Category</h2>
+<h1>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Service Category</h1>
 
 <form method="post">
     {% csrf_token %}

@@ -166,13 +166,13 @@
     <div class="booking-header">
       <div class="d-flex justify-content-between align-items-center">
         <div>
-          <h2 class="mb-2">
+          <h1 class="mb-2">
             {% if booking.service_cat.name|lower == 'commercial' %}
               🏢 Office Cleaning Booking
             {% else %}
               🧼 Home Cleaning Booking
             {% endif %}
-          </h2>
+          </h1>
           <p class="mb-0 opacity-90">Booking #{{ booking.id }}</p>
         </div>
         <div class="text-end">
