@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap page-intro section">
+    <p class="eyebrow">{{ service.get_category_display }}</p>
+    <h1>{{ service.name }}</h1>
+    <p class="lede">{{ service.short_description }}</p>
+  </div>
+  <div class="wrap page-layout" style="padding-bottom: 3rem;">
+    <div>
+      <div class="tile-grid">
+        {% if service.who_it_is_for %}
+          <section class="card">
+            <h2>Who this is for</h2>
+            {{ service.who_it_is_for|linebreaks }}
+          </section>
+        {% endif %}
+        {% if service.timeline %}
+          <section class="card">
+            <h2>Timeline</h2>
+            {{ service.timeline|linebreaks }}
+          </section>
+        {% endif %}
+        {% if service.included_items %}
+          <section class="card">
+            <h2>What is included</h2>
+            <ul class="checklist">
+              {% for item in service.included_items %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </section>
+        {% endif %}
+        {% if service.checklist_items %}
+          <section class="card">
+            <h2>Checklist</h2>
+            <ul class="checklist">
+              {% for item in service.checklist_items %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </section>
+        {% endif %}
+        {% if service.addon_items %}
+          <section class="card">
+            <h2>Optional services</h2>
+            <ul class="checklist">
+              {% for item in service.addon_items %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </section>
+        {% endif %}
+        {% if service.pricing_factors %}
+          <section class="card">
+            <h2>What affects the quote</h2>
+            {{ service.pricing_factors|linebreaks }}
+            <p><a href="{% url 'pricing' %}">See the published cleaning time guide</a></p>
+          </section>
+        {% endif %}
+      </div>
+      {% if service.category == "moving" %}
+        <section class="card" style="margin-top: 1rem;">
+          <h2>What the moving crew provides</h2>
+          <ul class="checklist">
+            {% for line in company.moving_capability_lines %}<li>{{ line }}</li>{% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+      {% if faqs %}
+        <h2 style="margin-top: 1.6rem;">Questions about {{ service.name }}</h2>
+        <div class="faq-grid">
+          {% for faq in faqs %}
+            <article class="panel">
+              <h3>{{ faq.question }}</h3>
+              <p>{{ faq.answer }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+    <aside>
+      {% if service.is_bookable %}
+        <div class="side-card">
+          <h2>Request a quote</h2>
+          <p>A staff member writes the price after you describe the job.</p>
+          <a class="button" href="{% url 'quote_start' %}?service={{ service.slug }}">Get a quote</a>
+        </div>
+      {% endif %}
+      {% if locations %}
+        <div class="side-card">
+          <h2>Service areas</h2>
+          <ul>
+            {% for area in locations %}<li><a href="{{ area.get_absolute_url }}">{{ area.name }}</a></li>{% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+      {% if solutions %}
+        <div class="side-card">
+          <h2>Who books this</h2>
+          <ul>
+            {% for solution in solutions %}<li><a href="{{ solution.get_absolute_url }}">{{ solution.name }}</a></li>{% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+      {% if related_services %}
+        <div class="side-card">
+          <h2>Related services</h2>
+          <ul>
+            {% for related in related_services %}<li><a href="{{ related.get_absolute_url }}">{{ related.name }}</a></li>{% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+      {% if articles %}
+        <div class="side-card">
+          <h2>Guides</h2>
+          <ul>
+            {% for article in articles %}<li><a href="{{ article.get_absolute_url }}">{{ article.title }}</a></li>{% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

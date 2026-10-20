@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap page-intro section legal-intro">
+    <p class="eyebrow">Legal</p>
+    <h1>Privacy Policy</h1>
+    <p class="lede">Last updated October 18, 2026. This policy explains what {{ company.legal_name }} collects when you use {{ company.website }} or hire the company for moving, cleaning, and related work in {{ company.service_area }}.</p>
+  </div>
+  <article class="wrap section prose">
+    <p>{{ company.legal_name }} (“we”) uses personal information to quote, schedule, and perform that work, and to keep accounts for customers and property managers. We do not sell personal information.</p>
+
+    <h2>Information we collect</h2>
+    <p>You give us most of this yourself, on a quote, an account, or a payment page.</p>
+    <div class="price-table">
+    <table>
+      <thead>
+        <tr><th>Category</th><th>What it includes</th><th>Why we have it</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Contact details</td>
+          <td>Name, email address, and phone number</td>
+          <td>You enter them on a quote or an account</td>
+        </tr>
+        <tr>
+          <td>Account details</td>
+          <td>Email, password, phone, and whether the account is for you or for properties you manage</td>
+          <td>You create an account, or you ask us to create one with the quote</td>
+        </tr>
+        <tr>
+          <td>Property and job details</td>
+          <td>Street, unit, area, property type, size band, pickup and drop-off, parking notes, preferred date, and notes about access or the work</td>
+          <td>You enter them so we can price and perform the job</td>
+        </tr>
+        <tr>
+          <td>Quote and job records</td>
+          <td>The service, line items, discount, tax, total, status, acceptance or decline, and invoices staff issue</td>
+          <td>Created when you request a quote and when staff price or schedule it</td>
+        </tr>
+        <tr>
+          <td>Payment details</td>
+          <td>Whether a 50% deposit or the full amount was paid, the amount, and the time of payment. Card numbers are handled by Stripe, not stored by us. Stripe also asks for a billing address and phone number on the payment page.</td>
+          <td>You pay from the link on a quote</td>
+        </tr>
+        <tr>
+          <td>Messages</td>
+          <td>Emails and notes you send about a quote or a visit</td>
+          <td>You contact us, or we write to you about the job</td>
+        </tr>
+        <tr>
+          <td>Newsletter</td>
+          <td>The email address you type into the newsletter form</td>
+          <td>You subscribe from the bottom of a page</td>
+        </tr>
+        <tr>
+          <td>Site activity</td>
+          <td>The page path of a phone click, an email click, or a submitted quote, and the account or quote those events belong to when you are signed in</td>
+          <td>Collected on this site so we can see which contact actions led to a request</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <p>Quote drafts are kept in your session until you submit or leave the form. The site also stores the cookies Django uses to keep you signed in and to protect forms from cross-site requests.</p>
+    <p>We do not ask for government ID, precise GPS location, or photos as a required field. If you put extra detail in the notes, we keep it with the quote.</p>
+
+    <h2>How we use it</h2>
+    <ul>
+      <li>To prepare a written quote and to decide whether the address is in the service area.</li>
+      <li>To schedule a crew, send the crew the address and access notes, and perform the moving, cleaning, assembly, mounting, or painting you booked.</li>
+      <li>To take a deposit or full payment, send the quote by email, and keep invoices.</li>
+      <li>To show you your quotes, jobs, and saved properties when you sign in.</li>
+      <li>To answer a question you send to {{ company.public_email }}{% if company.info_email %} or {{ company.info_email }}{% endif %}.</li>
+      <li>To keep tax and accounting records, and to look into a payment or access problem.</li>
+      <li>To send the newsletter when you subscribe, and to remember if you unsubscribe.</li>
+    </ul>
+    <p>Quote and job email is separate from the newsletter. A newsletter message has an unsubscribe link. Unsubscribing stops those notes and does not stop email about a quote or a job. We do not use third-party ads.</p>
+
+    <h2>Who we share it with</h2>
+    <ul>
+      <li><strong>The crew and staff.</strong> People who price, schedule, or perform the job see the name, phone, addresses, and access notes they need. Work is done by {{ company.legal_name }}, not assigned to an outside marketplace pro.</li>
+      <li><strong>Stripe.</strong> Card payments, billing address, and the phone number collected on the payment page are processed by Stripe under <a href="https://stripe.com/privacy">Stripe’s privacy policy</a>. We store the payment result, not the full card number.</li>
+      <li><strong>Email delivery.</strong> Quote, acceptance, payment, and newsletter messages are sent through the email provider configured for the site.</li>
+      <li><strong>Hosting.</strong> The site database is stored with the provider that hosts this application.</li>
+      <li><strong>Authorities.</strong> We share information when the law requires it, or when it is needed to protect the crew, a customer, or the company from fraud or harm.</li>
+    </ul>
+    <p>A building may require a certificate of insurance or the crew’s names for an elevator reservation. We share only what that booking needs. We do not sell personal information, and we do not share it for cross-context advertising.</p>
+
+    <h2>Cookies and similar storage</h2>
+    <p>The site uses a session cookie so a quote draft and a signed-in account persist from page to page, and a security cookie so forms can be submitted. Those cookies are required for the quote flow and for accounts.</p>
+    <p>Phone and email links can record a first-party event: the kind of click, the page path, and, when you are signed in, the account. That request stays on our server. The site does not load third-party advertising cookies or a cross-site analytics pixel. Browser “Do Not Track” settings are not used to change this, because that kind of tracking is not in place.</p>
+
+    <h2>How long we keep it</h2>
+    <ul>
+      <li>Account login details stay while the account is open.</li>
+      <li>Quotes, jobs, invoices, and payment records are kept for up to 7 years so we can meet tax and accounting duties and resolve a dispute about a job.</li>
+      <li>Ordinary support email that is not part of a job record is kept for up to 2 years.</li>
+      <li>A newsletter address stays while you are subscribed. After you unsubscribe we keep it marked as unsubscribed so it is not added again by mistake, until you subscribe once more or ask us to delete it.</li>
+    </ul>
+    <p>You can ask us to delete an account. We will delete or detach contact details that we do not need to keep for a completed job, a payment, or a legal duty. Records of work that was performed and paid for are kept for the periods above.</p>
+
+    <h2>Security</h2>
+    <p>Passwords are stored in hashed form. Payment card numbers are entered on Stripe, not on our servers. Access to quotes and accounts is limited to the account holder and to staff who operate the service. No method of storage or transmission is perfectly secure.</p>
+
+    <h2>Your choices</h2>
+    <p>You can see quotes, jobs, and properties after you sign in. To correct a name, phone number, or address on an open quote, email {{ company.public_email }}. To close an account or ask for a copy of the information tied to your email, use the same address. We may ask you to confirm you control that email before we change or delete anything.</p>
+    <p>Residents of states that give a right to know, correct, or delete personal information, including California, can use that email to make the request. We will not discriminate against you for asking. We do not sell personal information and we do not share it for cross-context behavioral advertising, so there is no sale or share to opt out of.</p>
+
+    <h2>Children</h2>
+    <p>The site and the services are for adults who can authorize access to a property. We do not knowingly collect personal information from children under 13. If you believe a child has given us information, email {{ company.public_email }} and we will delete it.</p>
+
+    <h2>Where information is handled</h2>
+    <p>We are based in {{ company.city }}, {{ company.region }}, and the service is performed in {{ company.service_area }}. Information is processed in the United States. If you send a request from outside the United States, it is still handled here.</p>
+
+    <h2>Changes</h2>
+    <p>We will post updates on this page and change the date at the top. A material change to how we use contact or payment information will also be noted on this page before it applies to new quotes.</p>
+
+    <h2>Contact</h2>
+    <p>{{ company.legal_name }}<br>
+      {{ company.headquarters_line }}<br>
+      <a href="mailto:{{ company.public_email }}">{{ company.public_email }}</a>
+      {% if company.info_email %} · <a href="mailto:{{ company.info_email }}">{{ company.info_email }}</a>{% endif %}<br>
+      <a href="tel:{{ company.phone_tel }}">{{ company.phone }}</a>
+    </p>
+    <p><a href="{% url 'terms' %}">Terms and Conditions</a></p>
+  </article>
+{% endblock %}

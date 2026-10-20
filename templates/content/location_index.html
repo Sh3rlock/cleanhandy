@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section">
+    <h1>Areas we serve</h1>
+    <p class="lede">TheCleanHandy works across New York City, Long Island, and New Jersey. Each area page describes the housing and the services offered there, instead of repeating one sentence with a new neighborhood name.</p>
+    <div class="cards">
+      {% for area in areas %}
+        <article class="card">
+          <h2><a href="{{ area.get_absolute_url }}">{{ area.name }}</a></h2>
+          <p>{{ area.introduction }}</p>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

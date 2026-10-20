@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>You're subscribed</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;color:#333333;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f4f4;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background:#ffffff;border-radius:10px;">
+          <tr>
+            <td style="background:#F15A29;padding:28px;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:24px;">You're on the list</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px;font-size:16px;line-height:1.5;">
+              <p style="margin:0 0 16px;">Thanks for subscribing to {{ company.legal_name }}. We'll send occasional notes about moving and cleaning in {{ company.service_area }}.</p>
+              <p style="margin:0 0 16px;">Quote and job email is separate. Unsubscribing here does not cancel a booking.</p>
+              <p style="margin:0;"><a href="{{ unsubscribe_url }}" style="color:#F15A29;">Unsubscribe</a></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

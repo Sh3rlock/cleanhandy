@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section quote">
+    {% include "booking/quote_steps.html" %}
+    <h1>Job details</h1>
+    <p class="lede">{{ service.name }}. Staff confirm the total before you can accept it.</p>
+    <form class="quote-card" method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="address-pair{% if needs_destination %} two{% endif %}">
+        <section>
+          <h2>{% if needs_destination %}Pickup{% else %}Address{% endif %}</h2>
+          {% if form.saved_property %}
+            <div class="field">
+              {{ form.saved_property.label_tag }}
+              {{ form.saved_property }}
+              {{ form.saved_property.errors }}
+            </div>
+          {% endif %}
+          <div class="field">
+            {{ form.street.label_tag }}
+            {{ form.street }}
+            {{ form.street.errors }}
+          </div>
+          <div class="quote-grid">
+            <div class="field">{{ form.borough.label_tag }} {{ form.borough }} {{ form.borough.errors }}</div>
+            <div class="field">{{ form.kind.label_tag }} {{ form.kind }} {{ form.kind.errors }}</div>
+            <div class="field wide">{{ form.sqft_band.label_tag }} {{ form.sqft_band }} {{ form.sqft_band.errors }}</div>
+          </div>
+        </section>
+        {% if needs_destination %}
+          <section>
+            <h2>Drop-off</h2>
+            <div class="field">
+              {{ form.dest_street.label_tag }}
+              {{ form.dest_street }}
+              {{ form.dest_street.errors }}
+            </div>
+            <div class="quote-grid">
+              <div class="field">{{ form.dest_borough.label_tag }} {{ form.dest_borough }} {{ form.dest_borough.errors }}</div>
+              <div class="field">{{ form.dest_kind.label_tag }} {{ form.dest_kind }} {{ form.dest_kind.errors }}</div>
+              <div class="field wide">{{ form.dest_sqft_band.label_tag }} {{ form.dest_sqft_band }} {{ form.dest_sqft_band.errors }}</div>
+            </div>
+          </section>
+        {% endif %}
+      </div>
+      <section class="day-pick">
+        <div>
+          {{ form.preferred_date.label_tag }}
+          {% if form.preferred_date.help_text %}<p>{{ form.preferred_date.help_text }}</p>{% endif %}
+        </div>
+        {{ form.preferred_date }}
+        {{ form.preferred_date.errors }}
+      </section>
+      {% if form.option_fields %}
+        <h2>Options</h2>
+        {% for field in form.option_fields %}
+          <div class="field choice-grid">
+            {{ field.label_tag }}
+            {{ field }}
+            {{ field.errors }}
+          </div>
+        {% endfor %}
+      {% endif %}
+      <div class="field">
+        {{ form.parking_notes.label_tag }}
+        {{ form.parking_notes }}
+        {{ form.parking_notes.errors }}
+      </div>
+      <button type="submit">Continue</button>
+    </form>
+  </div>
+{% endblock %}

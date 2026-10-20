@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section">
+    {% include "staff/nav.html" with current="calendar" %}
+    <h1>Calendar</h1>
+    <p>Scheduled jobs and quote requests that already have a preferred date. A job stays on its scheduled day once the quote is accepted.</p>
+    <div class="calendar-layout">
+      <div>
+        <div class="calendar-toolbar">
+          <a class="button small secondary" href="{% url 'staff_calendar' %}?month={{ prev_month }}">Previous</a>
+          <h2>{{ month_label }}</h2>
+          <a class="button small secondary" href="{% url 'staff_calendar' %}?month={{ next_month }}">Next</a>
+        </div>
+        <p class="calendar-legend">
+          <span><i class="calendar-swatch job"></i>Scheduled job</span>
+          <span><i class="calendar-swatch quote"></i>Quote, not booked</span>
+          <span><i class="calendar-swatch completed"></i>Completed</span>
+          <span><i class="calendar-swatch cancelled"></i>Cancelled</span>
+        </p>
+        <div class="calendar-grid" role="grid" aria-label="{{ month_label }}">
+          {% for name in weekdays %}
+            <div class="calendar-dow" role="columnheader">{{ name }}</div>
+          {% endfor %}
+          {% for week in grid %}
+            {% for day in week %}
+              <div class="calendar-day{% if not day.in_month %} outside{% endif %}{% if day.today %} today{% endif %}" role="gridcell">
+                <div class="calendar-day-num">{{ day.date|date:"j" }}</div>
+                {% for event in day.events %}
+                  <a class="calendar-event {{ event.kind }} {{ event.status_key }}" href="{{ event.url }}" title="{{ event.title }} · {{ event.service }} · {{ event.area }} · {{ event.status }}">
+                    {{ event.title }}
+                  </a>
+                {% endfor %}
+              </div>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+      <aside class="calendar-side">
+        <h2>Coming up</h2>
+        {% for event in upcoming %}
+          <a class="panel" href="{{ event.url }}">
+            <strong>{{ event.when|date:"M j" }}</strong><br>
+            {{ event.title }} · {{ event.service }}<br>
+            {{ event.area }} · {{ event.status }}
+          </a>
+        {% empty %}
+          <p>No dated jobs ahead.</p>
+        {% endfor %}
+        {% if needs_date %}
+          <h2>No date yet</h2>
+          {% for job in needs_date %}
+            <a class="panel" href="{% url 'staff_quote_detail' job.quote.pk %}">
+              {{ job.quote.contact_name }} · {{ job.quote.service.name }}<br>
+              {{ job.get_status_display }}
+            </a>
+          {% endfor %}
+        {% endif %}
+      </aside>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,40 @@
+Your {{ quote.service.name }} quote #{{ quote.pk }}
+
+Dear {{ quote.contact_name }},
+
+TheCleanHandy reviewed your request. The price below is confirmed. Use the links to accept or decline it.
+
+{{ quote.contact_name }}
+{{ quote.contact_email }}
+{{ quote.contact_phone }}
+{% if quote.preferred_date %}Preferred date: {{ quote.preferred_date }}
+{% endif %}
+{% if dropoff_lines %}Pickup{% else %}Address{% endif %}:
+{% for line in pickup_lines %}{{ line }}
+{% endfor %}
+{% if dropoff_lines %}Drop-off:
+{% for line in dropoff_lines %}{{ line }}
+{% endfor %}
+{% endif %}
+{% if quote.parking_notes %}Parking: {{ quote.parking_notes }}
+{% endif %}
+{% for line in lines %}{{ line.label }}: ${{ line.amount|floatformat:2 }}
+{% endfor %}
+Subtotal: ${{ quote.subtotal|floatformat:2 }}
+{% if quote.discount_amount %}Discount{% if quote.discount_kind == "percent" %} ({{ quote.discount_rate }}%){% endif %}: -${{ quote.discount_amount|floatformat:2 }}
+{% endif %}Tax ({{ quote.tax_rate }}%): ${{ quote.tax_amount|floatformat:2 }}
+Total: ${{ quote.total|floatformat:2 }}
+{% if quote.email_note %}
+Note from our team:
+{{ quote.email_note }}
+{% endif %}
+Accept: {{ accept_url }}
+Decline: {{ decline_url }}
+{% if deposit_payment.stripe_payment_link_url %}Pay 50% deposit (${{ deposit_payment.amount|floatformat:2 }}): {{ deposit_payment.stripe_payment_link_url }}
+{% endif %}{% if full_payment.stripe_payment_link_url %}Pay full amount (${{ full_payment.amount|floatformat:2 }}): {{ full_payment.stripe_payment_link_url }}
+{% endif %}
+Questions? Reply to this email or call {{ phone }}.
+
+TheCleanHandy
+{{ support_email }}
+{{ phone }}

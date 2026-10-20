@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+  <article class="wrap section prose">
+    <h1>{{ article.title }}</h1>
+    <p class="lede">{{ article.introduction }}</p>
+    <p>Related service: <a href="{{ article.service.get_absolute_url }}">{{ article.service.name }}</a></p>
+    {% for kind, value in article.body_blocks %}
+      {% if kind == "p" %}
+        <p>{{ value }}</p>
+      {% else %}
+        <ul class="checklist">
+          {% for item in value %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+      {% endif %}
+    {% endfor %}
+    <p><a class="button" href="{% url 'quote_start' %}?service={{ article.service.slug }}">Get a quote</a></p>
+  </article>
+{% endblock %}

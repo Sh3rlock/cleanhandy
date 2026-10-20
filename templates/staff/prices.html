@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section">
+    {% include "staff/nav.html" with current="prices" %}
+    <h1>Price options</h1>
+    <p>Each group is a question on the quote form. Set the dollar price for every answer. A discount, if you enter one, comes off the whole quote. When more than one chosen answer has a discount, the larger dollar amount is used. Quotes already submitted keep the prices they were given. Tax is set on the <a href="{% url 'staff_tax' %}">tax page</a>.</p>
+
+    {% for group in groups %}
+      <h2 class="price-family">{{ group.label }}</h2>
+      {% for category in group.categories %}
+        <section class="panel price-card">
+          <h3>{{ category.name }}</h3>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save-category">
+            <input type="hidden" name="category_id" value="{{ category.pk }}">
+            <p>
+              <label for="name-{{ category.pk }}">Question on the quote form</label>
+              <input id="name-{{ category.pk }}" type="text" name="name" value="{{ category.name }}">
+            </p>
+            <p class="price-note">
+              {% if category.input_type == "single" %}
+                The customer must choose one of the answers below.
+              {% else %}
+                The customer can add any of these. None of them is required.
+              {% endif %}
+              {% if not category.is_active %}This group is hidden until you turn it back on.{% endif %}
+            </p>
+            <p class="used-by">
+              Shown on
+              {% for service in category.services.all %}
+                <span>{{ service.name }}</span>{% if not forloop.last %}, {% endif %}
+              {% empty %}
+                no quote yet.
+              {% endfor %}
+            </p>
+            <details>
+              <summary>Change which quotes show this question</summary>
+              <p class="price-note">Select every service that should ask this question. On a Mac, hold Command while you click.</p>
+              <select id="services-{{ category.pk }}" name="services" multiple size="8">
+                {% for service in services %}
+                  <option value="{{ service.pk }}" {% if service in category.services.all %}selected{% endif %}>{{ service.name }}</option>
+                {% endfor %}
+                {% for service in category.services.all %}
+                  {% if not service.is_bookable %}
+                    <option value="{{ service.pk }}" selected>{{ service.name }} (not offered on new quotes)</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+            </details>
+            <p class="check">
+              <label>
+                <input type="checkbox" name="is_active" {% if category.is_active %}checked{% endif %}>
+                Show this question on the quote form
+              </label>
+            </p>
+            <div class="price-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Answer the customer sees</th>
+                    <th>Price</th>
+                    <th>Discount off the quote</th>
+                    <th>Show</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for variable in category.variables.all %}
+                    <tr>
+                      <td><input type="text" name="var_{{ variable.pk }}_name" value="{{ variable.name }}"></td>
+                      <td>
+                        <label class="money-field">
+                          <span>$</span>
+                          <input class="money" type="number" name="var_{{ variable.pk }}_price" min="0" step="0.01" value="{{ variable.price }}" aria-label="Price for {{ variable.name }}">
+                        </label>
+                      </td>
+                      <td>
+                        <label class="discount-field">
+                          <select class="kind" name="var_{{ variable.pk }}_discount_kind" aria-label="Discount type for {{ variable.name }}">
+                            <option value="amount" {% if variable.discount_kind == "amount" %}selected{% endif %}>Dollars</option>
+                            <option value="percent" {% if variable.discount_kind == "percent" %}selected{% endif %}>Percent</option>
+                          </select>
+                          <input class="money" type="number" name="var_{{ variable.pk }}_discount" min="0" step="0.01" value="{% if variable.discount_kind == 'amount' %}{{ variable.discount_amount }}{% else %}{{ variable.discount_percent }}{% endif %}" aria-label="Discount for {{ variable.name }}">
+                        </label>
+                      </td>
+                      <td>
+                        <input type="checkbox" name="var_{{ variable.pk }}_active" {% if variable.is_active %}checked{% endif %} aria-label="Show {{ variable.name }}">
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr><td colspan="4">No answers yet. Add one below.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <button type="submit">Save {{ category.name }}</button>
+          </form>
+          <form method="post" class="price-add">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add-variable">
+            <input type="hidden" name="category_id" value="{{ category.pk }}">
+            <h3>Add an answer</h3>
+            <div class="price-add-row">
+              <p>
+                <label for="new-name-{{ category.pk }}">Answer</label>
+                <input id="new-name-{{ category.pk }}" type="text" name="name" placeholder="For example, 1 bedroom">
+              </p>
+              <p>
+                <label for="new-price-{{ category.pk }}">Price ($)</label>
+                <input id="new-price-{{ category.pk }}" class="money" type="number" name="price" min="0" step="0.01" value="0">
+              </p>
+              <p>
+                <label for="new-kind-{{ category.pk }}">Discount</label>
+                <select id="new-kind-{{ category.pk }}" name="discount_kind">
+                  <option value="amount">Dollars off</option>
+                  <option value="percent" selected>Percent off</option>
+                </select>
+              </p>
+              <p>
+                <label for="new-discount-{{ category.pk }}">Discount amount</label>
+                <input id="new-discount-{{ category.pk }}" class="money" type="number" name="discount" min="0" step="0.01" value="0">
+              </p>
+              <p class="price-add-submit"><button type="submit">Add answer</button></p>
+            </div>
+            <p class="price-note">Leave the discount at 0 when this answer should not reduce the quote.</p>
+          </form>
+        </section>
+      {% endfor %}
+    {% empty %}
+      <p>No price questions yet.</p>
+    {% endfor %}
+
+    <details class="panel">
+      <summary>Add a new question</summary>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add-category">
+        <p>
+          <label for="new-category-name">Question</label>
+          <input id="new-category-name" type="text" name="name" placeholder="For example, Number of stairs">
+        </p>
+        <p>
+          <label for="input-type">How the customer answers</label>
+          <select id="input-type" name="input_type">
+            {% for value, label in input_types %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </p>
+        <p>
+          <label for="new-services">Quotes that ask this</label>
+          <select id="new-services" name="services" multiple size="8">
+            {% for service in services %}
+              <option value="{{ service.pk }}">{{ service.name }}</option>
+            {% endfor %}
+          </select>
+        </p>
+        <button type="submit">Add question</button>
+      </form>
+    </details>
+  </div>
+{% endblock %}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Quote #{{ quote.pk }} | TheCleanHandy</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;color:#333333;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f4f4;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background:#ffffff;border-radius:10px;">
+          <tr>
+            <td style="background:#F15A29;padding:28px;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:24px;">Your {{ quote.service.name }} quote</h1>
+              <p style="margin:8px 0 0;color:#ffffff;font-size:16px;">Quote #{{ quote.pk }}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px;">
+              <p style="margin:0 0 16px;font-size:16px;line-height:1.5;">Dear {{ quote.contact_name }},</p>
+              <p style="margin:0 0 24px;font-size:16px;line-height:1.5;">TheCleanHandy reviewed your request. The price below is confirmed. Use the buttons to accept or decline it.</p>
+
+              <h2 style="margin:0 0 8px;color:#F15A29;font-size:18px;">Your details</h2>
+              <p style="margin:0 0 16px;font-size:16px;line-height:1.5;">
+                {{ quote.contact_name }}<br>
+                {{ quote.contact_email }}<br>
+                {{ quote.contact_phone }}
+                {% if quote.preferred_date %}<br>Preferred date: {{ quote.preferred_date }}{% endif %}
+              </p>
+
+              <h2 style="margin:0 0 8px;color:#F15A29;font-size:18px;">{% if dropoff_lines %}Pickup{% else %}Address{% endif %}</h2>
+              <p style="margin:0 0 16px;font-size:16px;line-height:1.5;">
+                {% for line in pickup_lines %}{{ line }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+              </p>
+              {% if dropoff_lines %}
+                <h2 style="margin:0 0 8px;color:#F15A29;font-size:18px;">Drop-off</h2>
+                <p style="margin:0 0 16px;font-size:16px;line-height:1.5;">
+                  {% for line in dropoff_lines %}{{ line }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+                </p>
+              {% endif %}
+              {% if quote.parking_notes %}
+                <p style="margin:0 0 16px;font-size:16px;line-height:1.5;"><strong>Parking:</strong> {{ quote.parking_notes }}</p>
+              {% endif %}
+
+              <h2 style="margin:0 0 8px;color:#F15A29;font-size:18px;">Price</h2>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:16px;">
+                {% for line in lines %}
+                  <tr>
+                    <td style="padding:6px 0;border-bottom:1px solid #eeeeee;">{{ line.label }}</td>
+                    <td align="right" style="padding:6px 0;border-bottom:1px solid #eeeeee;">${{ line.amount|floatformat:2 }}</td>
+                  </tr>
+                {% endfor %}
+                <tr>
+                  <td style="padding:6px 0;">Subtotal</td>
+                  <td align="right" style="padding:6px 0;">${{ quote.subtotal|floatformat:2 }}</td>
+                </tr>
+                {% if quote.discount_amount %}
+                  <tr>
+                    <td style="padding:6px 0;color:#1b7f3a;">Discount{% if quote.discount_kind == "percent" %} ({{ quote.discount_rate }}%){% endif %}</td>
+                    <td align="right" style="padding:6px 0;color:#1b7f3a;">-${{ quote.discount_amount|floatformat:2 }}</td>
+                  </tr>
+                {% endif %}
+                <tr>
+                  <td style="padding:6px 0;">Tax ({{ quote.tax_rate }}%)</td>
+                  <td align="right" style="padding:6px 0;">${{ quote.tax_amount|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0 0;font-size:20px;font-weight:bold;color:#F15A29;">Total</td>
+                  <td align="right" style="padding:10px 0 0;font-size:20px;font-weight:bold;color:#F15A29;">${{ quote.total|floatformat:2 }}</td>
+                </tr>
+              </table>
+
+              {% if quote.email_note %}
+                <p style="margin:0 0 16px;padding:12px;background:#fff3e0;font-size:16px;line-height:1.5;"><strong>Note from our team:</strong><br>{{ quote.email_note }}</p>
+              {% endif %}
+
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:24px auto;">
+                <tr>
+                  <td style="padding:0 8px;">
+                    <a href="{{ accept_url }}" style="display:inline-block;padding:14px 28px;background:#1b7f3a;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Accept offer</a>
+                  </td>
+                  <td style="padding:0 8px;">
+                    <a href="{{ decline_url }}" style="display:inline-block;padding:14px 28px;background:#b42318;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Decline offer</a>
+                  </td>
+                </tr>
+              </table>
+
+              {% if deposit_payment.stripe_payment_link_url or full_payment.stripe_payment_link_url %}
+                <p style="margin:0 0 12px;font-size:16px;line-height:1.5;">Pay a 50% deposit to hold the date, or pay the full amount now.</p>
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto 24px;">
+                  <tr>
+                    {% if deposit_payment.status != "paid" and deposit_payment.stripe_payment_link_url %}
+                      <td style="padding:0 8px;">
+                        <a href="{{ deposit_payment.stripe_payment_link_url }}" style="display:inline-block;padding:14px 28px;background:#F15A29;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Pay 50% deposit (${{ deposit_payment.amount|floatformat:2 }})</a>
+                      </td>
+                    {% endif %}
+                    {% if full_payment.status != "paid" and full_payment.stripe_payment_link_url %}
+                      <td style="padding:0 8px;">
+                        <a href="{{ full_payment.stripe_payment_link_url }}" style="display:inline-block;padding:14px 28px;background:#1d4e89;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Pay full amount (${{ full_payment.amount|floatformat:2 }})</a>
+                      </td>
+                    {% endif %}
+                  </tr>
+                </table>
+              {% endif %}
+
+              <p style="margin:0;font-size:16px;line-height:1.5;">Questions about this quote? Reply to this email or call {{ phone }}.</p>
+              <p style="margin:16px 0 0;font-size:16px;line-height:1.5;">Best regards,<br><strong>TheCleanHandy Team</strong></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px;background:#f8f9fa;text-align:center;color:#666666;font-size:14px;">
+              TheCleanHandy<br>{{ support_email }}<br>{{ phone }}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

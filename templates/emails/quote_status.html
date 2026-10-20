@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Quote #{{ quote.pk }} {{ action }}</title>
+</head>
+<body style="margin:0;padding:24px;font-family:Arial,sans-serif;color:#333333;">
+  <h1 style="color:#F15A29;font-size:20px;">Quote #{{ quote.pk }} was {{ action }}</h1>
+  <p>{{ customer_name }} {{ action }} the {{ quote.service.name }} quote.</p>
+  <p>Total: ${{ quote.total|floatformat:2 }}</p>
+  <p>Email: {{ quote.contact_email }}<br>Phone: {{ quote.contact_phone }}</p>
+</body>
+</html>

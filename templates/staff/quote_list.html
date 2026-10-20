@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section">
+    {% include "staff/nav.html" with current="quotes" %}
+    <h1>Quote requests</h1>
+    <form method="get" class="split">
+      <p>
+        <label for="status">Status</label>
+        <select id="status" name="status">
+          <option value="">All statuses</option>
+          {% for value, label in statuses %}
+            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </p>
+      <p>
+        <label for="service">Service</label>
+        <select id="service" name="service">
+          <option value="">All services</option>
+          {% for service in services %}
+            <option value="{{ service.pk }}" {% if selected_service == service.pk|stringformat:"s" %}selected{% endif %}>{{ service.name }}</option>
+          {% endfor %}
+        </select>
+      </p>
+      <p><button type="submit">Filter</button></p>
+    </form>
+    <table>
+      <thead>
+        <tr>
+          <th>Request</th>
+          <th>Service</th>
+          <th>Contact</th>
+          <th>Status</th>
+          <th>Subtotal</th>
+          <th>Tax</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for quote in quotes %}
+          <tr>
+            <td><a href="{% url 'staff_quote_detail' quote.pk %}">{{ quote.pk }}</a></td>
+            <td>{{ quote.service.name }}</td>
+            <td>{{ quote.contact_name }}<br>{{ quote.contact_email }}<br>{{ quote.contact_phone }}</td>
+            <td>{{ quote.get_status_display }}</td>
+            <td>${{ quote.subtotal|floatformat:2 }}</td>
+            <td>${{ quote.tax_amount|floatformat:2 }}</td>
+            <td>${{ quote.total|floatformat:2 }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7">No quote requests match this filter.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">New York City</p>
+        <h1>Professional Moving &amp; Cleaning Services in <span class="mark">NYC</span></h1>
+        <p class="lede">Reliable move-in and move-out cleaning, moving support, and commercial cleaning for apartments, homes, property managers, and businesses across New York City, Long Island, and New Jersey.</p>
+        <div class="hero-actions">
+          <a class="button" href="{% url 'quote_start' %}">Get a Free Quote</a>
+          <a class="button secondary" href="#services">View Our Services</a>
+        </div>
+      </div>
+      <div class="hero-visual" role="img" aria-label="TheCleanHandy crew at work"></div>
+    </div>
+  </section>
+
+  <section class="wrap section" id="services">
+    <div class="section-head">
+      <p class="eyebrow">What we do</p>
+      <h2>Moving, cleaning, and commercial work</h2>
+    </div>
+    <div class="cards">
+      <article class="card" id="moving">
+        <p class="eyebrow">01</p>
+        <h3>Moving Services</h3>
+        <p>Moving help for apartments, homes, and small relocations, done by TheCleanHandy crews.</p>
+        {% if moving_hub %}<a class="more" href="{{ moving_hub.get_absolute_url }}">Moving services in NYC</a>{% endif %}
+      </article>
+      <article class="card" id="cleaning">
+        <p class="eyebrow">02</p>
+        <h3>Move-In / Move-Out Cleaning</h3>
+        <p>Detailed cleaning before you move in or after you move out, including rental turnovers.</p>
+        {% if cleaning_hub %}<a class="more" href="{{ cleaning_hub.get_absolute_url }}">Move-in and move-out cleaning</a>{% endif %}
+      </article>
+      <article class="card" id="commercial">
+        <p class="eyebrow">03</p>
+        <h3>Commercial Cleaning</h3>
+        <p>Cleaning programs for offices, retail spaces, and properties managed for tenants.</p>
+        {% if commercial_hub %}<a class="more" href="{{ commercial_hub.get_absolute_url }}">Commercial cleaning in NYC</a>{% endif %}
+      </article>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap section grid-2">
+      <div>
+        <p class="eyebrow">Property managers</p>
+        <h2>Cleaning for more than one building</h2>
+        <p>Turnovers, move-out cleaning, and recurring visits, with quotes and invoices kept on one account.</p>
+        <a class="button" href="{% url 'solution_page' 'property-managers' %}">For property managers</a>
+      </div>
+      <div class="card">
+        <h2>Why choose TheCleanHandy?</h2>
+        <ul class="checklist">
+          <li>Moving, move-in/out cleaning, and commercial cleaning are the core services.</li>
+          <li>The same company can quote cleaning and moving together.</li>
+          <li>Each service page states what is included, what affects the quote, and where the crew works.</li>
+          <li>Assembly, mounting, and painting stay available as additional services.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap section" id="areas">
+    <div class="section-head">
+      <p class="eyebrow">Service area</p>
+      <h2>Areas we serve</h2>
+    </div>
+    <div class="cards">
+      {% for area in areas %}
+        <article class="card">
+          <h3><a href="{{ area.get_absolute_url }}">{{ area.name }}</a></h3>
+          <p>{{ area.introduction|truncatewords:18 }}</p>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="wrap section" id="faq">
+    <div class="section-head">
+      <p class="eyebrow">Answers</p>
+      <h2>Frequently asked questions</h2>
+    </div>
+    <div class="faq-grid">
+      {% for faq in faqs %}
+        <details class="panel" open>
+          <summary><h3>{{ faq.question }}</h3></summary>
+          <p>{{ faq.answer }}</p>
+        </details>
+      {% endfor %}
+    </div>
+    <p><a href="{% url 'faq' %}">Read the full FAQ</a></p>
+  </section>
+
+  <section class="band">
+    <div class="wrap section grid-2" id="quote">
+      <div>
+        <h2>Get your free quote</h2>
+        <p>Tell us the service, the area, and the size. A staff member writes the price. Nothing on this page is a binding rate.</p>
+      </div>
+      <div>
+        <a class="button" href="{% url 'quote_start' %}">Get a Free Quote</a>
+      </div>
+    </div>
+  </section>
+{% endblock %}

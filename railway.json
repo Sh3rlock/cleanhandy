@@ -1,8 +1,6 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
-  "build": {
-    "builder": "DOCKERFILE"
-  },
+  "build": { "builder": "DOCKERFILE" },
   "deploy": {
     "healthcheckPath": "/static/health.json",
     "healthcheckTimeout": 600,

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section">
+    {% include "staff/nav.html" with current="newsletter" %}
+    <h1>Newsletter</h1>
+    <p>{{ active_count }} active subscriber{{ active_count|pluralize }}.</p>
+    <form class="account-form newsletter-compose" method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="field wide">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <button type="submit">Send to subscribers</button>
+    </form>
+    <h2>Subscribers</h2>
+    <table>
+      <thead>
+        <tr><th>Email</th><th>Status</th><th>Since</th></tr>
+      </thead>
+      <tbody>
+        {% for subscriber in subscribers %}
+          <tr>
+            <td>{{ subscriber.email }}</td>
+            <td>{% if subscriber.is_active %}Active{% else %}Unsubscribed{% endif %}</td>
+            <td>{{ subscriber.subscribed_at|date:"M j, Y" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">No subscribers yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

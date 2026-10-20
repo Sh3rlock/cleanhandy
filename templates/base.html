@@ -1,0 +1,227 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ seo_title }}</title>
+  <meta name="description" content="{{ meta_description }}">
+  <link rel="canonical" href="{{ canonical_url }}">
+  {% if noindex %}<meta name="robots" content="noindex, follow">{% endif %}
+  <meta property="og:title" content="{{ og_title }}">
+  <meta property="og:description" content="{{ og_description }}">
+  <meta property="og:url" content="{{ og_url }}">
+  <meta property="og:type" content="website">
+  {% if og_image %}<meta property="og:image" content="{{ og_image }}">{% endif %}
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{ og_title }}">
+  <meta name="twitter:description" content="{{ og_description }}">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}?v=19">
+  {{ json_ld }}
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="{% url 'home' %}"><img src="{% static 'brand/logo.png' %}" alt="TheCleanHandy"></a>
+      <input class="nav-toggle" type="checkbox" id="nav-toggle">
+      <nav class="nav" aria-label="Primary">
+        <a class="nav-link{% if request.resolver_match.url_name == 'home' %} on{% endif %}" href="{% url 'home' %}"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>Home</a>
+        <details class="nav-services{% if request.resolver_match.url_name == 'service_page' or request.resolver_match.url_name == 'solution_page' or request.resolver_match.url_name == 'location_index' or request.resolver_match.url_name == 'location_page' %} on{% endif %}">
+          <summary>All Services</summary>
+          <div class="nav-panel">
+            <div>
+              <p>Moving</p>
+              <ul>
+                {% for service in nav_moving %}
+                  <li><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div>
+              <p>Cleaning</p>
+              <ul>
+                {% for service in nav_cleaning %}
+                  <li><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div>
+              <p>Commercial</p>
+              <ul>
+                {% for service in nav_commercial %}
+                  <li><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div class="nav-panel-links">
+              <a href="{% url 'solution_page' 'property-managers' %}">For property managers</a>
+              <a href="{% url 'location_index' %}">Service areas</a>
+            </div>
+          </div>
+        </details>
+        <a class="nav-link{% if request.resolver_match.url_name == 'about' %} on{% endif %}" href="{% url 'about' %}"{% if request.resolver_match.url_name == 'about' %} aria-current="page"{% endif %}>About Us</a>
+        <a class="nav-link{% if request.resolver_match.url_name == 'article_index' or request.resolver_match.url_name == 'article_page' %} on{% endif %}" href="{% url 'article_index' %}"{% if request.resolver_match.url_name == 'article_index' or request.resolver_match.url_name == 'article_page' %} aria-current="page"{% endif %}>Blog</a>
+        <a class="nav-link{% if request.resolver_match.url_name == 'contact' %} on{% endif %}" href="{% url 'contact' %}"{% if request.resolver_match.url_name == 'contact' %} aria-current="page"{% endif %}>Contact</a>
+        <div class="nav-extra">
+          {% if company.phone_tel %}<a href="tel:{{ company.phone_tel }}" data-track="phone_click">{{ company.phone }}</a>{% endif %}
+          {% if company.public_email %}<a href="mailto:{{ company.public_email }}" data-track="email_click">{{ company.public_email }}</a>{% endif %}
+          {% if user.is_authenticated %}
+            {% if user.is_staff %}<a href="{% url 'staff_dashboard' %}">Dashboard</a>{% endif %}
+            <a href="{% url 'account_home' %}">Account</a>
+          {% else %}
+            <a href="{% url 'login' %}">Sign In</a>
+          {% endif %}
+          <a class="nav-quote" href="{% url 'quote_start' %}">Get a Quote</a>
+        </div>
+      </nav>
+      <div class="header-actions">
+        {% if user.is_authenticated %}
+          {% if user.is_staff %}<a href="{% url 'staff_dashboard' %}">Dashboard</a>{% endif %}
+          <a href="{% url 'account_home' %}">Account</a>
+        {% else %}
+          <a href="{% url 'login' %}">Sign In</a>
+        {% endif %}
+        <a class="nav-quote" href="{% url 'quote_start' %}">Get a Quote</a>
+      </div>
+      <div class="header-contact">
+        {% if company.phone_tel %}
+          <a href="tel:{{ company.phone_tel }}" data-track="phone_click">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 3.8h2.4l1.3 3.3-1.8 1.1a12.2 12.2 0 0 0 6.7 6.7l1.1-1.8 3.3 1.3v2.4a1.8 1.8 0 0 1-2 1.8A15.2 15.2 0 0 1 5.4 5.8a1.8 1.8 0 0 1 1.8-2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            <span>{{ company.phone }}</span>
+          </a>
+        {% endif %}
+        {% if company.public_email %}
+          <a href="mailto:{{ company.public_email }}" data-track="email_click">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.2" y="5.2" width="17.6" height="13.6" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4.2 7.2 12 12.4l7.8-5.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            <span>{{ company.public_email }}</span>
+          </a>
+        {% endif %}
+      </div>
+      <label class="nav-toggle-label" for="nav-toggle"><span></span></label>
+    </div>
+  </header>
+  <main id="content">
+    {% if breadcrumbs %}
+      <div class="wrap crumbs">
+        <ol>
+          {% for crumb in breadcrumbs %}
+            <li>
+              {% if not forloop.last and crumb.url %}<a href="{{ crumb.url }}">{{ crumb.name }}</a> /{% else %}{{ crumb.name }}{% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      </div>
+    {% endif %}
+    {% if messages %}
+      <div class="wrap">
+        {% for message in messages %}<p class="panel">{{ message }}</p>{% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <div class="wrap footer-top">
+      <img src="{% static 'brand/logo.png' %}" alt="TheCleanHandy">
+      <div class="footer-contact">
+        {% if company.phone_tel %}<a href="tel:{{ company.phone_tel }}" data-track="phone_click">{{ company.phone }}</a>{% endif %}
+        {% if company.public_email %} · <a href="mailto:{{ company.public_email }}" data-track="email_click">{{ company.public_email }}</a>{% endif %}
+        {% include "partials/social_links.html" %}
+      </div>
+    </div>
+    <div class="wrap footer-grid">
+      <div>
+        <h3>About us</h3>
+        <p>{{ company.about }}</p>
+        <p>{{ company.headquarters_line }}</p>
+      </div>
+      <div>
+        <h3>Moving</h3>
+        <ul>
+          {% for service in nav_moving %}
+            <li><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div>
+        <h3>Cleaning</h3>
+        <ul>
+          {% for service in nav_cleaning %}
+            <li><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></li>
+          {% endfor %}
+          {% for service in nav_commercial %}
+            <li><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div>
+        <h3>Pages</h3>
+        <ul>
+          <li><a href="{% url 'pricing' %}">Pricing</a></li>
+          <li><a href="{% url 'reviews' %}">Reviews</a></li>
+          <li><a href="{% url 'our_work' %}">Our work</a></li>
+          <li><a href="{% url 'faq' %}">FAQ</a></li>
+          <li><a href="{% url 'article_index' %}">Resources</a></li>
+          <li><a href="{% url 'service_page' 'additional-services' %}">Additional services</a></li>
+          <li><a href="{% url 'terms' %}">Terms</a></li>
+          <li><a href="{% url 'privacy' %}">Privacy</a></li>
+          <li><a href="{% url 'login' %}">Account</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="wrap newsletter">
+      <div>
+        <h3>Newsletter</h3>
+        <p>Occasional notes on moving and cleaning in {{ company.service_area }}. Quote email stays separate.</p>
+      </div>
+      <form method="post" action="{% url 'newsletter_subscribe' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <label class="sr-only" for="newsletter-email">Email</label>
+        <input id="newsletter-email" type="email" name="email" required placeholder="Email address" autocomplete="email">
+        <button type="submit">Subscribe</button>
+      </form>
+    </div>
+    <div class="legal">
+      <div class="wrap">© {{ company.legal_name }} · {{ company.service_area }}</div>
+    </div>
+    <form hidden>{% csrf_token %}</form>
+  </footer>
+  <script>
+    var menus = document.querySelectorAll(".nav details");
+    function closeOtherMenus(current) {
+      menus.forEach(function (other) {
+        if (other !== current) other.open = false;
+      });
+    }
+    menus.forEach(function (menu) {
+      menu.querySelector("summary").addEventListener("click", function () {
+        closeOtherMenus(menu);
+      });
+      menu.addEventListener("toggle", function () {
+        if (!menu.open) return;
+        window.setTimeout(function () { closeOtherMenus(menu); }, 0);
+      });
+    });
+    document.addEventListener("click", function (event) {
+      if (event.target.closest(".nav details")) return;
+      menus.forEach(function (menu) { menu.open = false; });
+    });
+    document.addEventListener("click", function (event) {
+      var link = event.target.closest("[data-track]");
+      if (!link) return;
+      var row = document.cookie.split("; ").find(function (item) { return item.indexOf("csrftoken=") === 0; });
+      if (!row) return;
+      fetch("{% url 'track_event' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": decodeURIComponent(row.split("=")[1]),
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({kind: link.dataset.track, path: location.pathname}),
+        keepalive: true
+      });
+    });
+  </script>
+</body>
+</html>

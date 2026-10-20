@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section quote">
+    {% include "booking/quote_steps.html" %}
+    <h1>How should we reach you?</h1>
+    <p class="lede">{{ service.name }}. You can send this as a guest. An account lets you accept the quote after staff confirm the price.</p>
+    <form class="quote-card" method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="quote-grid">
+        <div class="field">{{ form.contact_name.label_tag }} {{ form.contact_name }} {{ form.contact_name.errors }}</div>
+        <div class="field">{{ form.contact_phone.label_tag }} {{ form.contact_phone }} {{ form.contact_phone.errors }}</div>
+        <div class="field wide">{{ form.contact_email.label_tag }} {{ form.contact_email }} {{ form.contact_email.errors }}</div>
+        <div class="field wide">{{ form.notes.label_tag }} {{ form.notes }} {{ form.notes.errors }}</div>
+      </div>
+      {% if form.create_account %}
+        <div class="account-opt">
+          <label class="check">{{ form.create_account }} {{ form.create_account.label }}</label>
+          {{ form.create_account.errors }}
+          <div class="field">{{ form.password.label_tag }} {{ form.password }} {{ form.password.errors }}</div>
+        </div>
+      {% endif %}
+      <button type="submit">Request the quote</button>
+    </form>
+  </div>
+{% endblock %}

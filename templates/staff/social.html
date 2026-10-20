@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section">
+    {% include "staff/nav.html" with current="social" %}
+    <h1>Social links</h1>
+    <p>These icons appear in the footer and on the contact page. Paste the full profile address, then save. Leave a field blank to hide that icon.</p>
+    <form class="account-form" method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="field wide">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<p class="account-muted">{{ field.help_text }}</p>{% endif %}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <button type="submit">Save social links</button>
+    </form>
+  </div>
+{% endblock %}

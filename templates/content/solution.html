@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap page-intro section">
+    <p class="eyebrow">Who we work with</p>
+    <h1>{{ solution.name }}</h1>
+    <p class="lede">{{ solution.introduction }}</p>
+  </div>
+  <div class="wrap page-layout" style="padding-bottom: 3rem;">
+    <div>
+      <div class="card">{{ solution.body|linebreaks }}</div>
+      <h2 style="margin-top: 1.4rem;">Services</h2>
+      <div class="cards">
+        {% for service in services %}
+          <article class="card">
+            <h3><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></h3>
+            <p>{{ service.short_description|truncatewords:18 }}</p>
+          </article>
+        {% endfor %}
+      </div>
+      {% if faqs %}
+        <h2 style="margin-top: 1.4rem;">Questions</h2>
+        <div class="faq-grid">
+          {% for faq in faqs %}
+            <article class="panel">
+              <h3>{{ faq.question }}</h3>
+              <p>{{ faq.answer }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+    <aside>
+      <div class="side-card">
+        <h2>Request a quote</h2>
+        <p>Describe the properties or the schedule. Staff write the price.</p>
+        <a class="button" href="{% url 'quote_start' %}">Get a quote</a>
+      </div>
+    </aside>
+  </div>
+{% endblock %}

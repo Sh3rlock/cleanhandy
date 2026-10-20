@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section prose">
+    {% include "staff/nav.html" with current="tax" %}
+    <h1>Tax</h1>
+    <p>One sales-tax percent for every quote. It is added after the price and any discount. Prices for each answer are on <a href="{% url 'staff_prices' %}">Price options</a>.</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Save tax rate</button>
+    </form>
+  </div>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap account">
+    <header class="account-hero">
+      <div class="account-identity">
+        <span class="account-avatar" aria-hidden="true">{% if user.first_name %}{{ user.first_name|first }}{% else %}{{ user.email|first }}{% endif %}</span>
+        <div>
+          <p class="eyebrow">Account</p>
+          <h1>{% if user.first_name %}{{ user.first_name }}{% else %}Your account{% endif %}</h1>
+          <p class="account-meta">
+            <span>{{ user.email }}</span>
+            {% if user.phone %}<span>{{ user.phone }}</span>{% endif %}
+            <span class="status">{{ user.get_role_display }}</span>
+          </p>
+        </div>
+      </div>
+      <div class="account-actions">
+        <a class="button" href="{% url 'quote_start' %}">Get a quote</a>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="button secondary" type="submit">Log out</button></form>
+      </div>
+    </header>
+
+    <div class="account-stats">
+      <a href="#quotes"><strong>{{ quotes|length }}</strong><span>Quotes</span></a>
+      <a href="#jobs"><strong>{{ jobs|length }}</strong><span>Jobs</span></a>
+      <a href="#properties"><strong>{{ properties|length }}</strong><span>Properties</span></a>
+    </div>
+
+    <div class="account-layout">
+      <div class="account-main">
+        <section id="quotes" class="account-section">
+          <div class="account-section-head">
+            <h2>Quotes</h2>
+            <p>A request stays here until staff confirm the price. Accept a quote when you want the work scheduled.</p>
+          </div>
+          {% for quote in quotes %}
+            <article class="account-card">
+              <div class="account-card-top">
+                <div>
+                  <p class="account-kicker">Quote #{{ quote.pk }} · {{ quote.created_at|date:"M j, Y" }}</p>
+                  <h3><a href="{{ quote.service.get_absolute_url }}">{{ quote.service.name }}</a></h3>
+                </div>
+                <span class="status status-{{ quote.status }}">{{ quote.get_status_display }}</span>
+              </div>
+              <p class="account-address">
+                {% if quote.property.street %}{{ quote.property.street }}{% if quote.property.unit %}, {{ quote.property.unit }}{% endif %} · {% endif %}{{ quote.property.get_borough_display }}
+                {% if quote.destination %}
+                  <br>Drop-off: {% if quote.destination.street %}{{ quote.destination.street }} · {% endif %}{{ quote.destination.get_borough_display }}
+                {% endif %}
+              </p>
+              <dl class="account-facts">
+                {% if quote.preferred_date %}
+                  <div><dt>Preferred date</dt><dd>{{ quote.preferred_date|date:"M j, Y" }}</dd></div>
+                {% endif %}
+                <div>
+                  <dt>Price</dt>
+                  <dd>
+                    {% if quote.estimate or quote.status != "requested" %}
+                      ${{ quote.total|floatformat:2 }}
+                    {% else %}
+                      Waiting for staff to confirm the price
+                    {% endif %}
+                  </dd>
+                </div>
+              </dl>
+              {% if quote.estimate %}
+                {% if quote.estimate.scope %}<p class="account-scope">{{ quote.estimate.scope }}</p>{% endif %}
+              {% endif %}
+              <div class="account-card-actions">
+                {% if quote.paid_payment %}
+                  <span class="status status-paid">{{ quote.paid_payment.get_kind_display }}</span>
+                {% endif %}
+                {% for payment in quote.open_payments %}
+                  <a class="button small" href="{{ payment.stripe_payment_link_url }}">
+                    {% if payment.kind == "deposit" %}Pay 50% deposit{% else %}Pay full amount{% endif %} · ${{ payment.amount|floatformat:2 }}
+                  </a>
+                {% endfor %}
+                {% if quote.status == "quoted" and quote.estimate %}
+                  <form method="post" action="{% url 'accept_quote' quote.pk %}">
+                    {% csrf_token %}
+                    <button type="submit">Accept quote</button>
+                  </form>
+                {% endif %}
+              </div>
+            </article>
+          {% empty %}
+            <div class="account-empty">
+              <h3>No quotes yet</h3>
+              <p>Tell us the service, the address, and the size. Staff reply with a written price.</p>
+              <a class="button" href="{% url 'quote_start' %}">Request a quote</a>
+            </div>
+          {% endfor %}
+        </section>
+
+        <section id="jobs" class="account-section">
+          <div class="account-section-head">
+            <h2>Jobs</h2>
+            <p>Accepted quotes become jobs. The date is the one on the quote until staff confirm it.</p>
+          </div>
+          {% for job in jobs %}
+            <article class="account-card">
+              <div class="account-card-top">
+                <div>
+                  <p class="account-kicker">Job #{{ job.pk }}</p>
+                  <h3>{{ job.quote.service.name }}</h3>
+                </div>
+                <span class="status status-{{ job.status }}">{{ job.get_status_display }}</span>
+              </div>
+              <dl class="account-facts">
+                <div><dt>Date</dt><dd>{{ job.scheduled_date|date:"M j, Y"|default:"To be confirmed" }}</dd></div>
+                <div>
+                  <dt>Address</dt>
+                  <dd>{% if job.quote.property.street %}{{ job.quote.property.street }} · {% endif %}{{ job.quote.property.get_borough_display }}</dd>
+                </div>
+              </dl>
+              <div class="invoice-list">
+                {% for invoice in job.invoices.all %}
+                  <p><span>{{ invoice.number }}</span><span>${{ invoice.amount|floatformat:2 }}</span><span class="status status-{{ invoice.status }}">{{ invoice.get_status_display }}</span></p>
+                {% empty %}
+                  <p class="account-muted">No invoice yet</p>
+                {% endfor %}
+              </div>
+            </article>
+          {% empty %}
+            <div class="account-empty">
+              <h3>No jobs yet</h3>
+              <p>Accepted quotes show up here with the scheduled date and any invoices.</p>
+            </div>
+          {% endfor %}
+        </section>
+      </div>
+
+      <aside id="properties" class="account-side">
+        <section class="account-section">
+          <div class="account-section-head">
+            <h2>Properties</h2>
+            {% if user.is_property_manager %}
+              <p>This login can keep more than one building.</p>
+            {% else %}
+              <p>Saved addresses are ready the next time you request a quote.</p>
+            {% endif %}
+          </div>
+          {% for prop in properties %}
+            <article class="property-card">
+              <h3>{{ prop.label|default:prop.get_kind_display }}</h3>
+              <p>
+                {% if prop.street %}{{ prop.street }}{% if prop.unit %}, {{ prop.unit }}{% endif %}<br>{% endif %}
+                {{ prop.get_borough_display }} · {{ prop.get_sqft_band_display }}
+              </p>
+            </article>
+          {% empty %}
+            <div class="account-empty compact">
+              <p>No saved properties yet.</p>
+            </div>
+          {% endfor %}
+
+          <h3 class="account-form-title">Add a property</h3>
+          <form class="account-form" method="post" action="{% url 'add_property' %}">
+            {% csrf_token %}
+            {% for field in property_form %}
+              <div class="field {% if field.name == 'label' or field.name == 'street' %}wide{% endif %}">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {{ field.errors }}
+              </div>
+            {% endfor %}
+            <button type="submit">Save property</button>
+          </form>
+        </section>
+      </aside>
+    </div>
+  </div>
+{% endblock %}

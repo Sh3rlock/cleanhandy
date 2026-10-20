@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap page-intro section">
+    <p class="eyebrow">The company</p>
+    <h1>About TheCleanHandy</h1>
+    <p class="lede">{{ company.about }}</p>
+  </div>
+  <div class="wrap section" style="padding-top: 0;">
+    <div class="fact-grid">
+      <div class="fact"><span>Service area</span>{{ company.service_area }}</div>
+      <div class="fact"><span>Headquarters</span>{{ company.headquarters_line }}</div>
+      <div class="fact"><span>Phone</span>{{ company.phone }}</div>
+      <div class="fact"><span>Email</span>{{ company.public_email }}</div>
+      {% if company.info_email %}<div class="fact"><span>Info</span>{{ company.info_email }}</div>{% endif %}
+      <div class="fact"><span>Hours</span>{{ company.hours|default:"By appointment" }}</div>
+      {% if company.founded_year %}<div class="fact"><span>Founded</span>{{ company.founded_year }}</div>{% endif %}
+      <div class="fact"><span>Booking</span>Request a quote. A staff member writes the price.</div>
+    </div>
+    <h2 style="margin-top: 2rem;">Bookable services</h2>
+    <div class="cards">
+      {% for service in services %}
+        <article class="card">
+          <p class="eyebrow">{{ service.get_category_display }}</p>
+          <h3><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></h3>
+          <p>{{ service.short_description|truncatewords:20 }}</p>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

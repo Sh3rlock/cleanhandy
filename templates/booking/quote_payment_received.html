@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section">
+    <h1>Payment received</h1>
+    <p>Thank you. TheCleanHandy received your payment for {{ quote.service.name }}, quote #{{ quote.pk }}.</p>
+    <p><a class="button" href="{% url 'home' %}">Back to TheCleanHandy</a></p>
+  </div>
+{% endblock %}

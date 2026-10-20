@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section">
+    {% include "staff/nav.html" with current="quotes" %}
+    <h1>Quote {{ quote.pk }}</h1>
+    <p>{{ quote.service.name }} · {{ quote.get_status_display }} · {{ quote.created_at }}</p>
+    <div class="split">
+      <div class="panel">
+        <h2>Contact</h2>
+        <p>{{ quote.contact_name }}<br>{{ quote.contact_email }}<br>{{ quote.contact_phone }}</p>
+        <p>Preferred date: {{ quote.preferred_date|default:"Not given" }}</p>
+        {% if quote.parking_notes %}<p>Parking instructions: {{ quote.parking_notes }}</p>{% endif %}
+        {% if quote.notes %}<p>{{ quote.notes }}</p>{% endif %}
+      </div>
+      <div class="panel">
+        <h2>{% if quote.destination %}Pickup{% else %}Address{% endif %}</h2>
+        <p>
+          {{ quote.property.get_kind_display }}, {{ quote.property.get_borough_display }}<br>
+          {{ quote.property.street }}{% if quote.property.unit %}, {{ quote.property.unit }}{% endif %}<br>
+          {{ quote.property.get_sqft_band_display }}
+        </p>
+        {% if quote.destination %}
+          <h2>Drop-off</h2>
+          <p>
+            {{ quote.destination.get_kind_display }}, {{ quote.destination.get_borough_display }}<br>
+            {{ quote.destination.street }}{% if quote.destination.unit %}, {{ quote.destination.unit }}{% endif %}<br>
+            {{ quote.destination.get_sqft_band_display }}
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if locked %}
+      <p>This quote has been accepted, so the price is locked.</p>
+    {% endif %}
+    {% if price_differs %}
+      <p class="panel">The customer still sees ${{ estimate.price|floatformat:2 }} until you confirm again.</p>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <table>
+        <thead>
+          <tr><th>Option</th><th>Discount on this option</th><th>Amount</th></tr>
+        </thead>
+        <tbody>
+          {% for line in lines %}
+            <tr>
+              <td>{{ line.label }}</td>
+              <td>
+                {% if line.discount_kind == "amount" and line.discount_amount %}${{ line.discount_amount|floatformat:2 }}
+                {% elif line.discount_percent %}{{ line.discount_percent }}%
+                {% else %}—{% endif %}
+              </td>
+              <td>
+                {% if locked %}
+                  ${{ line.amount|floatformat:2 }}
+                {% else %}
+                  <input class="money" type="number" name="amount_{{ line.pk }}" min="0" step="0.01" value="{{ line.amount }}">
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3">No priced options were selected. Add a charge below if this job still needs a price.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p>Subtotal ${{ quote.subtotal|floatformat:2 }}</p>
+      {% if locked %}
+        <p>
+          Discount
+          {% if quote.discount_kind == "percent" %}{{ quote.discount_rate }}% (${{ quote.discount_amount|floatformat:2 }}){% else %}${{ quote.discount_amount|floatformat:2 }}{% endif %}
+        </p>
+      {% else %}
+        <p>{{ form.discount_kind.label_tag }} {{ form.discount_kind }}</p>
+        <p>{{ form.discount_value.label_tag }} {{ form.discount_value }} {{ form.discount_value.errors }}</p>
+        {% if quote.discount_kind == "percent" %}
+          <p>{{ quote.discount_rate }}% is ${{ quote.discount_amount|floatformat:2 }} off the subtotal.</p>
+        {% endif %}
+        <p>{{ form.extra_label.label_tag }} {{ form.extra_label }} {{ form.extra_label.errors }}</p>
+        <p>{{ form.extra_amount.label_tag }} {{ form.extra_amount }} {{ form.extra_amount.errors }}</p>
+      {% endif %}
+      <p>Tax {{ quote.tax_rate }}% · ${{ quote.tax_amount|floatformat:2 }}</p>
+      <p><strong>Total ${{ quote.total|floatformat:2 }}</strong></p>
+      <p>Tax is recalculated from the <a href="{% url 'staff_tax' %}">tax rate</a> when you save.</p>
+      {% if not locked %}
+        <button type="submit" name="action" value="save">Save price</button>
+        <button type="submit" name="action" value="confirm">Confirm quote</button>
+      {% endif %}
+    </form>
+
+    <div class="panel">
+      <h2>Email and PDF</h2>
+      {% if estimate and not price_differs %}
+        <form method="post" action="{% url 'staff_send_quote_email' quote.pk %}">
+          {% csrf_token %}
+          <p>
+            <label for="email_note">Note for the customer</label>
+            <textarea id="email_note" name="email_note" rows="4">{{ quote.email_note }}</textarea>
+          </p>
+          <p>The email goes to {{ quote.contact_email }} with buttons to accept or decline, and links to pay a 50% deposit or the full amount.</p>
+          {% if quote.quote_email_sent_at %}
+            <p>Last sent {{ quote.quote_email_sent_at }}.</p>
+          {% endif %}
+          <button type="submit">Send quote email</button>
+        </form>
+        {% if quote.payments.all %}
+          <h3>Payment links</h3>
+          {% for payment in quote.payments.all %}
+            <p>
+              {{ payment.get_kind_display }} ${{ payment.amount|floatformat:2 }} — {{ payment.get_status_display }}
+              {% if payment.status != "paid" and payment.stripe_payment_link_url %}
+                · <a href="{{ payment.stripe_payment_link_url }}">Open link</a>
+              {% endif %}
+            </p>
+          {% endfor %}
+        {% endif %}
+      {% elif price_differs %}
+        <p>Confirm the updated total before sending the email. The customer still sees the earlier price.</p>
+      {% else %}
+        <p>Confirm the quote before sending it. The email shows the price and lets the customer accept it.</p>
+      {% endif %}
+      <p><a class="button secondary" href="{% url 'staff_quote_pdf' quote.pk %}">Download PDF</a></p>
+    </div>
+  </div>
+{% endblock %}

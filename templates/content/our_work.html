@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+  <article class="wrap section prose">
+    <h1>Our work</h1>
+    <p>Case notes describe a situation, the service, the borough, and the result. They are published only when the job happened.</p>
+    {% for study in studies %}
+      <section class="panel">
+        <h2>{{ study.title }}</h2>
+        <p><strong>Situation.</strong> {{ study.situation }}</p>
+        <p><strong>Service.</strong> <a href="{{ study.service.get_absolute_url }}">{{ study.service.name }}</a> · {{ study.borough }}</p>
+        <p><strong>Result.</strong> {{ study.result }}</p>
+      </section>
+    {% empty %}
+      <p>No case studies are published yet.</p>
+    {% endfor %}
+  </article>
+{% endblock %}

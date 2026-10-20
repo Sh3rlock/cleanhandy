@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+  <article class="wrap section prose">
+    <h1>Reviews</h1>
+    <p>Stories on this page come from real jobs. TheCleanHandy does not publish a star average it controls, and this page does not use review rich-result markup.</p>
+    {% for review in reviews %}
+      <section class="panel">
+        <h2>{{ review.customer_label }}</h2>
+        <p><strong>Situation.</strong> {{ review.situation }}</p>
+        <p><strong>Service.</strong> <a href="{{ review.service.get_absolute_url }}">{{ review.service.name }}</a> · {{ review.borough }}</p>
+        <p><strong>Result.</strong> {{ review.result }}</p>
+      </section>
+    {% empty %}
+      <p>No customer stories are published yet. Completed jobs can be added in the admin when the customer and the result are real.</p>
+    {% endfor %}
+  </article>
+{% endblock %}

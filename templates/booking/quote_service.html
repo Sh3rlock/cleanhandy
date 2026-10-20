@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section quote">
+    {% include "booking/quote_steps.html" %}
+    <h1>Get a free quote</h1>
+    <p class="lede">Choose the service. The next step asks for the address and a few details about the job.</p>
+    <form class="quote-card" method="post">
+      {% csrf_token %}
+      <div class="field">
+        {{ form.service.label_tag }}
+        {{ form.service }}
+        {{ form.service.errors }}
+      </div>
+      <button type="submit">Continue</button>
+    </form>
+  </div>
+{% endblock %}

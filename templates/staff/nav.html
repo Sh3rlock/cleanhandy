@@ -1,0 +1,9 @@
+<nav class="staff-nav" aria-label="Staff">
+  <a class="{% if current == 'dashboard' %}on{% endif %}" href="{% url 'staff_dashboard' %}">Dashboard</a>
+  <a class="{% if current == 'calendar' %}on{% endif %}" href="{% url 'staff_calendar' %}">Calendar</a>
+  <a class="{% if current == 'quotes' %}on{% endif %}" href="{% url 'staff_quotes' %}">Quote requests</a>
+  <a class="{% if current == 'prices' %}on{% endif %}" href="{% url 'staff_prices' %}">Price options</a>
+  <a class="{% if current == 'social' %}on{% endif %}" href="{% url 'staff_social' %}">Social</a>
+  <a class="{% if current == 'tax' %}on{% endif %}" href="{% url 'staff_tax' %}">Tax</a>
+  <a class="{% if current == 'newsletter' %}on{% endif %}" href="{% url 'staff_newsletter' %}">Newsletter</a>
+</nav>

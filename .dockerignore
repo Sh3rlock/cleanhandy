@@ -1,8 +1,8 @@
-__pycache__/
+.venv
+.git
+__pycache__
 *.pyc
-*.pyo
-*.pyd
-.env
-*.env
-staticfiles/
-.git/
+db.sqlite3
+staticfiles
+media
+.DS_Store

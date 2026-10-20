@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section prose">
+    <h1>Quote request received</h1>
+    {% if quote %}
+      <p>Request {{ quote.pk }} for {{ quote.service.name }} is in the queue. A staff member will confirm the price. This page is not an invoice.</p>
+      {% if quote.preferred_date %}<p>Preferred day: {{ quote.preferred_date|date:"F j, Y" }}.</p>{% endif %}
+      {% if user.is_authenticated %}
+        <p><a class="button" href="{% url 'account_home' %}">View your account</a></p>
+      {% else %}
+        <p><a class="button" href="{% url 'signup' %}">Create an account</a> to watch this request. Use {{ quote.contact_email }} and the quote will be attached.</p>
+      {% endif %}
+    {% else %}
+      <p>There is no recent request in this browser. <a href="{% url 'quote_start' %}">Start a quote</a>.</p>
+    {% endif %}
+  </div>
+{% endblock %}

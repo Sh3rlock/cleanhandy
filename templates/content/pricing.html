@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+  <article class="wrap section">
+    <div class="prose">
+      <h1>Pricing</h1>
+      <p>TheCleanHandy quotes each job. The table below is the company's published cleaning time guide: how many cleaners and how many hours a typical home in that size band has taken. It is not a dollar price.</p>
+      <p>Moving, retail, and recurring commercial work depend on access, stairs, furniture, and frequency. Those quotes are written after the request.</p>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Size</th>
+          <th>Crew</th>
+          <th>Hours</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td>{% if row.service %}<a href="{{ row.service.get_absolute_url }}">{{ row.label }}</a>{% else %}{{ row.label }}{% endif %}</td>
+            <td>{{ row.sqft_band }}</td>
+            <td>{{ row.cleaners }} cleaners</td>
+            <td>{{ row.hours }} hours</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">The time guide has not been published yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p><a class="button" href="{% url 'quote_start' %}">Request a written quote</a></p>
+  </article>
+{% endblock %}

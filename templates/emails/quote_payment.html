@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Payment received for quote #{{ quote.pk }}</title>
+</head>
+<body style="margin:0;padding:24px;font-family:Arial,sans-serif;color:#333333;">
+  <h1 style="color:#F15A29;font-size:20px;">Payment received for quote #{{ quote.pk }}</h1>
+  <p>{{ quote.contact_name }} paid {{ payment.get_kind_display }} of ${{ payment.amount|floatformat:2 }} for {{ quote.service.name }}.</p>
+</body>
+</html>

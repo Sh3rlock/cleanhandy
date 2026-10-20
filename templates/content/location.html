@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap page-intro section">
+    <p class="eyebrow">{{ area_region }}</p>
+    <h1>Moving and cleaning in {{ area.name }}</h1>
+    <p class="lede">{{ area.introduction }}</p>
+  </div>
+  <div class="wrap page-layout" style="padding-bottom: 3rem;">
+    <div>
+      <div class="card">
+        {{ area.body|linebreaks }}
+      </div>
+      <h2 style="margin-top: 1.4rem;">Neighborhoods</h2>
+      <ul class="areas">
+        {% for name in area.neighborhood_items %}<li><span class="chip">{{ name }}</span></li>{% endfor %}
+      </ul>
+      <h2 style="margin-top: 1.4rem;">Services in {{ area.name }}</h2>
+      <div class="cards">
+        {% for service in services %}
+          <article class="card">
+            <h3><a href="{{ service.get_absolute_url }}">{{ service.name }}</a></h3>
+            <p>{{ service.short_description|truncatewords:22 }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+    <aside>
+      <div class="side-card">
+        <h2>Get a quote</h2>
+        <p>Tell us the service and the size of the {{ area.name }} job.</p>
+        <a class="button" href="{% url 'quote_start' %}">Get a quote in {{ area.name }}</a>
+      </div>
+      {% if faqs %}
+        <div class="side-card">
+          <h2>Questions</h2>
+          {% for faq in faqs %}
+            <h3>{{ faq.question }}</h3>
+            <p>{{ faq.answer }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

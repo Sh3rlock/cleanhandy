@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap account">
+    {% include "staff/nav.html" with current="dashboard" %}
+    <header class="account-hero">
+      <div>
+        <p class="eyebrow">Staff</p>
+        <h1>Dashboard</h1>
+        <p class="account-meta"><span>{{ today|date:"l, F j" }}</span></p>
+      </div>
+      <div class="account-actions">
+        <a class="button" href="{% url 'staff_calendar' %}">Calendar</a>
+        <a class="button secondary" href="{% url 'staff_quotes' %}">Quote requests</a>
+      </div>
+    </header>
+
+    <div class="account-stats desk-stats">
+      <a href="{% url 'staff_quotes' %}?status=requested">
+        <strong>{{ needs_price }}</strong>
+        <span>Need a price</span>
+      </a>
+      <a href="{% url 'staff_quotes' %}?status=quoted">
+        <strong>{{ waiting }}</strong>
+        <span>Waiting on the customer</span>
+      </a>
+      <a href="{% url 'staff_calendar' %}">
+        <strong>{{ jobs_ahead }}</strong>
+        <span>Jobs ahead</span>
+      </a>
+      <a href="{% url 'staff_quotes' %}">
+        <strong>${{ collected|floatformat:2 }}</strong>
+        <span>Collected in {{ month_label }}</span>
+      </a>
+    </div>
+
+    <div class="desk-links">
+      <a href="{% url 'staff_calendar' %}"><strong>Calendar</strong><span>Jobs and preferred dates</span></a>
+      <a href="{% url 'staff_prices' %}"><strong>Price options</strong><span>What the quote form offers</span></a>
+      <a href="{% url 'staff_social' %}"><strong>Social</strong><span>Footer and contact icons</span></a>
+      <a href="{% url 'staff_tax' %}"><strong>Tax</strong><span>Rate on new quotes</span></a>
+      <a href="{% url 'staff_newsletter' %}"><strong>Newsletter</strong><span>{{ subscribers }} active subscriber{{ subscribers|pluralize }}</span></a>
+    </div>
+
+    <div class="account-layout">
+      <section class="account-section">
+        <div class="account-section-head">
+          <h2>Recent requests</h2>
+          <p>Newest quotes, whether or not a price has been written.</p>
+        </div>
+        {% for quote in recent %}
+          <article class="account-card">
+            <div class="account-card-top">
+              <div>
+                <p class="account-kicker">{{ quote.created_at|date:"M j" }} · {{ quote.service.name }}</p>
+                <h3><a href="{% url 'staff_quote_detail' quote.pk %}">{{ quote.contact_name }}</a></h3>
+              </div>
+              <span class="status status-{{ quote.status }}">{{ quote.get_status_display }}</span>
+            </div>
+            <p class="account-address">
+              {% if quote.property.street %}{{ quote.property.street }} · {% endif %}{{ quote.property.get_borough_display }}
+              {% if quote.preferred_date %} · {{ quote.preferred_date|date:"M j" }}{% endif %}
+            </p>
+            <p class="account-muted">
+              {% if quote.status == "requested" %}Waiting for a price{% else %}${{ quote.total|floatformat:2 }}{% endif %}
+            </p>
+          </article>
+        {% empty %}
+          <p class="account-empty">No quote requests yet.</p>
+        {% endfor %}
+      </section>
+
+      <aside class="account-side">
+        <section class="account-section">
+          <div class="account-section-head">
+            <h2>Next 7 days</h2>
+            <p>Scheduled jobs and quotes that already have a date.</p>
+          </div>
+          {% for event in agenda %}
+            <a class="panel desk-agenda" href="{{ event.url }}">
+              <strong>{{ event.when|date:"D, M j" }}</strong>
+              <span>{{ event.title }}</span>
+              <span>{{ event.service }} · {{ event.area }}</span>
+              <span class="status status-{{ event.status_key }}">{{ event.status }}</span>
+            </a>
+          {% empty %}
+            <p class="account-empty compact">Nothing dated in the next 7 days.</p>
+          {% endfor %}
+        </section>
+      </aside>
+    </div>
+  </div>
+{% endblock %}

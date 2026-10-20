@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap section prose">
+    <p class="eyebrow">Newsletter</p>
+    <h1>Unsubscribe</h1>
+    {% if subscriber.is_active %}
+      <p>Stop newsletter email to {{ subscriber.email }}. Quote and booking messages are not affected.</p>
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit">Unsubscribe</button>
+      </form>
+    {% else %}
+      <p>{{ subscriber.email }} is off the list. You can subscribe again from the bottom of any page.</p>
+      <p><a href="{% url 'home' %}">Back to the homepage</a></p>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap page-intro section legal-intro">
+    <p class="eyebrow">Legal</p>
+    <h1>Terms and Conditions</h1>
+    <p class="lede">Last updated October 18, 2026. These terms cover quote requests and work performed by {{ company.legal_name }} in {{ company.service_area }}.</p>
+  </div>
+  <article class="wrap section prose">
+    <p>By requesting a quote, accepting a written estimate, creating an account, or paying for a job, you agree to these terms. If you are booking for a landlord, a property manager, or a business, you confirm that you are allowed to authorize the work at the addresses you give us.</p>
+    <p>The site is at {{ company.website }}. Questions go to <a href="mailto:{{ company.public_email }}">{{ company.public_email }}</a> or <a href="tel:{{ company.phone_tel }}">{{ company.phone }}</a>.</p>
+
+    <h2>The company and the services</h2>
+    <p>Moving, move-in and move-out cleaning, deep cleaning, post-renovation cleaning, post-event cleaning, commercial and office cleaning, rental turnover, assembly, mounting, and painting requested through this site are performed by {{ company.legal_name }}. The company is not a marketplace and does not hand the job to an unrelated pro.</p>
+    <p>The service area is {{ company.service_area }}. A request outside that area can be declined.</p>
+    <p>Published pages describe typical scope. The written quote is the scope for your job. A checklist on a service page is included only when the quote says so. Truck, packing, and insurance are part of a move only when the written quote says they are included.</p>
+
+    <h2>Quotes</h2>
+    <p>A quote request is not a booking. You tell us the service, the address, the size band, access, and anything the crew needs to know. Staff then send a written price based on that description, including any discount and sales tax shown on the quote.</p>
+    <p>Time guides on the site, such as cleaner count and hours for a size band, are planning figures. They are not a flat rate and they are not a promise that your home will take that long.</p>
+    <p>You can accept the written quote from the email link or from your account, or you can decline it. Declining before you pay does not create a charge. Acceptance means you want the work at the quoted price. The preferred date is held when we receive the deposit or the full payment described below. If that payment does not arrive, staff may release the date.</p>
+
+    <h2>Price, tax, and payment</h2>
+    <p>The price on the written quote is the price for the scope on that quote. Sales tax, when it applies, is calculated on the discounted subtotal and shown as its own line. A discount applies only when it appears on the quote or is accepted on the payment page.</p>
+    <p>You may pay a 50% deposit or the full amount. Card payments are processed by Stripe. We do not store your full card number. The remaining balance, if you paid the deposit, is due on the day of the job unless the quote says otherwise. Staff can issue an invoice against an accepted job. An invoice is a record of what was billed.</p>
+    <p>If the crew arrives and the space is blocked, without the water or power the service needs, or materially different from the request, the estimate can be revised before work continues, or the visit can be stopped. Extra rooms, heavier carries, stairs that were not described, construction debris, or a home that is still full of furniture are examples of a material difference.</p>
+
+    <h2>Scheduling and access</h2>
+    <p>You provide a way for the crew to reach the space at the agreed time, including keys, a door code, a super, or a person who will let them in. Building rules, certificates of insurance, elevator reservations, and parking instructions are part of the quote when you mention them, and you are responsible for getting the permissions the building requires.</p>
+    <p>Cleaning that needs water or electricity will not go ahead in a unit that does not have them. Tell us the floor, whether the building is a walk-up, and the elevator window. Hours are by appointment.</p>
+    <p>Someone 18 or older must authorize the work. If nobody will be home, the access instructions you send are the authorization to enter, and you accept that the crew will follow those instructions.</p>
+
+    <h2>Moving</h2>
+    <p>Moving services cover the labor on the quote: loading, carrying, unloading, and placing furniture in the rooms you name, with basic protection for floors and doorways on the path of the move. Apartment moves, small moves, and moving labor are quoted from the item list, the floors, and the stairs at each address. A job with two addresses needs both of them on the request.</p>
+    {% if company.provides_truck %}
+      <p>A company truck or van is available when the move needs one, and the quote will say when it is included.</p>
+    {% else %}
+      <p>A company truck or van is not assumed. If the quote does not list a vehicle, you are arranging transportation and the crew is there for the labor.</p>
+    {% endif %}
+    {% if company.provides_packing %}
+      <p>Packing can be included when the quote lists it. Boxes you packed yourself stay your responsibility for how the contents were wrapped.</p>
+    {% else %}
+      <p>Packing is not included unless the written quote lists it. How you packed your own boxes is your responsibility.</p>
+    {% endif %}
+    {% if company.provides_insurance %}
+      <p>Insurance for the move is only the coverage the written quote describes.</p>
+    {% else %}
+      <p>Insurance for your belongings is not included unless the written quote says so. Keep your own renter’s or homeowner’s coverage for furniture and other property.</p>
+    {% endif %}
+    <p>Please move cash, jewelry, documents, and other small valuables yourself. The crew can refuse an item that is unsafe to carry, or that was not on the quote, including a safe or an unusually heavy piece. Disassembly happens only when the quote or your notes ask for it.</p>
+
+    <h2>Cleaning</h2>
+    <p>Move-out, move-in, apartment move-out, rental turnover, and deep cleaning follow the checklist on the written quote. The usual scope is kitchens, bathrooms, floors, interior cabinets when they are empty, appliance exteriors, interior glass, and dust on baseboards and doors. Inside the fridge, oven, or microwave is included when those appliances are empty and the quote lists them.</p>
+    <p>Move-in cleaning is meant for an empty or nearly empty home, before furniture arrives. Move-out and turnover cleaning work best after the furniture is out. Furniture left in the rooms can change the time and the price.</p>
+    <p>A clean does not decide a security deposit, a lease dispute, or whether a landlord will accept the unit. Those decisions stay with the landlord or manager. If the crew finds damage, leftover furniture, or missing utilities, they can note it and stop or reprice the visit.</p>
+    <p>Post-renovation cleaning is for dust and debris after paint, plaster, or light construction, once the trades are finished. It does not include hauling construction waste unless the quote says so. If the site is not ready, the quoted time does not apply.</p>
+    <p>Post-event cleaning covers the rooms that were used: surfaces, floors, baths, and the kitchen. Trash is removed when it is already collected or listed on the quote.</p>
+    <p>If a listed item on the cleaning scope was missed, email or call within 48 hours and we will come back to correct that item. This is a return visit for the missed scope, not a promise about a landlord’s deposit.</p>
+
+    <h2>Commercial and recurring work</h2>
+    <p>Office, retail, property-management, and other commercial cleaning are quoted from the rooms, restrooms, days, and access you describe. The residential time guide does not set the commercial price. After-hours entry, alarms, and keys belong in the request. Restroom products are yours to supply unless the quote says we bring them.</p>
+    <p>A recurring schedule is the checklist on the days the quote names. Changes to days, rooms, or access should be in writing. Either of us can end a recurring schedule with at least 7 days’ notice before the next visit. A single visit cancelled inside 48 hours of its start can still be charged.</p>
+    <p>Property-manager accounts can keep more than one address. Each unit is quoted on its own size and condition. Invoices are issued per job.</p>
+
+    <h2>Assembly, mounting, and painting</h2>
+    <p>Assembly covers the pieces listed on the quote. Mounting covers the items listed, after you confirm the building allows them on that wall. Hardware is chosen for the wall when it can be confirmed on site. Plaster, brick, and drywall are not the same job, and a wall type you did not describe can change the quote.</p>
+    <p>Painting covers the rooms named on the quote, with basic protection of floors and fixtures in those rooms. Ceilings, color changes, and repairs are included only when the quote lists them. Leave dry time before furniture comes back or before a deep clean. Paint is supplied as the quote states.</p>
+
+    <h2>Cancellation and rescheduling</h2>
+    <p>You can decline a quote any time before you accept it, at no charge. After you have paid a deposit or the full amount:</p>
+    <ul>
+      <li>Cancel or reschedule more than 48 hours before the scheduled start, and we will refund the amount paid or apply it to a new date you both agree on.</li>
+      <li>Cancel within 48 hours of the start, or if the crew cannot start because access, parking, utilities, or the condition of the space was not as described and you do not accept a revised price, the deposit may be kept to cover the reserved crew.</li>
+      <li>If we cancel, we refund what you paid for work that was not performed, or we offer another date.</li>
+    </ul>
+    <p>Write to {{ company.public_email }} or call {{ company.phone }} to cancel or move a date. A new date depends on the calendar and on building rules.</p>
+
+    <h2>Accounts</h2>
+    <p>An account uses your email and a password. You can add a phone number and say whether you are booking for yourself or managing properties. An account lets you see quotes, accept a written estimate, and save properties. Keep the password to yourself. Staff can see the quotes and jobs on the account so they can price and schedule them.</p>
+
+    <h2>Damage and claims</h2>
+    <p>Tell the crew about fragile items and about damage that is already there. For a moving claim, tell us before the crew leaves when you can, and in any case within 24 hours, so the item can be looked at. We are not responsible for packing we did not do, for an item’s existing weakness, or for belongings you were asked to move yourself.</p>
+    <p>Except for personal injury caused by our negligence, and except where New York law does not allow a limit, our liability for a job is limited to the amount you paid for that job. We are not liable for a landlord’s deposit decision, a missed closing, lost wages, or other indirect loss.</p>
+
+    <h2>The website</h2>
+    <p>Service pages, time guides, and articles are information. They are not a promise that a particular crew is free on a particular day. Do not misuse the site, attempt to break into an account, or send a quote for a property you are not allowed to book.</p>
+
+    <h2>Changes</h2>
+    <p>We can update these terms by posting a new version on this page. The version on the page when you accept a quote applies to that job. A change does not rewrite a quote you have already accepted, except where the job itself changes under the section on price and access.</p>
+
+    <h2>Law and contact</h2>
+    <p>These terms are governed by the laws of the State of New York. Disputes are brought in the state or federal courts in New York. {{ company.legal_name }} is based in {{ company.city }}, {{ company.region }} {{ company.postal_code }}.</p>
+    <p>{{ company.legal_name }}<br>
+      {{ company.headquarters_line }}<br>
+      <a href="mailto:{{ company.public_email }}">{{ company.public_email }}</a>
+      {% if company.info_email %} · <a href="mailto:{{ company.info_email }}">{{ company.info_email }}</a>{% endif %}<br>
+      <a href="tel:{{ company.phone_tel }}">{{ company.phone }}</a>
+    </p>
+    <p><a href="{% url 'privacy' %}">Privacy Policy</a></p>
+  </article>
+{% endblock %}

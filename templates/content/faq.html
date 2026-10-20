@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="wrap page-intro section">
+    <p class="eyebrow">Answers</p>
+    <h1>Frequently asked questions</h1>
+  </div>
+  <div class="wrap faq-grid" style="padding-bottom: 3rem;">
+    {% for faq in faqs %}
+      <article class="panel">
+        <h2>{{ faq.question }}</h2>
+        <p>{{ faq.answer }}</p>
+        {% if faq.service %}<p><a href="{{ faq.service.get_absolute_url }}">{{ faq.service.name }}</a></p>{% endif %}
+      </article>
+    {% endfor %}
+  </div>
+{% endblock %}
