@@ -80,6 +80,39 @@ def staff_inbox():
     return address
 
 
+OWNER_QUOTE_EMAIL = "matyass91@gmail.com"
+
+
+def incoming_quote_recipients():
+    recipients = []
+    for address in (staff_inbox(), OWNER_QUOTE_EMAIL):
+        cleaned = (address or "").strip()
+        if cleaned and cleaned.lower() not in {item.lower() for item in recipients}:
+            recipients.append(cleaned)
+    return recipients
+
+
+def notify_incoming_quote(quote, request):
+    try:
+        context = {
+            "quote": quote,
+            "pickup_lines": _address_lines(quote.property),
+            "dropoff_lines": _address_lines(quote.destination) if quote.destination_id else [],
+            "staff_url": request.build_absolute_uri(reverse("staff_quote_detail", args=[quote.pk])),
+        }
+        html_content = render_to_string("emails/quote_received.html", context)
+        message = EmailMultiAlternatives(
+            subject=f"New quote #{quote.pk}: {quote.service.name}",
+            body=strip_tags(html_content),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=incoming_quote_recipients(),
+        )
+        message.attach_alternative(html_content, "text/html")
+        message.send(fail_silently=False)
+    except Exception:
+        logger.exception("Could not notify staff about incoming quote %s", quote.pk)
+
+
 def _address_lines(place):
     street = place.street
     if place.unit:

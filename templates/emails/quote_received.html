@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>New quote #{{ quote.pk }}</title>
+</head>
+<body style="margin:0;padding:24px;font-family:Arial,sans-serif;color:#333333;">
+  <h1 style="color:#F15A29;font-size:20px;">New {{ quote.service.name }} quote #{{ quote.pk }}</h1>
+  <p>{{ quote.contact_name }}<br>
+  {{ quote.contact_email }}<br>
+  {{ quote.contact_phone }}</p>
+  <p>
+    {% for line in pickup_lines %}{{ line }}<br>{% endfor %}
+  </p>
+  {% if dropoff_lines %}
+  <p>
+    Drop-off:<br>
+    {% for line in dropoff_lines %}{{ line }}<br>{% endfor %}
+  </p>
+  {% endif %}
+  {% if quote.preferred_date %}<p>Preferred day: {{ quote.preferred_date }}</p>{% endif %}
+  {% if quote.notes %}<p>Notes: {{ quote.notes }}</p>{% endif %}
+  <p>Calculated total: ${{ quote.total|floatformat:2 }}</p>
+  <p><a href="{{ staff_url }}">Open this quote</a></p>
+</body>
+</html>

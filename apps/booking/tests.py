@@ -106,6 +106,11 @@ class QuoteFlowTests(TestCase):
             },
         )
         self.assertRedirects(contact, reverse("quote_done"))
+        from django.core import mail
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["support@thecleanhandy.com", "matyass91@gmail.com"])
+        self.assertIn("Ada Lovelace", mail.outbox[0].body)
         quote = QuoteRequest.objects.get()
         self.assertEqual(quote.status, QuoteRequest.Status.REQUESTED)
         self.assertFalse(QuoteEstimate.objects.filter(quote=quote).exists())

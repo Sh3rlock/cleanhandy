@@ -10,6 +10,7 @@ from apps.accounts.models import User
 from apps.booking.forms import QuoteContactForm, QuotePropertyForm, QuoteServiceForm
 from apps.booking.models import ConversionEvent, Property, QuoteRequest
 from apps.booking.pricing import normalize_selection, selection_is_complete, service_needs_destination, store_calculated_quote
+from apps.booking.quote_actions import notify_incoming_quote
 from apps.company.models import get_company
 from apps.content.models import ServicePage
 from apps.content.views import _seo
@@ -199,6 +200,7 @@ def _create_quote(request, draft, cleaned, service, variables):
             user=user,
             quote=quote,
         )
+    notify_incoming_quote(quote, request)
     return quote
 
 
